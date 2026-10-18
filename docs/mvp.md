@@ -89,7 +89,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Open |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
 | 9 | Recognition reads garments wrong | Phase 3 (3b) | Open |
-| 10 | Provider data handling for audio and words | Phase 0 (0f) | Reviewed in 0f. One gap: Tavus publishes no retention period, so deleting each conversation is recommended |
+| 10 | Provider data handling for audio and words | Phase 0 (0f) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation will be hard-deleted when the session ends (2e) |
 | 11 | The free database pauses after 7 days without activity | Phase 1 (1f) | Open |
 | 12 | Phone browser quirks | Phase 0 (0f) | Open |
 | 13 | Sample catalog quality and image rights | Phase 1 (1e) | Open |
@@ -118,6 +118,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 18 Oct 2026 | Hard-delete each Tavus conversation when the session ends, because Tavus publishes no retention period. Notes and preferences are unaffected, since they live in our own database | Sabine | progress.md (2e), mvp.md section 8 |
 | 18 Oct 2026 | Direction for TQ3 (final decision in 0g): for live notes, accuracy matters more than speed, and Sonnet 5.5 is too expensive | Sabine | docs/mvp.md spike results |
 | 18 Oct 2026 | Stylist face (TQ5): Anna - Casual (Tavus stock face rc9cff32ceba, Phoenix 4.5, one of Tavus's Pro faces) | Sabine | tavus/stylist-pal.json |
 | 18 Oct 2026 | 0b plan approved: public repository ai-personal-stylist, commits use the GitHub no-reply email, and the PRD and backlog files stay out of the repository until the About page is built (Phase 7) | Sabine | progress.md (0b) |
@@ -169,7 +170,7 @@ Checked 18 Oct 2026 against each provider's own pages. These change, so check ag
 | Anthropic (notes, photos, camera, looks) | Transcript text, photos and camera frames | No (commercial terms) | Deleted within 30 days. Up to 2 years if flagged for a usage policy breach | Our server keeps only the resulting notes and confirmed photos, never frames or transcripts |
 
 **Gaps to close**
-- Tavus publishes no retention period for API conversations. Recommended: hard-delete each Tavus conversation when the session ends. Needs Sabine's OK (see the decision below).
+- Tavus publishes no retention period for API conversations. Decided 18 Oct 2026: hard-delete each Tavus conversation when the session ends (built in 2e).
 - Tavus's terms make us responsible for any consent its processing needs. The microphone permission card (R6) should say plainly that the voice is processed by Tavus, or by OpenAI in voice only.
 - For Phase 6 security: limit which events the browser may send on the GPT-Live data channel, so only our server can feed the stylist facts.
 

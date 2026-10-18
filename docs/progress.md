@@ -190,7 +190,7 @@
 
 ### 2e. Limits and session endings
 - [ ] Time limits and time left (R13), and connection problems (R14).
-- [ ] Session-only data deleted when the session ends (R63).
+- [ ] Session-only data deleted when the session ends (R63), including a hard delete of the Tavus conversation (decided in 0f).
 
 ### 2f. Code review
 - [ ] Code review of everything this phase changed, with fixes made, the automated tests re-run, and the findings explained to you.
