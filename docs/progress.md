@@ -2,12 +2,12 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task group 0b: project skeleton (GitHub repository and a bare Next.js site on Vercel).
-- **Current status:** Phase 0 is in progress. 0a is done: Tavus (Starter plan), OpenAI and Anthropic accounts have credit and spending limits, and the three keys are in .env.local and work. No app code has been written yet.
-- **Recent changes (18 Oct 2026):** 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
+- **Current focus:** Phase 0, task group 0c: the video stylist test.
+- **Current status:** Phase 0 is in progress. 0a and 0b are done: accounts, credit and limits are set, the keys are in .env.local and in Vercel (Production), the code is on GitHub, and a placeholder page is live at https://ai-personal-stylist-inky.vercel.app.
+- **Recent changes (18 Oct 2026):** 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
 - **What's left:** Phase 0 from 0b on, then phases 1 to 7.
 - **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Open assumptions and risks are tracked in docs/mvp.md.
-- **Next action:** build 0b (plan approved 18 Oct 2026): the repository, the bare Next.js site on Vercel, then your Vercel keys.
+- **Next action:** a plan for 0c (the Tavus video stylist test) for your approval.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -44,9 +44,9 @@
 - [x] **You:** put the API keys in a local `.env.local` file yourself. Never paste keys into the chat. Done 18 Oct 2026, and all three keys passed a check. Adding keys to Vercel moved to 0b, because it needs the Vercel project.
 
 ### 0b. Project skeleton
-- [ ] Create the public GitHub repository (TQ6), with a .gitignore that keeps .env files and database backups out of it.
-- [ ] A bare Next.js project deployed to Vercel, so the test page works on phones over a secure link.
-- [ ] **You:** add the Tavus, OpenAI and Anthropic keys in Vercel's environment settings, for Production only, using fresh keys named stylist-vercel. Preview deployments get their own low-limit keys later (tech spec section 6).
+- [x] Create the public GitHub repository (TQ6), with a .gitignore that keeps .env files and database backups out of it. Done 18 Oct 2026: github.com/sabinejoseph8/ai-personal-stylist. The .gitignore also keeps out the PRD and backlog files and the Memory site build.
+- [x] A bare Next.js project deployed to Vercel, so the test page works on phones over a secure link. Done 18 Oct 2026: Next.js 16.4, live at https://ai-personal-stylist-inky.vercel.app, checked on your phone.
+- [x] **You:** add the Tavus, OpenAI and Anthropic keys in Vercel's environment settings, for Production only, using fresh keys named stylist-vercel. Preview deployments get their own low-limit keys later (tech spec section 6).
 
 ### 0c. Video stylist test
 - [ ] Set up the Tavus stylist from a config file in the repository: full pipeline, the **tavus-gpt-5.6-terra** conversation model, perception off, recording off, short timeouts.

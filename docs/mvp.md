@@ -108,7 +108,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens; Haiku 5.5 costs $0.10 and $0.50 | Anthropic's model table, Oct 2026 | Phase 0 costs |
 | A full demo uses about $1.10 of AI with Opus 5.5 for every job | Tech spec section 9 estimate | Phase 0 (0f) |
 | Supabase pauses free projects after 7 days without activity, and a daily job prevents it | Third-party pricing guides | Phase 1, then the uptime check |
-| Vercel's free Hobby plan allows this personal, non-commercial portfolio project | Vercel's plan terms | Phase 0 (0b) |
+| Vercel's free Hobby plan allows this personal, non-commercial portfolio project | Vercel's Hobby plan docs (checked 18 Oct 2026): personal, non-commercial use only, which fits a portfolio project with no money-making. Hobby also limits functions to 5 minutes and keeps runtime logs for 1 hour | Checked in 0b |
 | About 150 sample products are enough for three different looks for common occasions | Estimate | Phase 1 (1e) and Phase 4 |
 | About 6 full demos a month is enough for job applications | The $40 budget | Phase 7 monitoring |
 
