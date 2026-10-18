@@ -1,0 +1,29 @@
+[
+  { "id": "Held-out: cocktail",
+    "text": "I was thinking around 400 but actually keep it under 200 for the cocktail party",
+    "expect": [
+      { "field": "budget", "after": "200", "has": ["200"], "lacks": ["400"] },
+      { "field": "occasion", "after": "party", "has": ["cocktail"] } ] },
+  { "id": "Held-out: black tie",
+    "text": "It's a black tie charity dinner in late January and my budget is around 600",
+    "expect": [
+      { "field": "occasion", "after": "dinner", "has": ["black tie"] },
+      { "field": "season_date", "after": "January", "has": ["winter", "january"] },
+      { "field": "budget", "after": "600", "has": ["around", "600"] } ] },
+  { "id": "Held-out: office",
+    "text": "I need work clothes for my new office job, mostly neutral colors, nothing too flashy",
+    "expect": [
+      { "field": "occasion", "after": "job", "has": ["office"] },
+      { "field": "colors", "after": "colors", "has": ["neutral"] } ] },
+  { "id": "Held-out: rehearsal",
+    "text": "There's a rehearsal dinner in September and I'm leaning toward a jumpsuit",
+    "expect": [
+      { "field": "occasion", "after": "dinner", "has": ["rehearsal"] },
+      { "field": "season_date", "after": "September", "has": ["fall", "september"] },
+      { "field": "outfit_type", "after": "jumpsuit", "has": ["jumpsuit"] } ] },
+  { "id": "Held-out: changed budget",
+    "text": "My budget was 300 but let's say 450 now, for a fall engagement party",
+    "expect": [
+      { "field": "budget", "after": "450", "has": ["450"], "lacks": ["300"] },
+      { "field": "occasion", "after": "party", "has": ["engagement"] } ] }
+]
