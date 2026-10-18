@@ -20,6 +20,20 @@
 9. **Privacy by design.** No raw audio, transcripts or camera video are kept. Camera frames are read and thrown away, and the video service never sees the camera.
 10. **Planning discipline.** I wrote the product spec, design, tech spec and build plan in stages, and each one was agreed before the next began. Every requirement traces back to my PRD, and every requirement is covered by a build phase.
 
+11. **I chose the AI for live notes with data, and put accuracy first.** Live notes have to appear within about 2 seconds while the shopper is still talking, so I tested before building. I replayed 11 test sentences, including my wedding example, at real speaking speed through a first notes reader on three Claude models:
+
+    | | Opus 5.5 | Sonnet 5.5 | Haiku 5.5 |
+    |---|---|---|---|
+    | Notes within 2 seconds | 10% | 53% | 83% |
+    | Accuracy | All right | All right | Two mistakes, including a missed budget correction |
+    | Rough cost per 10-minute demo | $2.70 | $1.35 | $0.07 |
+
+    None of them met the speed target. The biggest model was accurate but too slow, and would have cost more than four times my estimate. The smallest was fast and nearly free, but it got things wrong.
+    - **I questioned the obvious fix first.** I asked whether simply letting Haiku think harder would close the gap. At medium effort it caught the correction, but it became as slow as Sonnet and still got the wedding notes wrong. More thinking wasn't the answer.
+    - **I set the priority:** accuracy matters more than speed, because a wrong note breaks trust in the whole product. Sonnet was accurate but too expensive for my budget.
+    - **Then I improved the cheap model instead of buying the expensive one.** I gave Haiku clearer instructions with examples, and moved budgets and dates out of AI into plain code, where exact rules beat a model. The improved Haiku got every note right in four runs, at the same $0.07 a demo, with 75 to 90% of notes within 2 seconds.
+    - **I guarded against fooling myself.** Before tuning, I wrote five new test sentences the model was never tuned on. It got all of those right too. I still treat it as a small test, and a larger one is planned before launch.
+
 ## Major bugs and how I fixed them
 
 None yet. The build starts with Phase 0.
