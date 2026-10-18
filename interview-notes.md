@@ -26,4 +26,6 @@ None yet. The build starts with Phase 0.
 
 ## Significant improvements
 
-None yet. The planning-stage changes are in the decisions above.
+- **I proved the riskiest part first.** Before building any real screens, I ran a throwaway test of the video stylist on my own devices. She appeared quickly, lip sync looked natural, I could interrupt her by talking over her, and my words streamed in while I was still speaking. That last one mattered most, because live notes depend on it. I also triggered a second call at the same time and recorded Tavus's exact refusal, so the voice-only fallback can be built against real behavior instead of a guess.
+- **I protected the budget from day one.** The test page is behind a passcode, every call is capped at 10 minutes, and abandoned calls end after 30 seconds, so a public link can't quietly burn my video minutes.
+- **I adjusted the plan to the facts.** My video plan turned out to include 120 minutes a month, not the 60 I'd planned around, so I moved to it straight away. Full-length test demos now match the real experience, and the same $22 covers about twice as many demos.

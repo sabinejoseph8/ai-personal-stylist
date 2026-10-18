@@ -82,7 +82,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 |---|---|---|---|
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Open |
 | 2 | Live notes miss the 2 second target | Phase 0 (0d) | Open |
-| 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Open |
+| 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior confirmed in 0c, and the fallback is still to build |
 | 4 | A public link runs up costs | Phase 1 (1b, 1f) | Open |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c) | Open |
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
@@ -142,14 +142,15 @@ Filled in during task group 0f.
 
 | Test | Pass mark | Result | Date | Notes |
 |---|---|---|---|---|
-| Video start time | 5 seconds or less | | | |
-| Stylist stops when interrupted | Half a second or less | | | |
-| Lip sync | Looks natural to Sabine | | | |
+| Video start time | 5 seconds or less | Fast, by Sabine's eye on an iPad. The exact seconds get measured in the 0f test demos | 18 Oct 2026 | Test page event log |
+| Stylist stops when interrupted | Half a second or less | Works by voice and button. The button path took 0.7 seconds, including the network | 18 Oct 2026 | Talking over her felt immediate to Sabine. A precise voice timing comes in 0f |
+| Lip sync | Looks natural to Sabine | "As natural as we can expect" | 18 Oct 2026 | Anna - Casual, Phoenix 4.5 |
+| Tavus live words for notes | Shopper's words arrive while speaking | Yes: conversation.utterance.streaming carries role "user" partial text while the shopper speaks | 18 Oct 2026 | The stylist replied about 1.3 seconds after the shopper stopped |
 | Live notes on Opus 5.5 | 95% within 2 seconds | | | |
 | Live notes on Haiku 5.5 | 95% within 2 seconds | | | |
 | GPT-Live live words | Available | | | |
 | Camera naming time | A few seconds | | | |
-| A second Tavus call during the first | Behavior understood | | | |
+| A second Tavus call during the first | Behavior understood | Refused within 2 seconds: HTTP 400, "User has reached maximum concurrent conversations" | 18 Oct 2026 | Phase 6 can catch this exact error and switch to voice only |
 | iPhone Safari, Android Chrome and laptop | All work | | | |
 | AI cost per demo | About $1.10 or less | | | |
 
