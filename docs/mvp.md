@@ -118,6 +118,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 18 Oct 2026 | Stylist face (TQ5): Anna - Casual (Tavus stock face rc9cff32ceba, Phoenix 4.5, one of Tavus's Pro faces) | Sabine | tavus/stylist-pal.json |
 | 18 Oct 2026 | 0b plan approved: public repository ai-personal-stylist, commits use the GitHub no-reply email, and the PRD and backlog files stay out of the repository until the About page is built (Phase 7) | Sabine | progress.md (0b) |
 | 18 Oct 2026 | Adding keys to Vercel moved from 0a to 0b, because it needs the Vercel project. Vercel gets its own keys (stylist-vercel), separate from the local ones (stylist-local). OpenAI's cap is the $5 prepaid credit with auto-recharge off | Sabine | progress.md (0a, 0b) |
 | 18 Oct 2026 | Tavus starts on the Starter plan ($22 a month) from Phase 0 instead of Free, so test demos can run the full 10 minutes. The monthly budget is unchanged, and the Tavus cost starts earlier | Sabine | progress.md (0a, 0f, 7c) |
