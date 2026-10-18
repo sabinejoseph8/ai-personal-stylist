@@ -1,0 +1,33 @@
+# Secrets: never commit keys. .env.example lists the names only.
+.env*
+!.env.example
+*.pem
+
+# Database backups and dumps
+*.dump
+*.backup
+*.bak
+*.sql.gz
+*.sql.zip
+backups/
+
+# Planning files kept out of the public repository (Sabine, 18 Oct 2026)
+*.docx
+*.xlsx
+
+# Memory site build output
+tools/memory-site/dist/
+
+# Dependencies and build output
+/node_modules
+/.next/
+/out/
+/build
+/coverage
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Mac and logs
+.DS_Store
+npm-debug.log*
