@@ -10,7 +10,7 @@ const model = process.argv[2] ?? "claude-opus-5-5";
 const WORDS_PER_SECOND = 2.5;
 const SEND_EVERY_MS = 1000;
 // Prices per million tokens (input, output), from docs/mvp.md assumptions.
-const PRICES = { "claude-opus-5-5": [4, 20], "claude-haiku-5-5": [0.1, 0.5] };
+const PRICES = { "claude-opus-5-5": [4, 20], "claude-haiku-5-5": [0.1, 0.5], "claude-sonnet-5-5": [2, 10] };
 
 const env = Object.fromEntries(
   readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("=") && !l.startsWith("#"))
