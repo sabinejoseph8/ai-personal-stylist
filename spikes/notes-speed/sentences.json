@@ -1,0 +1,63 @@
+[
+  { "id": "R18 wedding",
+    "text": "I'm going to an outdoor wedding in November. I'd like something elegant, preferably emerald green, and my budget is $500",
+    "expect": [
+      { "field": "occasion", "after": "wedding", "has": ["outdoor", "wedding"] },
+      { "field": "season_date", "after": "November", "has": ["november"] },
+      { "field": "style", "after": "elegant", "has": ["elegant"] },
+      { "field": "colors", "after": "green", "has": ["emerald"] },
+      { "field": "budget", "after": "$500", "has": ["500"] } ] },
+  { "id": "Correction",
+    "text": "My budget is around $400 for this. Actually, make my budget $350",
+    "expect": [ { "field": "budget", "after": "$350", "has": ["350"], "lacks": ["400"] } ] },
+  { "id": "Colors to avoid",
+    "text": "It's for a job interview next Tuesday, and please nothing black, I'd love navy or grey",
+    "expect": [
+      { "field": "occasion", "after": "interview", "has": ["interview"] },
+      { "field": "colors", "after": "grey", "has": ["navy", "black"] } ] },
+  { "id": "Budget range",
+    "text": "I want to spend somewhere between 200 and 300 dollars on a casual dinner outfit",
+    "expect": [
+      { "field": "budget", "after": "dollars", "has": ["200", "300"] },
+      { "field": "occasion", "after": "dinner", "has": ["dinner"] } ] },
+  { "id": "Outfit type",
+    "text": "I think I'd rather wear a pantsuit than a dress for the gala",
+    "expect": [
+      { "field": "outfit_type", "after": "dress", "has": ["pantsuit"] },
+      { "field": "occasion", "after": "gala", "has": ["gala"] } ] },
+  { "id": "Existing wardrobe",
+    "text": "I already have a camel coat and white sneakers I want to use for a weekend brunch",
+    "expect": [
+      { "field": "existing_wardrobe", "after": "sneakers", "has": ["coat", "sneakers"] },
+      { "field": "occasion", "after": "brunch", "has": ["brunch"] } ] },
+  { "id": "Exact date",
+    "text": "My sister's graduation is on June 14th and I want to look polished but comfortable",
+    "expect": [
+      { "field": "occasion", "after": "graduation", "has": ["graduation"] },
+      { "field": "season_date", "after": "14th", "has": ["june", "14"] },
+      { "field": "style", "after": "comfortable", "has": ["polished"] } ] },
+  { "id": "Unclear budget",
+    "text": "Money is a bit tight this month so maybe not too expensive, it's for a birthday party",
+    "expect": [ { "field": "occasion", "after": "party", "has": ["birthday"] } ] },
+  { "id": "Long ramble",
+    "text": "So my company is having its winter holiday party in December at a rooftop bar, it gets cold up there, I usually wear a lot of earth tones, and I'd say my style is relaxed but put together, budget wise I can do about 250",
+    "expect": [
+      { "field": "occasion", "after": "party", "has": ["holiday", "party"] },
+      { "field": "season_date", "after": "December", "has": ["december"] },
+      { "field": "colors", "after": "tones", "has": ["earth"] },
+      { "field": "style", "after": "together", "has": ["relaxed"] },
+      { "field": "budget", "after": "250", "has": ["250"] } ] },
+  { "id": "Summer vacation",
+    "text": "We're off to the beach in July and I want bright colorful vacation outfits under 150",
+    "expect": [
+      { "field": "occasion", "after": "beach", "has": ["beach"] },
+      { "field": "season_date", "after": "July", "has": ["july"] },
+      { "field": "budget", "after": "150", "has": ["150"] } ] },
+  { "id": "Menswear",
+    "text": "I need a suit for my best friend's wedding in spring, something classic in charcoal",
+    "expect": [
+      { "field": "outfit_type", "after": "suit", "has": ["suit"] },
+      { "field": "occasion", "after": "wedding", "has": ["wedding"] },
+      { "field": "season_date", "after": "spring", "has": ["spring"] },
+      { "field": "colors", "after": "charcoal", "has": ["charcoal"] } ] }
+]

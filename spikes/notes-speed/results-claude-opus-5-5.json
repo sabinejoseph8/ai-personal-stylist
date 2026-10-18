@@ -1,0 +1,672 @@
+{
+  "summary": {
+    "model": "claude-opus-5-5",
+    "notes": 30,
+    "within2s": 3,
+    "sharePercent": 10,
+    "missed": 0,
+    "p95Seconds": 3.9724890830000006,
+    "medianCallSeconds": 2.529123708000003,
+    "calls": 83,
+    "inputTokens": 119444,
+    "outputTokens": 13437,
+    "costUSD": 0.7465,
+    "r18Pass": true
+  },
+  "results": [
+    {
+      "id": "R18 wedding",
+      "timings": [
+        {
+          "field": "occasion",
+          "seconds": 3.4855857919999997
+        },
+        {
+          "field": "season_date",
+          "seconds": 3.9724890830000006
+        },
+        {
+          "field": "style",
+          "seconds": 3.04401625
+        },
+        {
+          "field": "colors",
+          "seconds": 1.9798201250000003
+        },
+        {
+          "field": "budget",
+          "seconds": 2.766461042000001
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Outdoor Wedding",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "Fall, November",
+          "status": "Confirmed"
+        },
+        "colors": {
+          "value": "Emerald Green",
+          "status": "Confirmed"
+        },
+        "style": {
+          "value": "Elegant",
+          "status": "Confirmed"
+        },
+        "budget": {
+          "value": "Up to $500",
+          "status": "To confirm"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        11533,
+        1319
+      ],
+      "callSeconds": [
+        4.930796667000001,
+        3.0246451669999996,
+        2.8852694999999997,
+        3.171732666,
+        2.842386458,
+        1.9797566669999997,
+        2.3658099580000007,
+        2.7664164170000003
+      ]
+    },
+    {
+      "id": "Correction",
+      "timings": [
+        {
+          "field": "budget",
+          "seconds": 1.9497585830000008
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "season_date": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "colors": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "style": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "budget": {
+          "value": "Up to $350",
+          "status": "Confirmed"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        7153,
+        755
+      ],
+      "callSeconds": [
+        2.589059458,
+        2.0446128750000008,
+        2.618908916999999,
+        1.8758400409999996,
+        1.9485271670000002
+      ]
+    },
+    {
+      "id": "Colors to avoid",
+      "timings": [
+        {
+          "field": "occasion",
+          "seconds": 2.485292625000002
+        },
+        {
+          "field": "colors",
+          "seconds": 2.763845250000002
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Job Interview",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "Next Tuesday",
+          "status": "Confirmed"
+        },
+        "colors": {
+          "value": "Navy Or Grey, Not Black",
+          "status": "Confirmed"
+        },
+        "style": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "budget": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        10058,
+        1129
+      ],
+      "callSeconds": [
+        2.529123708000003,
+        2.483818665999999,
+        2.1421295409999983,
+        2.687698625000001,
+        2.0878948750000017,
+        3.7306414170000024,
+        2.7634894160000005
+      ]
+    },
+    {
+      "id": "Budget range",
+      "timings": [
+        {
+          "field": "budget",
+          "seconds": 2.7421446660000037
+        },
+        {
+          "field": "occasion",
+          "seconds": 2.3359483750000036
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Casual Dinner",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "colors": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "style": {
+          "value": "Casual",
+          "status": "Confirmed"
+        },
+        "budget": {
+          "value": "$200 to $300",
+          "status": "Confirmed"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        8609,
+        918
+      ],
+      "callSeconds": [
+        2.8197797499999977,
+        1.9888551249999982,
+        1.9986387090000026,
+        2.741749125000002,
+        2.5979841250000026,
+        1.9357279590000034
+      ]
+    },
+    {
+      "id": "Outfit type",
+      "timings": [
+        {
+          "field": "outfit_type",
+          "seconds": 2.6380687499999986
+        },
+        {
+          "field": "occasion",
+          "seconds": 2.3530692920000003
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Gala",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "colors": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "style": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "budget": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "outfit_type": {
+          "value": "Pantsuit, Not Dress",
+          "status": "To confirm"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        8603,
+        922
+      ],
+      "callSeconds": [
+        2.068984832999995,
+        3.2963362500000004,
+        2.4194855000000026,
+        2.637869458000001,
+        2.0495127500000017,
+        2.3519345420000026
+      ]
+    },
+    {
+      "id": "Existing wardrobe",
+      "timings": [
+        {
+          "field": "existing_wardrobe",
+          "seconds": 2.642828042000001
+        },
+        {
+          "field": "occasion",
+          "seconds": 2.644955834
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Weekend Brunch",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "colors": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "style": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "budget": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "Camel Coat, White Sneakers",
+          "status": "Confirmed"
+        }
+      },
+      "usage": [
+        10028,
+        1106
+      ],
+      "callSeconds": [
+        2.138963542000005,
+        2.7401762080000043,
+        2.4327166249999936,
+        2.242009624999999,
+        2.771069500000005,
+        2.686742333000002,
+        2.644732167000002
+      ]
+    },
+    {
+      "id": "Exact date",
+      "timings": [
+        {
+          "field": "occasion",
+          "seconds": 3.0215699999999996
+        },
+        {
+          "field": "season_date",
+          "seconds": 2.858188500000004
+        },
+        {
+          "field": "style",
+          "seconds": 2.5630761659999988
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Sister's Graduation",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "Summer, June 14",
+          "status": "Confirmed"
+        },
+        "colors": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "style": {
+          "value": "Polished But Comfortable",
+          "status": "Confirmed"
+        },
+        "budget": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        8599,
+        969
+      ],
+      "callSeconds": [
+        2.6441554169999946,
+        2.220625124999999,
+        2.6578900839999986,
+        2.2245039590000015,
+        2.538123416999995,
+        2.5627328749999942
+      ]
+    },
+    {
+      "id": "Unclear budget",
+      "timings": [
+        {
+          "field": "occasion",
+          "seconds": 2.1748037499999993
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Birthday Party",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "colors": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "style": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "budget": {
+          "value": "Not Too Expensive",
+          "status": "To confirm"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        10041,
+        1078
+      ],
+      "callSeconds": [
+        2.5182280830000017,
+        3.1473139999999984,
+        1.954856958999997,
+        2.081818250000004,
+        2.6382217080000117,
+        2.5285850409999986,
+        2.1701834999999994
+      ]
+    },
+    {
+      "id": "Long ramble",
+      "timings": [
+        {
+          "field": "occasion",
+          "seconds": 2.972411208999998
+        },
+        {
+          "field": "season_date",
+          "seconds": 3.189760209
+        },
+        {
+          "field": "colors",
+          "seconds": 3.144284
+        },
+        {
+          "field": "style",
+          "seconds": 4.045345958999999
+        },
+        {
+          "field": "budget",
+          "seconds": 2.2352338750000054
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Company Holiday Party, Rooftop Bar",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "Winter, December",
+          "status": "Confirmed"
+        },
+        "colors": {
+          "value": "Earth Tones",
+          "status": "Confirmed"
+        },
+        "style": {
+          "value": "Relaxed But Put Together",
+          "status": "Confirmed"
+        },
+        "budget": {
+          "value": "Around $250",
+          "status": "Confirmed"
+        },
+        "outfit_type": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        26199,
+        3137
+      ],
+      "callSeconds": [
+        2.3211271660000055,
+        2.7914833329999964,
+        3.2981242499999937,
+        2.5722404169999935,
+        2.589684834,
+        2.045273291999998,
+        2.8338265419999953,
+        2.751388500000001,
+        2.060320875000005,
+        2.1079503330000007,
+        2.0695244170000078,
+        2.342252708,
+        2.710579958000002,
+        2.913140625,
+        2.368989167000007,
+        3.4650930419999932,
+        2.2457704999999986,
+        2.234427207999994
+      ]
+    },
+    {
+      "id": "Summer vacation",
+      "timings": [
+        {
+          "field": "occasion",
+          "seconds": 1.9402731670000066
+        },
+        {
+          "field": "season_date",
+          "seconds": 2.172526125000004
+        },
+        {
+          "field": "budget",
+          "seconds": 2.141757500000007
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Beach Vacation",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "Summer, July",
+          "status": "Confirmed"
+        },
+        "colors": {
+          "value": "Bright, Colorful",
+          "status": "Confirmed"
+        },
+        "style": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "budget": {
+          "value": "Up to $150",
+          "status": "Confirmed"
+        },
+        "outfit_type": {
+          "value": "Vacation Outfits",
+          "status": "Confirmed"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        10031,
+        1151
+      ],
+      "callSeconds": [
+        2.5630479999999953,
+        1.939137333999999,
+        1.9712141669999983,
+        2.7590913750000037,
+        2.6744873329999974,
+        2.6752790000000095,
+        2.140859249999994
+      ]
+    },
+    {
+      "id": "Menswear",
+      "timings": [
+        {
+          "field": "outfit_type",
+          "seconds": 2.2216401659999976
+        },
+        {
+          "field": "occasion",
+          "seconds": 2.904903833000004
+        },
+        {
+          "field": "season_date",
+          "seconds": 3.1908920829999987
+        },
+        {
+          "field": "colors",
+          "seconds": 2.410641916000008
+        }
+      ],
+      "final": {
+        "occasion": {
+          "value": "Best Friend's Wedding",
+          "status": "Confirmed"
+        },
+        "season_date": {
+          "value": "Spring",
+          "status": "Confirmed"
+        },
+        "colors": {
+          "value": "Charcoal",
+          "status": "Confirmed"
+        },
+        "style": {
+          "value": "Classic",
+          "status": "Confirmed"
+        },
+        "budget": {
+          "value": "",
+          "status": "Not specified"
+        },
+        "outfit_type": {
+          "value": "Suit",
+          "status": "Confirmed"
+        },
+        "existing_wardrobe": {
+          "value": "",
+          "status": "Not specified"
+        }
+      },
+      "usage": [
+        8590,
+        953
+      ],
+      "callSeconds": [
+        2.525460290999996,
+        1.8211052499999933,
+        2.669071916999994,
+        2.50560166700001,
+        2.589969167000003,
+        2.4114123330000004
+      ]
+    }
+  ]
+}

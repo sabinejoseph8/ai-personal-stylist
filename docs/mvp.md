@@ -146,8 +146,8 @@ Filled in during task group 0f.
 | Stylist stops when interrupted | Half a second or less | Works by voice and button. The button path took 0.7 seconds, including the network | 18 Oct 2026 | Talking over her felt immediate to Sabine. A precise voice timing comes in 0f |
 | Lip sync | Looks natural to Sabine | "As natural as we can expect" | 18 Oct 2026 | Anna - Casual, Phoenix 4.5 |
 | Tavus live words for notes | Shopper's words arrive while speaking | Yes: conversation.utterance.streaming carries role "user" partial text while the shopper speaks | 18 Oct 2026 | The stylist replied about 1.3 seconds after the shopper stopped |
-| Live notes on Opus 5.5 | 95% within 2 seconds | | | |
-| Live notes on Haiku 5.5 | 95% within 2 seconds | | | |
+| Live notes on Opus 5.5 | 95% within 2 seconds | Fail on speed: 10% within 2 seconds (95th percentile 4.0 s, each call about 2.5 s). Pass on accuracy: all 30 notes right, including R18 and the $350 correction. Cost $0.75 for the 11 test sentences | 18 Oct 2026 | Effort low, structured output. Rough estimate: about $2.70 of notes per 10-minute demo if the shopper talks half the time, against $0.60 in the tech spec |
+| Live notes on Haiku 5.5 | 95% within 2 seconds | Fail, but close: 83% within 2 seconds (95th percentile 2.9 s, each call about 1.3 s). Less accurate: it dropped "outdoor" from the R18 occasion, marked the $500 budget To confirm, and missed the $350 correction. Cost $0.02 for the same sentences | 18 Oct 2026 | Same prompt as Opus. Rough estimate: about $0.07 of notes per demo. Options for 0g: Haiku with a tuned prompt, plain code for money and dates (already planned in 2c), or both |
 | GPT-Live live words | Available | | | |
 | Camera naming time | A few seconds | | | |
 | A second Tavus call during the first | Behavior understood | Refused within 2 seconds: HTTP 400, "User has reached maximum concurrent conversations" | 18 Oct 2026 | Phase 6 can catch this exact error and switch to voice only |

@@ -2,12 +2,12 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task group 0d: the live notes speed test.
-- **Current status:** Phase 0 is in progress. 0a, 0b and 0c are done. The video stylist test passed on your devices: Anna appears fast, live words stream while you speak, and interrupting works. Earlier: accounts, credit and limits are set, the keys are in .env.local and in Vercel (Production), the code is on GitHub, and a placeholder page is live at https://ai-personal-stylist-inky.vercel.app.
-- **Recent changes (18 Oct 2026):** 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
+- **Current focus:** Phase 0, task group 0e: voice only and camera tests.
+- **Current status:** Phase 0 is in progress. 0a to 0d are done. Live notes missed the 2-second target on both models: Opus 5.5 was accurate but slow, and Haiku 5.5 was fast and cheap but less accurate. You decide TQ3 in 0g. The video stylist test passed on your devices: Anna appears fast, live words stream while you speak, and interrupting works. Earlier: accounts, credit and limits are set, the keys are in .env.local and in Vercel (Production), the code is on GitHub, and a placeholder page is live at https://ai-personal-stylist-inky.vercel.app.
+- **Recent changes (18 Oct 2026):** 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
 - **What's left:** Phase 0 from 0b on, then phases 1 to 7.
-- **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Open assumptions and risks are tracked in docs/mvp.md.
-- **Next action:** a plan for 0d (live notes speed on Opus 5.5 and Haiku 5.5) for your approval.
+- **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Live notes on Opus 5.5 may cost about $2.70 a demo, not $0.60, which matters for the cost gate in 0g. Open assumptions and risks are tracked in docs/mvp.md.
+- **Next action:** a plan for 0e (GPT-Live voice only, and the camera test) for your approval.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -56,8 +56,8 @@
 - [x] Confirm what Tavus does when a second call starts while one is running (risk 3). Tavus refuses at once with error 400, "User has reached maximum concurrent conversations".
 
 ### 0d. Live notes speed test
-- [ ] Stream the wedding sentence (R18) and 10 other test sentences to a first notes reader on Claude Opus 5.5, and record how long each note takes to appear.
-- [ ] Run the same test on Claude Haiku 5.5, so TQ3 can be decided with real numbers.
+- [x] Stream the wedding sentence (R18) and 10 other test sentences to a first notes reader on Claude Opus 5.5, and record how long each note takes to appear. Done 18 Oct 2026: all notes right, but only 10% within 2 seconds.
+- [x] Run the same test on Claude Haiku 5.5, so TQ3 can be decided with real numbers. Done: 83% within 2 seconds at about a fortieth of the cost, but less accurate. Results are in docs/mvp.md.
 
 ### 0e. Voice only and camera tests
 - [ ] GPT-Live test: start a voice-only call through our server, check that live words arrive for notes (risk 7), and check that our server can feed it facts.
