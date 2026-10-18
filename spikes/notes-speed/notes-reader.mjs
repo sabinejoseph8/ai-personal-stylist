@@ -32,13 +32,13 @@ export const SCHEMA = {
   required: FIELDS,
 };
 
-export async function readNotes(client, model, words) {
+export async function readNotes(client, model, words, effort = "low") {
   const res = await client.messages.create({
     model,
     max_tokens: 2000,
     system: SYSTEM,
     // Low effort keeps live notes fast; thinking can't be turned off on these models.
-    output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
+    output_config: { effort, format: { type: "json_schema", schema: SCHEMA } },
     messages: [{ role: "user", content: `Words heard so far: "${words}"` }],
   });
   const block = res.content.find((b) => b.type === "text");

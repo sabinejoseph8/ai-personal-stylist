@@ -1,12 +1,13 @@
 // Phase 0 notes speed test (0d). Replays each test sentence in small pieces, as live
 // words arrive (about 2.5 words a second, sent once a second), and times each note.
-// Run: node spikes/notes-speed/replay.mjs claude-opus-5-5
+// Run: node spikes/notes-speed/replay.mjs claude-opus-5-5 [low|medium|high]
 // Exits with an error if the wedding sentence doesn't produce the R18 notes.
 import { readFileSync, writeFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { readNotes } from "./notes-reader.mjs";
 
 const model = process.argv[2] ?? "claude-opus-5-5";
+const effort = process.argv[3] ?? "low";
 const WORDS_PER_SECOND = 2.5;
 const SEND_EVERY_MS = 1000;
 // Prices per million tokens (input, output), from docs/mvp.md assumptions.
@@ -41,7 +42,7 @@ async function replay(sentence) {
       lastSent = heard;
       const startedAt = performance.now() - t0;
       calls.push(
-        readNotes(client, model, heard).then((r) => ({ ...r, startedAt, finishedAt: performance.now() - t0 })),
+        readNotes(client, model, heard, effort).then((r) => ({ ...r, startedAt, finishedAt: performance.now() - t0 })),
       );
     }
     if (at >= totalMs) break;
@@ -86,13 +87,13 @@ const [pi, po] = PRICES[model] ?? [0, 0];
 const cost = (inTok * pi + outTok * po) / 1e6;
 const wedding = results.find((r) => r.id === "R18 wedding");
 const summary = {
-  model, notes: all.length, within2s: within2, sharePercent: Math.round((within2 / all.length) * 100),
+  model, effort, notes: all.length, within2s: within2, sharePercent: Math.round((within2 / all.length) * 100),
   missed: all.filter((t) => t.seconds === null).length, p95Seconds: p95 ?? null,
   medianCallSeconds: calls[Math.floor(calls.length / 2)], calls: calls.length,
   inputTokens: inTok, outputTokens: outTok, costUSD: Number(cost.toFixed(4)), r18Pass: r18Ok(wedding.final),
 };
 console.log("\n" + JSON.stringify(summary, null, 2));
-writeFileSync(`spikes/notes-speed/results-${model}.json`, JSON.stringify({ summary, results }, null, 2) + "\n");
+writeFileSync(`spikes/notes-speed/results-${model}${effort === "low" ? "" : "-" + effort}.json`, JSON.stringify({ summary, results }, null, 2) + "\n");
 if (!summary.r18Pass) {
   console.error("R18 check FAILED. Final wedding notes:", JSON.stringify(wedding.final));
   process.exit(1);
