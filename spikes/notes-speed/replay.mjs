@@ -1,13 +1,17 @@
 // Phase 0 notes speed test (0d). Replays each test sentence in small pieces, as live
 // words arrive (about 2.5 words a second, sent once a second), and times each note.
-// Run: node spikes/notes-speed/replay.mjs claude-opus-5-5 [low|medium|high]
+// Run: node spikes/notes-speed/replay.mjs claude-opus-5-5 [low|medium|high] [v1|v2] [sentences.json|heldout.json]
 // Exits with an error if the wedding sentence doesn't produce the R18 notes.
 import { readFileSync, writeFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
-import { readNotes } from "./notes-reader.mjs";
+import { readNotes as readV1 } from "./notes-reader.mjs";
+import { readNotes as readV2 } from "./notes-reader-v2.mjs";
 
 const model = process.argv[2] ?? "claude-opus-5-5";
 const effort = process.argv[3] ?? "low";
+const reader = process.argv[4] ?? "v1";
+const set = process.argv[5] ?? "sentences.json";
+const readNotes = reader === "v2" ? readV2 : readV1;
 const WORDS_PER_SECOND = 2.5;
 const SEND_EVERY_MS = 1000;
 // Prices per million tokens (input, output), from docs/mvp.md assumptions.
@@ -18,7 +22,7 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
 );
 const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-const sentences = JSON.parse(readFileSync("spikes/notes-speed/sentences.json", "utf8"));
+const sentences = JSON.parse(readFileSync(`spikes/notes-speed/${set}`, "utf8"));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const lower = (s) => String(s ?? "").toLowerCase();
 
@@ -58,7 +62,9 @@ async function replay(sentence) {
   });
   const usage = done.reduce((u, c) => [u[0] + c.usage.input_tokens, u[1] + c.usage.output_tokens], [0, 0]);
   const callSeconds = done.map((c) => (c.finishedAt - c.startedAt) / 1000);
-  return { id: sentence.id, timings, final: done.at(-1).notes, usage, callSeconds };
+  const final = done.at(-1).notes;
+  const finalWrong = sentence.expect.filter((exp) => !matches(final[exp.field], exp)).map((e) => e.field);
+  return { id: sentence.id, timings, final, finalWrong, usage, callSeconds };
 }
 
 function r18Ok(n) {
@@ -74,7 +80,7 @@ const results = [];
 for (const s of sentences) {
   const r = await replay(s);
   results.push(r);
-  console.log(`${s.id.padEnd(18)} ${r.timings.map((t) => `${t.field}=${t.seconds === null ? "MISSED" : t.seconds.toFixed(2) + "s"}`).join("  ")}`);
+  console.log(`${s.id.padEnd(18)} ${r.finalWrong.length ? "FINAL WRONG: " + r.finalWrong.join(",") + "  " : ""}${r.timings.map((t) => `${t.field}=${t.seconds === null ? "MISSED" : t.seconds.toFixed(2) + "s"}`).join("  ")}`);
 }
 
 const all = results.flatMap((r) => r.timings);
@@ -87,14 +93,15 @@ const [pi, po] = PRICES[model] ?? [0, 0];
 const cost = (inTok * pi + outTok * po) / 1e6;
 const wedding = results.find((r) => r.id === "R18 wedding");
 const summary = {
-  model, effort, notes: all.length, within2s: within2, sharePercent: Math.round((within2 / all.length) * 100),
+  model, effort, reader, set, notes: all.length, within2s: within2, sharePercent: Math.round((within2 / all.length) * 100),
+  finalCorrect: `${all.length - results.reduce((n, r) => n + r.finalWrong.length, 0)} of ${all.length}`,
   missed: all.filter((t) => t.seconds === null).length, p95Seconds: p95 ?? null,
   medianCallSeconds: calls[Math.floor(calls.length / 2)], calls: calls.length,
-  inputTokens: inTok, outputTokens: outTok, costUSD: Number(cost.toFixed(4)), r18Pass: r18Ok(wedding.final),
+  inputTokens: inTok, outputTokens: outTok, costUSD: Number(cost.toFixed(4)), r18Pass: wedding ? r18Ok(wedding.final) : null,
 };
 console.log("\n" + JSON.stringify(summary, null, 2));
-writeFileSync(`spikes/notes-speed/results-${model}${effort === "low" ? "" : "-" + effort}.json`, JSON.stringify({ summary, results }, null, 2) + "\n");
-if (!summary.r18Pass) {
+writeFileSync(`spikes/notes-speed/results-${model}${effort === "low" ? "" : "-" + effort}${reader === "v1" ? "" : "-" + reader}${set === "sentences.json" ? "" : "-heldout"}.json`, JSON.stringify({ summary, results }, null, 2) + "\n");
+if (summary.r18Pass === false) {
   console.error("R18 check FAILED. Final wedding notes:", JSON.stringify(wedding.final));
   process.exit(1);
 }
