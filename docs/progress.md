@@ -66,7 +66,7 @@
 
 ### 0f. Phones, privacy and costs
 - [ ] Try it on an iPhone with Safari, an Android phone with Chrome and a laptop: the microphone prompt, audio starting after a tap, video, and the back camera (risk 12).
-- [ ] Review how Tavus, OpenAI and Anthropic store data, and write a short plain summary for the About page (risk 10).
+- [x] Review how Tavus, OpenAI and Anthropic store data, and write a short plain summary for the About page (risk 10). Done 18 Oct 2026: findings and a draft summary are in docs/mvp.md section 8.
 - [ ] Run 3 test demos (10 minutes each on the Tavus Starter plan), and record Tavus minutes, OpenAI minutes and Claude spend. Compare them with the estimate of about $1.10 of AI use per 10-minute demo.
 - [ ] Record the results in the spike results table in docs/mvp.md.
 

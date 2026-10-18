@@ -89,7 +89,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Open |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
 | 9 | Recognition reads garments wrong | Phase 3 (3b) | Open |
-| 10 | Provider data handling for audio and words | Phase 0 (0f) | Open |
+| 10 | Provider data handling for audio and words | Phase 0 (0f) | Reviewed in 0f. One gap: Tavus publishes no retention period, so deleting each conversation is recommended |
 | 11 | The free database pauses after 7 days without activity | Phase 1 (1f) | Open |
 | 12 | Phone browser quirks | Phase 0 (0f) | Open |
 | 13 | Sample catalog quality and image rights | Phase 1 (1e) | Open |
@@ -157,6 +157,27 @@ Filled in during task group 0f.
 | A second Tavus call during the first | Behavior understood | Refused within 2 seconds: HTTP 400, "User has reached maximum concurrent conversations" | 18 Oct 2026 | Phase 6 can catch this exact error and switch to voice only |
 | iPhone Safari, Android Chrome and laptop | All work | | | |
 | AI cost per demo | About $1.10 or less | | | |
+
+### Provider data handling (0f, risk 10)
+
+Checked 18 Oct 2026 against each provider's own pages. These change, so check again before launch (7c).
+
+| Provider | What it receives from a shopper | Trains AI on it? | How long it keeps it | Our settings |
+|---|---|---|---|---|
+| Tavus (video stylist) | The shopper's voice and the conversation transcript. Never the camera | Its pricing page says it doesn't train on customer data, but its terms let it use customer content to "maintain and improve" its services | No period is published for conversation data. Zero data retention is Enterprise only | Recording off, perception off, camera never sent. Tavus offers a hard delete of each conversation |
+| OpenAI (voice only, GPT-Live) | The shopper's voice and transcript, only in voice-only mode | No (API data isn't used for training) | Up to 30 days in abuse-monitoring logs. Sessions aren't stored by default | `store` left off |
+| Anthropic (notes, photos, camera, looks) | Transcript text, photos and camera frames | No (commercial terms) | Deleted within 30 days. Up to 2 years if flagged for a usage policy breach | Our server keeps only the resulting notes and confirmed photos, never frames or transcripts |
+
+**Gaps to close**
+- Tavus publishes no retention period for API conversations. Recommended: hard-delete each Tavus conversation when the session ends. Needs Sabine's OK (see the decision below).
+- Tavus's terms make us responsible for any consent its processing needs. The microphone permission card (R6) should say plainly that the voice is processed by Tavus, or by OpenAI in voice only.
+- For Phase 6 security: limit which events the browser may send on the GPT-Live data channel, so only our server can feed the stylist facts.
+
+**Draft for the About page (for Sabine's review)**
+
+> **Your data in this demo.** Your voice goes to Tavus, which runs the video stylist, or to OpenAI if the stylist switches to voice only. Your words, photos and camera frames go to Anthropic's Claude, which writes your notes and builds your looks. None of these services train their AI on what you share here. OpenAI and Anthropic delete it within 30 days, and we ask Tavus to delete each conversation when it ends. Calls are never recorded, and your camera is never sent to the video service. This app keeps only your notes, your saved looks and the photos you choose to save, for 7 days without use, and you can download or delete everything at any time.
+
+Sources: [Tavus privacy policy](https://www.tavus.io/privacy-policy) (12 Nov 2025), [Tavus terms](https://www.tavus.io/terms-of-service) (24 Apr 2025), [Tavus pricing](https://www.tavus.io/pricing), [Tavus Delete Conversation](https://docs.tavus.io/api-reference/conversations/delete-conversation), [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data), [Anthropic data retention](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data) (1 Jul 2026).
 
 ## 9. PRD backlog map
 
