@@ -118,6 +118,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 18 Oct 2026 | Direction for TQ3 (final decision in 0g): for live notes, accuracy matters more than speed, and Sonnet 5.5 is too expensive | Sabine | docs/mvp.md spike results |
 | 18 Oct 2026 | Stylist face (TQ5): Anna - Casual (Tavus stock face rc9cff32ceba, Phoenix 4.5, one of Tavus's Pro faces) | Sabine | tavus/stylist-pal.json |
 | 18 Oct 2026 | 0b plan approved: public repository ai-personal-stylist, commits use the GitHub no-reply email, and the PRD and backlog files stay out of the repository until the About page is built (Phase 7) | Sabine | progress.md (0b) |
 | 18 Oct 2026 | Adding keys to Vercel moved from 0a to 0b, because it needs the Vercel project. Vercel gets its own keys (stylist-vercel), separate from the local ones (stylist-local). OpenAI's cap is the $5 prepaid credit with auto-recharge off | Sabine | progress.md (0a, 0b) |
