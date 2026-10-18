@@ -91,7 +91,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 9 | Recognition reads garments wrong | Phase 3 (3b) | Open |
 | 10 | Provider data handling for audio and words | Phase 0 (0f) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation will be hard-deleted when the session ends (2e) |
 | 11 | The free database pauses after 7 days without activity | Phase 1 (1f) | Open |
-| 12 | Phone browser quirks | Phase 0 (0f) | Open |
+| 12 | Phone browser quirks | Phase 0 (0f) | Open. Android isn't tested in v1 (accepted risk) |
 | 13 | Sample catalog quality and image rights | Phase 1 (1e) | Open |
 | 14 | Outside services change quickly | Every phase | Open |
 | 15 | The scope is large for one builder | Task groups, and the cut list in progress.md | Open |
@@ -118,6 +118,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 18 Oct 2026 | Android phones aren't tested in v1, because no Android phone is available. Testing covers an iPhone with Safari and a laptop with Chrome. Accepted risk: Android-only problems with permissions or the back camera could reach visitors. Claude recommended a friend's 5-minute check before launch instead | Sabine | progress.md (0f, 7c). Tech spec section 8 to be updated in 0g |
 | 18 Oct 2026 | Hard-delete each Tavus conversation when the session ends, because Tavus publishes no retention period. Notes and preferences are unaffected, since they live in our own database | Sabine | progress.md (2e), mvp.md section 8 |
 | 18 Oct 2026 | Direction for TQ3 (final decision in 0g): for live notes, accuracy matters more than speed, and Sonnet 5.5 is too expensive | Sabine | docs/mvp.md spike results |
 | 18 Oct 2026 | Stylist face (TQ5): Anna - Casual (Tavus stock face rc9cff32ceba, Phoenix 4.5, one of Tavus's Pro faces) | Sabine | tavus/stylist-pal.json |
@@ -156,7 +157,7 @@ Filled in during task group 0f.
 | GPT-Live live words | Available | | | |
 | Camera naming time | A few seconds | Pass. Haiku 5.5: about 1 second (0.7 to 1.3 s). Opus 5.5: about 1.5 to 2 seconds (up to 3.2 s). Accuracy needs work on both: Sabine showed an avocado earbud case, a camo Herschel pouch and a black quilted tote bag, and both models sometimes called the quilted tote a "quilted jacket" that wasn't there. Haiku also once called the tote brown and once replied in a full sentence. Opus wobbled between charcoal and dark gray | 18 Oct 2026 | One frame every 2 seconds, 640 px, low effort, iPhone back camera. Rough cost for 2 minutes of camera: under 1 cent on Haiku, about 18 cents on Opus. Phase 3 needs the R28 confirm step, plus a rule to only name an item after the same answer on two frames in a row |
 | A second Tavus call during the first | Behavior understood | Refused within 2 seconds: HTTP 400, "User has reached maximum concurrent conversations" | 18 Oct 2026 | Phase 6 can catch this exact error and switch to voice only |
-| iPhone Safari, Android Chrome and laptop | All work | | | |
+| iPhone Safari and laptop (Android dropped for v1) | All work | | | |
 | AI cost per demo | About $1.10 or less | | | |
 
 ### Provider data handling (0f, risk 10)
