@@ -15,6 +15,9 @@ backups/
 *.docx
 *.xlsx
 
+# Interview notes are private (Sabine, 19 Oct 2026)
+interview-notes.md
+
 # Memory site build output
 tools/memory-site/dist/
 

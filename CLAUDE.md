@@ -41,7 +41,7 @@ Maintain a file called interview-notes.md (in the project root). Keep it written
 - major bugs and how she fixed them
 - significant improvements
 
-Update this file whenever there is a significant new feature, a major bug resolved, or a meaningful design change. The repository is public, so the notes never include passwords, keys or account email addresses.
+Update this file whenever there is a significant new feature, a major bug resolved, or a meaningful design change. The notes are private: the file is in .gitignore and is never committed or pushed (decided 19 Oct 2026). Still keep passwords, keys and account email addresses out of them.
 
 ## How to work with Sabine
 

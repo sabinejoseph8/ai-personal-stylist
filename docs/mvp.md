@@ -1,7 +1,7 @@
 # AI Personal Stylist: MVP Scope
 
 **Status:** Living document, version 1.0
-**Last updated:** 18 Oct 2026
+**Last updated:** 19 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.3, design 0.6, tech spec 1.1 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
@@ -72,7 +72,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 **Portfolio success (default)**
 - About 6 full video demos a month within about $40.
 - The link works whenever a recruiter clicks it.
-- The About page and interview-notes.md tell the story behind the product.
+- The About page, the README and the one-page case study tell the story behind the product, with the evaluation's results and limits (7b). The interview notes stay private, for interview practice.
 
 ## 5. Risks
 
@@ -118,6 +118,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 19 Oct 2026 | The portfolio package (a recruiter README, an architecture diagram, an evaluation defined before measuring, simple standard-library checks, a one-page case study PDF and a private portfolio kit) is built in Phase 7 (7b), once the app exists, not now on Phase 0 test pages. interview-notes.md becomes private: kept on Sabine's Mac and no longer tracked in the public repository (its earlier versions stay in the history) | Sabine | progress.md (7b), CLAUDE.md, .gitignore |
 | 18 Oct 2026 | Android phones aren't tested in v1, because no Android phone is available. Testing covers an iPhone with Safari and a laptop with Chrome. Accepted risk: Android-only problems with permissions or the back camera could reach visitors. Claude recommended a friend's 5-minute check before launch instead | Sabine | progress.md (0f, 7c). Tech spec section 8 to be updated in 0g |
 | 18 Oct 2026 | Hard-delete each Tavus conversation when the session ends, because Tavus publishes no retention period. Notes and preferences are unaffected, since they live in our own database | Sabine | progress.md (2e), mvp.md section 8 |
 | 18 Oct 2026 | Direction for TQ3 (final decision in 0g): for live notes, accuracy matters more than speed, and Sonnet 5.5 is too expensive | Sabine | docs/mvp.md spike results |

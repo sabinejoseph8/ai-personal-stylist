@@ -77,7 +77,7 @@
 
 ```
 CLAUDE.md            how Claude works on this project
-interview-notes.md   the project story, told for interviews
+interview-notes.md   the project story, told for interviews (private: on Sabine's Mac, not in the repository)
 docs/                the plan and project memory: product spec, design, tech spec, progress, MVP scope
 app/                 screens and server endpoints
 core/                stylist core: notes, feedback, looks, checker, versions, limits

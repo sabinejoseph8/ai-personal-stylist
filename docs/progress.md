@@ -2,12 +2,13 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task group 0e: voice only and camera tests. The camera test is done, and voice only waits for a quiet moment.
-- **Current status:** Phase 0 is in progress. 0a to 0d are done. Live notes missed the 2-second target on both models: Opus 5.5 was accurate but slow, and Haiku 5.5 was fast and cheap but less accurate. An extra run on Sonnet 5.5 was accurate, with 53% within 2 seconds. An improved Haiku reader (better instructions plus plain code for money and dates) got every note right, with 75 to 90% within 2 seconds, at about $0.07 a demo. You decide TQ3 in 0g. The video stylist test passed on your devices: Anna appears fast, live words stream while you speak, and interrupting works. Earlier: accounts, credit and limits are set, the keys are in .env.local and in Vercel (Production), the code is on GitHub, and a placeholder page is live at https://ai-personal-stylist-inky.vercel.app.
-- **Recent changes (18 Oct 2026):** 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
-- **What's left:** Phase 0 from 0b on, then phases 1 to 7.
+- **Current focus:** Phase 0, task groups 0e and 0f. In 0e the camera test is done, and the voice-only test and the voice pick wait for a quiet moment. In 0f the provider data review is done; the iPhone and laptop check and the 3 cost demos are still to do.
+- **Current status:** Phase 0 is in progress. 0a to 0d are done, and 0e and 0f are partly done. The camera test named items in about 1 second on Haiku 5.5 and 1.5 to 2 seconds on Opus 5.5; both sometimes mistook the quilted tote for a jacket. Live notes missed the 2-second target on both models: Opus 5.5 was accurate but slow, and Haiku 5.5 was fast and cheap but less accurate. An extra run on Sonnet 5.5 was accurate, with 53% within 2 seconds. An improved Haiku reader (better instructions plus plain code for money and dates) got every note right, with 75 to 90% within 2 seconds, at about $0.07 a demo. You decide TQ3 in 0g. The video stylist test passed on your devices: Anna appears fast, live words stream while you speak, and interrupting works. Earlier: accounts, credit and limits are set, the keys are in .env.local and in Vercel (Production), the code is on GitHub, and a placeholder page is live at https://ai-personal-stylist-inky.vercel.app.
+- **Recent changes (19 Oct 2026):** the portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
+- **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
+- **What's left:** the rest of Phase 0 (0e voice only, 0f phones and costs, 0g decisions, 0h code review), then phases 1 to 7.
 - **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Live notes on Opus 5.5 may cost about $2.70 a demo, not $0.60, which matters for the cost gate in 0g. Open assumptions and risks are tracked in docs/mvp.md.
-- **Next action:** you try the voice-only test page somewhere quiet and pick the voice (0e). The camera test is done.
+- **Next action:** you try the voice-only test page somewhere quiet and pick the voice (0e). Then the iPhone and laptop check and the 3 cost demos (0f).
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -402,9 +403,15 @@
 
 ### 7b. Portfolio pages
 - [ ] About this project page: the problem, the approach, key decisions and how it was built, written for product manager roles, with links to the PRD, the docs and the code (R71).
-- [ ] A README for the code repository, with setup steps and the architecture diagram.
+- [ ] A README for the code repository, written for AI product manager recruiters: the problem and the user, the architecture diagram, how it works, key design choices and tradeoffs, how quality was defined and measured with real results, limitations stated honestly, skills demonstrated, and setup steps.
 - [ ] Record a 2 minute demo video for your portfolio, for anyone who can't try it live (default).
-- [ ] Bring interview-notes.md up to date for the launch story.
+- [ ] Bring interview-notes.md up to date for the launch story. It stays private: on your Mac, never in the repository.
+- [ ] Evaluation write-up (docs/evaluation.md). Write down what good looks like before measuring: the S1 to S20 checks, notes accuracy and speed (the Phase 2 eval of 30 utterances, plus the 0d results), the preference check against planted looks that break a rule, and cost per demo. Then measure with a small, repeatable script, report the results with their caveats first, and say what the results changed. The expected answers are written before any run, and a session that has seen them doesn't change the code being measured.
+- [ ] Architecture diagram as SVG, PNG and PDF, used by the README, the About page and the case study.
+- [ ] Simple automated checks for the portfolio pieces: Python standard library only, one run_all script (docs present, README links work, no em dashes, no secrets or private files in the repository, the case study is one page), and a short run guide (docs/how-to-run.md).
+- [ ] A one-page "AI product management case study" PDF, made with headless Chrome and checked to be one page.
+- [ ] A private portfolio kit PDF, kept outside the repository: a 2-minute and a 10-minute story, answers to likely interview questions, a reader test and a demo video script.
+- [ ] Before publishing: scan the repository for secrets, personal email addresses and private files, and check every README link on GitHub. **You:** approve before anything is pushed.
 
 ### 7c. Launch
 - [ ] **You:** check the Tavus Starter plan ($22 a month, already chosen in 0a) and set the final spending limits (TQ2).
@@ -419,6 +426,7 @@
 - The accessibility check passes on every screen.
 - The full end-to-end suite passes on phone and desktop sizes.
 - The welcome screen scores 90 or more for phone performance (default).
+- The portfolio checks pass (`python3 checks/run_all.py`), and the evaluation script reproduces the numbers in docs/evaluation.md.
 
 **Manual verification**
 
@@ -428,6 +436,8 @@
 | Use the whole app with VoiceOver and a keyboard only | Every task can be done |
 | A first-time visitor starts from the link on a phone | They reach their first look within 3 minutes, without signing up (S20) |
 | Check the provider dashboards after the first week live | Spending is on track for about $40 a month |
+| Open the README on GitHub and click every link | Every link works, and a recruiter can see the problem, the diagram, the results and the limits without scrolling far |
+| Open the case study PDF | It is exactly one page and its numbers match docs/evaluation.md |
 
 ---
 
