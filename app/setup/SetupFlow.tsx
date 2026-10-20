@@ -143,6 +143,8 @@ export function SetupFlow({ initial }: { initial: Profile }) {
 
   const go = (next: 1 | 2 | 3 | "session" | "welcome") => {
     setError(null);
+    // Leaving setup: next time it opens at step 1 (Next.js keeps this page's state while it's hidden).
+    if (next === "session" || next === "welcome") setStep(1);
     if (next === "session") router.push("/session");
     else if (next === "welcome") router.push("/");
     else setStep(next);

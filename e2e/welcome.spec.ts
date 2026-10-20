@@ -87,6 +87,26 @@ test.describe("a guest", () => {
     await expect(page.getByText("Up to $400")).toBeVisible();
   });
 
+  test("editing the profile after the sample profile keeps it (found on Sabine's iPhone in 1g)", async ({ page }) => {
+    // The same moves as on the phone: setup opens by navigating in the app, not by a fresh page load.
+    await page.goto("/");
+    await page.getByRole("link", { name: "Continue" }).click();
+    await expect(page.getByText("Step 1 of 3")).toBeVisible();
+    await page.getByRole("button", { name: "Use a sample profile" }).click();
+    await expect(page).toHaveURL("/session");
+    await expect(page.getByText("Never: high heels", { exact: true })).toBeVisible();
+    await page.getByRole("link", { name: "Edit your profile" }).click();
+    await expect(page.getByText("Step 1 of 3")).toBeVisible();
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByRole("button", { name: "Womenswear", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByLabel("Amount ($)")).toHaveValue("400");
+    await page.getByRole("button", { name: "Finish setup" }).click();
+    await expect(page).toHaveURL("/session");
+    await expect(page.getByText("Never: high heels", { exact: true })).toBeVisible();
+    await expect(page.getByText("Classic, Elegant")).toBeVisible();
+  });
+
   test("can go through setup with Back, Skip and Continue, and answers are saved (R4)", async ({ page }) => {
     await page.goto("/setup");
     await page.getByRole("button", { name: "Continue" }).click();

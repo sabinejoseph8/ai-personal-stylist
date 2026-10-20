@@ -2,7 +2,7 @@
 
 **Status:** Living document, version 1.6
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.8 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.9 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -247,7 +247,7 @@ Reviewed all Phase 1 code (77 files, about 4,600 lines, apart from photos and do
 | .env.example missed the Phase 1 settings | Fixed |
 | A very large budget showed a developer message | Fixed: "Enter a budget up to $100,000.", with a test |
 
-The review also caught one mistake in its own fixes: the first version of the one-step preferences save used a query form PostgreSQL doesn't allow, and the new test found it before it shipped. Turning on the signed-in browser tests on GitHub also showed that Supabase allows only about 30 test sign-ins per 5 minutes from one computer, so the welcome tests now share one test guest per worker. After the fixes: 96 unit and database tests and 38 browser tests pass.
+Your iPhone check after the fixes found one more bug: after Use a sample profile, Edit your profile opened setup with the old empty answers, and finishing setup saved them over the sample profile. Next.js 16 keeps a page's state when you leave and come back, so setup still held what it showed on your first visit. Fixed: setup starts from the saved profile whenever that changes, with a test that repeats your steps (tech spec 1.9, pattern 11). The review also caught one mistake in its own fixes: the first version of the one-step preferences save used a query form PostgreSQL doesn't allow, and the new test found it before it shipped. Turning on the signed-in browser tests on GitHub also showed that Supabase allows only about 30 test sign-ins per 5 minutes from one computer, so the welcome tests now share one test guest per worker. After the fixes: 96 unit and database tests and 40 browser tests pass.
 
 ## 9. PRD backlog map
 
@@ -307,7 +307,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
-- **1.6 (20 Oct 2026):** The Phase 1 code review: 13 findings, 11 fixed, decisions A and B.
+- **1.6 (20 Oct 2026):** The Phase 1 code review: 13 findings, 11 fixed, decisions A and B, and the setup bug from your iPhone check.
 - **1.5 (20 Oct 2026):** 1f decisions: the budget limits, the server key for usage records, last-active time on every visit, and the daily job's rules. Risk 4 updated.
 - **1.4 (20 Oct 2026):** 1e decisions: the image generator and quality setting, the half-price batch, 140 products, photos served from the site, the catalog load script and the private review page. Risk 13 updated.
 - **1.3 (20 Oct 2026):** One Supabase project on Pro, the budget about $50, and risk 11 updated.
