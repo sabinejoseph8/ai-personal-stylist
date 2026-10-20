@@ -2,13 +2,13 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task group 0g: your Phase 0 decisions, using the recorded results.
+- **Current focus:** Phase 0, task group 0h: the code review of everything Phase 0 changed.
 - **Current status:** Phase 0 is in progress. 0a to 0f are done. Video, live words, voice only and the camera all work on your iPhone and laptop. Three 10-minute demos cost about $0.05 of Claude each for notes and camera, far under the $1.10 estimate. Notes are accurate on the improved Haiku 5.5 reader, but demos jotted too many notes, which needs tuning in Phase 2.
-- **Recent changes (19 Oct 2026):** 0f done: a full demo page, 3 test demos, a fix so confirmed notes never disappear. your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
+- **Recent changes (19 Oct 2026):** 0g done: you approved the Phase 0 gate (video, voice only and cost passed; Haiku 5.5 for live notes and the camera), recorded in tech spec 1.3. 0f done: a full demo page, 3 test demos, a fix so confirmed notes never disappear. your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
 - **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
-- **What's left:** 0g decisions and 0h code review to finish Phase 0, then phases 1 to 7.
-- **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Live notes on Opus 5.5 may cost about $2.70 a demo, not $0.60, which matters for the cost gate in 0g. Open assumptions and risks are tracked in docs/mvp.md.
-- **Next action:** the 0g decision sheet: every Phase 0 result, the decisions to make, and a recommendation for each.
+- **What's left:** 0h code review to finish Phase 0, then phases 1 to 7.
+- **Known issues:** live notes are accurate but only 75 to 90% arrive within 2 seconds (target 95%), and demos jotted too many notes. Both get fixed in Phase 2. Open risks are tracked in docs/mvp.md.
+- **Next action:** I run the Phase 0 code review, fix what it finds, and explain it to you. Then Phase 1 starts with a plan for your approval.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -72,8 +72,8 @@
 - [x] Record the results in the spike results table in docs/mvp.md.
 
 ### 0g. Phase 0 decisions
-- [ ] **You:** make the decisions in the Phase 0 gate below, using the recorded results.
-- [ ] Record your decisions in docs/mvp.md, and in the specs if any agreed decision changes.
+- [x] **You:** make the decisions in the Phase 0 gate below, using the recorded results. Done 19 Oct 2026: you approved every recommendation on the decision sheet.
+- [x] Record your decisions in docs/mvp.md, and in the specs if any agreed decision changes. Done: docs/mvp.md and tech spec 1.3.
 
 ### 0h. Code review
 - [ ] Code review of everything this phase changed, with fixes made, the automated tests re-run, and the findings explained to you.

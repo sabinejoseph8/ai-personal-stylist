@@ -2,7 +2,7 @@
 
 **Status:** Living document, version 1.1
 **Last updated:** 19 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 0.7, tech spec 1.2 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 0.7, tech spec 1.3 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -74,7 +74,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 **How they are checked:** success checks S1 to S20 in the product spec, spread across the phases and run in full in task group 7c.
 
 **Portfolio success (default)**
-- About 6 full video demos a month within about $40.
+- About 12 full video demos a month within about $40 (Tavus Starter has 120 minutes on Sabine's account).
 - The link works whenever a recruiter clicks it.
 - The About page, the README and the one-page case study tell the story behind the product, with the evaluation's results and limits (7b). The interview notes stay private, for interview practice.
 
@@ -84,9 +84,9 @@ The tech spec's risk table has the full detail. This list tracks status.
 
 | # | Risk | Handled in | Status |
 |---|---|---|---|
-| 1 | The video stylist feels slow or out of sync | Phase 0 gate | Open |
-| 2 | Live notes miss the 2 second target | Phase 0 (0d) | Open |
-| 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior confirmed in 0c, and the fallback is still to build |
+| 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
+| 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 | Open: accurate on Haiku 5.5, but 75 to 90% within 2 seconds. Closed in Phase 2 with the target unchanged |
+| 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
 | 4 | A public link runs up costs | Phase 1 (1b, 1f) | Open |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c) | Open |
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
@@ -106,12 +106,12 @@ The tech spec's risk table has the full detail. This list tracks status.
 
 | Assumption | Based on | Checked in |
 |---|---|---|
-| Tavus Starter costs $22 a month, one call at a time, calls up to 10 minutes, with no overage. Sabine's plan shows 120 minutes a month, not the 60 the pricing page showed on 17 Oct 2026, which allows about 12 full video demos a month instead of 6 | Sabine's Tavus account, 18 Oct 2026 | Phase 0 (0c, 0f). Update tech spec section 9 and the portfolio goal in 0g |
+| Tavus Starter costs $22 a month, one call at a time, calls up to 10 minutes, with no overage. Sabine's plan shows 120 minutes a month, not the 60 the pricing page showed on 17 Oct 2026, which allows about 12 full video demos a month instead of 6 | Sabine's Tavus account, 18 Oct 2026 | Phase 0 (0c, 0f). Tech spec section 9 and the portfolio goal were updated in 0g |
 | Tavus audio-only minutes cost the same as video minutes | Tavus doesn't say. Its billing docs count any open call | Phase 0 |
 | GPT-Live costs $0.05 a minute and needs a paid OpenAI account | OpenAI's model page, 17 Oct 2026 | Phase 0 |
-| GPT-Live sends live words that the notes reader can use | Not confirmed in OpenAI's docs | Phase 0 (risk 7) |
+| GPT-Live sends live words that the notes reader can use | Confirmed in 0e (session.input_transcript.delta) | Closed |
 | Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens; Haiku 5.5 costs $0.10 and $0.50 | Anthropic's model table, Oct 2026 | Phase 0 costs |
-| A full demo uses about $1.10 of AI with Opus 5.5 for every job | Tech spec section 9 estimate | Phase 0 (0f) |
+| A full demo uses about $1.10 of AI with Opus 5.5 for every job | Tech spec section 9 estimate | Measured in 0f: about $0.05 for notes and camera on Haiku 5.5. With looks and checks on Opus, about $0.35. Looks and checks get measured in Phase 4 |
 | Supabase pauses free projects after 7 days without activity, and a daily job prevents it | Third-party pricing guides | Phase 1, then the uptime check |
 | Vercel's free Hobby plan allows this personal, non-commercial portfolio project | Vercel's Hobby plan docs (checked 18 Oct 2026): personal, non-commercial use only, which fits a portfolio project with no money-making. Hobby also limits functions to 5 minutes and keeps runtime logs for 1 hour | Checked in 0b |
 | About 150 sample products are enough for three different looks for common occasions | Estimate | Phase 1 (1e) and Phase 4 |
@@ -128,6 +128,7 @@ Newest first. The agreed files hold the detail.
 | 19 Oct 2026 | Defaults accepted with the scope change: notes are confirmed or removed by touch, with Undo, and changed by voice. Uncertain notes are jotted in pencil as To confirm. The details looks need are read in the background. Feedback is jotted under its look. Text only mode is removed, so the conversation pauses or ends with notes and looks kept. Tap-to-try phrases work only once the conversation is running | Sabine | product spec 1.4 (R13, R14, R16, R20, R47, R70) |
 | 19 Oct 2026 | Accepted trade-off: with no captions and no typing, people who are deaf, hard of hearing or can't speak can't use the conversation in v1. Captions and typing are listed as future features | Sabine | product spec 1.4 (R67, section 9), risk 17 |
 | 19 Oct 2026 | The portfolio package (a recruiter README, an architecture diagram, an evaluation defined before measuring, simple standard-library checks, a one-page case study PDF and a private portfolio kit) is built in Phase 7 (7b), once the app exists, not now on Phase 0 test pages. interview-notes.md becomes private: kept on Sabine's Mac and no longer tracked in the public repository (its earlier versions stay in the history) | Sabine | progress.md (7b), CLAUDE.md, .gitignore |
+| 19 Oct 2026 | Phase 0 gate (0g), all recommendations approved: keep video for the whole conversation; keep GPT-Live with the quartz voice; keep the budget at about $40 and the Anthropic limit at $15 until Phase 4 measures looks; live notes are accurate but below the 2-second target, so Phase 2 closes the gap with the target unchanged; TQ3: Haiku 5.5 for live notes and the camera, Opus 5.5 for the photo reader, looks and checks | Sabine | tech spec 1.3 |
 | 19 Oct 2026 | A confirmed note always stays in My Styling Notes until the shopper removes it by touch or changes it by voice. The notes reader may never drop it (R16, R22) | Sabine, after demos 1 and 2 | Phase 2 (2c, 2d), and the /test/demo page |
 | 19 Oct 2026 | Voice-only voice: OpenAI "quartz" (Australian, feminine), the closest to Anna | Sabine | progress.md (0e) |
 | 18 Oct 2026 | Android phones aren't tested in v1, because no Android phone is available. Testing covers an iPhone with Safari and a laptop with Chrome. Accepted risk: Android-only problems with permissions or the back camera could reach visitors. Claude recommended a friend's 5-minute check before launch instead | Sabine | progress.md (0f, 7c). Tech spec section 8 to be updated in 0g |
@@ -251,5 +252,6 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.2 (19 Oct 2026):** Phase 0 results and the 0g decisions, risks 1, 2, 3 and 7 updated, assumptions checked, and about 12 demos a month.
 - **1.1 (19 Oct 2026):** Sabine's scope change: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook. Updated the summary, the in and out lists, the PRD table, the success criteria, risk 17, an assumption, the decisions log and the backlog map to match product spec 1.4, design 0.7 and tech spec 1.2.
 - **1.0 (18 Oct 2026):** First version, built from PRD v1.8, backlog v1.8 and the agreed plan files.

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.2 (19 Oct 2026)
+**Status:** Agreed, version 1.3 (19 Oct 2026)
 **Last updated:** 19 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 0.7
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -99,7 +99,7 @@ The **core** folder never imports an outside service directly. That keeps it tes
 | Video stylist | **Tavus**, full pipeline (TQ1, your decision) | The PRD's intended avatar. Tavus handles listening, turn-taking, interruptions, voice and face in one call from the browser, which its docs describe as the lowest-latency setup. |
 | Joining the video call | **Daily** browser SDK | Tavus calls run on Daily, and the SDK lets us use our own screen design and read live events. |
 | Voice only mode | **OpenAI GPT-Live 1** (**gpt-live-1**) | The PRD's intended OpenAI voice layer, built to sit in front of your own logic. $0.05 per minute, billed per second. |
-| AI jobs | **Anthropic Claude** through the official TypeScript SDK | Reliable structured output, image understanding, and careful rule following for the preference check. Default model: Claude Opus 5.5 (see 4.4). |
+| AI jobs | **Anthropic Claude** through the official TypeScript SDK | Reliable structured output, image understanding, and careful rule following for the preference check. Live notes and the camera use Claude Haiku 5.5, and the other jobs use Claude Opus 5.5 (TQ3, decided in Phase 0; see 4.4). |
 | Input and output checking | **Zod** schemas | Every request and every AI answer is checked against a defined shape before use. |
 | Styling | **Tailwind CSS** with the design.md tokens | Colors, type, spacing and radius live in one place, as the design doc lists them. |
 | Accessible building blocks | **Radix UI** primitives | Dialogs, sheets, popovers and menus with keyboard and screen reader support built in. |
@@ -164,7 +164,7 @@ Every engine implements the same small interface, so the rest of the app never k
 - **Commands:** start, end, mute, unmute, send a tap-to-try phrase, update the stylist's context (notes, looks, next question), say a short scripted line, interrupt.
 - **Events:** words heard (speaker, text so far, final or not, turn ID), stylist started or stopped speaking, stylist request, connection state, error. Words heard feed the notes reader and are never shown on screen.
 - **Tavus engine:** joins the call with Daily. Context goes in through Tavus's context interaction, scripted lines through **conversation.echo**, and interruptions through **conversation.interrupt**, all sent as Daily app messages. Live words arrive as **conversation.utterance.streaming** events. The Tavus setup ("PAL") uses **pipeline_mode: "full"**, a stock female face, perception turned off (the camera stays with us), and recording turned off.
-- **GPT-Live engine:** a browser WebRTC call set up through our server. Uses the same stylist instructions. Our core supplies facts and results through GPT-Live's client delegation.
+- **GPT-Live engine:** a browser WebRTC call set up through our server, which sends the browser's offer to **POST /v1/live/sessions** and returns only the answer, never the key. The session must set **delegation: { type: "client" }** (OpenAI rejects null). Uses the same stylist instructions. Live words arrive as **session.input_transcript.delta**. Facts go in through **session.thinking.append**, and exact lines through **session.instructions.append**. The browser's data channel should be limited so only our server can feed facts (Phase 6). The voice is **quartz** (picked in Phase 0).
 - **Switching to voice only:** GPT-Live uses the OpenAI voice that sounds closest to the Tavus face, picked in Phase 0. When the shopper taps Voice only, the Tavus stylist first says "I'm switching to voice only, so I'll sound a little different." through **conversation.echo**. Then the video call ends and GPT-Live picks up with the current notes and a short recap. If video drops without warning, GPT-Live says the same line as its first words. If video is unavailable from the start (another visitor is using it, or the month's video minutes are used up), the stylist starts in voice only and says why.
 - **Stylist requests are limited to three:** capture the item on camera, open saved looks, end the session. The stylist never changes notes, looks or the bag itself.
 
@@ -179,12 +179,12 @@ The same contract the PRD asks for (D02), so a real retailer can be added later.
 
 ### 4.4 AI connector jobs
 
-Each job has its own prompt, a strict output shape and an effort setting. Claude Opus 5.5 is the default for every job (default). Claude Haiku 5.5 is a much faster and cheaper option for the two live jobs if Phase 0 shows Opus 5.5 is too slow. That switch is your call (TQ3).
+Each job has its own prompt, a strict output shape (structured outputs, because these models don't allow forced tool use) and an effort setting. Phase 0 measured the live jobs (TQ3, decided 19 Oct 2026): Claude Haiku 5.5 runs live notes and the camera, and Claude Opus 5.5 runs the rest, where accuracy matters most and speed matters less. The notes reader pairs Haiku with plain code that reads money and dates, keeps each note's id and wording between readings, and never drops a confirmed note.
 
 | Job | Input | Output | Default model and effort |
 |---|---|---|---|
-| Notes and feedback reader | New words, current notes, the visible look | Short jotted notes in the stylist's words, each with a status and confidence, plus the hidden details looks and checks need | Opus 5.5, low |
-| Camera reader | One small frame | Is one item clearly shown? If so, type, colors, pattern | Opus 5.5, low |
+| Notes and feedback reader | New words, current notes with their ids, removed notes, the visible look | Short jotted notes in the stylist's words, each with an id, a status and confidence, plus the hidden details looks and checks need | Haiku 5.5, low, with plain code for money and dates |
+| Camera reader | One small frame | Is one item clearly shown? If so, type, colors, pattern. An item is named only after two frames in a row agree, and the shopper confirms it | Haiku 5.5, low |
 | Photo reader | One photo | Items found, details with confidence | Opus 5.5, low |
 | Looks builder | Filtered products, notes, anchor, feedback | Up to 5 candidate looks by product ID, each with a reason | Opus 5.5, medium |
 | Preference checker, judgment step | One look plus preferences | Pass, conflict or needs clarification, with reasons | Opus 5.5, medium |
@@ -243,6 +243,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 
 ### Privacy
 - Recording is off for every Tavus call. Tavus never receives the camera. Frames are read by our server and thrown away.
+- Each Tavus conversation is hard-deleted when the session ends, because Tavus publishes no retention period (decided 18 Oct 2026). OpenAI and Anthropic delete API data within 30 days and don't train on it.
 - The browser sends words to our server to update notes. The server keeps only the resulting notes.
 - How Tavus, OpenAI and Anthropic store data is checked in Phase 0 and summarized on the About page.
 - Deleting all data removes database rows, stored photos and the guest sign-in.
@@ -272,24 +273,24 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
   - Photos: about 20 sample photos with known details.
 - **End-to-end tests** with Playwright on phone and desktop sizes. The fake engine replaces live voice, so tests are free and repeatable. They cover the success checks that do not need a real voice (S4 to S20).
 - **Accessibility:** automatic axe-core checks in every end-to-end test, plus a manual VoiceOver and keyboard pass before each release.
-- **Real-device checks** each phase on an iPhone with Safari, an Android phone with Chrome, and a laptop: video start, interruption, camera, permissions (S1 to S3, S8 to S10).
+- **Real-device checks** each phase on an iPhone with Safari and a laptop: video start, interruption, camera, permissions (S1 to S3, S8 to S10). Android phones aren't tested in v1 (decided 18 Oct 2026, an accepted risk).
 - **Speed measurements** in Phase 0 and before launch: note updates within 2 seconds at the 95th percentile (R17), the stylist stopping within half a second (R7), and video within 5 seconds (R8).
 
 ## 9. Cost estimate
 
-Rough estimates behind the TQ2 budget. Phase 0 measures real numbers.
+Estimates behind the TQ2 budget, with what Phase 0 measured in three 10-minute demos on 19 Oct 2026.
 
 **One full demo:** 10 minutes, all with video, 1 photo, 1 camera use, 4 rounds of looks.
 
-| Item | All jobs on Opus 5.5 | Live jobs on Haiku 5.5 (TQ3) |
+| Item | All jobs on Opus 5.5 (first estimate) | Live jobs on Haiku 5.5 (chosen, TQ3) |
 |---|---|---|
 | Tavus video, 10 minutes | Comes out of the plan's included minutes | Same |
 | OpenAI voice only | Nothing, unless video fails or is busy ($0.05 a minute) | Same |
-| Claude: reading notes and feedback | About $0.60 | About $0.03 |
-| Claude: camera and photo | About $0.15 | About $0.05 |
+| Claude: reading notes and feedback | About $0.60 (Phase 0 measured closer to $2.70) | Measured: about $0.05 for notes and camera together |
+| Claude: camera and photo | About $0.15 | Included above, plus a few cents for a photo on Opus |
 | Claude: looks and checks | About $0.30 | About $0.30 |
 | Claude: voice-only facts | About $0.05, only in voice only | Same |
-| **Per demo, apart from the Tavus plan** | **About $1.10** | **About $0.45** |
+| **Per demo, apart from the Tavus plan** | **About $1.10** | **About $0.35** (looks and checks still to be measured in Phase 4) |
 
 Fixed monthly costs: the Tavus plan only. Vercel and Supabase stay free at this scale. GPT-Live needs a paid OpenAI account, which means a small prepaid credit, because the free tier doesn't support it.
 
@@ -297,7 +298,7 @@ Fixed monthly costs: the Tavus plan only. Vercel and Supabase stay free at this 
 
 | Budget | Tavus plan | Full video demos a month | Notes |
 |---|---|---|---|
-| A, about $40 (chosen) | Starter, $22: 60 minutes, one call at a time, calls up to 10 minutes | About 6 | The rest covers AI use, including about 6 more demos in voice only once the video minutes run out |
+| A, about $40 (chosen) | Starter, $22: 120 minutes on your account (the pricing page said 60), one call at a time, calls up to 10 minutes | About 12 | The rest covers AI use with plenty to spare, including voice-only demos once the video minutes run out |
 | B, about $100 | Builder, $59: 175 minutes, 3 calls at once, calls up to 15 minutes | About 17 | About $40 left for AI use |
 | C, about $10 | Free: 20 minutes, one call at a time, calls up to 5 minutes | None at full length | About 4 demos with 5 minutes of video each, because calls can't last longer on this plan. Each would then switch to voice only |
 
@@ -336,6 +337,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
 | 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A) | Your decision |
+| 19 Oct 2026 | Phase 0 gate (0g): video passed and stays on for the whole conversation; GPT-Live passed, with the quartz voice; cost passed at about $0.35 of AI per demo. Live notes are accurate but below the 95%-within-2-seconds target, so the gap is closed in Phase 2 with the target unchanged. TQ3: Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest. Stock face TQ5: Anna - Casual | Your decision |
 | 19 Oct 2026 | Product spec 1.4: no transcript or captions, no typing, a working microphone required, and free-form jotted notes. The connector has two engines, and the notes reader writes jotted notes plus hidden details | Your decision |
 
 ### Remaining questions (accepted defaults)
@@ -344,13 +346,14 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 | # | Question | Recommended default |
 |---|---|---|
-| TQ3 | Use Claude Haiku 5.5 for the two live jobs (reading notes and camera frames)? | Start with Opus 5.5 everywhere. Measure speed and cost in Phase 0, then you decide. |
+| TQ3 | Use Claude Haiku 5.5 for the two live jobs (reading notes and camera frames)? | Decided 19 Oct 2026 after Phase 0: yes, with the improved notes reader. Opus 5.5 for every other job. |
 | TQ4 | When the monthly AI allowance is used up, show "The demo is resting until the 1st" on the welcome screen? | Yes. Added to product spec R13 in version 1.3. |
 | TQ5 | Which Tavus stock face? | Pick in Phase 0 from the stock faces tuned for low delay, and use a still of it for the voice-only portrait (design DQ1). |
 | TQ6 | Public or private code repository? | Public, so you can link it in applications. |
 
 ## 12. Change log
 
+- **1.3 (19 Oct 2026):** Phase 0 results and your 0g decisions: TQ3 (Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest), the stock face (TQ5), the quartz voice, GPT-Live session details, Tavus conversations hard-deleted, Android not tested in v1, Tavus Starter's 120 minutes (about 12 demos), and the measured cost per demo.
 - **1.2 (19 Oct 2026):** Updated for product spec 1.4: two conversation engines (text only removed), the notes reader writes jotted notes plus hidden details, notes are confirmed or removed by touch, and live words are never shown on screen. Updated sections 1, 3, 4, 5, 6, 9 and 11.
 - **1.1 (18 Oct 2026):** Added CLAUDE.md, interview-notes.md and docs/ to the code layout. No decisions changed.
 - **1.0 (18 Oct 2026):** Agreed by you, with the recommended answers for TQ3 to TQ6. Same content as 0.4, apart from status updates.
