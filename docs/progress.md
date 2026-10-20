@@ -4,7 +4,7 @@
 
 - **Current focus:** Phase 0, task group 0f: the iPhone and laptop check, and 3 full test demos to measure real costs.
 - **Current status:** Phase 0 is in progress. 0a to 0e are done. Voice only works with live words, and you picked the quartz voice. In 0f, the data-privacy review is done. Live notes: an improved Haiku 5.5 reader got every note right. The camera names items in about 1 second on Haiku, but both models sometimes mistook a tote for a jacket.
-- **Recent changes (19 Oct 2026):** 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
+- **Recent changes (19 Oct 2026):** your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
 - **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
 - **What's left:** the rest of Phase 0 (0f iPhone and laptop check and 3 test demos, 0g decisions, 0h code review), then phases 1 to 7.
 - **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Live notes on Opus 5.5 may cost about $2.70 a demo, not $0.60, which matters for the cost gate in 0g. Open assumptions and risks are tracked in docs/mvp.md.
@@ -174,19 +174,19 @@
 - [ ] Session start, End, the 30 minute idle timeout and resuming (R12), with the engine chosen by limits and availability.
 
 ### 2b. Stylist stage
-- [ ] Stylist stage with its state in words (R8), voice controls and interruption (R7), captions (R10) and the message box (R11).
-- [ ] Microphone permission card and the typing fallback (R6).
+- [ ] Stylist stage with its state in words (R8), and voice controls and interruption (R7). No captions, transcript or message box (R10, R11).
+- [ ] Microphone permission card, and the Microphone needed state when the microphone is blocked, missing or not working (R6).
 - [ ] Sample phrases for visitors (R70).
 
 ### 2c. Notes reader
-- [ ] Notes reader, with plain code for money and dates, receiving new words about once a second (R16, R17).
+- [ ] Notes reader that jots short notes in the stylist's words plus the hidden details looks need, with plain code for money and dates, receiving new words about once a second (R15 to R17).
 - [ ] "Latest word wins" and version numbers on every note (R22).
 - [ ] Voice corrections (R21), and the next useful question with quick replies (R19).
 - [ ] Context updates, so the stylist always knows the confirmed notes.
 
 ### 2d. Notebook
-- [ ] Notebook: fields and statuses in pencil and ink (R15, R16), the ink-in motion, collapse and reopen (R23), saved preferences in view (R24), and the empty and paused states (R25).
-- [ ] Note editor for each field, with Save, Cancel and input checks (R20).
+- [ ] Notebook page with jotted notes in pencil and ink and no fixed fields (R15, R16), the ink-in motion, collapse and reopen (R23), saved preferences in view (R24), and the empty and paused states (R25).
+- [ ] Confirm and Remove on each note, with Undo (R20).
 - [ ] Grouped screen reader announcements (R68).
 
 ### 2e. Limits and session endings
@@ -197,22 +197,22 @@
 - [ ] Code review of everything this phase changed, with fixes made, the automated tests re-run, and the findings explained to you.
 
 **Automated tests**
-- Out-of-order replay: a late update never overwrites a newer touch edit or spoken correction.
+- Out-of-order replay: a late update never overwrites a newer spoken correction, or brings back a removed note.
 - Budget parsing: "$500", "under 350", "around 400" and "between 200 and 300".
 - Notes eval set of about 30 utterances, including R18: at least 90% correct (default), with 95% of updates within 2 seconds.
-- End-to-end with the fake engine: the wedding sentence gives the R18 notes, a touch edit shows "Edited by you", collapsing and reopening keeps everything, and ending the session clears the notes.
+- End-to-end with the fake engine: the wedding sentence gives the R18 notes, a tapped Confirm turns a note to ink, collapsing and reopening keeps everything, and ending the session clears the notes.
 
 **Manual verification**
 
 | Step | Expected result |
 |---|---|
 | Start a conversation on your phone | The video stylist appears within about 5 seconds (S1) |
-| Say the wedding sentence | Notes appear while you talk, Outfit type and Existing wardrobe show Not specified, and the stylist asks "dress or pantsuit?" (S4, S5) |
+| Say the wedding sentence | Notes are jotted while you talk, nothing is jotted about the outfit type, and the stylist asks "dress or pantsuit?" (S4, S5) |
 | Say "Actually, make my budget $350" | The budget changes to Up to $350 and the stylist acknowledges it (S6) |
-| Tap Budget, enter $400, tap Save | "Edited by you" shows within 1 second (S7) |
+| Tap a note in pencil, then Confirm | It turns to ink and reads Confirmed within 1 second (S7) |
 | Collapse the notebook, then reopen it | Every value and status is still there |
 | Turn on VoiceOver and correct a note | The change is announced and focus stays where it was (S18) |
-| Deny the microphone and type instead | Typing works, and the stylist still answers out loud and on video |
+| Deny the microphone | The app says the stylist needs it, and the conversation doesn't start (S17) |
 
 ---
 
@@ -317,7 +317,7 @@
 ### 5a. Feedback capture
 - [ ] Feedback reader for likes, dislikes, requested changes and items to keep, sharing the notes reader (R46).
 - [ ] Keep and Change buttons on every item (R46).
-- [ ] "Feedback on this outfit" section in the notebook (R47).
+- [ ] Feedback jotted in the notebook under its look (R47).
 
 ### 5b. Revisions
 - [ ] Revised looks with the Revising status, scoped rejections and kept items (R48, R49).
@@ -364,7 +364,7 @@
 ### 6c. Fallbacks
 - [ ] GPT-Live voice only engine with the matched voice (R9).
 - [ ] The switch line at handover, plus the "with another visitor" and out-of-minutes messages (R9, design section 4.1).
-- [ ] Text only mode and the full fallback order: video, then voice only, then text only (R13, R14).
+- [ ] The fallback order: video, then voice only, then the conversation pausing or ending with notes and looks kept (R13, R14).
 - [ ] The "demo is resting" welcome state when the monthly allowance is used up (R13, TQ4).
 - [ ] Tavus webhook, so usage is recorded exactly.
 
@@ -372,7 +372,7 @@
 - [ ] Code review of everything this phase changed, with fixes made, the automated tests re-run, and the findings explained to you.
 
 **Automated tests**
-- Fallback order with fake engines: video, then voice only, then text only, with notes and looks kept at every step.
+- Fallback order with fake engines: video, then voice only, then a paused or ended conversation, with notes and looks kept at every step.
 - Download my data includes saved notes and captured stills, and no audio, transcripts or video.
 - Delete all data removes rows, photos and the guest sign-in.
 - The bag refuses owned items and items without a passing check, and the server refuses checkout.
@@ -386,7 +386,7 @@
 | Start a conversation on a second device while the first is running | The second gets voice only, with "The video stylist is with another visitor." |
 | Leave the camera on for 2 minutes, then download your data | The camera turns itself off, and the download has the still but no video (S9) |
 | Add items to the demo bag and try to check out | Checkout stays disabled, and every product says Sample product (S16) |
-| Deny the microphone and complete the whole journey | Setup, notes, photo, looks, feedback, saving and the bag all work by typing and tapping (S17) |
+| Let the day's conversation time run out | The stylist says time is up and the conversation ends. Notes and looks stay on screen (R13) |
 | Delete all data | You land on the welcome screen, and starting again shows no old data (S19) |
 
 ---

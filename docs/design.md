@@ -1,8 +1,8 @@
 # AI Personal Stylist: Design
 
-**Status:** Draft, version 0.6
-**Last updated:** 18 Oct 2026
-**Goes with:** product-spec.md, version 1.3 (agreed)
+**Status:** Draft, version 0.7
+**Last updated:** 19 Oct 2026
+**Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
 
 ---
@@ -18,7 +18,7 @@
 3. **Your words win.** The newest thing the shopper says or taps replaces the stylist's guess, visibly and at once.
 4. **Show first, then ask.** Show what was understood before asking anything, and ask one short question at a time.
 5. **Owned and sample never blur.** Every item says in words whether it is yours or a sample.
-6. **Every voice action has a tap.** Anything you can say, you can also tap or type.
+6. **Talk first, tap to fix.** The conversation is spoken. Touch confirms or removes notes and gives quick replies and feedback.
 7. **Motion only shows change.** A note inking in or a piece being swapped moves. Nothing moves for decoration.
 8. **Clothes on a clean surface.** Product photos sit on plain white, never tinted, filtered or covered by text.
 9. **The camera is obvious.** It stays off until the shopper turns it on, is clearly marked while on, and turns itself off.
@@ -55,7 +55,7 @@ Rules:
 
 Two families that look clearly different from each other, both free on Google Fonts:
 - **Newsreader** (serif) is the notebook's ink. It sets note values, the notebook title, look names and page titles. Its optical sizes keep it readable at 18 px and refined at 48 px.
-- **Figtree** (sans serif) is the interface. It sets labels, buttons, captions, prices and body text, and stays clear at small sizes.
+- **Figtree** (sans serif) is the interface. It sets labels, buttons, prices and body text, and stays clear at small sizes.
 
 | Style | Font and weight | Phone (size / line height, px) | Desktop | Used for |
 |---|---|---|---|---|
@@ -65,7 +65,7 @@ Two families that look clearly different from each other, both free on Google Fo
 | Heading | Newsreader 500 | 21 / 28 | 21 / 28 | Look names, notebook sections |
 | Note value | Newsreader 400 | 18 / 28 | 18 / 28 | Notebook values. The 28 px line height matches the ruled lines, so values sit on the rules |
 | Subheading | Figtree 600 | 17 / 24 | 17 / 24 | Card and dialog titles |
-| Body | Figtree 400 | 16 / 24 | 16 / 24 | Default text and captions |
+| Body | Figtree 400 | 16 / 24 | 16 / 24 | Default text |
 | Label | Figtree 600 | 14 / 20 | 14 / 20 | Note labels, buttons, chips |
 | Small | Figtree 400 | 13 / 18 | 13 / 18 | Prices, sources, times. Nothing is smaller than this |
 
@@ -138,8 +138,7 @@ This keeps the notebook visibly on top of everything else.
 |---|---|
 | Check | Confirmed |
 | Question mark | To confirm |
-| Dash | Not specified |
-| Pencil | Edited by you |
+| Curved arrow | Undo a removed note |
 | Hanger | You own this |
 | Tag | Sample product |
 | Bookmark | Saved preference |
@@ -156,7 +155,7 @@ This keeps the notebook visibly on top of everything else.
 
 - Sentence case, plain verbs, no filler.
 - Buttons say exactly what happens, and the confirmation uses the same words: **Save look** leads to "Look saved".
-- One name per action everywhere: Save look, Add to bag, Swap, Keep, Change, Try again, Type instead, Camera, Capture, Voice only.
+- One name per action everywhere: Save look, Add to bag, Swap, Keep, Change, Try again, Camera, Capture, Voice only.
 - Errors say what happened and what to do next, without apologizing. Examples: "Voice disconnected. Reconnecting, attempt 2 of 3." and "Camera blocked. Upload a photo instead."
 - Empty screens invite the next step. Example: "Your wardrobe is empty. Add a photo of something you own."
 - Details are separated with commas or line breaks, not symbols. No arrows or emoji in buttons.
@@ -170,39 +169,30 @@ Grouped by where they appear. Each lists its states and how it behaves.
 **Stylist stage**
 - Shows the live video stylist, the current state in words, and time left when it is running low.
 - Frame: on desktops, a 4:5 frame that fills the stylist column. On phones, a full-width 4:5 frame before the session starts, then a 3:2 band (head and shoulders) once it starts. The video is cropped to the center so the stylist's head and shoulders stay in view.
-- States: Ready, Connecting, Listening, Thinking, Speaking, Muted, Reconnecting, Voice only, Text only, Ended.
+- States: Ready, Connecting, Listening, Thinking, Speaking, Muted, Reconnecting, Voice only, Microphone needed, Time is up, Ended.
 - **Voice only:** a still portrait of the same stylist with the speaking ring, and a line that says why: "Video unavailable. Continuing with voice." or "The video stylist is with another visitor. Continuing with voice." When the shopper chose it, the line reads "Voice only" with **Turn video on**. When the switch happens mid-conversation, the stylist also says out loud: "I'm switching to voice only, so I'll sound a little different." The voice only voice is chosen to sound as close as possible to the video stylist.
-- **Text only:** the still portrait with "Text only. Replies appear in the captions."
+- **Microphone needed:** shown when the microphone is blocked, missing or not working. It says "The stylist needs your microphone to hear you" and how to turn it on. The conversation can't start or carry on until it works.
+- **Time is up:** when the day's or month's conversation time runs out, the stage says so and the conversation ends. Notes and looks stay on screen.
 - The moment the shopper talks over the stylist, voice and video stop together and the state switches to Listening.
 - In the last 2 minutes of conversation time it shows, for example, "2 minutes left".
 
 **Voice controls**
-- **Start conversation** (primary), **Mute**, **Camera**, **Captions**, **Voice only**, **End**.
-- On phones the row shows Mute, Camera, More and End. **More** holds Captions and Voice only.
+- **Start conversation** (primary), **Mute**, **Camera**, **Voice only**, **End**.
+- On phones the row shows Mute, Camera, More and End. **More** holds Voice only.
 - States: enabled, pressed (Mute shows a crossed-out microphone and "Muted", Camera shows "Camera on", Voice only shows "Video off"), disabled while connecting.
 - 48 px circles with a label underneath. In the pinned phone bar they are icon-only, with accessible names.
 - End asks "End this session? Notes you haven't saved will be cleared." with **Keep talking** and **End session**.
 
-**Captions**
-- The last 3 lines, each starting with "You" or "Stylist". **Show all** opens the whole session's captions.
-- Words still being recognized are Graphite. Final words are Ink.
-- In Text only mode, the stylist's replies appear here as text.
-- States: on, off, empty ("Captions appear here when you start talking").
-- Cleared when the session ends.
-
-**Message box**
-- One line that grows to four, with **Send**. Placeholder: "Type to the stylist".
-- On phones it stays pinned to the bottom of the screen. On wider screens it sits at the bottom of the stylist column.
-- States: empty, typing, sending, not sent ("Message not sent." with **Try again**).
-- Always available, including during voice. The stylist answers typed messages out loud and on video, the same as spoken ones.
+**No transcript**
+- There are no captions and no message box. The stylist's voice and My Styling Notes are the only output, and the shopper talks instead of typing (product spec R10, R11).
 
 **Quick replies and sample phrases**
-- Quick replies: when the stylist asks a question with clear options, they appear as chips under the captions, for example Dress, Pantsuit, Not sure yet. Tapping one answers as if spoken. They disappear once answered.
-- Sample phrases (portfolio extra): before the first message, three phrases appear, including the wedding example. Tapping one sends it.
+- Quick replies: when the stylist asks a question with clear options, they appear as chips under the stylist, for example Dress, Pantsuit, Not sure yet. Tapping one answers as if spoken. They disappear once answered.
+- Sample phrases (portfolio extra): once the conversation is running and before the shopper first speaks, three phrases appear, including the wedding example. Tapping one sends it as if spoken.
 - States: shown, pressed, hidden after use, disabled while connecting.
 
 **Pinned bar (phones)**
-- Appears when the stylist stage scrolls out of view. Holds a 56 px live circle of the stylist, **Mute**, "Camera on" while the camera is on, and the notebook summary, for example "5 confirmed, 1 to confirm".
+- Appears when the stylist stage scrolls out of view. Holds a 56 px live circle of the stylist, **Mute**, "Camera on" while the camera is on, and the notebook summary, for example "6 notes, 1 to confirm".
 - Tapping the summary scrolls back to the notebook and opens it.
 
 **Camera view**
@@ -217,40 +207,34 @@ Grouped by where they appear. Each lists its states and how it behaves.
 ### 4.2 My Styling Notes
 
 **Notebook**
-- Title "My Styling Notes" with the line "Tap any note to change it."
-- Sections, in this order: Style around this item (only with a photo), Styling details (the seven notes), Your saved preferences, This session only (only with an exception), Feedback on this outfit (only once a look exists).
-- States: expanded; collapsed (one line, for example "5 confirmed, 1 to confirm", plus the photo thumbnail); empty (every note Not specified); writing (a note is inking in); paused ("Notes paused. You can still edit them.").
+- A notebook page, not a form: there are no fixed fields. The title "My Styling Notes" sits at the top, with the line "Notes appear here as you talk. Tap a note to confirm or remove it, or say a correction."
+- Order on the page: saved preferences that apply, jotted at the top; Style around this item (only with a photo); the stylist's notes in the order they were jotted, newest at the bottom, like writing down a page; then feedback under a small heading for each look (only once a look exists). Session exceptions are jotted where they happen, marked This session only.
+- States: expanded; collapsed (one line, for example "6 notes, 1 to confirm", plus the photo thumbnail); empty (a blank ruled page with the hint line); writing (a note is inking in); paused ("Notes paused. You can still confirm or remove notes.").
 - **Hide** and **Show** keep everything as it was.
 - Look: a white page, Rule blue lines every 28 px, a Margin pink line on the left, and the Paper shadow. The lines sit under the text and are light enough not to affect reading.
 
-**Note row**
-- Two lines on the ruled page: the label (Figtree, Graphite) with the status chip on the right, then the value (Newsreader).
+**Jotted note**
+- One or two lines of Newsreader sitting on the ruled lines, in the stylist's words: short summaries, never quotes. For example "Outdoor wedding, November" or "Budget: up to $500".
+- A small status chip at the end of the line.
 - States:
-  - Not specified: "Not specified" in Graphite italic, with a dash icon.
-  - To confirm: the value in Graphite on a Highlighter mark, with a To confirm chip.
-  - Confirmed: the value in Ink, with a Confirmed chip and an Emerald check.
-  - Edited by you: the value in Ink, with a Confirmed chip plus an "Edited by you" tag and a pencil.
-  - Writing: the value inks in, then screen readers hear, for example, "Budget updated: up to $350, confirmed."
-- The whole row is one tap target that opens the note editor.
-- While the shopper is speaking, screen reader updates are grouped, for example "3 notes updated", so they do not talk over the conversation.
+  - To confirm: written in Graphite on a Highlighter mark, with a To confirm chip.
+  - Confirmed: written in Ink, with a Confirmed chip and an Emerald check.
+  - Writing: the note inks in from left to right, then screen readers hear, for example, "Noted: budget up to $350, confirmed."
+  - Corrected by voice: the old words are struck through for a moment, then the new words ink in.
+  - Selected: after a tap, **Confirm** and **Remove** appear beside the note.
+  - Removed: the note fades out, with **Undo** for 5 seconds.
+- The whole note is one tap target.
+- While the shopper is speaking, screen reader updates are grouped, for example "3 notes added", so they do not talk over the conversation.
 
 **Status chip**
-- A small pill with an icon and a word: Not specified, To confirm, Confirmed, Edited by you, Saved preference, This session only, Checking, Checked, Needs a new check.
+- A small pill with an icon and a word: To confirm, Confirmed, Saved preference, This session only, Checking, Checked, Needs a new check.
 - Always an icon plus a word. Never color alone.
 
-**Note editor**
-- Phones: a bottom sheet. Tablets and desktops: a panel attached to the note.
-- Inputs suited to each note:
-  - Occasion: text with suggestions such as Wedding guest, Work, Interview, Date night, Party, Weekend.
-  - Season and date: season choices plus an optional date, marked "Exact date" or "Around then".
-  - Preferred colors: colors to wear and colors to avoid, plus free text.
-  - Style: choices such as Elegant, Classic, Relaxed, Minimal and Bold, plus free text.
-  - Budget: an amount, the currency (US dollars in v1), and its meaning: Up to, Around, or Between two amounts.
-  - Outfit type: choices that follow the shopper's departments (for example Dress, Pantsuit, Suit, Separates, Jumpsuit), plus free text.
-  - Existing wardrobe: pick items from the wardrobe.
-- Buttons: **Save** and **Cancel**, plus an "Also save to my profile" option that starts unticked.
-- States: open, invalid (a Red pen message under the input, with Save disabled), saving, saved (the editor closes and the row inks in), cancelled.
-- Focus moves into the editor when it opens and back to the note when it closes.
+**Note actions**
+- Tapping a note shows two buttons beside it: **Confirm** and **Remove**. There is no keyboard and no editor.
+- To change what a note says, the shopper says the correction, for example "Actually, make my budget $350".
+- States: hidden, shown, confirming (the note turns to ink), removed (with **Undo** for 5 seconds).
+- Focus moves to Confirm when the buttons appear, and back to the note when they close.
 
 **Pasted photo ("Style around this item")**
 - The shopper's photo, uploaded or captured from the camera, with a white print border, a 1 degree tilt and two strips of tape. The label beside it is never tilted.
@@ -262,19 +246,19 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Enlarge shows the full photo, untilted, with its description.
 
 **Item details review**
-- Shown after analysis: type, colors, pattern and style, each with a status chip. Tap any detail to correct it.
+- Shown after analysis: type, colors, pattern and style, each with a status chip. Tap a detail to confirm it, or say a correction.
 - Asks "Is this yours or an inspiration?" with **It's mine** and **Inspiration**.
 - **Save to wardrobe** appears only for owned items. The first use asks for photo storage permission.
 - Several items found: a numbered list ("1. Denim jacket", "2. White T-shirt") so the shopper can tap one or say "the first one". The matching area on the photo is outlined when it is known.
 
-**Feedback on this outfit**
-- Four groups: Likes, Dislikes, Requested changes, Items to keep.
-- Each entry names its look, item and scope, for example "Shoes in Look 1: lower heels. This look only."
-- Entry states: To confirm, Confirmed, Edited by you, removed (with **Undo** for 5 seconds).
-- Empty: "Tell the stylist what you like or dislike about this look."
+**Feedback jotted under a look**
+- Feedback is jotted like any other note, under a small heading for the look it's about, for example "Look 1".
+- Each line says what to keep or change, and its scope, for example "Keep the dress and bag" or "Lower heels, this look only".
+- States: To confirm, Confirmed, removed (with **Undo** for 5 seconds).
+- Before any feedback, nothing shows under the look's heading.
 
 **Saved preferences and session exceptions**
-- Your saved preferences: the Must have, Never and Likes items from the profile, each with a bookmark icon. Tapping one opens it in Profile and privacy.
+- Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a bookmark icon. Tapping one opens it in Profile and privacy.
 - This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**.
 
 ### 4.3 Looks
@@ -325,7 +309,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Permission card**
 - Explains one permission at a time in plain words, just before it is needed: microphone, camera, wardrobe photo storage, saving preferences.
-- Buttons: **Allow** and **Not now**. Not now always leads to a working path, such as typing or uploading a photo.
+- Buttons: **Allow** and **Not now**. For the camera, Not now leads to photo upload. For the microphone, Not now shows that the stylist can't hear the shopper without it.
 - Denied: explains how to change it later.
 
 **Dialogs, banners and toasts**
@@ -369,10 +353,10 @@ Phone
 |                                      |
 |  +--------------------------------+  |
 |  | My Styling Notes               |  |
-|  | Occasion                       |  |
-|  | Outdoor wedding                |  |
-|  | Budget                         |  |
-|  | Up to $500                     |  |
+|  | Outdoor wedding, November      |  |
+|  | Elegant                        |  |
+|  | Emerald green, preferred       |  |
+|  | Budget: up to $500             |  |
 |  +--------------------------------+  |
 |                                      |
 |  [         Try the demo         ]    |
@@ -394,7 +378,7 @@ Phone
 
 ### 5.3 Styling session on a phone
 
-Top to bottom: stylist, notebook, looks (the PRD's mobile session layout), with the message box pinned at the bottom.
+Top to bottom: stylist, notebook, looks (the PRD's mobile session layout).
 
 ```
 +--------------------------------------+
@@ -407,26 +391,17 @@ Top to bottom: stylist, notebook, looks (the PRD's mobile session layout), with 
 | |                                  | |
 | | Listening                        | |
 | +----------------------------------+ |
-| You: ...an outdoor wedding in        |
-| November.                            |
-| Stylist: Would you prefer a dress    |
-| or a pantsuit?                       |
 | [ Dress ] [ Pantsuit ] [ Not sure ]  |
 |   Mute     Camera     More     End   |
 +--------------------------------------+
 | My Styling Notes                Hide |
-| Tap any note to change it.           |
-|  :  Occasion               Confirmed |
-|  :  Outdoor wedding                  |
-|  :  Season and date        Confirmed |
-|  :  Fall, November                   |
-|  :  Budget                 Confirmed |
-|  :  Up to $500                       |
-|  :  Outfit type        Not specified |
-|  :  Not specified                    |
-|  :  (more notes)                     |
-|  :  Your saved preferences           |
-|  :  Never: high heels                |
+| Notes appear here as you talk.       |
+|  :  Never: high heels (profile)      |
+|  :  Outdoor wedding, November        |
+|  :  Elegant                          |
+|  :  Emerald green, preferred         |
+|  :  Budget: up to $500               |
+|  :  Maid of honor        To confirm  |
 +--------------------------------------+
 | Look 1 of 3                          |
 | Garden ceremony                      |
@@ -441,15 +416,13 @@ Top to bottom: stylist, notebook, looks (the PRD's mobile session layout), with 
 | Checked against your preferences     |
 | [Save look] [Give feedback] [More]   |
 +--------------------------------------+
-| [ Type to the stylist          Send ]|
-+--------------------------------------+
 ```
 
 When the shopper scrolls down to the looks, the pinned bar appears. The circle is a live view of the stylist:
 
 ```
 +--------------------------------------+
-| (o) Listening   Mute    5 confirmed, |
+| (o) Listening   Mute    6 notes,     |
 |                         1 to confirm |
 +--------------------------------------+
 ```
@@ -472,9 +445,8 @@ The camera view and the stylist swap places until **Done showing**.
 | | [ Capture ]    [ Switch camera ] | |
 | +----------------------------------+ |
 | Video isn't saved.    [Done showing] |
-| Stylist: That looks like a navy wool |
-| blazer. Shall I build looks around   |
-| it?                                  |
+| The stylist says what it sees out    |
+| loud.                                |
 +--------------------------------------+
 ```
 
@@ -488,12 +460,12 @@ Two columns: the stylist above the notebook on the left, looks on the right.
 | | Stylist video            | | Garden ceremony                     |
 | | Speaking                 | | [dress] [shoes] [bag]               |
 | +--------------------------+ | $312 to buy                         |
-| Captions                     | [Save look] [Give feedback]         |
-| Mute  Camera  Captions  End  |                                     |
+| [Dress] [Pantsuit]           | [Save look] [Give feedback]         |
+| Mute  Camera  More  End      |                                     |
 +------------------------------+ Look 2 of 3                         |
 | My Styling Notes        Hide | (items)                             |
-|  : Occasion        Confirmed |                                     |
-|  : Outdoor wedding           |                                     |
+|  : Outdoor wedding, November |                                     |
+|  : Budget: up to $500        |                                     |
 |  : (more notes)              |                                     |
 +------------------------------+-------------------------------------+
 ```
@@ -505,18 +477,18 @@ Three columns: stylist, notebook, looks.
 ```
 +----------------------+--------------------------------+-------------------------------------+
 | +------------------+ | My Styling Notes          Hide | Look 1 of 3                         |
-| |                  | | Tap any note to change it.     | Garden ceremony                     |
+| |                  | | Notes appear as you talk.      | Garden ceremony                     |
 | |  Stylist video   | |  : Style around this item      | +-------+ +-------+ +-------+       |
 | |  (4:5)           | |  :  [photo]  Navy wool blazer  | | dress | | shoes | | bag   |       |
 | |                  | |  :           You own this      | +-------+ +-------+ +-------+       |
-| +------------------+ |  : Occasion         Confirmed  | $312 to buy                         |
-| Speaking             |  : Outdoor wedding             | $38 under your $350 limit           |
-|                      |  : Budget           Confirmed  | Checked against your preferences    |
-| You: (captions)      |  : Up to $350   Edited by you  | [Save look] [Give feedback]         |
-| Stylist: (captions)  |  : (more notes)                | [Compare] [Add to bag]              |
-| [Dress] [Pantsuit]   |  : Feedback on this outfit     |                                     |
-| Mute  Camera  End    |  : Likes: dress, bag           | Look 2 of 3                         |
-| [Type to the stylist]|  : (more feedback)             | (items)                             |
+| +------------------+ |  : Outdoor wedding, November   | $312 to buy                         |
+| Speaking             |  : Elegant, emerald green      | $38 under your $350 limit           |
+|                      |  : Budget: up to $350          | Checked against your preferences    |
+|                      |  : Maid of honor   To confirm  | [Save look] [Give feedback]         |
+|                      |  : (more notes)                | [Compare] [Add to bag]              |
+| [Dress] [Pantsuit]   |  : Look 1                      |                                     |
+| Mute Camera More End |  : Keep the dress and bag      | Look 2 of 3                         |
+|                      |  : Lower heels, this look only | (items)                             |
 +----------------------+--------------------------------+-------------------------------------+
 ```
 
@@ -526,7 +498,10 @@ Shows the pencil and ink states and the pasted photo.
 
 ```
  My Styling Notes                                          Hide
- Tap any note to change it.
+ Notes appear here as you talk. Tap a note to confirm or
+ remove it, or say a correction.
+  :------------------------------------------------------------
+  : Never: high heels (from your profile)    Saved preference
   :------------------------------------------------------------
   : Style around this item
   :   +-------------+   Navy wool blazer
@@ -535,23 +510,15 @@ Shows the pencil and ink states and the pasted photo.
   :   |   taped)    |   [Enlarge] [Replace] [Remove]
   :   +-------------+
   :------------------------------------------------------------
-  : Occasion                                        Confirmed
-  : Outdoor wedding                     (ink)
-  : Season and date                                To confirm
-  : Fall, November                      (pencil on highlighter)
-  : Outfit type                                 Not specified
-  : Not specified                       (graphite italic)
-  : Budget                          Confirmed, Edited by you
-  : Up to $350                          (ink)
+  : Outdoor wedding, November          Confirmed   (ink)
+  : Ceremony on grass                  To confirm  (pencil on highlighter)
+  : Budget: up to $350                 Confirmed   (said as a correction)
+  : Maid of honor                      To confirm
+  :     [Confirm] [Remove]             (after a tap)
   :------------------------------------------------------------
-  : Your saved preferences
-  : Never: sequins
-  :------------------------------------------------------------
-  : Feedback on this outfit
-  : Likes: dress and bag (Look 1)
-  : Dislikes: high heels (Look 1 only)
-  : Requested changes: lower heels
-  : Items to keep: dress and bag
+  : Look 1
+  : Keep the dress and bag             Confirmed
+  : Lower heels, this look only        To confirm
 ```
 
 ### 5.8 Other pages
@@ -569,7 +536,7 @@ Shows the pencil and ink states and the pasted photo.
 - Status is always an icon plus a word.
 - Touch targets are at least 44 by 44 px.
 - Screen reader announcements are polite, grouped while the shopper speaks, and never move focus.
-- Captions are on by default.
+- There are no captions in v1, and the conversation needs the shopper's voice. People who are deaf, hard of hearing or can't speak can't use the conversation in v1 (product spec R6, R10, R67).
 - The camera view says in words whether it is on, and items recognized on camera are announced.
 - **Voice only** is always one tap away for anyone who finds video distracting or has a slow connection.
 - Every image has a description. Product photos use the product's name and color. Shopper photos use the recognized description, or "Your photo" until recognition finishes.
@@ -585,6 +552,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **0.7 (19 Oct 2026):** Updated for product spec 1.4. My Styling Notes is now a free-form notebook of jotted notes, with Confirm and Remove by touch and no editor. Captions, the message box and Text only mode are removed, and Microphone needed and Time is up are new stylist states. Principle 6 and the screen sketches are redrawn.
 - **0.6 (18 Oct 2026):** The About page now links the planning files in docs/, where they moved.
 - **0.5 (18 Oct 2026):** Added the welcome screen's resting state (product spec R13).
 - **0.4 (18 Oct 2026):** Video now runs for the whole conversation, so the time-left message counts conversation time. Voice only gained a reason line for when another visitor is using the video stylist.

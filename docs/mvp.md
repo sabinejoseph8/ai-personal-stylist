@@ -1,28 +1,28 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.0
+**Status:** Living document, version 1.1
 **Last updated:** 19 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.3, design 0.6, tech spec 1.1 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 0.7, tech spec 1.2 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
 
 ## 1. The MVP in one paragraph
 
-A mobile-first web app where you talk face to face with a lifelike AI stylist on video, show what you own on camera or in a photo, and watch your preferences appear in My Styling Notes. The stylist then builds complete looks that mix your clothes with sample products and refines them as you react. Nothing can be bought. It is a portfolio project: a hiring manager can try it with no sign-up, and it runs on about $40 a month.
+A mobile-first web app where you talk face to face with a lifelike AI stylist on video, show what you own on camera or in a photo, and watch the stylist jot down what matters in My Styling Notes. The stylist then builds complete looks that mix your clothes with sample products and refines them as you react. Nothing can be bought. It is a portfolio project: a hiring manager can try it with no sign-up, and it runs on about $40 a month.
 
 ## 2. In and out of v1
 
 **In v1**
-- The video stylist (Tavus), with voice only and text only as fallbacks.
-- My Styling Notes, filled in live while you talk and editable by voice or touch.
+- The video stylist (Tavus), with voice only as the fallback. A working microphone is required.
+- My Styling Notes: a free-form notebook the stylist jots in while you talk. Notes are confirmed or removed by touch, and changed by voice.
 - Items to style around, from a photo or the live camera.
 - A wardrobe of owned items.
 - Three checked looks, swaps, and feedback rounds with undo and compare.
 - The preference check: no look breaks a saved preference or a confirmed note.
 - Saved looks and a demo bag that cannot check out.
 - Privacy controls: clear, download and delete.
-- Accessibility: everything works by touch, keyboard or typing.
+- Accessibility: everything outside the conversation works by touch or keyboard. The conversation itself needs your voice (accepted trade-off, risk 17).
 - Portfolio extras: sample phrases, the About this project page, and the Behind the scenes panel.
 
 **Out of v1**
@@ -31,6 +31,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 - Native iOS and Android apps.
 - Other languages, and currencies other than US dollars.
 - Virtual try-on, and a choice of stylists or voices.
+- Captions or any transcript of the conversation, and typing to the stylist (future features).
 - Ads or any other way of making money.
 
 ## 3. How the plan changed from the PRD
@@ -40,7 +41,10 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 | Platform | Mobile-first, platform not set | A web app that opens from a link | Recruiters can try it without installing anything | 17 Oct 2026, product spec |
 | Video stylist and live camera | P0 | Both in v1 (Q1, option B) | The lifelike stylist is the experience | 17 Oct 2026, Sabine |
 | Accounts | Accounts and style profiles | One-tap guest accounts kept for 7 days, plus a sample profile (Q2, option A) | Recruiters won't sign up to try a portfolio project | 17 Oct 2026, Sabine |
-| Conversation layer | OpenAI Realtime for speech, with a Tavus face | Tavus runs the whole video conversation. OpenAI GPT-Live is only a voice-only fallback, and our server handles text only (TQ1) | The PRD pairing needs an always-on media server and adds delay. This setup costs less and is simpler | 18 Oct 2026, Sabine |
+| Conversation layer | OpenAI Realtime for speech, with a Tavus face | Tavus runs the whole video conversation, and OpenAI GPT-Live is only a voice-only fallback (TQ1). The text only mode was removed on 19 Oct 2026 | The PRD pairing needs an always-on media server and adds delay. This setup costs less and is simpler | 18 Oct 2026, Sabine |
+| Captions | Transcript captions (FR-01, AC-06) | No transcript or captions. The stylist's voice and My Styling Notes are the only output (R10) | The screen should feel like a stylist taking notes, not a chat log | 19 Oct 2026, Sabine |
+| My Styling Notes | Labelled fields for occasion, season and date, colors, style, budget, outfit type and owned wardrobe, each with a status (FR-11, FR-12) | A free-form notebook with no fixed fields. The stylist jots down any relevant details, in pencil (To confirm) or ink (Confirmed). The details looks need are still read in the background (R15, R16) | Feels like a real stylist taking notes, and nothing relevant is lost for not fitting a field | 19 Oct 2026, Sabine |
+| Typing and the microphone | Typing as another way in (D18), and a graceful fallback when the microphone is refused (release gate) | No typing to the stylist in v1, to be reviewed in a future version. A working microphone is required, and the app explains how to turn it on (R6, R11) | Keeps v1 focused on the voice conversation. Accepted trade-off: people who can't use voice can't use the conversation in v1 (risk 17) | 19 Oct 2026, Sabine |
 | Video length | Not set | Video for the whole 10-minute conversation. Voice only is used only when something goes wrong | One consistent voice, at the cost of fewer demos a month | 18 Oct 2026, Sabine |
 | Voice change on fallback | Not set | A matched OpenAI voice, and the line "I'm switching to voice only, so I'll sound a little different." | Makes the rare switch less jarring | 18 Oct 2026, Sabine |
 | Live camera recognition | A vision session | Frames read by our server and thrown away, never sent to Tavus. The camera turns off after 2 minutes | Privacy, and it works in every mode | 18 Oct 2026, tech spec |
@@ -52,7 +56,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 ## 4. Success criteria
 
 **Product goals** (product spec section 3)
-1. Feel understood: preferences appear in My Styling Notes while you talk, and anything can be fixed.
+1. Feel understood: the stylist jots down notes in My Styling Notes while you talk, and anything can be fixed by voice or touch.
 2. Style what they own: looks are built around a photo or camera item.
 3. Reach a look they love: feedback rounds keep what you asked for.
 4. Never be contradicted: no look breaks a saved preference or a confirmed note.
@@ -62,7 +66,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 - A demo user can talk to the stylist, show an owned item, save it, get three coordinated looks, swap a piece, save a look, and put sample products in a bag that cannot check out.
 - Owned items are never in totals, and no sample product can be bought or shown as live stock.
 - Catalog connector contract tests pass.
-- Refusing the camera or microphone still leaves a working app.
+- Refusing the camera still leaves a working app. Refusing the microphone shows how to turn it on, because the conversation needs it (changed 19 Oct 2026, R6).
 - Mixed feedback gives a revised look that keeps confirmed requirements and kept pieces, round after round.
 - The item photo stays visible in the notebook through refinement.
 - Every look passes the preference check before anyone sees it.
@@ -96,6 +100,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 14 | Outside services change quickly | Every phase | Open |
 | 15 | The scope is large for one builder | Task groups, and the cut list in progress.md | Open |
 | 16 | Looks feel generic or badly matched (the PRD's "fashion relevance" risk) | Phase 4 looks evals, and you reviewing sample looks | Open |
+| 17 | People who can't use voice can't use the conversation in v1, because there are no captions or typing and a working microphone is required. This includes people who are deaf, hard of hearing or can't speak, and anyone whose microphone is blocked or broken | The app explains how to turn the microphone on (R6). Captions and typing are future features | Accepted on 19 Oct 2026 |
 
 ## 6. Assumptions
 
@@ -111,6 +116,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | Vercel's free Hobby plan allows this personal, non-commercial portfolio project | Vercel's Hobby plan docs (checked 18 Oct 2026): personal, non-commercial use only, which fits a portfolio project with no money-making. Hobby also limits functions to 5 minutes and keeps runtime logs for 1 hour | Checked in 0b |
 | About 150 sample products are enough for three different looks for common occasions | Estimate | Phase 1 (1e) and Phase 4 |
 | About 6 full demos a month is enough for job applications | The $40 budget | Phase 7 monitoring |
+| Visitors trying the demo can talk out loud and have a working microphone | Recruiters try it on a phone or laptop | Phase 7 monitoring |
 
 ## 7. Decisions log
 
@@ -118,6 +124,9 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 19 Oct 2026 | Scope change: no word-for-word transcript or captions on screen, so the stylist's voice and My Styling Notes are the only output. My Styling Notes becomes a free-form notebook with no fixed fields, where the stylist jots down any relevant details. Typing to the stylist is out of scope for v1, to be reviewed in a future version. A working microphone is required: without one, the shopper can't use the app | Sabine | product spec 1.4 (R6, R10, R11, R15), design 0.7, tech spec 1.2, progress.md |
+| 19 Oct 2026 | Defaults accepted with the scope change: notes are confirmed or removed by touch, with Undo, and changed by voice. Uncertain notes are jotted in pencil as To confirm. The details looks need are read in the background. Feedback is jotted under its look. Text only mode is removed, so the conversation pauses or ends with notes and looks kept. Tap-to-try phrases work only once the conversation is running | Sabine | product spec 1.4 (R13, R14, R16, R20, R47, R70) |
+| 19 Oct 2026 | Accepted trade-off: with no captions and no typing, people who are deaf, hard of hearing or can't speak can't use the conversation in v1. Captions and typing are listed as future features | Sabine | product spec 1.4 (R67, section 9), risk 17 |
 | 19 Oct 2026 | The portfolio package (a recruiter README, an architecture diagram, an evaluation defined before measuring, simple standard-library checks, a one-page case study PDF and a private portfolio kit) is built in Phase 7 (7b), once the app exists, not now on Phase 0 test pages. interview-notes.md becomes private: kept on Sabine's Mac and no longer tracked in the public repository (its earlier versions stay in the history) | Sabine | progress.md (7b), CLAUDE.md, .gitignore |
 | 19 Oct 2026 | Voice-only voice: OpenAI "quartz" (Australian, feminine), the closest to Anna | Sabine | progress.md (0e) |
 | 18 Oct 2026 | Android phones aren't tested in v1, because no Android phone is available. Testing covers an iPhone with Safari and a laptop with Chrome. Accepted risk: Android-only problems with permissions or the back camera could reach visitors. Claude recommended a friend's 5-minute check before launch instead | Sabine | progress.md (0f, 7c). Tech spec section 8 to be updated in 0g |
@@ -132,7 +141,7 @@ Newest first. The agreed files hold the detail.
 | 18 Oct 2026 | Monthly budget of about $40: Tavus Starter plus about $18 of AI use, with spending limits on every provider (TQ2) | Sabine | tech spec |
 | 18 Oct 2026 | Video for the whole 10-minute conversation. Voice only is used only when something goes wrong | Sabine | product spec 1.2 (R13) |
 | 18 Oct 2026 | Soften the voice change with a matched voice and the line "I'm switching to voice only, so I'll sound a little different." | Sabine | product spec 1.1 (R9), tech spec 4.2 |
-| 18 Oct 2026 | Tavus full pipeline for video, GPT-Live for voice only, our server for text only, to keep costs lower (TQ1) | Sabine | tech spec |
+| 18 Oct 2026 | Tavus full pipeline for video, GPT-Live for voice only, our server for text only, to keep costs lower (TQ1). Text only was removed on 19 Oct 2026 | Sabine | tech spec |
 | 18 Oct 2026 | Product spec agreed | Sabine | product spec 1.0 |
 | 17 Oct 2026 | The video stylist and the live camera are in v1 (Q1, option B) | Sabine | product spec |
 | 17 Oct 2026 | One-tap guest access with a sample profile (Q2, option A) | Sabine | product spec |
@@ -206,13 +215,13 @@ Where every backlog item from PRD v1.8 lives in the plan.
 | D15 | Saved outfits | Phase 6 (6a) | Planned |
 | D16 | Demo shopping bag | Phase 6 (6a) | Planned |
 | D17 | Consent, deletion and retention | Phase 1 (1a, 1f), Phase 6 (6b) | Planned |
-| D18 | Accessibility and resilient experience | Phase 7 (7a), and every phase | Planned |
+| D18 | Accessibility and resilient experience | Phase 7 (7a), and every phase. Typing and captions moved to a future version on 19 Oct 2026 (risk 17) | Planned |
 | D19 | Contract tests and usage tracking | Phase 1 (1e, 1f), moved earlier than the PRD's R2 | Planned |
 | D20 | End-to-end tests and release gate | Phase 7 (7c) | Planned |
 | D21 | Live preference capture | Phase 2 (2c) | Planned |
-| D22 | My Styling Notes panel | Phase 2 (2d) | Planned |
-| D23 | Not specified, To confirm and Confirmed states | Phase 2 (2c, 2d) | Planned |
-| D24 | Touch editing | Phase 2 (2d) | Planned |
+| D22 | My Styling Notes panel | Phase 2 (2d), as a free-form notebook since 19 Oct 2026 (R15) | Planned |
+| D23 | Not specified, To confirm and Confirmed states | Phase 2 (2c, 2d). Simplified on 19 Oct 2026 to To confirm and Confirmed, since a free-form notebook has no empty fields (R16) | Planned |
+| D24 | Touch editing | Phase 2 (2d). Since 19 Oct 2026: confirm or remove by touch, and change by voice (R20, R21) | Planned |
 | D25 | Voice corrections | Phase 2 (2c) | Planned |
 | D26 | Confirmed notes into looks | Phase 4 (4a, 4c) | Planned |
 | D27 | Privacy and accessibility for live notes | Phase 2 (2d, 2e), Phase 6 (6b), Phase 7 (7a) | Planned |
@@ -241,4 +250,5 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.1 (19 Oct 2026):** Sabine's scope change: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook. Updated the summary, the in and out lists, the PRD table, the success criteria, risk 17, an assumption, the decisions log and the backlog map to match product spec 1.4, design 0.7 and tech spec 1.2.
 - **1.0 (18 Oct 2026):** First version, built from PRD v1.8, backlog v1.8 and the agreed plan files.

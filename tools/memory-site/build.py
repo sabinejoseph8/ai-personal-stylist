@@ -711,8 +711,8 @@ def principles(sec):
 
 def in_use_strip():
     return ('<div class="stack tight"><div class="kicker">In use</div><div class="pv" aria-hidden="true"><div class="row-inline">'
-            '<span class="pchip ok">Confirmed</span><span class="pchip hl">To confirm</span><span class="pchip">Not specified</span>'
-            '<span class="pchip">Edited by you</span><span class="pbtn">Save look</span><span class="pbtn sec">Cancel</span>'
+            '<span class="pchip ok">Confirmed</span><span class="pchip hl">To confirm</span><span class="pchip">Saved preference</span>'
+            '<span class="pchip">This session only</span><span class="pbtn">Save look</span><span class="pbtn sec">Cancel</span>'
             '</div><div class="banner bad">Voice disconnected. Reconnecting, attempt 2 of 3.</div></div></div>')
 
 
@@ -937,34 +937,32 @@ PREVIEWS = {
     "Stylist stage": '<div class="frame"><span class="state"><span class="pchip ok">Listening</span></span></div>',
     "Voice controls": '<div class="row-inline" style="justify-content:space-around">%s%s%s%s</div>' % (
         ctrl("mic", "Mute"), ctrl("cam", "Camera"), ctrl("more", "More"), ctrl("end", "End")),
-    "Captions": '<div class="pcard"><div><b>You</b> I\'m going to an outdoor wedding in <span class="g">November</span></div>'
-                '<div><b>Stylist</b> Would you prefer a dress or a pantsuit?</div></div>',
-    "Message box": '<div class="row-inline"><span class="input">Type to the stylist</span><span class="pbtn">Send</span></div>',
+    "No transcript": '<div class="row-inline"><span class="pchip ok">Speaking</span><span class="g" style="font-size:12px">No captions or message box. The stylist talks, and jots notes.</span></div>',
     "Quick replies and sample phrases": '<div class="row-inline"><span class="pchip">Dress</span><span class="pchip">Pantsuit</span><span class="pchip">Not sure yet</span></div>',
     "Pinned bar": '<div class="pcard" style="flex-direction:row;align-items:center;gap:8px;flex-wrap:wrap"><span class="circle" style="width:30px;height:30px"></span>'
-                  '<span class="pchip ok">Listening</span><span class="g" style="margin-left:auto;font-size:12px">5 confirmed, 1 to confirm</span></div>',
+                  '<span class="pchip ok">Listening</span><span class="g" style="margin-left:auto;font-size:12px">6 notes, 1 to confirm</span></div>',
     "Camera view": '<div class="frame" style="aspect-ratio:4/3"><span class="state"><span class="pchip"><span class="dotred"></span>Camera on</span></span></div>'
                    '<div class="row-inline"><span>Navy wool blazer?</span><span class="pbtn">Capture</span><span class="g" style="font-size:12px">Video isn\'t saved.</span></div>',
     "Notebook": '<div class="page"><div class="serif" style="font-style:italic;line-height:28px">My Styling Notes</div>'
-                '<div class="nlabel">Occasion <span class="pchip ok">Confirmed</span></div><div class="nval">Outdoor wedding</div></div>',
-    "Note row": '<div class="page">'
-                '<div class="nlabel">Occasion <span class="pchip ok">Confirmed</span></div><div class="nval">Outdoor wedding</div>'
-                '<div class="nlabel">Season and date <span class="pchip hl">To confirm</span></div><div class="nval"><span class="pencil">Fall, November</span></div>'
-                '<div class="nlabel">Outfit type <span class="pchip">Not specified</span></div><div class="nval unset">Not specified</div>'
-                '<div class="nlabel">Budget <span class="pchip ok">Confirmed, edited by you</span></div><div class="nval">Up to $350</div></div>',
-    "Status chip": '<div class="row-inline"><span class="pchip">Not specified</span><span class="pchip hl">To confirm</span><span class="pchip ok">Confirmed</span>'
-                   '<span class="pchip">Edited by you</span><span class="pchip">Saved preference</span><span class="pchip">This session only</span>'
+                '<div class="g" style="font-size:12px;line-height:28px">Notes appear here as you talk. Tap a note to confirm or remove it, or say a correction.</div>'
+                '<div class="nval jot"><span>Outdoor wedding, November</span><span class="pchip ok">Confirmed</span></div></div>',
+    "Jotted note": '<div class="page">'
+                   '<div class="nval jot"><span>Outdoor wedding, November</span><span class="pchip ok">Confirmed</span></div>'
+                   '<div class="nval jot"><span class="pencil">Ceremony on grass</span><span class="pchip hl">To confirm</span></div>'
+                   '<div class="nval jot"><span>Budget: up to $350</span><span class="pchip ok">Confirmed</span></div></div>',
+    "Status chip": '<div class="row-inline"><span class="pchip hl">To confirm</span><span class="pchip ok">Confirmed</span>'
+                   '<span class="pchip">Saved preference</span><span class="pchip">This session only</span>'
                    '<span class="pchip">Checking</span><span class="pchip ok">Checked</span><span class="pchip hl">Needs a new check</span></div>',
-    "Note editor": '<div class="pcard"><b>Budget</b><span class="input">$350</span><div class="row-inline"><span class="pchip ok">Up to</span>'
-                   '<span class="pchip">Around</span><span class="pchip">Between</span></div><div class="row-inline"><span class="pbtn">Save</span><span class="pbtn sec">Cancel</span></div></div>',
+    "Note actions": '<div class="page"><div class="nval jot"><span class="pencil">Maid of honor</span><span class="pchip hl">To confirm</span></div>'
+                    '<div class="row-inline" style="padding:2px 0 4px"><span class="pbtn">Confirm</span><span class="pbtn sec">Remove</span></div></div>',
     "Pasted photo": '<div class="row-inline" style="align-items:flex-start;gap:14px"><span class="photo"></span><div class="stack" style="gap:4px">'
                     '<b>Navy wool blazer</b><span class="g">From your camera</span><span class="pchip ok">You own this</span></div></div>',
     "Item details review": '<div class="pcard"><div class="row-inline">Type: Blazer <span class="pchip ok">Confirmed</span></div>'
                            '<div class="row-inline">Color: Navy <span class="pchip hl">To confirm</span></div>'
                            '<div class="row-inline"><span class="pbtn">It\'s mine</span><span class="pbtn sec">Inspiration</span></div></div>',
-    "Feedback on this outfit": '<div class="page"><div class="nlabel">Likes</div><div class="nval">Dress and bag</div>'
-                               '<div class="nlabel">Dislikes <span class="pchip">This look only</span></div><div class="nval">High heels</div>'
-                               '<div class="nlabel">Requested changes</div><div class="nval">Lower heels</div></div>',
+    "Feedback jotted under a look": '<div class="page"><div class="nlabel">Look 1</div>'
+                                    '<div class="nval jot"><span>Keep the dress and bag</span><span class="pchip ok">Confirmed</span></div>'
+                                    '<div class="nval jot"><span class="pencil">Lower heels, this look only</span><span class="pchip hl">To confirm</span></div></div>',
     "Saved preferences and session exceptions": '<div class="pcard"><div class="row-inline">Never: high heels <span class="pchip">Saved preference</span></div>'
                                                 '<div class="banner info">High heels allowed for this session. <span class="pchip">This session only</span></div></div>',
     "Look panel": '<div class="pcard"><span class="g">Look 1 of 3</span><span class="serif">Garden ceremony</span>'
@@ -982,7 +980,7 @@ PREVIEWS = {
     "Wardrobe": '<div class="row-inline"><span class="pchip ok">All</span><span class="pchip">Tops</span><span class="pchip">Shoes</span></div>'
                 '<div class="thumbs"><span class="thumb">Blazer</span><span class="thumb">Jeans</span><span class="thumb">Loafers</span></div>',
     "Saved looks": '<div class="pcard"><span class="serif">Garden ceremony</span><span class="g">Saved 18 Oct</span><div class="row-inline"><span class="pbtn sec">Open</span><span class="pbtn sec">Remove</span></div></div>',
-    "Permission card": '<div class="pcard"><b>Use your microphone?</b><span class="g">The stylist needs it to hear you. You can type instead.</span>'
+    "Permission card": '<div class="pcard"><b>Use your microphone?</b><span class="g">The stylist needs it to hear you.</span>'
                        '<div class="row-inline"><span class="pbtn">Allow</span><span class="pbtn sec">Not now</span></div></div>',
     "Dialogs, banners and toasts": '<div class="banner ok">Look saved.</div><div class="banner bad">Voice disconnected. Reconnecting, attempt 2 of 3.</div>'
                                    '<div class="row-inline"><span class="pbtn red">Delete all data</span><span class="pbtn sec">Cancel</span></div>',
@@ -1105,6 +1103,8 @@ MERMAID_INIT = {
         "noteBorderColor": "#C9A100",
         "attributeBackgroundColorOdd": "#FFFFFF",
         "attributeBackgroundColorEven": "#F4F6F5",
+        "rowOdd": "#FFFFFF",
+        "rowEven": "#F4F6F5",
     },
     "flowchart": {"useMaxWidth": True, "htmlLabels": True, "curve": "basis", "nodeSpacing": 36, "rankSpacing": 46},
     "sequence": {"useMaxWidth": True, "mirrorActors": False, "actorMargin": 36, "messageMargin": 30},
@@ -1113,7 +1113,7 @@ MERMAID_INIT = {
 
 ARCH = """flowchart TB
   B["Shopper's browser<br/>screens and the live call"]
-  C["Conversation connector<br/>one interface, three engines"]
+  C["Conversation connector<br/>one interface, two engines"]
   T["Tavus<br/>video stylist"]
   G["OpenAI GPT-Live<br/>voice only"]
   S["Our server<br/>Vercel functions"]
@@ -1122,9 +1122,8 @@ ARCH = """flowchart TB
   D["Supabase<br/>sign-in, data, photos"]
   P["Sample catalog<br/>catalog connector"]
   B --> C
-  C -->|video| T
-  C -->|voice only| G
-  C -->|text only| S
+  C --> T
+  C --> G
   B -->|signed-in requests| S
   S --> K
   K --> A
@@ -1221,11 +1220,14 @@ ER = [
     int notes_version
   }
   session_notes {
+    uuid id PK
     uuid session_id FK
-    text field
-    jsonb value
+    text note
+    text kind
+    jsonb details
     text status
     int version
+    bool removed
   }
   session_feedback {
     uuid id PK
