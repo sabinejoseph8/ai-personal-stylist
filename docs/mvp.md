@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.9
+**Status:** Living document, version 1.10
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.1, tech spec 1.12 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.2, tech spec 1.13 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -124,6 +124,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 2d plan: saved preferences in the notebook aren't tappable until Profile and privacy exists in Phase 6 (Q1), and the shopping, style and budget from setup stay in a small From your profile section under the notebook until then (Q2) | Sabine | design 1.2 |
 | 20 Oct 2026 | 2c, note speed: option 3. The notes reader runs Haiku 5.5 with thinking off, readings overlap, and words are sent about twice a second. It was the only setup tested that met R17. The agreed setup (low effort, once a second, one reading at a time) got 35 to 57% within 2 seconds. Notes cost about 14 cents a demo instead of about 6 | Sabine | tech spec 1.12 |
 | 20 Oct 2026 | 2c plan: a clear voice correction keeps the note's status, so a confirmed budget stays confirmed when changed to $350 (Q1). At most 12 notes a session, saved preferences not counted, with one place kept for the budget (Q2) | Sabine | tech spec 1.12, core/notes/merge.ts |
 | 20 Oct 2026 | 2b: the stage shows only controls that work. Camera joins in Phase 3 and Voice only (with More on phones) in 6c, instead of disabled buttons that do nothing | Sabine | progress.md (2b) |
@@ -317,6 +318,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.10 (20 Oct 2026):** 2d decisions (Q1 and Q2).
 - **1.9 (20 Oct 2026):** 2c: your option 3 for note speed and the Q1 and Q2 answers, the notes eval results, risk 2 met in the eval, risk 5 handled for notes, and the per-demo cost at about $0.45.
 - **1.8 (20 Oct 2026):** 2b decisions: only working controls, the three sample phrases, the pinned bar moved to 2d, and the controls under the stage.
 - **1.7 (20 Oct 2026):** 2a decisions (the engines in 2a, and no conversation when video is unavailable until 6c), and the first measured video start in the app.

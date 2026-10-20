@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { Icon, type IconName } from "./icons";
 
 // Buttons (design.md sections 3 and 4.4): at least 44 px, sentence case, saying exactly what happens.
@@ -15,6 +15,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   icon?: IconName;
   children: ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 };
 
 export function buttonClasses(variant: Variant = "primary", extra = "") {
