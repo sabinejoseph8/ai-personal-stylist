@@ -17,5 +17,7 @@ export default defineConfig({
     url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // Conversations in browser tests use the fake engine: free, and the same every time.
+    env: { CONVERSATION_ENGINE: "fake" },
   },
 });

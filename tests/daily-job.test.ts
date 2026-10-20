@@ -31,6 +31,7 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
   const db = serverDb();
   let old: TestGuest;
   let active: TestGuest;
+  let old2: TestGuest;
   let idleSession: string;
   let liveSession: string;
   let summary: Record<string, number>;
@@ -38,13 +39,17 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
   beforeAll(async () => {
     process.env.CRON_SECRET = SECRET;
     process.env.SUPABASE_SECRET_KEY = setting("SUPABASE_SECRET_KEY");
-    [old, active] = await Promise.all([createTestGuest(), createTestGuest()]);
+    [old, active, old2] = await Promise.all([createTestGuest(), createTestGuest(), createTestGuest()]);
     await db.from("profiles").update({ last_active_at: ago(8 * 24 * 60) }).eq("user_id", old.id).throwOnError();
     const upload = await old.db.storage.from("guest-photos").upload(`${old.id}/blazer.jpg`, new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
     if (upload.error) throw upload.error;
-    const sessions = await active.db
+    // One open session per guest: the idle one is a second guest's (only the server creates sessions).
+    const sessions = await db
       .from("sessions")
-      .insert([{ last_activity_at: ago(40) }, { last_activity_at: ago(5) }])
+      .insert([
+        { user_id: old2.id, last_activity_at: ago(40) },
+        { user_id: active.id, last_activity_at: ago(5) },
+      ])
       .select("id, last_activity_at")
       .order("last_activity_at")
       .throwOnError();
@@ -56,6 +61,7 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
 
   afterAll(async () => {
     await active?.remove();
+    await old2?.remove();
     await old?.remove().catch(() => undefined); // already deleted by the job, unless a test failed
   });
 

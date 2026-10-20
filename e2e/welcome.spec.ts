@@ -1,15 +1,9 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { canRunDatabaseTests, serverDb, type TestGuest } from "../tests/support/test-guests";
+import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest, resetGuest } from "./support/guest";
 
 // Phase 1 end-to-end tests: welcome, Try the demo, the sample profile and the setup steps (1d).
-
-async function noSeriousA11yProblems(page: Page) {
-  const results = await new AxeBuilder({ page }).analyze();
-  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
-}
 
 test.describe("a first-time visitor", () => {
   test("sees the welcome screen, the inked notebook and the small print (R1)", async ({ page }) => {
