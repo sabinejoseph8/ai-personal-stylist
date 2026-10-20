@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ConversationEvent } from "@/connectors/conversation/types";
-import type { NextQuestion } from "@/core/notes/types";
+import type { NextQuestion, ShownNote } from "@/core/notes/types";
 
 // The browser's side of My Styling Notes (2c, 2d): it sends the shopper's words about twice a second
 // while they talk (R17, Sabine's option 3 in 2c), and right away when they finish, and shows the notes
@@ -10,7 +10,7 @@ import type { NextQuestion } from "@/core/notes/types";
 // them. A late answer never replaces a newer one (R22): each update carries the notebook's version.
 // Confirm, Remove and Undo by touch (R20) go to the server too.
 
-export type ShownNote = { id: string; kind: string; text: string; status: "to_confirm" | "confirmed" };
+export type { ShownNote };
 export type TouchAction = "confirm" | "remove" | "restore";
 type Touch = { action: TouchAction; note: ShownNote; index: number };
 
@@ -52,7 +52,8 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
   const [question, setQuestion] = useState<NextQuestion>(null);
   const [paused, setPaused] = useState(false);
   const version = useRef(0);
-  const turn = useRef({ id: "", text: "", sent: "" });
+  // The shopper's turn so far, with a fresh label per turn for the server's kept question.
+  const turn = useRef({ id: "", key: "", text: "", sent: "" });
   const stylistSaid = useRef("");
   const context = useRef(onContext);
   const session = useRef(sessionId);
@@ -61,12 +62,12 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     session.current = sessionId;
   });
 
-  // The question on screen, and the turn whose reading asked it: it's sent back with that turn's words,
-  // so a reading that leaves the question out doesn't clear it. Readings overlap, so only a reading of
-  // newer words (a higher sequence) replaces it.
-  const asked = useRef<{ key: string; question: NextQuestion; seq: number }>({ key: "", question: null, seq: 0 });
+  // Readings overlap, so only a reading of newer words (a higher sequence) replaces the question.
+  const questionSeq = useRef(0);
 
-  function apply(u: Update, key: string) {
+  /** An answer from the server. One for a session that has since ended is ignored (Phase 2 review). */
+  function apply(u: Update, from: string) {
+    if (from !== session.current) return;
     if (u.error || u.version === undefined) {
       if (u.paused) setPaused(true);
       return;
@@ -74,8 +75,8 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     if (u.version < version.current) return;
     version.current = u.version;
     if (u.notes) setNotes(u.notes);
-    if (u.question !== undefined && (u.seq ?? 0) >= asked.current.seq) {
-      asked.current = { key, question: u.question, seq: u.seq ?? 0 };
+    if (u.question !== undefined && (u.seq ?? 0) >= questionSeq.current) {
+      questionSeq.current = u.seq ?? 0;
       setQuestion(u.question);
     }
     setPaused(Boolean(u.paused));
@@ -93,7 +94,7 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
       const res = await fetch(`/api/sessions/${id}/words`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, asked: asked.current.key === key ? asked.current.question : null }),
+        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key }),
       });
       if (res.status === 429) {
         // The end of a turn has no later send to carry its words, so it tries again shortly.
@@ -105,7 +106,7 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
         setPaused(true);
         return true;
       }
-      await readLines(res, (u) => apply(u, key));
+      await readLines(res, (u) => apply(u, id));
     } catch {
       setPaused(true);
     }
@@ -117,12 +118,12 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     if (t.text && t.text !== t.sent) {
       t.sent = t.text;
       const words = t.text;
-      void post(`turn-${t.id}`, words, final).then((sent) => {
+      void post(t.key, words, final).then((sent) => {
         // Turned away mid-turn: the next tick sends the words again.
         if (!sent && t.sent === words) t.sent = "";
       });
     }
-    if (final) turn.current = { id: "", text: "", sent: "" };
+    if (final) turn.current = { id: "", key: "", text: "", sent: "" };
   }
 
   /** Feed every conversation event here: the shopper's words are sent, the stylist's last words kept as context. */
@@ -133,6 +134,7 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
       return;
     }
     if (turn.current.id && e.turnId !== turn.current.id) flush(true);
+    if (turn.current.id !== e.turnId) turn.current.key = crypto.randomUUID();
     turn.current.id = e.turnId;
     turn.current.text = e.text;
     if (e.final) flush(true);
@@ -169,7 +171,7 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
       if (res.ok) {
         const u = (await res.json()) as Update;
         // Readings may still be paused: a touch's answer only updates the notes and her context.
-        if (u.version !== undefined && u.version >= version.current) {
+        if (id === session.current && u.version !== undefined && u.version >= version.current) {
           version.current = u.version;
           if (u.notes) setNotes(u.notes);
           if (u.context) context.current(u.context);
@@ -188,7 +190,6 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     return saved;
   }
 
-  const phrases = useRef(0);
   // About twice a second while the shopper talks (tech spec 1.2).
   useEffect(() => {
     if (!live) return;
@@ -204,16 +205,13 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     paused,
     onEvent,
     /** A tapped phrase or quick reply, sent as if spoken. */
-    say: (text: string) => void post(`phrase-${++phrases.current}`, text, true),
+    say: (text: string) => void post(crypto.randomUUID(), text, true),
     touch,
-    clearQuestion: () => {
-      asked.current = { ...asked.current, key: "", question: null };
-      setQuestion(null);
-    },
+    clearQuestion: () => setQuestion(null),
     reset: () => {
       version.current = 0;
       setTouches(new Map());
-      asked.current = { key: "", question: null, seq: 0 };
+      questionSeq.current = 0;
       setNotes([]);
       setQuestion(null);
       setPaused(false);

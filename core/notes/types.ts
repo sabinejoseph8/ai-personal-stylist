@@ -33,4 +33,10 @@ export type NextQuestion = { text: string; options: string[] } | null;
 /** At most 12 notes in a session, saved preferences not counted (Sabine, 2c). */
 export const NOTE_CAP = 12;
 
+/** A note as the browser shows it: its hidden details stay on the server. */
+export type ShownNote = Pick<Note, "id" | "kind" | "text" | "status">;
+
 export const active = (notes: Note[]) => notes.filter((n) => !n.removed);
+
+export const sameDetails = (a: Detail[], b: Detail[]) =>
+  a.length === b.length && a.every((d) => b.some((e) => e.name === d.name && e.value === d.value));

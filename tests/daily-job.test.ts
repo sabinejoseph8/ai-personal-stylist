@@ -39,7 +39,8 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
   beforeAll(async () => {
     process.env.CRON_SECRET = SECRET;
     process.env.SUPABASE_SECRET_KEY = setting("SUPABASE_SECRET_KEY");
-    [old, active, old2] = await Promise.all([createTestGuest(), createTestGuest(), createTestGuest()]);
+    // Fresh guests, not from the pool: the job deletes some of them.
+    [old, active, old2] = await Promise.all([createTestGuest({ fresh: true }), createTestGuest({ fresh: true }), createTestGuest({ fresh: true })]);
     await db.from("profiles").update({ last_active_at: ago(8 * 24 * 60) }).eq("user_id", old.id).throwOnError();
     const upload = await old.db.storage.from("guest-photos").upload(`${old.id}/blazer.jpg`, new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
     if (upload.error) throw upload.error;

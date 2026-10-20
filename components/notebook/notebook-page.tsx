@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { Icon } from "@/components/ui/icons";
+import type { ShownNote } from "@/core/notes/types";
 
 // My Styling Notes as a notebook page (design.md sections 3 and 4.2): ruled lines every
 // 28 px, a margin line, notes jotted in pencil (To confirm) or ink (Confirmed).
 // Used by the welcome hero; the session's notebook is my-styling-notes.tsx (2d).
 
-export type JottedNote = { id: string; text: string; status: "to_confirm" | "confirmed" };
+export type JottedNote = Pick<ShownNote, "id" | "text" | "status">;
 
 export function NotebookPage({ title = "My Styling Notes", children, className = "" }: { title?: string; children: ReactNode; className?: string }) {
   return (

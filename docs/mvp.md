@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.11
+**Status:** Living document, version 1.12
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.4, tech spec 1.14 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.4, tech spec 1.15 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -124,6 +124,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | Phase 2 code review: A, split the session screen's code now, before the camera joins it (recommended). B, a call a closed browser left behind is counted until the shopper's last activity plus the 30 seconds Tavus waits, rather than its whole reserved time (Claude recommended the whole time, which can't undercount; Sabine chose the estimate, accepting it can undercount a call left running with nobody there) | Sabine | tech spec 1.15 |
 | 20 Oct 2026 | 2e plan: idle sessions are ended and their notes deleted by a database timer every 10 minutes (Supabase Cron), not just by the daily job (Q1). Time left and Time is up are checked by automated tests with a sped-up clock, and the iPhone check covers reconnecting and End, to save 10 Tavus minutes (Q2) | Sabine | tech spec 1.14 |
 | 20 Oct 2026 | 2e: the fonts come from the Fontsource packages instead of Google at build time, because the Google download had started failing builds (on GitHub twice in 2c, then every local build in 2e). Moved forward from the 2f list, since it blocked testing | Claude, recorded for Sabine | tech spec 1.14 |
 | 20 Oct 2026 | 2d plan: saved preferences in the notebook aren't tappable until Profile and privacy exists in Phase 6 (Q1), and the shopping, style and budget from setup stay in a small From your profile section under the notebook until then (Q2) | Sabine | design 1.2 |
@@ -262,6 +263,35 @@ Reviewed all Phase 1 code (77 files, about 4,600 lines, apart from photos and do
 
 Your iPhone check after the fixes found one more bug: after Use a sample profile, Edit your profile opened setup with the old empty answers, and finishing setup saved them over the sample profile. Next.js 16 keeps a page's state when you leave and come back, so setup still held what it showed on your first visit. Fixed: setup starts from the saved profile whenever that changes, with a test that repeats your steps (tech spec 1.9, pattern 11). The review also caught one mistake in its own fixes: the first version of the one-step preferences save used a query form PostgreSQL doesn't allow, and the new test found it before it shipped. Turning on the signed-in browser tests on GitHub also showed that Supabase allows only about 30 test sign-ins per 5 minutes from one computer, so the welcome tests now share one test guest per worker. After the fixes: 96 unit and database tests and 40 browser tests pass.
 
+### Phase 2 code review (2f, 20 Oct 2026)
+
+Reviewed all Phase 2 code (64 files, about 4,750 lines, apart from docs) at extra-high effort. 15 findings:
+
+| Finding | Outcome |
+|---|---|
+| Two ends of the same call arriving together gave its reserved time back twice, which could reset the daily 10 minutes | Fixed: the first end claims the call; the other only ends the session. With a test |
+| A call that failed to join was never destroyed, and Daily allows one call per page, so every retry would fail | Fixed in the engine and the session screen, with engine tests |
+| Fatal call errors were ignored, so the stage could stay on Reconnecting | Fixed: treated as a dropped call, with a test |
+| Notes answers weren't tied to their session: after End, a late one could show old notes or hide a new session's | Fixed: answers for an earlier session are ignored |
+| Ink by voice was allowed whenever the stylist had said anything, and her greeting always counts | Fixed: the stylist's question has to name the note, with tests |
+| A note removed by touch could come back reworded | Fixed: removed notes block rewordings, with tests |
+| The overlapping-readings merge could merge a yes and a no ("Emerald green" and "Not green shoes") | Fixed: the yes/no check, with a test |
+| "Below 40 degrees" or "about 30 minutes" became a budget | Fixed: numbers followed by units aren't money, with tests |
+| "I may need a coat" was read as May, matched to "Maybe..." | Fixed: May and March only when used as months, matched as whole words, with tests |
+| The next question came back from the browser into the stylist's instructions | Fixed: the session keeps its question on the server; the browser sends only a turn label |
+| Note touches had no rate limit | Fixed: 4 a second |
+| The daily job stopped before deleting old guests if ending one left-behind call failed | Fixed: each step carries on |
+| Duplicate helpers and four copies of the note shape | Fixed: one of each |
+| The session screen's 590-line component ran the whole call | Decision A: split into the conversation hook and the screen |
+| Left-behind calls were counted for their whole reserved time, though the docs said otherwise | Decision B: counted until the last activity plus 30 seconds, with a test |
+
+Also in 2f, as planned:
+- The Phase 0 test pages, their endpoints and their security exemption were deleted. The Phase 0 jotted-notes reader moved into spikes/notes-speed, where its replay script still uses it.
+- The tests now reuse a pool of test guests, so a run signs in a few guests at most instead of about 25.
+- GitHub's workflow steps moved to versions that run on Node 24.
+
+After the fixes: 178 unit and database tests and 91 browser tests pass (the Phase 0 test pages' own tests went with them). The notes eval scored 99% right with 94% of notes within 2 seconds, then 96% and 96% on a second run: Claude's speed varies by a few points between runs, so the target holds on average but not on every run. The eval also shows notes sometimes repeating (about 1 sentence in 6) when Claude edits a note so it matches another, because the repeat rules only look at new notes. It's left for later polish.
+
 ## 9. PRD backlog map
 
 Where every backlog item from PRD v1.8 lives in the plan.
@@ -320,6 +350,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.12 (20 Oct 2026):** The Phase 2 code review: 15 findings, decisions A and B, and the tidying done in 2f.
 - **1.11 (20 Oct 2026):** 2e decisions (Q1, Q2), the fonts from Fontsource, and risk 10 updated.
 - **1.10 (20 Oct 2026):** 2d decisions (Q1 and Q2).
 - **1.9 (20 Oct 2026):** 2c: your option 3 for note speed and the Q1 and Q2 answers, the notes eval results, risk 2 met in the eval, risk 5 handled for notes, and the per-demo cost at about $0.45.

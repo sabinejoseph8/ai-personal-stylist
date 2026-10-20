@@ -57,19 +57,29 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     expect(texts(last)).not.toContain("Budget: up to $500");
   });
 
-  it("keeps this turn's question when a reading leaves it out, and two overlapping readings jot one note", async () => {
-    const asked = { text: "Dress or pantsuit?", options: ["Dress", "Pantsuit"] };
+  it("keeps this turn's question on the server when a reading leaves it out, until a later turn (Phase 2 review)", async () => {
     const silent: NotesReader = { read: async (input) => ({ ...(await createFakeNotesReader().read(input))!, question: null }) };
+    const say = async (words: string, turn: string, reader?: NotesReader) => {
+      const updates: NotesUpdate[] = [];
+      await hearWords(deps(reader ? { reader } : {}), guest.id, sessionId, { words, stylistSaid: "", final: false, turn }, (u) => updates.push(u));
+      return updates.at(-1)!;
+    };
+    expect((await say("It's for a wedding", "turn-a")).question).toEqual({ text: "Dress or pantsuit?", options: ["Dress", "Pantsuit", "Not sure yet"] });
+    const sameTurn = await say("It's for a wedding in November", "turn-a", silent);
+    expect(sameTurn.question?.text).toBe("Dress or pantsuit?");
+    expect(sameTurn.context).toContain("Ask next, when it fits: Dress or pantsuit?");
+    expect((await say("Something elegant", "turn-b", silent)).question).toBeNull();
+  });
+
+  it("two overlapping readings of a growing sentence jot one note", async () => {
     const updates: NotesUpdate[] = [];
-    const heard = (words: string) => ({ words, stylistSaid: "", final: false, asked });
+    const heard = (words: string) => ({ words, stylistSaid: "", final: false, turn: "t" });
     // Two readings start on the same empty notebook and finish one after the other.
     await Promise.all([
-      hearWords(deps({ reader: silent }), guest.id, sessionId, heard("I'm going to an outdoor wedding"), (u) => updates.push(u)),
-      hearWords(deps({ reader: silent }), guest.id, sessionId, heard("I'm going to an outdoor wedding in November"), (u) => updates.push(u)),
+      hearWords(deps(), guest.id, sessionId, heard("I'm going to an outdoor wedding"), (u) => updates.push(u)),
+      hearWords(deps(), guest.id, sessionId, heard("I'm going to an outdoor wedding in November"), (u) => updates.push(u)),
     ]);
     const last = updates.reduce((a, b) => (b.version >= a.version ? b : a));
-    expect(last.question).toEqual(asked);
-    expect(last.context).toContain("Ask next, when it fits: Dress or pantsuit?");
     expect(texts(last).filter((t) => t.toLowerCase().includes("wedding"))).toHaveLength(1);
   });
 

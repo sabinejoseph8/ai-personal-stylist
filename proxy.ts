@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/public-config";
 import { GUEST_COOKIE } from "@/lib/supabase/cookies";
-import { contentSecurityPolicy, isPhase0TestPage, permissionsPolicy } from "@/lib/security-headers";
+import { contentSecurityPolicy, permissionsPolicy } from "@/lib/security-headers";
 
 // Runs before every page: keeps the guest's sign-in fresh, marks the guest's visit, and adds the browser protections.
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
@@ -13,7 +13,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
-  if (!isPhase0TestPage(path)) requestHeaders.set("Content-Security-Policy", csp);
+  requestHeaders.set("Content-Security-Policy", csp);
 
   let response = NextResponse.next({ request: { headers: requestHeaders } });
 
@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     event.waitUntil(Promise.resolve(db.rpc("touch_last_active")).then(() => undefined, () => undefined));
   }
 
-  if (!isPhase0TestPage(path)) response.headers.set("Content-Security-Policy", csp);
+  response.headers.set("Content-Security-Policy", csp);
   response.headers.set("Permissions-Policy", permissionsPolicy(path));
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");

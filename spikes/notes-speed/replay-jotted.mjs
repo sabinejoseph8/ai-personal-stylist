@@ -4,7 +4,7 @@
 // Run: node spikes/notes-speed/replay-jotted.mjs [sentences.json|heldout.json] [model]
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
-import { readNotes } from "../../lib/notes-reader.mjs";
+import { readNotes } from "./notes-reader-jotted.mjs";
 
 const set = process.argv[2] ?? "sentences.json";
 const model = process.argv[3] ?? "claude-haiku-5-5";

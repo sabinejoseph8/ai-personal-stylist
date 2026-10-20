@@ -11,11 +11,8 @@ const Body = z.object({
   words: z.string().trim().min(1).max(3000),
   stylistSaid: z.string().max(600).default(""),
   final: z.boolean().default(false),
-  /** The question on screen from this turn's earlier readings, kept if this reading has none to ask. */
-  asked: z
-    .object({ text: z.string().trim().min(1).max(120), options: z.array(z.string().trim().min(1).max(30)).max(3) })
-    .nullable()
-    .default(null),
+  /** The browser's label for the shopper's turn: the session's question stays while the turn does. */
+  turn: z.string().max(64).default(""),
 });
 
 export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[id]/words">) {

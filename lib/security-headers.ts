@@ -26,12 +26,10 @@ export function contentSecurityPolicy(nonce: string, dev: boolean, local = dev):
   ].join("; ");
 }
 
-/** Camera and microphone are only allowed on the session screen (and the Phase 0 test pages until Phase 2). */
+/** Camera and microphone are only allowed on the session screen. */
 export function permissionsPolicy(pathname: string): string {
-  const mediaAllowed = pathname === "/session" || pathname.startsWith("/session/") || pathname.startsWith("/test/");
+  const mediaAllowed = pathname === "/session" || pathname.startsWith("/session/");
   const allow = mediaAllowed ? "(self)" : "()";
   return `camera=${allow}, microphone=${allow}, geolocation=(), payment=()`;
 }
 
-/** The Phase 0 test pages load Tavus's video library, so they keep a looser policy until Phase 2 deletes them. */
-export const isPhase0TestPage = (pathname: string) => pathname.startsWith("/test/");
