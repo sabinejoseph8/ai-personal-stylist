@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.13 (20 Oct 2026)
+**Status:** Agreed, version 1.14 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -104,7 +104,7 @@ The **core** folder never imports an outside service directly. That keeps it tes
 | Styling | **Tailwind CSS** with the design.md tokens | Colors, type, spacing and radius live in one place, as the design doc lists them. |
 | Accessible building blocks | **Radix UI** primitives | Dialogs, sheets, popovers and menus with keyboard and screen reader support built in. |
 | Icons | **Lucide** | Simple outline icons with the 1.5 px stroke the design doc asks for. |
-| Fonts | **Newsreader** and **Figtree** through Next.js font loading | Served from our own site, so no layout jumps and no calls to Google at runtime. |
+| Fonts | **Newsreader** and **Figtree** through Next.js font loading, from the **Fontsource** packages (open font licence) | Served from our own site, so no layout jumps and no calls to Google. Fetching them from Google at build time sometimes failed, so the files come with the packages (2e). |
 | Browser state | **Zustand** | A small, predictable store for live session state and versions. |
 | Bot protection | **Cloudflare Turnstile** on Try the demo | Stops bots from creating guests and spending the budget. Supabase supports it for anonymous sign-in. |
 | Tests | **Vitest**, **Playwright**, **axe-core** | Fast unit tests, real-browser tests on phone and desktop sizes, and automatic accessibility checks. |
@@ -119,7 +119,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **profiles** | One row per guest | departments, style words, sizes, default budget (amount, currency, meaning), last active time | Until deleted, or 7 days without use |
 | **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule (for example heel height over 5 cm), version | Same as profile |
 | **consents** | Separate permissions (R64) | wardrobe photos, remember preferences, camera explained, with times | Same as profile |
-| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, and the words sequence (one number per send of words, for latest word wins). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle, then the row is closed |
+| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, and the words sequence (one number per send of words, for latest word wins). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle (a database timer closes idle ones every 10 minutes), then the row is closed |
 | **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, colors, style, budget, outfit, owned item, fit, other), hidden details for looks and checks, status, source (voice or touch), the words sequence that last changed it, created and update times, version, removed. At most 12 per session, saved preferences not counted (your answer to Q2 in 2c). Read-only for guests: the server saves them through **save_notes**, which only saves if nothing else saved in between (decision A, done in 2c) | Deleted when the session ends (R63) |
 | **session_feedback** | Likes, Dislikes, Requested changes, Items to keep | look, item or attribute, scope, status, source, version | Deleted when the session ends |
 | **session_exceptions** | "This session only" permissions | saved preference, confirmed time | Deleted when the session ends |
@@ -143,9 +143,9 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 
 | Endpoint | Used for |
 |---|---|
-| **POST /api/sessions** | Start conversation: picks up the guest's open session or opens one (5 starts an hour), reserves their time with the budget guard, and starts the call with that time as its longest length. Returns the call's join link only. Until voice only arrives (6c), if video is unavailable (another visitor, or the month's minutes used) it says so and the conversation doesn't start (your decision, 2a). |
+| **POST /api/sessions** | Start conversation: picks up the guest's open session or opens one (5 starts an hour), reserves their time with the budget guard, and starts the call with that time as its longest length. Returns the call's join link, its longest length, and which limit ends it (today's time or the month's video minutes), for time left and Time is up (R13). Until voice only arrives (6c), if video is unavailable (another visitor, or the month's minutes used) it says so and the conversation doesn't start (your decision, 2a). |
 | **POST /api/sessions/:id/voice** | Exchanges the browser's connection offer with OpenAI for GPT-Live. The OpenAI key never reaches the browser. |
-| **POST /api/sessions/:id/end** | End: ends the call, hard-deletes the Tavus conversation and gives back the reserved time the call didn't use. With keep: true (the call stopped by itself, or the shopper left the page) the session pauses and can be resumed for 30 minutes. Deleting session-only data comes in 2e. |
+| **POST /api/sessions/:id/end** | End: ends the call, hard-deletes the Tavus conversation and gives back the reserved time the call didn't use. With keep: true (the call stopped by itself, or the shopper left the page) the session pauses and can be resumed for 30 minutes. Ending deletes the session's notes, and later its other session-only data (R63). |
 | **POST /api/sessions/:id/words** | New words heard: the turn's words so far, what the stylist last said, whether the turn has ended, and the question on screen from this turn. Streams one line of JSON per update: first the plain-code money and dates, then the notes after Claude's reading, with the next question and the stylist's context. Feedback updates come in Phase 5. |
 | **PATCH /api/sessions/:id/notes/:noteId** | Confirm, remove or restore (Undo) a note by touch (R20). |
 | **POST /api/sessions/:id/assets** | Upload a photo or a captured still. Returns the asset ID at once, then recognition runs. |
@@ -155,7 +155,7 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **/api/wardrobe**, **/api/saved-looks**, **/api/bag** | Add, edit, list and delete. Adding to the bag runs the preference check first. |
 | **GET /api/me/export**, **DELETE /api/me** | Download my data and delete all my data (R65). |
 | **POST /api/webhooks/tavus** | Tavus reports a call's end, so usage is exact. |
-| **GET /api/cron/daily** | The daily clean-up, at 08:00 UTC (vercel.json). Only Vercel's scheduler can call it, because it sends **CRON_SECRET**. |
+| **GET /api/cron/daily** | The daily clean-up, at 08:00 UTC (vercel.json). Only Vercel's scheduler can call it, because it sends **CRON_SECRET**. It also ends at Tavus any call a session left behind. |
 
 ### 4.2 Conversation connector
 
@@ -220,7 +220,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 6. **One publishing gate.** A look reaches the screen or the bag through a single function. That function requires a passing check of that exact look against the current versions (FR-30). Rules run in code first: budget, Never and Must have rules, colors to avoid, outfit type, kept items and the owned item. A missing required detail is a fail. Claude then judges only subjective fit, and any uncertainty becomes "needs clarification".
 7. **Code for facts, AI for language and taste.** Money, totals, dates, filters and firm rules are plain code. AI answers are always shape-checked before use.
 8. **Degrade, never break.** Video falls back to voice only. If voice drops, the conversation pauses and reconnects, and notes and looks stay on screen. A failed check holds the look. A failed notes reader pauses notes while confirming and removing notes by touch keeps working.
-9. **Private by default.** Session data is deleted when the session ends. Photos sit in private storage behind links that expire in minutes. Decision records hold versions and reasons only.
+9. **Private by default.** Session data is deleted when the session ends: at End, and for idle sessions by a database timer every 10 minutes. One database step, **delete_session_data**, deletes a session's session-only data, and each new session-only table joins it (2e). Photos sit in private storage behind links that expire in minutes. Decision records hold versions and reasons only.
 10. **Every paid call passes the budget guard** (**lib/budget-guard.ts**). Before a video or voice call, the server reserves the guest's conversation time in one database step, so two tabs can't share the same minutes, and the call is created with the time granted as its longest length. After the call, the time really used replaces the reservation. Before a Claude or OpenAI call, the server checks the guest's AI money for the day and the provider's money for the month, and records the cost afterwards. If the guard can't answer, the paid call doesn't happen.
 11. **Screens start from saved data.** With Cache Components, Next.js hides a page instead of closing it when the shopper navigates away, and keeps its state for when they come back (React **Activity**). A screen that edits saved data is keyed on that data (for example setup on the saved profile), so it never shows, or saves, old answers over new ones. Passing states such as "Starting your demo…" reset when the page is hidden. Found on your iPhone during the Phase 1 check.
 
@@ -266,7 +266,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 
 ### Privacy
 - Recording is off for every Tavus call. Tavus never receives the camera. Frames are read by our server and thrown away.
-- Each Tavus conversation is hard-deleted when the session ends, because Tavus publishes no retention period (decided 18 Oct 2026). OpenAI and Anthropic delete API data within 30 days and don't train on it.
+- Each Tavus conversation is hard-deleted when its call ends, because Tavus publishes no retention period (decided 18 Oct 2026). Checked with a real call in 2e: afterwards Tavus answers "Invalid conversation_id". A call a closed browser left behind is ended and deleted on the guest's next start or by the daily job. OpenAI and Anthropic delete API data within 30 days and don't train on it.
 - The browser sends words to our server to update notes. The server keeps only the resulting notes.
 - How Tavus, OpenAI and Anthropic store data is checked in Phase 0 and summarized on the About page.
 - Deleting all data removes database rows, stored photos and the guest sign-in.
@@ -280,7 +280,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - **Code:** a GitHub repository, public so it can be linked from your portfolio (default). Secrets are never committed.
 - **Deploys:** Vercel builds every pull request into its own preview link. Merging to main deploys production.
 - **Database:** one Supabase project, **ai-personal-stylist** in your Pro organization, shared by development, previews and the live site until launch (your decision, 20 Oct 2026). Tests clean up the rows they create. A separate production database can be added before launch. Table changes ship as migration files in the repository (supabase/migrations).
-- **Scheduled job:** a Vercel cron job runs daily at 08:00 UTC (4 am in New York). It closes sessions idle for 30 minutes, deletes guests unused for 7 days with their photos (R3), deletes test guests older than a day that a test run left behind, and deletes usage records older than 90 days and old rate-limit counts. Only anonymous guests and test guests are ever deleted. A guest's last-active time is updated on every page visit, at most once an hour (your decision, 20 Oct 2026). Keeping the database awake isn't needed on Pro.
+- **Scheduled jobs:** a database timer (Supabase Cron, **close-idle-sessions**) runs every 10 minutes: it ends sessions idle for 30 minutes and deletes their notes (your answer to Q1 in 2e). A Vercel cron job runs daily at 08:00 UTC (4 am in New York). It does the same, ends at Tavus any call those sessions left behind and gives back its unused minutes, deletes guests unused for 7 days with their photos (R3), deletes test guests older than a day that a test run left behind, and deletes usage records older than 90 days and old rate-limit counts. Only anonymous guests and test guests are ever deleted. A guest's last-active time is updated on every page visit, at most once an hour (your decision, 20 Oct 2026). Keeping the database awake isn't needed on Pro.
 - **Tavus setup:** the stylist's Tavus configuration (PAL, face, conversation model, timeouts) is kept as a file in the repository and applied by a script, so it is versioned like code.
 - **Address:** the free vercel.app address for v1 (default). A custom domain can be added later.
 - **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, and the daily and monthly limits (section 6, Cost limits). **CONVERSATION_ENGINE=fake** is for automated tests only.
@@ -360,6 +360,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
 | 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A). Now about $50, with the Supabase project ($10) from 20 Oct 2026 | Your decision |
+| 20 Oct 2026 | 2e: idle sessions are ended and their notes deleted by a database timer every 10 minutes, rather than only by the daily job (Q1). The time left and Time is up are checked by automated tests with a sped-up clock rather than a 10-minute call on your iPhone (Q2) | Your decision |
 | 20 Oct 2026 | 2c, note speed (option 3): the notes reader runs Haiku 5.5 with thinking off, readings overlap, and words are sent about twice a second, within the existing limit of 2 a second. It's the only setup tested that meets R17 (97 to 99% of notes within 2 seconds, 96 to 99% right). Notes cost about 14 cents a demo instead of about 6. Also from the 2c plan: a clear voice correction keeps the note's status (Q1), and at most 12 notes a session, saved preferences not counted (Q2) | Your decision |
 | 20 Oct 2026 | One Supabase project in your Pro organization ($10 a month), shared by development and the live site until launch, instead of two free projects. Your organization was already on Pro, where each project costs about $10 | Your decision |
 | 19 Oct 2026 | Phase 0 gate (0g): video passed and stays on for the whole conversation; GPT-Live passed, with the quartz voice; cost passed at about $0.35 of AI per demo. Live notes are accurate but below the 95%-within-2-seconds target, so the gap is closed in Phase 2 with the target unchanged. TQ3: Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest. Stock face TQ5: Anna - Casual | Your decision |
@@ -378,6 +379,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.14 (20 Oct 2026):** 2e: time left and Time is up, a dropped call started again by itself up to 3 times, session data deleted at End and by the database timer (your Q1), calls left behind ended at Tavus, saving notes refused once a session ends, and fonts from the Fontsource packages.
 - **1.13 (20 Oct 2026):** 2d: touches on a note show at once and are sent in order (section 5, pattern 5).
 - **1.12 (20 Oct 2026):** 2c: the notes reader as built. Words twice a second with overlapping readings, Haiku 5.5 with thinking off (your option 3), notes saved only by the server, the words sequence and merge rules, the words and notes endpoints, and the notes eval.
 - **1.11 (20 Oct 2026):** 2b: the connector's microphone event, and the stage's state worked out from the events in one tested rule set (lib/stage.ts). The microphone is checked before the server starts a call, so a blocked microphone never uses Tavus minutes.

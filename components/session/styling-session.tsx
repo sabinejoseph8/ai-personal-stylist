@@ -14,7 +14,7 @@ import type { ConversationEngine, ConversationEvent } from "@/connectors/convers
 import { checkMicrophone, microphoneAllowed } from "@/lib/microphone";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
-import { type MicrophoneProblem, nextStage, READY, showSamplePhrases, someoneSpeaking, stageLabel } from "@/lib/stage";
+import { type MicrophoneProblem, nextStage, READY, showSamplePhrases, someoneSpeaking, stageLabel, timeLeftLabel } from "@/lib/stage";
 
 // The styling session (design 4.1, 4.2, 5.3 and 5.6). The stylist stage (R6 to R8, R70): the video
 // stylist with her state in words, Mute and End, the microphone card, and tap-to-try phrases, with no
@@ -25,6 +25,22 @@ import { type MicrophoneProblem, nextStage, READY, showSamplePhrases, someoneSpe
 type Flow = "idle" | "explain" | "declined" | "starting" | "live" | "ending";
 
 const NO_CONNECTION = "We couldn't reach your stylist. Check your connection and try again.";
+const NO_RECONNECT = "We couldn't reconnect to your stylist. Check your connection, then try again.";
+
+/** What Time is up says, by the limit that ended the call (R13). */
+const TIME_UP = {
+  day: "You've used today's 10 minutes with your stylist. Come back tomorrow to talk again.",
+  month: "The video stylist is resting until the 1st of next month.",
+} as const;
+type Limit = keyof typeof TIME_UP;
+const TIME_USED = new Set(["daily_time_used", "monthly_video_used"]);
+
+/** A dropped call is started again by itself up to 3 times, this far apart (R14). */
+const RETRIES = 3;
+const RETRY_MS = 1500;
+
+/** How starting a call went. `final` means trying again won't help (a refusal or the microphone). */
+type Outcome = { ok: true } | { ok: false; final: boolean; message?: string; reason?: string };
 
 const MICROPHONE_HELP: Record<MicrophoneProblem, string> = {
   blocked:
@@ -109,6 +125,12 @@ export function StylingSession({
   const video = useRef<HTMLVideoElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const shown = useRef(false);
+  // R13: when the call's time runs out, and which limit ends it. R14: each Start, End or Try again
+  // starts a new attempt, so a dropped call's retries stop when the shopper does something else.
+  const callEnds = useRef<{ at: number; because: Limit } | null>(null);
+  const attempt = useRef(0);
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const [timeUpMessage, setTimeUpMessage] = useState<string | null>(null);
   // My Styling Notes (2c, 2d): words go to the server, notes and the next question come back, and the
   // stylist is told every change, including Confirm and Remove by touch.
   const notes = useNotes(sessionId, flow === "live", initialNotes, (context) => engine.current?.updateContext(context));
@@ -162,66 +184,129 @@ export function StylingSession({
     };
   }, []);
 
-  /** The call stops without End: the session pauses, so it can be resumed. */
-  function pauseCall(reason?: MicrophoneProblem) {
+  // Time left in the last 2 minutes, and Time is up when it runs out (R13).
+  useEffect(() => {
+    if (flow !== "live") return;
+    const timer = setInterval(() => {
+      const ends = callEnds.current;
+      if (!ends) return;
+      const left = (ends.at - Date.now()) / 1000;
+      setTimeLeft(timeLeftLabel(left));
+      if (left <= 0) timeUp(ends.because);
+    }, 1000);
+    return () => clearInterval(timer);
+    // timeUp only uses refs and state setters, so the timer needn't restart.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flow]);
+
+  /** Leaves the call, and pauses the session on the server so it can be resumed. False if there was no call. */
+  function leaveCall() {
     const current = live.current;
-    if (!current || current.ending) return;
+    if (!current || current.ending) return false;
     current.ending = true;
     const e = engine.current;
     live.current = null;
     engine.current = null;
+    callEnds.current = null;
     void e?.leave();
     void endOnServer(current.sessionId, true);
+    return true;
+  }
+
+  /** The microphone stopped working: the session pauses (R6). */
+  function pauseCall(reason: MicrophoneProblem) {
+    if (!leaveCall()) return;
     setFlow("idle");
-    if (reason) dispatch({ type: "microphone", problem: reason });
-    else {
-      dispatch({ type: "stopped" });
-      setProblem("The call ended. You can resume while you have conversation time left today.");
+    dispatch({ type: "microphone", problem: reason });
+  }
+
+  /** The day's or month's conversation time ran out: the conversation ends for now, and the notes stay (R13). */
+  function timeUp(because: Limit, message: string = TIME_UP[because]) {
+    leaveCall();
+    callEnds.current = null;
+    setFlow("idle");
+    setProblem(null);
+    setTimeUpMessage(message);
+    dispatch({ type: "time-up" });
+  }
+
+  /** The call dropped: a fresh call starts by itself, up to 3 times, then Try again (R14). */
+  async function dropped() {
+    const near = callEnds.current && Date.now() >= callEnds.current.at - 10_000;
+    // Tavus ends a call itself when its time is up.
+    if (near) return timeUp(callEnds.current!.because);
+    if (!leaveCall()) return;
+    const mine = ++attempt.current;
+    setFlow("starting");
+    dispatch({ type: "connection", state: "reconnecting" });
+    for (let i = 0; i < RETRIES; i++) {
+      await new Promise((r) => setTimeout(r, RETRY_MS));
+      if (attempt.current !== mine || !shown.current) return;
+      const outcome = await connect({ reconnecting: true });
+      if (outcome.ok || attempt.current !== mine) return;
+      if (outcome.final) return settle(outcome);
     }
+    settle({ ok: false, final: true, message: NO_RECONNECT });
   }
 
   function onEvent(e: ConversationEvent) {
-    if (e.type === "connection" && e.state === "ended") return pauseCall();
+    if (e.type === "connection" && e.state === "ended") return void dropped();
     if (e.type === "microphone") return pauseCall(e.problem);
     if (e.type === "error" && e.message === "audio_blocked") setSoundBlocked(true);
     notes.onEvent(e);
     dispatch(e);
   }
 
-  function fail(message: string) {
+  /** A call that couldn't start: Time is up when the time is used, otherwise the reason in words. */
+  function settle(outcome: Outcome) {
+    if (outcome.ok) return;
+    if (outcome.reason && TIME_USED.has(outcome.reason)) return timeUp(outcome.reason === "daily_time_used" ? "day" : "month", outcome.message);
+    if (!outcome.message) return; // the microphone card, or the page was left
     setFlow("idle");
     dispatch({ type: "stopped" });
-    setProblem(message);
+    setProblem(outcome.message);
   }
 
   /** Start conversation, Resume or Try again: explain the microphone first unless it's allowed. */
   async function begin() {
     setProblem(null);
-    if (await microphoneAllowed()) await connect();
+    if (await microphoneAllowed()) await start();
     else setFlow("explain");
   }
 
-  async function connect() {
+  async function start() {
+    attempt.current++;
+    setTimeUpMessage(null);
+    settle(await connect());
+  }
+
+  async function connect({ reconnecting = false } = {}): Promise<Outcome> {
     setProblem(null);
     setFlow("starting");
-    dispatch({ type: "starting" });
+    dispatch(reconnecting ? { type: "connection", state: "reconnecting" } : { type: "starting" });
     // The microphone is checked before the server starts a call, so it never uses Tavus minutes.
     const mic = await checkMicrophone();
     if (mic) {
       setFlow("idle");
-      return dispatch({ type: "microphone", problem: mic });
+      dispatch({ type: "microphone", problem: mic });
+      return { ok: false, final: true };
     }
 
     let res: Response;
     try {
       res = await fetch("/api/sessions", { method: "POST" });
     } catch {
-      return fail(NO_CONNECTION);
+      return { ok: false, final: false, message: NO_CONNECTION };
     }
     const data = await res.json().catch(() => null);
-    if (!res.ok || !data?.call) return fail(data?.error ?? NO_CONNECTION);
+    if (!res.ok || !data?.call) {
+      // A refusal (time used, the stylist busy, too many starts) won't change by trying again.
+      const final = [401, 409, 429, 503].includes(res.status);
+      return { ok: false, final, message: data?.error ?? NO_CONNECTION, reason: data?.reason };
+    }
 
     setSessionId(data.sessionId);
+    callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : "day" };
     const e = await engineFor(data.call.joinUrl);
     engine.current = e;
     live.current = { sessionId: data.sessionId, ending: false };
@@ -234,14 +319,17 @@ export function StylingSession({
         live.current = null;
         engine.current = null;
         await e.leave();
-        return void endOnServer(data.sessionId, true);
+        void endOnServer(data.sessionId, true);
+        return { ok: false, final: true };
       }
       if (live.current) setFlow("live");
+      return { ok: true };
     } catch {
       live.current = null;
       engine.current = null;
+      callEnds.current = null;
       void endOnServer(data.sessionId, true);
-      fail("The call couldn't connect. Please try again.");
+      return { ok: false, final: false, message: "The call couldn't connect. Please try again." };
     }
   }
 
@@ -266,6 +354,9 @@ export function StylingSession({
   async function end() {
     const current = live.current;
     const id = current?.sessionId ?? sessionId;
+    attempt.current++;
+    callEnds.current = null;
+    setTimeUpMessage(null);
     setFlow("ending");
     if (current) current.ending = true;
     await engine.current?.leave();
@@ -302,11 +393,18 @@ export function StylingSession({
           <audio ref={audio} autoPlay />
           {!showVideo && (
             <p className="type-body absolute inset-0 m-0 flex items-center justify-center p-6 text-center text-white/80">
-              {label === "Ended" ? "Conversation ended." : "Your stylist will appear here."}
+              {label === "Ended" || label === "Time is up" ? "Conversation ended." : "Your stylist will appear here."}
             </p>
           )}
           <p aria-live="polite" className="type-label absolute left-3 top-3 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white">
             {label}
+          </p>
+          {/* Time left, in the last 2 minutes (R13). Always there, so screen readers hear it change. */}
+          <p
+            role="status"
+            className={`type-label absolute right-3 top-3 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white ${flow === "live" && timeLeft ? "" : "sr-only"}`}
+          >
+            {flow === "live" ? timeLeft : null}
           </p>
         </div>
 
@@ -396,19 +494,23 @@ export function StylingSession({
         )}
 
         {problem && <Banner tone="error" title={problem} />}
+        {stage.timeUp && timeUpMessage && <Banner title="Time is up">{timeUpMessage} Your notes stay here until you end the session.</Banner>}
 
         {(flow === "explain" || flow === "declined") && (
           <PermissionCard
             permission="microphone"
             state={flow === "explain" ? "ask" : "declined"}
-            onAllow={connect}
+            onAllow={() => void start()}
             onNotNow={() => setFlow("declined")}
           />
         )}
 
         {!inCall && !stage.microphone && flow !== "explain" && (
           <div className="flex flex-wrap gap-2">
-            <Button onClick={begin}>{sessionId ? "Resume conversation" : "Start conversation"}</Button>
+            {/* After Time is up there's no time left to resume with (R13). */}
+            {!stage.timeUp && (
+              <Button onClick={begin}>{problem === NO_RECONNECT ? "Try again" : sessionId ? "Resume conversation" : "Start conversation"}</Button>
+            )}
             {sessionId && (
               <ConfirmDialog
                 open={confirmEndPaused}

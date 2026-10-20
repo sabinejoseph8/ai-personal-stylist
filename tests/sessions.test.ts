@@ -2,11 +2,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createFakeProvider } from "@/connectors/conversation/fake";
 import type { CallProvider } from "@/connectors/conversation/types";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
-import { endConversation, openSession, type SessionDeps, startConversation } from "@/lib/sessions";
+import { endConversation, endLeftBehindCalls, openSession, type SessionDeps, startConversation } from "@/lib/sessions";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
-// 2a: sessions (R12) with the fake engine, against the real database: start, resume, End, the
-// 30-minute idle rule, the budget guard on every call, and sessions only the server can change.
+// 2a and 2e: sessions (R12) with the fake engine, against the real database: start, resume, End, the
+// 30-minute idle rule, the budget guard on every call, sessions only the server can change, and
+// session-only data deleted when a session ends (R63).
 describe.skipIf(!canRunDatabaseTests)("sessions", () => {
   const db = serverDb();
   let guest: TestGuest;
@@ -55,6 +56,49 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     const used = await usedToday();
     expect(used).toBeGreaterThanOrEqual(90);
     expect(used).toBeLessThan(100);
+  });
+
+  const addNote = (sessionId: string) =>
+    db.from("session_notes").insert({ user_id: guest.id, session_id: sessionId, note_text: "Elegant", kind: "style" }).throwOnError();
+  const notesIn = async (sessionId: string) =>
+    (await db.from("session_notes").select("id", { count: "exact", head: true }).eq("session_id", sessionId).throwOnError()).count;
+
+  it("End deletes the session's notes, while a paused session keeps them to resume (R63)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    expect(started.endsBecause).toBe("day");
+    await addNote(started.sessionId);
+    await endConversation(deps(), guest.id, started.sessionId, true);
+    expect(await notesIn(started.sessionId)).toBe(1);
+    await endConversation(deps(), guest.id, started.sessionId);
+    expect(await notesIn(started.sessionId)).toBe(0);
+  });
+
+  it("the database timer ends sessions idle for 30 minutes and deletes their notes; the call they left behind ends on the next start (R12, R63)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    await addNote(started.sessionId);
+    await db.from("sessions").update({ last_activity_at: new Date(Date.now() - 40 * 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    await db.rpc("close_idle_sessions").throwOnError();
+    expect(await row(started.sessionId)).toMatchObject({ status: "ended", call_id: started.call.callId });
+    expect(await notesIn(started.sessionId)).toBe(0);
+
+    const next = await startConversation(deps(), guest.id);
+    if (!next.ok) throw new Error(next.reason);
+    expect(next.sessionId).not.toBe(started.sessionId);
+    expect(ended).toEqual([started.call.callId]);
+    expect(await row(started.sessionId)).toMatchObject({ status: "ended", call_id: null, reserved_seconds: null });
+  });
+
+  it("the daily job's sweep ends every call left behind, and gives back its unused minutes", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    await db.from("sessions").update({ status: "ended", call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    expect(await endLeftBehindCalls(deps(), guest.id)).toBe(1);
+    expect(ended).toEqual([started.call.callId]);
+    expect(await row(started.sessionId)).toMatchObject({ call_id: null });
+    expect(await usedToday()).toBeLessThan(120);
+    expect(await endLeftBehindCalls(deps(), guest.id)).toBe(0);
   });
 
   it("a call that stops by itself pauses the session, and the next start resumes it", async () => {

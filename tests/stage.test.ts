@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextStage, READY, showSamplePhrases, type Stage, type StageAction, stageLabel } from "@/lib/stage";
+import { nextStage, READY, showSamplePhrases, type Stage, type StageAction, stageLabel, timeLeftLabel } from "@/lib/stage";
 
 // 2b: the stylist's state in words (R8), interrupting (R7) and when the sample phrases show (R70).
 const run = (...actions: StageAction[]): Stage => actions.reduce(nextStage, READY);
@@ -49,6 +49,25 @@ describe("the stylist's state in words", () => {
   it("is Ended after the call", () => {
     expect(label(...connected, { type: "stopped" })).toBe("Ended");
     expect(label(...connected, { type: "connection", state: "ended" })).toBe("Ended");
+  });
+});
+
+describe("time limits (R13)", () => {
+  it("says Time is up when the time runs out, until a new start", () => {
+    expect(label(...connected, { type: "time-up" })).toBe("Time is up");
+    expect(label(...connected, { type: "time-up" }, { type: "starting" })).toBe("Connecting");
+  });
+
+  it.each([
+    [600, null],
+    [121, null],
+    [120, "2 minutes left"],
+    [61, "2 minutes left"],
+    [60, "1 minute left"],
+    [1, "1 minute left"],
+    [0, null],
+  ])("with %i seconds left shows %s", (seconds, text) => {
+    expect(timeLeftLabel(seconds)).toBe(text);
   });
 });
 

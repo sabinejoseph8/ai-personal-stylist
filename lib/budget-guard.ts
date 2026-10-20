@@ -80,7 +80,11 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
      * then created with the seconds granted as its longest length, so Tavus ends it on time.
      * Voice only also needs OpenAI money left this month.
      */
-    async reserveTime(guestId: string, engine: Engine, wantedSeconds = limits.dailyConversationSeconds): Promise<Answer<{ reservation: Reservation }>> {
+    async reserveTime(
+      guestId: string,
+      engine: Engine,
+      wantedSeconds = limits.dailyConversationSeconds,
+    ): Promise<Answer<{ reservation: Reservation; endsBecause: "day" | "month" }>> {
       if (!Number.isInteger(wantedSeconds) || wantedSeconds < 1) throw new Error("budget guard: ask for at least 1 second");
       if (engine === "voice") {
         const money = await checkAi(guestId, "openai");
@@ -93,7 +97,7 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
         daily_limit: limits.dailyConversationSeconds,
         monthly_video_limit: limits.monthlyVideoSeconds,
       });
-      if (r.granted > 0) return { ok: true, reservation: { engine, seconds: r.granted, day: r.day } };
+      if (r.granted > 0) return { ok: true, reservation: { engine, seconds: r.granted, day: r.day }, endsBecause: endsBecause(r.granted, wantedSeconds, r.left_today) };
       return { ok: false, reason: r.left_today <= 0 ? "daily_time_used" : "monthly_video_used" };
     },
 
@@ -112,3 +116,8 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
 }
 
 export type BudgetGuard = ReturnType<typeof createBudgetGuard>;
+
+/** Which limit ends a call (R13): today's time, or the month's video minutes when they run out first. */
+export function endsBecause(granted: number, wanted: number, leftToday: number): "day" | "month" {
+  return granted < Math.min(wanted, leftToday) ? "month" : "day";
+}

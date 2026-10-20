@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.2 (20 Oct 2026)
+**Status:** Agreed, version 1.3 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -175,9 +175,10 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - States: Ready, Connecting, Listening, Thinking, Speaking, Muted, Reconnecting, Voice only, Microphone needed, Time is up, Ended.
 - **Voice only:** a still portrait of the same stylist with the speaking ring, and a line that says why: "Video unavailable. Continuing with voice." or "The video stylist is with another visitor. Continuing with voice." When the shopper chose it, the line reads "Voice only" with **Turn video on**. When the switch happens mid-conversation, the stylist also says out loud: "I'm switching to voice only, so I'll sound a little different." The voice only voice is chosen to sound as close as possible to the video stylist.
 - **Microphone needed:** shown when the microphone is blocked, missing or not working. It says "The stylist needs your microphone to hear you" and how to turn it on. The conversation can't start or carry on until it works.
-- **Time is up:** when the day's or month's conversation time runs out, the stage says so and the conversation ends. Notes and looks stay on screen.
+- **Time is up:** when the day's or month's conversation time runs out, the stage says so and the conversation ends. Notes and looks stay on screen. A banner says which limit ran out, for example "You've used today's 10 minutes with your stylist. Come back tomorrow to talk again.", and Resume conversation isn't offered; End still clears the notes (2e).
+- **Reconnecting:** shown while a weak connection comes back. If the call drops, a fresh call starts by itself up to 3 times, with Reconnecting showing; then the stage offers **Try again** with "We couldn't reconnect to your stylist." (R14, 2e).
 - The moment the shopper talks over the stylist, voice and video stop together and the state switches to Listening.
-- In the last 2 minutes of conversation time it shows, for example, "2 minutes left".
+- In the last 2 minutes of conversation time it shows, for example, "2 minutes left", then "1 minute left", in a pill at the top right of the stage. Screen readers hear it change.
 
 **Voice controls**
 - **Start conversation** (primary), **Mute**, **Camera**, **Voice only**, **End**.
@@ -556,6 +557,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.3 (20 Oct 2026):** 2e: what Time is up and Reconnecting show, and where the time left sits (4.1).
 - **1.2 (20 Oct 2026):** 2d: your answers to Q1 (saved preferences become tappable with Profile and privacy in Phase 6) and Q2 (From your profile under the notebook until then), notes sitting on the ruled lines, the highlighter as a stroke behind the words, and the removed line with Undo (4.2).
 - **1.1 (20 Oct 2026):** 2b: added the microphone, crossed-out microphone and hang-up icons that Mute and End use (4.1) to the icon table (3.7). No other change.
 - **1.0 (20 Oct 2026):** Agreed by you before the design system was built (1c). Same content as 0.7, plus a note that the hanger icon is drawn to match Lucide. Any later change gets a new version number.

@@ -6,7 +6,7 @@ import { plainChanges } from "@/core/notes/plain";
 import type { NotesReader } from "@/core/notes/reader";
 import { active, type NextQuestion, type Note } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
-import { loadNotes, nextWordsSeq, saveNotes } from "@/lib/notes-store";
+import { loadNotes, nextWordsSeq, SessionEndedError, saveNotes } from "@/lib/notes-store";
 
 // My Styling Notes on the server (2c): words in, notes out, with latest word wins (R22).
 
@@ -77,6 +77,16 @@ async function apply(db: SupabaseClient, sessionId: string, change: (notes: Note
  */
 export async function hearWords(deps: NotesDeps, guestId: string, sessionId: string, heard: HeardWords, emit: (u: NotesUpdate) => void) {
   if (!(await ownSession(deps.db, guestId, sessionId))) return false;
+  try {
+    await readWords(deps, guestId, sessionId, heard, emit);
+  } catch (e) {
+    // The shopper ended the session while the words were being read: nothing is saved or sent (2e).
+    if (!(e instanceof SessionEndedError)) throw e;
+  }
+  return true;
+}
+
+async function readWords(deps: NotesDeps, guestId: string, sessionId: string, heard: HeardWords, emit: (u: NotesUpdate) => void) {
   const seq = await nextWordsSeq(deps.db, sessionId);
 
   const quick = await apply(deps.db, sessionId, (notes) => mergeNotes(notes, plainChanges(notes, heard.words), seq));
@@ -85,13 +95,13 @@ export async function hearWords(deps: NotesDeps, guestId: string, sessionId: str
   const money = await deps.guard.checkAi(guestId, "claude");
   if (!money.ok) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
-    return true;
+    return;
   }
 
   const reading = await deps.reader.read({ stylistSaid: heard.stylistSaid, words: heard.words, notes: quick.notes });
   if (!reading) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
-    return true;
+    return;
   }
   if (reading.costUsd > 0) await deps.guard.recordAi(guestId, "claude", reading.costUsd);
 
@@ -107,7 +117,6 @@ export async function hearWords(deps: NotesDeps, guestId: string, sessionId: str
   const preferences = await preferencesOf(deps.db, guestId);
   const question = reading.question ?? heard.asked ?? null;
   emit({ version: done.version, notes: shown(done.notes), question, seq, context: stylistContext(done.notes, preferences, question) });
-  return true;
 }
 
 /** Confirm, Remove or Undo by touch (PATCH /api/sessions/:id/notes/:noteId, R20). Null if not the guest's. */
@@ -115,7 +124,13 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
   const { notes, wordsSeq } = await loadNotes(deps.db, sessionId);
   if (!notes.some((n) => n.id === noteId)) return null;
-  const done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
+  let done: Awaited<ReturnType<typeof apply>>;
+  try {
+    done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
+  } catch (e) {
+    if (e instanceof SessionEndedError) return null; // ended meanwhile
+    throw e;
+  }
   const preferences = await preferencesOf(deps.db, guestId);
   return { version: done.version, notes: shown(done.notes), context: stylistContext(done.notes, preferences, null) } satisfies NotesUpdate;
 }
