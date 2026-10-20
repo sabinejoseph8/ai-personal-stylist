@@ -13,6 +13,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel = "Cancel",
   destructive = false,
   onConfirm,
 }: {
@@ -23,6 +24,8 @@ export function ConfirmDialog({
   title: string;
   description: ReactNode;
   confirmLabel: string;
+  /** The button that keeps things as they are, for example "Keep talking". */
+  cancelLabel?: string;
   destructive?: boolean;
   onConfirm: () => void;
 }) {
@@ -36,7 +39,7 @@ export function ConfirmDialog({
           <RadixDialog.Description className="type-body m-0 text-graphite">{description}</RadixDialog.Description>
           <div className="flex flex-wrap justify-end gap-2">
             <RadixDialog.Close asChild>
-              <Button variant="secondary">Cancel</Button>
+              <Button variant="secondary">{cancelLabel}</Button>
             </RadixDialog.Close>
             <Button
               variant={destructive ? "destructive" : "primary"}

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.0 (20 Oct 2026)
+**Status:** Agreed, version 1.1 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -150,6 +150,9 @@ This keeps the notebook visibly on top of everything else.
 | Camera with turning arrows | Switch camera |
 | Shutter circle | Capture |
 | Crossed-out video | Voice only |
+| Microphone | Mute (the microphone is on) |
+| Crossed-out microphone | Muted |
+| Phone hanging up | End the conversation |
 
 ### 3.8 Words
 
@@ -552,6 +555,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.1 (20 Oct 2026):** 2b: added the microphone, crossed-out microphone and hang-up icons that Mute and End use (4.1) to the icon table (3.7). No other change.
 - **1.0 (20 Oct 2026):** Agreed by you before the design system was built (1c). Same content as 0.7, plus a note that the hanger icon is drawn to match Lucide. Any later change gets a new version number.
 - **0.7 (19 Oct 2026):** Updated for product spec 1.4. My Styling Notes is now a free-form notebook of jotted notes, with Confirm and Remove by touch and no editor. Captions, the message box and Text only mode are removed, and Microphone needed and Time is up are new stylist states. Principle 6 and the screen sketches are redrawn.
 - **0.6 (18 Oct 2026):** The About page now links the planning files in docs/, where they moved.

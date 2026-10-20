@@ -33,6 +33,8 @@ export type ConversationEvent =
   | { type: "shopper-speaking"; speaking: boolean }
   | { type: "stylist-request"; request: StylistRequest }
   | { type: "connection"; state: ConnectionState }
+  /** The shopper's microphone is blocked, missing or stopped working (R6): she can't hear them. */
+  | { type: "microphone"; problem: "blocked" | "missing" | "failed" }
   | { type: "error"; message: string };
 
 export type ConversationListener = (event: ConversationEvent) => void;

@@ -4,6 +4,9 @@ import {
   CircleDot,
   CircleQuestionMark,
   Clock,
+  Mic,
+  MicOff,
+  PhoneOff,
   RefreshCw,
   ShieldCheck,
   SwitchCamera,
@@ -56,6 +59,9 @@ export const ICONS = {
   switchCamera: SwitchCamera,
   capture: CircleDot,
   voiceOnly: VideoOff,
+  microphone: Mic,
+  muted: MicOff,
+  end: PhoneOff,
 } satisfies Record<string, ComponentType<LucideProps>>;
 
 export type IconName = keyof typeof ICONS;

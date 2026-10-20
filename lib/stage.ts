@@ -1,0 +1,96 @@
+import type { ConversationEvent } from "@/connectors/conversation/types";
+
+// The stylist stage's state in words (R8, design 4.1), worked out from the conversation's events.
+// Pure rules, so every state has a test. Voice only arrives in 6c, and Time is up in 2e.
+
+export type StageLabel =
+  | "Ready"
+  | "Connecting"
+  | "Listening"
+  | "Thinking"
+  | "Speaking"
+  | "Muted"
+  | "Reconnecting"
+  | "Microphone needed"
+  | "Ended";
+
+export type MicrophoneProblem = "blocked" | "missing" | "failed";
+
+export type Stage = {
+  connection: "idle" | "connecting" | "connected" | "reconnecting" | "ended";
+  stylistSpeaking: boolean;
+  /** The shopper finished speaking (or tapped a phrase) and she hasn't started answering yet. */
+  awaitingReply: boolean;
+  muted: boolean;
+  microphone: MicrophoneProblem | null;
+  /** The shopper has spoken or tapped a phrase: the sample phrases go away (R70). */
+  shopperHasSpoken: boolean;
+};
+
+export const READY: Stage = {
+  connection: "idle",
+  stylistSpeaking: false,
+  awaitingReply: false,
+  muted: false,
+  microphone: null,
+  shopperHasSpoken: false,
+};
+
+/** What the screen itself does, besides the call's events. */
+export type StageAction =
+  | ConversationEvent
+  | { type: "starting" }
+  | { type: "muted"; muted: boolean }
+  | { type: "phrase-sent" }
+  | { type: "stopped" };
+
+export function nextStage(stage: Stage, action: StageAction): Stage {
+  switch (action.type) {
+    case "starting":
+      return { ...READY, connection: "connecting" };
+    case "stopped":
+      return { ...READY, connection: "ended" };
+    case "connection":
+      if (action.state === "ended") return { ...stage, connection: "ended", stylistSpeaking: false, awaitingReply: false };
+      return { ...stage, connection: action.state };
+    case "stylist-speaking":
+      return { ...stage, stylistSpeaking: action.speaking, awaitingReply: false };
+    case "shopper-speaking":
+      // Talking over her stops her at once (R7): the stage goes straight to Listening.
+      return action.speaking
+        ? { ...stage, stylistSpeaking: false, awaitingReply: false, shopperHasSpoken: true }
+        : { ...stage, awaitingReply: true };
+    case "words":
+      return action.speaker === "shopper" ? { ...stage, shopperHasSpoken: true } : stage;
+    case "phrase-sent":
+      return { ...stage, awaitingReply: true, shopperHasSpoken: true };
+    case "muted":
+      return { ...stage, muted: action.muted };
+    case "microphone":
+      return { ...stage, microphone: action.problem };
+    default:
+      return stage;
+  }
+}
+
+export function stageLabel(stage: Stage): StageLabel {
+  if (stage.microphone) return "Microphone needed";
+  switch (stage.connection) {
+    case "idle":
+      return "Ready";
+    case "connecting":
+      return "Connecting";
+    case "reconnecting":
+      return "Reconnecting";
+    case "ended":
+      return "Ended";
+  }
+  if (stage.stylistSpeaking) return "Speaking";
+  if (stage.muted) return "Muted";
+  if (stage.awaitingReply) return "Thinking";
+  return "Listening";
+}
+
+/** The sample phrases show once she's connected and before the shopper first speaks (R70). */
+export const showSamplePhrases = (stage: Stage) =>
+  stage.connection === "connected" && !stage.shopperHasSpoken && !stage.microphone;

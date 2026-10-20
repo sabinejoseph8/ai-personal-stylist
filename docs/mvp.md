@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.7
+**Status:** Living document, version 1.8
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.10 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.1, tech spec 1.11 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -124,6 +124,10 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 2b: the stage shows only controls that work. Camera joins in Phase 3 and Voice only (with More on phones) in 6c, instead of disabled buttons that do nothing | Sabine | progress.md (2b) |
+| 20 Oct 2026 | 2b: the three tap-to-try phrases are the wedding example (R18), a job interview next week (smart but comfortable, under $300) and a friend's birthday dinner on Saturday (relaxed, nothing too bright) | Sabine | lib/sample-phrases.ts |
+| 20 Oct 2026 | 2b: the phones' pinned bar (a live circle of the stylist, Mute and the notes count) is built in 2d with the notebook, since it shows the notes count | Sabine | progress.md (2d) |
+| 20 Oct 2026 | 2b: on phones, Mute and End sit right under the stage and the sample phrases below them, so End is always within reach | Claude | components/session/stylist-stage.tsx |
 | 20 Oct 2026 | 2a builds the Tavus and fake engines. The 2a task's "text engine" was left over from before text only was removed (19 Oct), and the voice-only engine (GPT-Live) stays in 6c | Sabine | progress.md (2a) |
 | 20 Oct 2026 | Until voice only arrives in 6c, when the video stylist is unavailable (another visitor on a call, or the month's video minutes used), the app says so and the conversation doesn't start | Sabine | tech spec 1.10 (4.1) |
 | 20 Oct 2026 | Phase 1 code review, decision A: from Phase 2, the records only the app should change (session state, looks, check results, the bag) are read-only for visitors, and the server writes them with the server key after checking the session is theirs. Built as each feature arrives | Sabine | tech spec 1.8 (6), progress.md (2a) |
@@ -310,6 +314,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.8 (20 Oct 2026):** 2b decisions: only working controls, the three sample phrases, the pinned bar moved to 2d, and the controls under the stage.
 - **1.7 (20 Oct 2026):** 2a decisions (the engines in 2a, and no conversation when video is unavailable until 6c), and the first measured video start in the app.
 - **1.6 (20 Oct 2026):** The Phase 1 code review: 13 findings, 11 fixed, decisions A and B, and the setup bug from your iPhone check.
 - **1.5 (20 Oct 2026):** 1f decisions: the budget limits, the server key for usage records, last-active time on every visit, and the daily job's rules. Risk 4 updated.

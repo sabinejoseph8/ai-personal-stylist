@@ -32,6 +32,13 @@ export type FakeEngine = ConversationEngine & {
 };
 
 export function createFakeEngine(script: FakeStep[] = GREETING): FakeEngine {
+  const engine = makeFakeEngine(script);
+  // Browser tests reach the running fake call here, to play events and read the commands sent.
+  if (typeof window !== "undefined") (window as unknown as { fakeConversation?: FakeEngine }).fakeConversation = engine;
+  return engine;
+}
+
+function makeFakeEngine(script: FakeStep[]): FakeEngine {
   const listeners = new Set<ConversationListener>();
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const commands: { name: string; value?: unknown }[] = [];
