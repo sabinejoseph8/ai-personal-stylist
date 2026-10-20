@@ -2,13 +2,13 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task group 0f: the iPhone and laptop check, and 3 full test demos to measure real costs.
-- **Current status:** Phase 0 is in progress. 0a to 0e are done. Voice only works with live words, and you picked the quartz voice. In 0f, the data-privacy review is done. Live notes: an improved Haiku 5.5 reader got every note right. The camera names items in about 1 second on Haiku, but both models sometimes mistook a tote for a jacket.
-- **Recent changes (19 Oct 2026):** your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
+- **Current focus:** Phase 0, task group 0g: your Phase 0 decisions, using the recorded results.
+- **Current status:** Phase 0 is in progress. 0a to 0f are done. Video, live words, voice only and the camera all work on your iPhone and laptop. Three 10-minute demos cost about $0.05 of Claude each for notes and camera, far under the $1.10 estimate. Notes are accurate on the improved Haiku 5.5 reader, but demos jotted too many notes, which needs tuning in Phase 2.
+- **Recent changes (19 Oct 2026):** 0f done: a full demo page, 3 test demos, a fix so confirmed notes never disappear. your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
 - **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
-- **What's left:** the rest of Phase 0 (0f iPhone and laptop check and 3 test demos, 0g decisions, 0h code review), then phases 1 to 7.
+- **What's left:** 0g decisions and 0h code review to finish Phase 0, then phases 1 to 7.
 - **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Live notes on Opus 5.5 may cost about $2.70 a demo, not $0.60, which matters for the cost gate in 0g. Open assumptions and risks are tracked in docs/mvp.md.
-- **Next action:** a plan for the rest of 0f (iPhone and laptop check, 3 test demos) for your approval.
+- **Next action:** the 0g decision sheet: every Phase 0 result, the decisions to make, and a recommendation for each.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -68,8 +68,8 @@
 ### 0f. Phones, privacy and costs
 - [x] Try it on an iPhone with Safari and a laptop (Android was dropped for v1 on 18 Oct 2026): the microphone prompt, audio starting after a tap, video, and the back camera (risk 12). Done 19 Oct 2026: all worked.
 - [x] Review how Tavus, OpenAI and Anthropic store data, and write a short plain summary for the About page (risk 10). Done 18 Oct 2026: findings and a draft summary are in docs/mvp.md section 8.
-- [ ] Run 3 test demos (10 minutes each on the Tavus Starter plan), and record Tavus minutes, OpenAI minutes and Claude spend. Compare them with the estimate of about $1.10 of AI use per 10-minute demo.
-- [ ] Record the results in the spike results table in docs/mvp.md.
+- [x] Run 3 test demos (10 minutes each on the Tavus Starter plan), and record Tavus minutes, OpenAI minutes and Claude spend. Compare them with the estimate of about $1.10 of AI use per 10-minute demo. Done 19 Oct 2026: about $0.05 of Claude per demo for notes and camera, 10.1 Tavus minutes each, no OpenAI.
+- [x] Record the results in the spike results table in docs/mvp.md.
 
 ### 0g. Phase 0 decisions
 - [ ] **You:** make the decisions in the Phase 0 gate below, using the recorded results.
