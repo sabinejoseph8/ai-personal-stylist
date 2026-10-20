@@ -1,4 +1,4 @@
-import { canRunDatabaseTests, createTestGuest, type TestGuest } from "./support/test-guests";
+import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // Phase 1 automated test: guest A cannot read or change any of guest B's rows or photos.
@@ -14,7 +14,8 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     a = await createTestGuest();
     b = await createTestGuest();
     await a.db.from("profiles").update({ style_words: ["classic"] }).eq("user_id", a.id).throwOnError();
-    const s = await a.db.from("sessions").insert({}).select("id").single().throwOnError();
+    // Sessions are the app's own record: only the server creates them (decision A).
+    const s = await serverDb().from("sessions").insert({ user_id: a.id }).select("id").single().throwOnError();
     sessionId = s.data!.id;
     const n = await a.db
       .from("session_notes")

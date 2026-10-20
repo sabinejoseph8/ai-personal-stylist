@@ -2,28 +2,35 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NotebookPage } from "@/components/notebook/notebook-page";
+import { ConversationPanel } from "@/components/session/conversation-panel";
 import { buttonClasses } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/status-chip";
 import { currentGuest } from "@/lib/guest";
 import { describeBudget, describePreference } from "@/lib/profile";
 import { loadProfile } from "@/lib/profile-store";
+import { isIdle } from "@/lib/sessions";
 
-// Placeholder until Phase 2 builds the styling session. It shows what the stylist will know,
-// including saved preferences such as "Never: high heels" (R5, R24).
+// The styling session. 2a: Start conversation, Resume (R12) and End with the video stylist.
+// Below it, what the stylist already knows, including saved preferences such as "Never: high heels" (R5, R24).
+// The rest of the session screen (the notebook, looks) arrives during Phase 2.
 export const metadata: Metadata = { title: "Your session · AI Personal Stylist" };
 
 export default async function SessionPage() {
   const guest = await currentGuest();
   if (!guest) redirect("/");
-  const profile = await loadProfile(guest.db, guest.id);
+  const [profile, open] = await Promise.all([
+    loadProfile(guest.db, guest.id),
+    guest.db.from("sessions").select("id, last_activity_at").in("status", ["active", "paused"]).maybeSingle(),
+  ]);
   const budget = describeBudget(profile.budget);
+  // Within 30 minutes, the shopper can carry on the same session (R12).
+  const resumable = open.data && !isIdle(open.data.last_activity_at) ? open.data.id : null;
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:px-6">
-      <h1 className="type-title m-0">Your stylist is coming next</h1>
-      <p className="type-body m-0 text-graphite">
-        The live styling session is being built now. Here&apos;s what your stylist will already know about you.
-      </p>
+      <h1 className="type-title m-0">Your styling session</h1>
+      <ConversationPanel openSessionId={resumable} />
+      <p className="type-body m-0 text-graphite">Here&apos;s what your stylist already knows about you.</p>
       <NotebookPage title="Your saved preferences">
         {profile.preferences.length === 0 && (
           <li className="type-body pl-[calc(var(--margin-x)+0.75rem)] pr-4 italic text-graphite">No saved preferences yet.</li>
