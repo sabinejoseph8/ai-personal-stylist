@@ -1,0 +1,283 @@
+{
+ "summary": {
+  "model": "claude-haiku-5-5",
+  "effort": "low",
+  "date": "2026-10-20T23:33:23.990Z",
+  "frames": 24,
+  "typeRight": "18 of 20",
+  "colorRight": "20 of 20",
+  "sure": "20 of 20",
+  "twoItemFramesFair": "4 of 4",
+  "seconds": {
+   "median": 1.32,
+   "p95": 1.91
+  },
+  "costUSD": 0.0034
+ },
+ "results": [
+  {
+   "id": "m-beige-trench-coat",
+   "expected": "coat; beige",
+   "found": "Beige cotton trench coat [coat, beige]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.912552792,
+   "cost": 0.0001435
+  },
+  {
+   "id": "m-black-bomber-jacket",
+   "expected": "jacket; black",
+   "found": "Black nylon bomber jacket [jacket, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.644751083,
+   "cost": 0.000144
+  },
+  {
+   "id": "m-black-bow-tie",
+   "expected": "accessory; black",
+   "found": "Black satin bow tie [tie, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 2.0176236659999995,
+   "cost": 0.000142
+  },
+  {
+   "id": "m-black-chelsea-boots",
+   "expected": "shoes; black",
+   "found": "Black leather Chelsea boots [boots, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.628029,
+   "cost": 0.0001435
+  },
+  {
+   "id": "m-black-dress-shirt",
+   "expected": "shirt; black",
+   "found": "Black long-sleeve button-up shirt [shirt, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.3093419580000005,
+   "cost": 0.0001455
+  },
+  {
+   "id": "m-black-leather-weekender",
+   "expected": "bag; black",
+   "found": "Black leather weekender bag [bag, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.240161333,
+   "cost": 0.0001425
+  },
+  {
+   "id": "m-black-slim-jeans",
+   "expected": "jeans; black",
+   "found": "Black denim jeans [jeans, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.1794085,
+   "cost": 0.000142
+  },
+  {
+   "id": "m-black-turtleneck",
+   "expected": "knitwear; black",
+   "found": "Black knit turtleneck sweater [knitwear, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.3169792500000004,
+   "cost": 0.000145
+  },
+  {
+   "id": "m-black-tuxedo-jacket",
+   "expected": "suit; black",
+   "found": "Black satin-lapel tuxedo jacket [blazer, black]",
+   "typeRight": false,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.3868200000000002,
+   "cost": 0.0001465
+  },
+  {
+   "id": "m-black-tuxedo-trousers",
+   "expected": "trousers; black",
+   "found": "Black satin-stripe tuxedo trousers [trousers, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.0893387499999994,
+   "cost": 0.0001465
+  },
+  {
+   "id": "m-brown-tweed-blazer",
+   "expected": "blazer; brown",
+   "found": "Brown herringbone wool blazer [blazer, brown]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.3815587090000003,
+   "cost": 0.000145
+  },
+  {
+   "id": "m-navy-chino-shorts",
+   "expected": "shorts; navy",
+   "found": "Navy cotton chino shorts [shorts, navy]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.6884337499999997,
+   "cost": 0.0001445
+  },
+  {
+   "id": "m-navy-polo-shirt",
+   "expected": "t-shirt; navy",
+   "found": "Navy cotton polo shirt [t-shirt, navy]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.317961625,
+   "cost": 0.0001455
+  },
+  {
+   "id": "w-black-column-gown",
+   "expected": "dress; black",
+   "found": "Black long-sleeve turtleneck maxi dress [dress, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 0.9017233340000003,
+   "cost": 0.000147
+  },
+  {
+   "id": "w-black-fitted-tee",
+   "expected": "top; black",
+   "found": "Black crew-neck t-shirt [t-shirt, black]",
+   "typeRight": false,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 0.8229680410000001,
+   "cost": 0.0001455
+  },
+  {
+   "id": "w-black-leather-mini-skirt",
+   "expected": "skirt; black",
+   "found": "Black faux leather mini skirt [skirt, black]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.1580760419999996,
+   "cost": 0.000144
+  },
+  {
+   "id": "w-grey-long-cardigan",
+   "expected": "cardigan; heather grey",
+   "found": "Grey long knit open cardigan [cardigan, grey]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.107086208999999,
+   "cost": 0.000145
+  },
+  {
+   "id": "m-burgundy-patterned-tie",
+   "expected": "accessory; burgundy/navy",
+   "found": "Burgundy patterned silk tie [tie, burgundy]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.1738434589999998,
+   "cost": 0.0001455
+  },
+  {
+   "id": "m-floral-short-sleeve-shirt",
+   "expected": "shirt; navy/white",
+   "found": "Navy floral short-sleeve shirt [shirt, navy]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.527921625000001,
+   "cost": 0.000146
+  },
+  {
+   "id": "m-green-flannel-shirt",
+   "expected": "shirt; forest green/navy",
+   "found": "Green and navy plaid flannel shirt [shirt, green]",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": true,
+   "two": false,
+   "seconds": 1.4492491660000004,
+   "cost": 0.0001455
+  },
+  {
+   "id": "m-brown-tweed-blazer + m-black-slim-jeans",
+   "expected": "blazer + jeans",
+   "found": "several",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": false,
+   "two": true,
+   "seconds": 1.6184365420000013,
+   "cost": 0.00014419999999999998
+  },
+  {
+   "id": "w-blush-pleated-maxi-dress + m-black-patent-dress-shoes",
+   "expected": "dress + shoes",
+   "found": "several",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": false,
+   "two": true,
+   "seconds": 1.6197655419999992,
+   "cost": 0.0001112
+  },
+  {
+   "id": "m-black-dress-shirt + m-black-leather-weekender",
+   "expected": "shirt + bag",
+   "found": "several",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": false,
+   "two": true,
+   "seconds": 1.0517232919999988,
+   "cost": 0.0001112
+  },
+  {
+   "id": "m-beige-trench-coat + m-charcoal-wool-trousers",
+   "expected": "coat + trousers",
+   "found": "several",
+   "typeRight": true,
+   "colorRight": true,
+   "sure": false,
+   "two": true,
+   "seconds": 1.2020162920000002,
+   "cost": 0.0001112
+  }
+ ]
+}

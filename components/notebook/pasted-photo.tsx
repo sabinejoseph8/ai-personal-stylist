@@ -1,7 +1,7 @@
 "use client";
 
 import * as RadixDialog from "@radix-ui/react-dialog";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ItemDetails, OwnershipLabel } from "@/components/notebook/item-details";
 import type { PagePhoto } from "@/components/session/use-photos";
 import { Button } from "@/components/ui/button";
@@ -101,6 +101,7 @@ export function StyleAroundThisItem({
   onConfirm,
   onChooseItem,
   onOwnership,
+  pickRef,
 }: {
   photos: PagePhoto[];
   active: PagePhoto | null;
@@ -118,6 +119,8 @@ export function StyleAroundThisItem({
   onConfirm: (photo: PagePhoto, detail: DetailName) => void;
   onChooseItem: (photo: PagePhoto, index: number) => void;
   onOwnership: (photo: PagePhoto, ownership: "owned" | "inspiration") => void;
+  /** Lets Upload photo elsewhere on the screen open the same picker (3c: the camera's fallback). */
+  pickRef?: RefObject<(() => void) | null>;
 }) {
   const picker = useRef<HTMLInputElement>(null);
   const replacing = useRef<PagePhoto | null>(null);
@@ -147,6 +150,11 @@ export function StyleAroundThisItem({
     replacing.current = photo;
     picker.current?.click();
   }
+  useLayoutEffect(() => {
+    if (!pickRef) return;
+    pickRef.current = () => pick(null);
+    return () => void (pickRef.current = null);
+  });
 
   if (!photos.length && !canAdd) return null;
   const index = active ? photos.indexOf(active) : -1;

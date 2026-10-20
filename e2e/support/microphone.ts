@@ -2,25 +2,62 @@ import type { Page } from "@playwright/test";
 
 /**
  * A stand-in microphone for browser tests: allowed (the browser hasn't been asked yet, or already
- * said yes), blocked by the shopper, or missing. Tests can't use a real microphone.
+ * said yes), blocked by the shopper, or missing. Tests can't use a real microphone. The camera (3c)
+ * is a drawn picture from two pretend cameras, or blocked, or missing.
  */
-export async function fakeMicrophone(page: Page, mode: "allowed" | "blocked" | "missing", alreadyAllowed = false) {
+export async function fakeMicrophone(
+  page: Page,
+  mode: "allowed" | "blocked" | "missing",
+  alreadyAllowed = false,
+  camera: "allowed" | "blocked" | "missing" = "allowed",
+) {
   await page.addInitScript(
-    ({ mode, alreadyAllowed }) => {
-      const getUserMedia = async () => {
+    ({ mode, alreadyAllowed, camera }) => {
+      const pretendCamera = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 640;
+        canvas.height = 480;
+        const draw = () => {
+          const g = canvas.getContext("2d")!;
+          g.fillStyle = "#e9e4da";
+          g.fillRect(0, 0, 640, 480);
+          g.fillStyle = "#1f2a44";
+          g.fillRect(220, 90, 200, 300);
+        };
+        draw();
+        setInterval(draw, 100);
+        return canvas.captureStream(10);
+      };
+      const getUserMedia = async (constraints?: MediaStreamConstraints) => {
+        if (constraints?.video) {
+          if (camera === "blocked") throw new DOMException("Permission denied", "NotAllowedError");
+          if (camera === "missing") throw new DOMException("Requested device not found", "NotFoundError");
+          return pretendCamera();
+        }
         if (mode === "blocked") throw new DOMException("Permission denied", "NotAllowedError");
         if (mode === "missing") throw new DOMException("Requested device not found", "NotFoundError");
         return new MediaStream();
       };
-      Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } });
+      const enumerateDevices = async () =>
+        camera === "allowed"
+          ? ([
+              { kind: "videoinput", deviceId: "back", label: "Back camera", groupId: "" },
+              { kind: "videoinput", deviceId: "front", label: "Front camera", groupId: "" },
+            ] as MediaDeviceInfo[])
+          : [];
+      Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia, enumerateDevices } });
       const permissions = navigator.permissions;
       const query = permissions?.query?.bind(permissions);
       if (permissions && query) {
         permissions.query = (async (d: PermissionDescriptor) =>
-          d.name === ("microphone" as PermissionName) ? { state: alreadyAllowed ? "granted" : "prompt" } : query(d)) as typeof permissions.query;
+          d.name === ("microphone" as PermissionName)
+            ? { state: alreadyAllowed ? "granted" : "prompt" }
+            : d.name === ("camera" as PermissionName)
+              ? { state: "prompt" }
+              : query(d)) as typeof permissions.query;
       }
     },
-    { mode, alreadyAllowed },
+    { mode, alreadyAllowed, camera },
   );
 }
 
