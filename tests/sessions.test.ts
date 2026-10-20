@@ -18,7 +18,8 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
   const deps = (change: Partial<SessionDeps> = {}): SessionDeps => ({
     db,
     provider: recording(),
-    guard: createBudgetGuard(db, { ...readBudgetLimits({}), dailyConversationSeconds: 600 }),
+    // The month's video total is shared with the live site and other tests, so it's kept out of reach here.
+    guard: createBudgetGuard(db, { ...readBudgetLimits({}), dailyConversationSeconds: 600, monthlyVideoSeconds: 1e9 }),
     ...change,
   });
   const row = async (id: string) => (await db.from("sessions").select("*").eq("id", id).single().throwOnError()).data!;
@@ -84,7 +85,7 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
   });
 
   it("refuses once the day's 10 minutes are used, without starting a call (R13)", async () => {
-    const tight = deps({ guard: createBudgetGuard(db, { ...readBudgetLimits({}), dailyConversationSeconds: 60 }) });
+    const tight = deps({ guard: createBudgetGuard(db, { ...readBudgetLimits({}), dailyConversationSeconds: 60, monthlyVideoSeconds: 1e9 }) });
     const first = await startConversation(tight, guest.id);
     if (!first.ok) throw new Error(first.reason);
     // The first call ran its whole minute, so starting again (which ends it first) finds no time left.
