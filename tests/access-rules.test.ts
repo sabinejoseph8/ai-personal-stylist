@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // Phase 1 automated test: guest A cannot read or change any of guest B's rows or photos.
-// Runs against the development database when its address and public key are set
+// Runs against the database (shared by development and the live site until launch) when its address and public key are set
 // (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local or the environment).
 function setting(name: string): string | undefined {
   if (process.env[name]) return process.env[name];
@@ -46,6 +46,16 @@ describe.skipIf(!url || !key)("access rules", () => {
     const upload = await a.db.storage.from("guest-photos").upload(photo(), new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
     if (upload.error) throw upload.error;
   }, 30_000);
+
+  // The test shares the live database until launch, so it removes what it made. The two
+  // anonymous test guests themselves are removed by the daily clean-up job (1f).
+  afterAll(async () => {
+    await a.db.storage.from("guest-photos").remove([photo()]);
+    await a.db.from("sessions").delete().eq("id", sessionId);
+    await a.db.from("wardrobe_items").delete().eq("user_id", a.id);
+    await a.db.from("profiles").delete().eq("user_id", a.id);
+    await Promise.all([a.db.auth.signOut(), b.db.auth.signOut()]);
+  });
 
   it("guest A sees their own rows", async () => {
     const { data } = await a.db.from("session_notes").select("id").eq("id", noteId);

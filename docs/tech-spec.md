@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.3 (19 Oct 2026)
+**Status:** Agreed, version 1.4 (20 Oct 2026)
 **Last updated:** 19 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 0.7
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -95,7 +95,7 @@ The **core** folder never imports an outside service directly. That keeps it tes
 | Language | **TypeScript** everywhere | One language for screens, server and tests, with types that catch mistakes early. |
 | Web app and server | **Next.js** (current stable, App Router) | Screens and server endpoints in one project, and first-class support on Vercel. |
 | Hosting | **Vercel**, free Hobby plan | One-click deploys, a preview link for every change, daily scheduled jobs, free for personal projects. You already have it connected. |
-| Database, guest sign-in, photos | **Supabase**, free plan | Postgres with per-row access rules, anonymous guest sign-in, and private file storage in one service. You already have it connected. |
+| Database, guest sign-in, photos | **Supabase**, one project in your Pro organization, about $10 a month (decided 20 Oct 2026) | Postgres with per-row access rules, anonymous guest sign-in, and private file storage in one service. You already have it connected. |
 | Video stylist | **Tavus**, full pipeline (TQ1, your decision) | The PRD's intended avatar. Tavus handles listening, turn-taking, interruptions, voice and face in one call from the browser, which its docs describe as the lowest-latency setup. |
 | Joining the video call | **Daily** browser SDK | Tavus calls run on Daily, and the SDK lets us use our own screen design and read live events. |
 | Voice only mode | **OpenAI GPT-Live 1** (**gpt-live-1**) | The PRD's intended OpenAI voice layer, built to sit in front of your own logic. $0.05 per minute, billed per second. |
@@ -256,8 +256,8 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 
 - **Code:** a GitHub repository, public so it can be linked from your portfolio (default). Secrets are never committed.
 - **Deploys:** Vercel builds every pull request into its own preview link. Merging to main deploys production.
-- **Database:** one Supabase project for production and one for previews and development (the free plan allows two). Table changes ship as migration files in the repository.
-- **Scheduled job:** a Vercel cron job runs daily. It deletes guest data unused for 7 days, closes idle sessions, and touches the database so Supabase's free plan does not pause it after a week without activity.
+- **Database:** one Supabase project, **ai-personal-stylist** in your Pro organization, shared by development, previews and the live site until launch (your decision, 20 Oct 2026). Tests clean up the rows they create. A separate production database can be added before launch. Table changes ship as migration files in the repository (supabase/migrations).
+- **Scheduled job:** a Vercel cron job runs daily. It deletes guest data unused for 7 days, closes idle sessions, and touches the database, which matters less now: Pro projects don't pause after a week without activity.
 - **Tavus setup:** the stylist's Tavus configuration (PAL, face, conversation model, timeouts) is kept as a file in the repository and applied by a script, so it is versioned like code.
 - **Address:** the free vercel.app address for v1 (default). A custom domain can be added later.
 - **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, daily and monthly limits.
@@ -292,7 +292,7 @@ Estimates behind the TQ2 budget, with what Phase 0 measured in three 10-minute d
 | Claude: voice-only facts | About $0.05, only in voice only | Same |
 | **Per demo, apart from the Tavus plan** | **About $1.10** | **About $0.35** (looks and checks still to be measured in Phase 4) |
 
-Fixed monthly costs: the Tavus plan only. Vercel and Supabase stay free at this scale. GPT-Live needs a paid OpenAI account, which means a small prepaid credit, because the free tier doesn't support it.
+Fixed monthly costs: the Tavus plan ($22) and the Supabase project (about $10). Vercel stays free at this scale. GPT-Live needs a paid OpenAI account, which means a small prepaid credit, because the free tier doesn't support it.
 
 **What each TQ2 budget buys, with video for the whole conversation:**
 
@@ -318,7 +318,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 8 | The voice changes when the stylist drops to voice only (accepted in TQ1) | The stylist can feel like a different person. With video for the whole conversation, this only happens when video fails, is busy, or runs out of monthly minutes | Pick the GPT-Live voice that sounds closest to the Tavus face (Phase 0), and have the stylist say "I'm switching to voice only, so I'll sound a little different." (section 4.2) | 0 |
 | 9 | Recognition reads garments wrong | Bad looks built on wrong details | To confirm statuses, easy correction, and a photo eval set | 3 |
 | 10 | Provider data handling for audio and words (Tavus, OpenAI) | Shopper trust and R35 | Recording off, no camera sent to Tavus, a provider terms review in Phase 0, and a plain summary on the About page | 0 |
-| 11 | Supabase's free plan pauses after 7 days without activity | A recruiter clicks your link and the app is down | Daily keep-awake job, an uptime check, and the paid plan if pausing still happens | 1 |
+| 11 | The database is down or paused when a recruiter clicks the link | A recruiter clicks your link and the app is down | The database is on Supabase Pro, which doesn't pause. An uptime check catches outages (originally about the free plan pausing) | 1 |
 | 12 | Phone browser quirks: iPhone audio autoplay, camera switching, permissions | Phones are the main screen | Test on real phones from Phase 0, and start audio only after a tap | 0 |
 | 13 | Sample catalog quality and image rights | Weak images make weak looks | One consistent photo style, every image reviewed, and the source recorded per image. No real brands | 1 |
 | 14 | Fast-changing outside services (Tavus recently renamed "personas" to "PALs", and GPT-Live is new) | Updates can break the app | Connectors, pinned versions, contract tests, and a monthly check of change logs | All |
@@ -336,7 +336,8 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | Claude runs every AI job behind one AI connector | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
-| 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A) | Your decision |
+| 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A). Now about $50, with the Supabase project ($10) from 20 Oct 2026 | Your decision |
+| 20 Oct 2026 | One Supabase project in your Pro organization ($10 a month), shared by development and the live site until launch, instead of two free projects. Your organization was already on Pro, where each project costs about $10 | Your decision |
 | 19 Oct 2026 | Phase 0 gate (0g): video passed and stays on for the whole conversation; GPT-Live passed, with the quartz voice; cost passed at about $0.35 of AI per demo. Live notes are accurate but below the 95%-within-2-seconds target, so the gap is closed in Phase 2 with the target unchanged. TQ3: Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest. Stock face TQ5: Anna - Casual | Your decision |
 | 19 Oct 2026 | Product spec 1.4: no transcript or captions, no typing, a working microphone required, and free-form jotted notes. The connector has two engines, and the notes reader writes jotted notes plus hidden details | Your decision |
 
@@ -353,6 +354,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.4 (20 Oct 2026):** One Supabase project in your Pro organization, shared until launch ($10 a month), the running budget now about $50, and risk 11 updated, because Pro projects don't pause.
 - **1.3 (19 Oct 2026):** Phase 0 results and your 0g decisions: TQ3 (Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest), the stock face (TQ5), the quartz voice, GPT-Live session details, Tavus conversations hard-deleted, Android not tested in v1, Tavus Starter's 120 minutes (about 12 demos), and the measured cost per demo.
 - **1.2 (19 Oct 2026):** Updated for product spec 1.4: two conversation engines (text only removed), the notes reader writes jotted notes plus hidden details, notes are confirmed or removed by touch, and live words are never shown on screen. Updated sections 1, 3, 4, 5, 6, 9 and 11.
 - **1.1 (18 Oct 2026):** Added CLAUDE.md, interview-notes.md and docs/ to the code layout. No decisions changed.
