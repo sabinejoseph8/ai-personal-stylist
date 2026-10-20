@@ -22,8 +22,9 @@ import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/li
 // use-conversation.ts, and the notes in use-notes.ts.
 
 const MICROPHONE_HELP: Record<MicrophoneProblem, string> = {
+  // Browsers apply a changed microphone setting only after the page reloads (found on Sabine's iPhone in 2f).
   blocked:
-    "Allow the microphone for this site. On an iPhone, tap aA in Safari's address bar, then Website Settings, then Microphone, then Allow. On a computer, use the microphone icon in the address bar.",
+    "Allow the microphone for this site, then reload the page. On an iPhone, tap aA in Safari's address bar, then Website Settings, then Microphone, then Allow. On a computer, use the microphone icon in the address bar. Your notes are kept.",
   missing: "No microphone was found. Connect one, then try again.",
   failed: "Your microphone isn't working. Check that no other app is using it, then try again.",
 };
@@ -238,7 +239,11 @@ export function StylingSession({
             <Banner tone="error" title="The stylist needs your microphone to hear you">
               {MICROPHONE_HELP[stage.microphone]}
             </Banner>
-            <Button onClick={call.begin}>Try again</Button>
+            {stage.microphone === "blocked" ? (
+              <Button onClick={() => window.location.reload()}>Reload page</Button>
+            ) : (
+              <Button onClick={call.begin}>Try again</Button>
+            )}
           </div>
         )}
 

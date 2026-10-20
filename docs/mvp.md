@@ -2,7 +2,7 @@
 
 **Status:** Living document, version 1.12
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.4, tech spec 1.15 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.5, tech spec 1.15 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -284,6 +284,8 @@ Reviewed all Phase 2 code (64 files, about 4,750 lines, apart from docs) at extr
 | Duplicate helpers and four copies of the note shape | Fixed: one of each |
 | The session screen's 590-line component ran the whole call | Decision A: split into the conversation hook and the screen |
 | Left-behind calls were counted for their whole reserved time, though the docs said otherwise | Decision B: counted until the last activity plus 30 seconds, with a test |
+
+Your final iPhone check then found that after allowing a blocked microphone again, Try again kept failing: Safari applies a changed microphone setting only after the page reloads. Fixed: a blocked microphone's message says to reload, and its button is Reload page (design 1.5), with a test.
 
 Also in 2f, as planned:
 - The Phase 0 test pages, their endpoints and their security exemption were deleted. The Phase 0 jotted-notes reader moved into spikes/notes-speed, where its replay script still uses it.
