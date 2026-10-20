@@ -1,7 +1,9 @@
+import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createFakeProvider } from "@/connectors/conversation/fake";
 import type { CallProvider } from "@/connectors/conversation/types";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { addPhoto, finishPhoto } from "@/lib/photos-service";
 import { endConversation, endLeftBehindCalls, openSession, type SessionDeps, startConversation } from "@/lib/sessions";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
@@ -72,6 +74,41 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(await notesIn(started.sessionId)).toBe(1);
     await endConversation(deps(), guest.id, started.sessionId);
     expect(await notesIn(started.sessionId)).toBe(0);
+  });
+
+  /** A kept photo in the session, the way the page adds one (3a). */
+  async function addKeptPhoto(sessionId: string) {
+    const added = await addPhoto(db, guest.id, sessionId, "upload");
+    if (!added.ok) throw new Error(added.reason);
+    const body = await sharp({ create: { width: 8, height: 8, channels: 3, background: "#0b6b4f" } }).jpeg().toBuffer();
+    await fetch(added.uploadUrl, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: new Uint8Array(body) });
+    expect(await finishPhoto(db, guest.id, sessionId, added.id, added.version)).toMatchObject({ ok: true });
+  }
+  const photosIn = async (sessionId: string) => ({
+    rows: (await db.from("session_assets").select("id", { count: "exact", head: true }).eq("session_id", sessionId).throwOnError()).count,
+    files: ((await db.storage.from("guest-photos").list(`${guest.id}/${sessionId}`)).data ?? []).length,
+  });
+
+  it("End deletes the session's photos, while a paused session keeps them (R63, 3a)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    await addKeptPhoto(started.sessionId);
+    await endConversation(deps(), guest.id, started.sessionId, true);
+    expect(await photosIn(started.sessionId)).toEqual({ rows: 1, files: 2 });
+    await endConversation(deps(), guest.id, started.sessionId);
+    expect(await photosIn(started.sessionId)).toEqual({ rows: 0, files: 0 });
+  });
+
+  it("an idle session's photos are deleted on the guest's next start (Sabine's answer to Q4 in 3a)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    await addKeptPhoto(started.sessionId);
+    await db.from("sessions").update({ last_activity_at: new Date(Date.now() - 40 * 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    await db.rpc("close_idle_sessions").throwOnError();
+    expect(await photosIn(started.sessionId)).toEqual({ rows: 1, files: 2 });
+    const next = await startConversation(deps(), guest.id);
+    if (!next.ok) throw new Error(next.reason);
+    expect(await photosIn(started.sessionId)).toEqual({ rows: 0, files: 0 });
   });
 
   it("the database timer ends sessions idle for 30 minutes and deletes their notes; the call they left behind ends on the next start (R12, R63)", async () => {

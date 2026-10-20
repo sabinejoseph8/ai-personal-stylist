@@ -42,7 +42,8 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
     // Fresh guests, not from the pool: the job deletes some of them.
     [old, active, old2] = await Promise.all([createTestGuest({ fresh: true }), createTestGuest({ fresh: true }), createTestGuest({ fresh: true })]);
     await db.from("profiles").update({ last_active_at: ago(8 * 24 * 60) }).eq("user_id", old.id).throwOnError();
-    const upload = await old.db.storage.from("guest-photos").upload(`${old.id}/blazer.jpg`, new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
+    // Only the app adds photos (3a).
+    const upload = await db.storage.from("guest-photos").upload(`${old.id}/blazer.jpg`, new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
     if (upload.error) throw upload.error;
     // One open session per guest: the idle one is a second guest's (only the server creates sessions).
     const sessions = await db

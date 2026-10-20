@@ -348,7 +348,8 @@ test.describe("the stylist stage", () => {
 
   test("screen readers hear note changes, grouped and held while someone is talking (R68)", async ({ page }) => {
     await inCall(page);
-    const heard = notebookOf(page).locator("p[aria-live]");
+    // The notes' own announcements (the photo to style around has its own, 3a).
+    const heard = notebookOf(page).locator(":scope > p[aria-live]");
     await playInCall(page, { type: "shopper-speaking", speaking: true });
     await playInCall(page, { type: "words", speaker: "shopper", text: "It's for a gala, something elegant", final: true, turnId: "1" });
     await expect(note(page, "Elegant")).toBeVisible();

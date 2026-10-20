@@ -1,0 +1,144 @@
+import sharp from "sharp";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { addPhoto, choosePhoto, deleteEndedSessionPhotos, deleteSessionPhotos, finishPhoto, listPhotos, PHOTO_BUCKET, removePhoto } from "@/lib/photos-service";
+import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
+
+// 3a: photos to style around against the real database and photo store (R26, R27, R31, FR-27).
+// Phase 3 automated tests: a late result for a replaced photo is ignored, and guest B can't open
+// guest A's photo. Also: the 5-photo limit, the active photo, and photos deleted when a session ends.
+describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
+  const db = serverDb();
+  let a: TestGuest;
+  let b: TestGuest;
+  let session: string;
+
+  const jpeg = (color: string) => sharp({ create: { width: 64, height: 48, channels: 3, background: color } }).jpeg().toBuffer();
+  const put = (url: string, body: Buffer, type = "image/jpeg") =>
+    fetch(url, { method: "PUT", headers: { "content-type": type }, body: new Uint8Array(body) });
+
+  /** Add a photo the way the page does: ask, send, then finish. */
+  async function upload(guest: TestGuest, body: Buffer, replaces: string | null = null) {
+    const added = await addPhoto(db, guest.id, session, "upload", replaces);
+    if (!added.ok) throw new Error(added.reason);
+    expect((await put(added.uploadUrl, body)).ok).toBe(true);
+    return { ...added, finished: await finishPhoto(db, guest.id, session, added.id, added.version) };
+  }
+  const rows = async () => (await db.from("session_assets").select("*").eq("session_id", session).order("created_at").throwOnError()).data!;
+  const files = async (folder: string) => ((await db.storage.from(PHOTO_BUCKET).list(folder)).data ?? []).filter((f) => f.id).map((f) => f.name);
+
+  beforeAll(async () => {
+    [a, b] = await Promise.all([createTestGuest(), createTestGuest()]);
+  }, 30_000);
+  beforeEach(async () => {
+    await db.from("sessions").delete().eq("user_id", a.id).throwOnError();
+    const s = await db.from("sessions").insert({ user_id: a.id, status: "active" }).select("id").single().throwOnError();
+    session = s.data!.id;
+  });
+  afterAll(async () => {
+    await Promise.all([a?.remove(), b?.remove()]);
+  });
+
+  it("checks, cleans and keeps a photo, with links that work and no original left behind", async () => {
+    const { id, version, finished } = await upload(a, await jpeg("#0b6b4f"));
+    expect(finished).toMatchObject({ ok: true, photo: { id, version, source: "upload", active: true } });
+    if (!finished?.ok) throw new Error("not kept");
+    expect((await fetch(finished.photo.photoUrl)).status).toBe(200);
+    expect((await fetch(finished.photo.thumbnailUrl)).headers.get("content-type")).toBe("image/jpeg");
+    expect(await rows()).toMatchObject([{ id, status: "ready", version: 1, active: true }]);
+    expect(await files(`${a.id}/incoming`)).toEqual([]);
+    expect((await files(`${a.id}/${session}`)).sort()).toEqual([`${id}-v1-thumb.jpg`, `${id}-v1.jpg`]);
+  });
+
+  it("turns away a renamed text file, and removes it", async () => {
+    const { finished } = await upload(a, Buffer.from("Shopping list: blazer, shoes"));
+    expect(finished).toEqual({ ok: false, reason: "type" });
+    expect(await rows()).toEqual([]);
+    expect(await files(`${a.id}/incoming`)).toEqual([]);
+  });
+
+  it("the photo store refuses a file over 10 MB and anything not sent as a photo", async () => {
+    const added = await addPhoto(db, a.id, session, "upload");
+    if (!added.ok) throw new Error(added.reason);
+    const big = await put(added.uploadUrl, Buffer.alloc(10 * 1024 * 1024 + 1));
+    expect(big.ok).toBe(false);
+    expect(await big.text()).toMatch(/413|too large/i);
+    expect((await put(added.uploadUrl, Buffer.from("hello"), "text/plain")).ok).toBe(false);
+    // Nothing arrived, so there's nothing to keep.
+    expect(await finishPhoto(db, a.id, session, added.id, added.version)).toEqual({ ok: false, reason: "missing" });
+  });
+
+  it("a late result for a replaced photo is ignored, and the new photo keeps its own (R31)", async () => {
+    const first = await upload(a, await jpeg("#1f2a44"));
+    const second = await addPhoto(db, a.id, session, "upload", first.id);
+    if (!second.ok) throw new Error(second.reason);
+    expect(second).toMatchObject({ id: first.id, version: 2 });
+    // The replaced version's files go at once.
+    expect(await files(`${a.id}/${session}`)).toEqual([]);
+
+    // The photo reader's answer for version 1 arrives late (3b): refused.
+    const late = await db.rpc("save_asset_details", { asset: first.id, expected_version: 1, details: { name: "Navy blazer" } });
+    expect(late.data).toBe(false);
+    expect((await put(second.uploadUrl, await jpeg("#b42318"))).ok).toBe(true);
+    // A slow finish for the old version doesn't bring it back either.
+    expect(await finishPhoto(db, a.id, session, first.id, 1)).toBeNull();
+    const kept = await finishPhoto(db, a.id, session, second.id, 2);
+    expect(kept).toMatchObject({ ok: true, photo: { version: 2 } });
+    const now = await db.rpc("save_asset_details", { asset: first.id, expected_version: 2, details: { name: "Red dress" } });
+    expect(now.data).toBe(true);
+    expect(await rows()).toMatchObject([{ version: 2, status: "ready", recognized_details: { name: "Red dress" } }]);
+  });
+
+  it("guest B can't open, list, finish or change guest A's photo", async () => {
+    const { id, finished } = await upload(a, await jpeg("#0b6b4f"));
+    if (!finished?.ok) throw new Error("not kept");
+    const path = `${a.id}/${session}/${id}-v1.jpg`;
+    expect((await b.db.storage.from(PHOTO_BUCKET).download(path)).data).toBeNull();
+    expect((await b.db.storage.from(PHOTO_BUCKET).createSignedUrl(path, 60)).data).toBeNull();
+    expect((await b.db.from("session_assets").select("id").eq("id", id)).data ?? []).toEqual([]);
+    expect(await listPhotos(db, b.id, session)).toEqual([]);
+    expect(await finishPhoto(db, b.id, session, id, 1)).toBeNull();
+    expect(await addPhoto(db, b.id, session, "upload")).toEqual({ ok: false, reason: "session" });
+    expect(await choosePhoto(db, b.id, session, id)).toBe(false);
+    expect(await removePhoto(db, b.id, session, id)).toBe(false);
+    expect(await rows()).toHaveLength(1);
+    // Guest A can open their own.
+    expect((await a.db.storage.from(PHOTO_BUCKET).download(path)).data).not.toBeNull();
+  });
+
+  it("only the app adds or changes photos: guests can't write photo records or files themselves", async () => {
+    const insert = await a.db.from("session_assets").insert({ user_id: a.id, session_id: session, photo_path: "x", source: "upload" });
+    expect(insert.error).not.toBeNull();
+    const file = await a.db.storage.from(PHOTO_BUCKET).upload(`${a.id}/planted.jpg`, await jpeg("#000000"), { contentType: "image/jpeg" });
+    expect(file.error).not.toBeNull();
+  });
+
+  it("holds up to 5 photos, with the newest active, and switching or removing moves Active (R31, Q3)", async () => {
+    const ids: string[] = [];
+    for (let i = 0; i < 5; i++) ids.push((await upload(a, await jpeg("#575e6a"))).id);
+    expect(await addPhoto(db, a.id, session, "upload")).toEqual({ ok: false, reason: "full" });
+    expect((await rows()).filter((r) => r.active).map((r) => r.id)).toEqual([ids[4]]);
+
+    expect(await choosePhoto(db, a.id, session, ids[1])).toBe(true);
+    expect((await rows()).filter((r) => r.active).map((r) => r.id)).toEqual([ids[1]]);
+    // Removing the active photo makes the newest one left active.
+    expect(await removePhoto(db, a.id, session, ids[1])).toBe(true);
+    expect((await rows()).filter((r) => r.active).map((r) => r.id)).toEqual([ids[4]]);
+    expect((await files(`${a.id}/${session}`)).some((f) => f.startsWith(ids[1]))).toBe(false);
+    expect((await listPhotos(db, a.id, session)).map((p) => p.id)).toEqual([ids[0], ids[2], ids[3], ids[4]]);
+  }, 60_000);
+
+  it("a session's photos are deleted when it ends, and an idle session's on the next clean-up (R63, Q4)", async () => {
+    await upload(a, await jpeg("#0b6b4f"));
+    expect(await deleteSessionPhotos(db, session)).toBe(1);
+    expect(await rows()).toEqual([]);
+    expect(await files(`${a.id}/${session}`)).toEqual([]);
+
+    await upload(a, await jpeg("#0b6b4f"));
+    // The database timer ends an idle session, but can't delete files.
+    await db.from("sessions").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", session).throwOnError();
+    expect(await addPhoto(db, a.id, session, "upload")).toEqual({ ok: false, reason: "session" });
+    expect(await deleteEndedSessionPhotos(db, a.id)).toBe(1);
+    expect(await rows()).toEqual([]);
+    expect(await files(`${a.id}/${session}`)).toEqual([]);
+  });
+});

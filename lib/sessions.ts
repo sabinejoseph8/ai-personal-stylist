@@ -2,11 +2,12 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CallProvider, Engine } from "@/connectors/conversation/types";
 import type { BudgetGuard, Refusal } from "@/lib/budget-guard";
+import { deleteEndedSessionPhotos, deleteSessionPhotos } from "@/lib/photos-service";
 
 // Styling sessions (R12): Start conversation opens one (or picks up the guest's open one), End
 // closes it, and 30 minutes without activity ends it. Sessions are the app's own record, so this
 // runs with the server key (decision A) and checks every session belongs to the guest. When a session
-// ends, its session-only data is deleted (R63, 2e).
+// ends, its session-only data is deleted (R63, 2e), photos included (3a).
 
 export const IDLE_MINUTES = 30;
 
@@ -93,7 +94,11 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
     // Another request finished the call first: End still ends the session.
     await deps.db.from("sessions").update({ status: "ended", ended_at: now }).eq("id", s.id).throwOnError();
   }
-  if (status === "ended") await deps.db.rpc("delete_session_data", { session: s.id }).throwOnError();
+  if (status === "ended") {
+    // A photo that fails to delete here goes on the guest's next start or in the daily job (3a).
+    await deleteSessionPhotos(deps.db, s.id).catch((e) => console.error(`deleting a session's photos failed: ${e instanceof Error ? e.message : e}`));
+    await deps.db.rpc("delete_session_data", { session: s.id }).throwOnError();
+  }
 }
 
 /**
@@ -138,6 +143,8 @@ export async function openSession(deps: SessionDeps, guestId: string): Promise<S
 /** Start conversation: picks up the open session or opens one, reserves time, and starts a video call. */
 export async function startConversation(deps: SessionDeps, guestId: string): Promise<StartResult> {
   await endLeftBehindCalls(deps, guestId);
+  // Photos of a session that ended from being idle (Sabine's answer to Q4 in 3a).
+  await deleteEndedSessionPhotos(deps.db, guestId).catch((e) => console.error(`deleting old photos failed: ${e instanceof Error ? e.message : e}`));
   let session = await openSession(deps, guestId);
   const resumed = session !== null;
   if (!session) {

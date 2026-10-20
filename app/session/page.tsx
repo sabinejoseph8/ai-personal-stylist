@@ -6,6 +6,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { currentGuest } from "@/lib/guest";
 import { describeBudget, describePreference } from "@/lib/profile";
 import { loadProfile } from "@/lib/profile-store";
+import { listPhotos } from "@/lib/photos-service";
 import { isIdle } from "@/lib/sessions";
 
 // The styling session: the stylist stage (2a, 2b) and My Styling Notes (2c, 2d), with saved preferences
@@ -26,22 +27,24 @@ export default async function SessionPage() {
   const budget = describeBudget(profile.budget);
   // Within 30 minutes, the shopper can carry on the same session (R12).
   const resumable = open.data && !isIdle(open.data.last_activity_at) ? open.data.id : null;
-  // A resumed session keeps its notes (guests can read their own).
-  const notes = resumable
-    ? ((
-        await guest.db
+  // A resumed session keeps its notes and photos (guests can read their own).
+  const [notes, photos] = resumable
+    ? await Promise.all([
+        guest.db
           .from("session_notes")
           .select("id, kind, text:note_text, status")
           .eq("session_id", resumable)
           .eq("removed", false)
           .order("created_at")
-      ).data ?? [])
-    : [];
+          .then((r) => r.data ?? []),
+        listPhotos(guest.db, guest.id, resumable).catch(() => []),
+      ])
+    : [[], []];
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:px-6 desktop:grid desktop:max-w-5xl desktop:grid-cols-[320px_minmax(0,440px)] desktop:items-start desktop:gap-x-12 desktop:px-8">
       <h1 className="type-title m-0 desktop:col-span-2">Your styling session</h1>
-      <StylingSession openSessionId={resumable} initialNotes={notes} preferences={profile.preferences.map(describePreference)}>
+      <StylingSession openSessionId={resumable} initialNotes={notes} initialPhotos={photos} preferences={profile.preferences.map(describePreference)}>
         <section aria-labelledby="profile-title" className="flex flex-col gap-3">
           <h2 id="profile-title" className="type-subheading m-0">
             From your profile

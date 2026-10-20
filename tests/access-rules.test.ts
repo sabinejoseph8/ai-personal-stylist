@@ -26,7 +26,10 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
       .throwOnError();
     noteId = n.data!.id;
     await a.db.from("wardrobe_items").insert({ name: "Navy blazer" }).throwOnError();
-    const upload = await a.db.storage.from("guest-photos").upload(photo(), new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
+    // Photos are the app's own record too (3a): only the server adds them.
+    const upload = await serverDb()
+      .storage.from("guest-photos")
+      .upload(photo(), new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }), { upsert: true });
     if (upload.error) throw upload.error;
   }, 30_000);
 
@@ -40,7 +43,7 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     expect(data).toHaveLength(1);
   });
 
-  it.each(["profiles", "sessions", "session_notes", "wardrobe_items"])("guest B can't read guest A's %s", async (table) => {
+  it.each(["profiles", "sessions", "session_notes", "session_assets", "wardrobe_items"])("guest B can't read guest A's %s", async (table) => {
     const { data } = await b.db.from(table).select("*").eq("user_id", a.id);
     expect(data ?? []).toHaveLength(0);
   });
@@ -78,9 +81,11 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     expect(stillThere.data).not.toBeNull();
   });
 
-  it("guest B can't put a photo in guest A's folder", async () => {
-    const { error } = await b.db.storage.from("guest-photos").upload(`${a.id}/planted.jpg`, new Blob(["x"], { type: "image/jpeg" }));
-    expect(error).not.toBeNull();
+  it("guest B can't put a photo in guest A's folder, or even their own (3a: only the app adds photos)", async () => {
+    const theirs = await b.db.storage.from("guest-photos").upload(`${a.id}/planted.jpg`, new Blob(["x"], { type: "image/jpeg" }));
+    expect(theirs.error).not.toBeNull();
+    const own = await b.db.storage.from("guest-photos").upload(`${b.id}/planted.jpg`, new Blob(["x"], { type: "image/jpeg" }));
+    expect(own.error).not.toBeNull();
   });
 
   it("everyone can read the sample catalog, and nobody can change it", async () => {
