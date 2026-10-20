@@ -204,3 +204,37 @@
     animation: fade-in var(--duration-standard) var(--ease-arrive);
   }
 }
+
+/* The notebook page: ruled lines every 28 px and a margin line (design.md 3.3). */
+@utility notebook-page {
+  --margin-x: 1.75rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1.75rem - 1px),
+    var(--color-rule-blue) calc(1.75rem - 1px),
+    var(--color-rule-blue) 1.75rem
+  );
+  background-position: 0 2.5rem;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--margin-x);
+    width: 1px;
+    background: var(--color-margin-pink);
+  }
+  @media (width >= 64rem) {
+    --margin-x: 2.25rem;
+  }
+}
+
+/* "Ink in", the signature moment: a note writes itself in from left to right (design.md 3.6). */
+@keyframes ink-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@utility ink-in {
+  animation: ink-in var(--duration-ink-in) var(--ease-arrive) both;
+}
