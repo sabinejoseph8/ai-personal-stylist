@@ -294,6 +294,25 @@ test.describe("the stylist stage", () => {
     await expect.poll(sessions).toEqual([expect.objectContaining({ status: "active" })]);
   });
 
+  test("while the phone is offline, a dropped call waits for the connection before trying again (found on Sabine's iPhone, R14)", async ({ page, context }) => {
+    await weddingNotes(page);
+    let starts = 0;
+    page.on("request", (r) => {
+      if (r.method() === "POST" && new URL(r.url()).pathname === "/api/sessions") starts++;
+    });
+    await context.setOffline(true);
+    await playInCall(page, { type: "connection", state: "ended" });
+    await expect(state(page)).toHaveText("Reconnecting");
+    await page.waitForTimeout(6000);
+    expect(starts).toBe(0); // no tries used up while offline
+    await expect(state(page)).toHaveText("Reconnecting");
+    await context.setOffline(false);
+    await expect(page.getByRole("button", { name: "End", exact: true })).toBeEnabled({ timeout: 15_000 });
+    await expect(state(page)).toHaveText(/^(Speaking|Listening)$/);
+    expect(starts).toBe(1);
+    await expect(note(page, "Elegant")).toBeVisible();
+  });
+
   test("after 3 failed tries to bring back a dropped call, it offers Try again (R14)", async ({ page }) => {
     await weddingNotes(page);
     let starts = 0;
@@ -303,7 +322,9 @@ test.describe("the stylist stage", () => {
       return route.fulfill({ status: 500, json: { error: "Something went wrong." } });
     });
     await playInCall(page, { type: "connection", state: "ended" });
-    await expect(page.getByText("We couldn't reconnect to your stylist.", { exact: false })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("We couldn't reconnect to your stylist.", { exact: false })).toBeVisible({ timeout: 25_000 });
+    await expect(state(page)).toHaveText("Connection lost");
+    await expect(page.getByText("Connection lost.")).toBeVisible();
     expect(starts).toBe(3);
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(note(page, "Elegant")).toBeVisible();

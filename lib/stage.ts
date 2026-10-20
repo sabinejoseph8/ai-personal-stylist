@@ -13,6 +13,7 @@ export type StageLabel =
   | "Reconnecting"
   | "Microphone needed"
   | "Time is up"
+  | "Connection lost"
   | "Ended";
 
 export type MicrophoneProblem = "blocked" | "missing" | "failed";
@@ -30,6 +31,8 @@ export type Stage = {
   shopperHasSpoken: boolean;
   /** The day's (or month's) conversation time ran out and the call ended (R13). */
   timeUp: boolean;
+  /** The call dropped and couldn't be brought back: Try again (R14). */
+  lost: boolean;
 };
 
 export const READY: Stage = {
@@ -41,6 +44,7 @@ export const READY: Stage = {
   microphone: null,
   shopperHasSpoken: false,
   timeUp: false,
+  lost: false,
 };
 
 /** What the screen itself does, besides the call's events. */
@@ -50,7 +54,8 @@ export type StageAction =
   | { type: "muted"; muted: boolean }
   | { type: "phrase-sent" }
   | { type: "stopped" }
-  | { type: "time-up" };
+  | { type: "time-up" }
+  | { type: "connection-lost" };
 
 export function nextStage(stage: Stage, action: StageAction): Stage {
   switch (action.type) {
@@ -60,6 +65,8 @@ export function nextStage(stage: Stage, action: StageAction): Stage {
       return { ...READY, connection: "ended" };
     case "time-up":
       return { ...READY, connection: "ended", timeUp: true };
+    case "connection-lost":
+      return { ...READY, connection: "ended", lost: true };
     case "connection":
       if (action.state === "ended") return { ...stage, connection: "ended", stylistSpeaking: false, shopperSpeaking: false, awaitingReply: false };
       return { ...stage, connection: action.state };
@@ -86,6 +93,7 @@ export function nextStage(stage: Stage, action: StageAction): Stage {
 export function stageLabel(stage: Stage): StageLabel {
   if (stage.microphone) return "Microphone needed";
   if (stage.timeUp) return "Time is up";
+  if (stage.lost) return "Connection lost";
   switch (stage.connection) {
     case "idle":
       return "Ready";
