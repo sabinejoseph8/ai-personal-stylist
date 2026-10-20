@@ -1,38 +1,19 @@
-import { existsSync, readFileSync } from "node:fs";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { canRunDatabaseTests, createTestGuest, type TestGuest } from "./support/test-guests";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // Phase 1 automated test: guest A cannot read or change any of guest B's rows or photos.
-// Runs against the database (shared by development and the live site until launch) when its address and public key are set
-// (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local or the environment).
-function setting(name: string): string | undefined {
-  if (process.env[name]) return process.env[name];
-  if (!existsSync(".env.local")) return undefined;
-  const line = readFileSync(".env.local", "utf8").split("\n").find((l) => l.startsWith(`${name}=`));
-  return line?.slice(name.length + 1).trim() || undefined;
-}
-
-const url = setting("NEXT_PUBLIC_SUPABASE_URL");
-const key = setting("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
-
-async function guest(): Promise<{ db: SupabaseClient; id: string }> {
-  const db = createClient(url!, key!, { auth: { persistSession: false } });
-  const { data, error } = await db.auth.signInAnonymously();
-  if (error || !data.user) throw new Error(`anonymous sign-in failed: ${error?.message}`);
-  return { db, id: data.user.id };
-}
-
-describe.skipIf(!url || !key)("access rules", () => {
-  let a: { db: SupabaseClient; id: string };
-  let b: { db: SupabaseClient; id: string };
+// Runs against the shared database when SUPABASE_SECRET_KEY is set (in .env.local, or GitHub's secrets).
+describe.skipIf(!canRunDatabaseTests)("access rules", () => {
+  let a: TestGuest;
+  let b: TestGuest;
   let sessionId: string;
   let noteId: string;
   const photo = () => `${a.id}/jacket.jpg`;
 
   beforeAll(async () => {
-    a = await guest();
-    b = await guest();
-    await a.db.from("profiles").insert({ style_words: ["classic"] }).throwOnError();
+    a = await createTestGuest();
+    b = await createTestGuest();
+    await a.db.from("profiles").update({ style_words: ["classic"] }).eq("user_id", a.id).throwOnError();
     const s = await a.db.from("sessions").insert({}).select("id").single().throwOnError();
     sessionId = s.data!.id;
     const n = await a.db
@@ -47,14 +28,9 @@ describe.skipIf(!url || !key)("access rules", () => {
     if (upload.error) throw upload.error;
   }, 30_000);
 
-  // The test shares the live database until launch, so it removes what it made. The two
-  // anonymous test guests themselves are removed by the daily clean-up job (1f).
+  // The test shares the live database until launch, so it removes its test guests and their data.
   afterAll(async () => {
-    await a.db.storage.from("guest-photos").remove([photo()]);
-    await a.db.from("sessions").delete().eq("id", sessionId);
-    await a.db.from("wardrobe_items").delete().eq("user_id", a.id);
-    await a.db.from("profiles").delete().eq("user_id", a.id);
-    await Promise.all([a.db.auth.signOut(), b.db.auth.signOut()]);
+    await Promise.all([a?.remove(), b?.remove()]);
   });
 
   it("guest A sees their own rows", async () => {

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.4 (20 Oct 2026)
+**Status:** Agreed, version 1.5 (20 Oct 2026)
 **Last updated:** 19 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 0.7
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -213,12 +213,14 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 ### Sign-in
 - Guests sign in anonymously through Supabase. No email or password.
 - Sign-in lives in secure, HTTP-only cookies.
-- Turnstile runs invisibly on Try the demo to keep bots out.
+- Turnstile runs invisibly on Try the demo to keep bots out. Supabase checks the Turnstile answer before it creates a guest.
+- Every new guest gets a profile row automatically (a database trigger).
+- Rate limits are counted per guest in the database (the take_rate_limit function).
 
 ### Access
 - Database access rules on every table: a guest can only read and change their own rows.
 - Photo storage is split into one private folder per guest, with the same rule.
-- The server key that bypasses those rules is used only by scheduled jobs and account deletion.
+- The server key that bypasses those rules is used only by scheduled jobs, account deletion, and automated tests that create test guests (decided 20 Oct 2026, because bot protection blocks normal sign-in in tests). It never reaches the app or the browser.
 
 ### Secrets
 - The Tavus, OpenAI, Anthropic and Supabase server keys live only in Vercel's environment settings. They are never committed and never sent to the browser.
@@ -249,7 +251,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Deleting all data removes database rows, stored photos and the guest sign-in.
 
 ### Browser protections
-- A content security policy only allows connections to our own site, Supabase, Tavus and Daily, and OpenAI.
+- A content security policy only allows connections to our own site, Supabase, Tavus and Daily, OpenAI, and Cloudflare (for Turnstile). Scripts need a fresh per-request nonce (proxy.ts). The Phase 0 test pages are exempt until Phase 2 deletes them.
 - Microphone and camera access are only allowed on the session screen.
 
 ## 7. Hosting, deployment and configuration
@@ -354,6 +356,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.5 (20 Oct 2026):** 1b: the server key may also create test guests in automated tests (your decision), guest profiles are created by a trigger, rate limits live in the database, and the security policy details.
 - **1.4 (20 Oct 2026):** One Supabase project in your Pro organization, shared until launch ($10 a month), the running budget now about $50, and risk 11 updated, because Pro projects don't pause.
 - **1.3 (19 Oct 2026):** Phase 0 results and your 0g decisions: TQ3 (Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest), the stock face (TQ5), the quartz voice, GPT-Live session details, Tavus conversations hard-deleted, Android not tested in v1, Tavus Starter's 120 minutes (about 12 demos), and the measured cost per demo.
 - **1.2 (19 Oct 2026):** Updated for product spec 1.4: two conversation engines (text only removed), the notes reader writes jotted notes plus hidden details, notes are confirmed or removed by touch, and live words are never shown on screen. Updated sections 1, 3, 4, 5, 6, 9 and 11.
