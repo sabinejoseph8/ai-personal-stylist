@@ -2,14 +2,14 @@
 
 ## Summary
 
-- **Current focus:** Phase 1, task group 1b: guest sign-in and security basics.
-- **Current status:** Phase 1 is in progress. 1a is done: automatic checks run on every change, and the database has all 16 tables with access rules and private photo storage. The access test passes 11 of 11. No app screens are built yet.
-- **Recent changes (20 Oct 2026):** 1a done. You chose one Supabase project in your Pro organization ($10 a month, shared until launch), which puts the running budget at about $50 a month.
+- **Current focus:** Phase 1, task group 1c: the design system.
+- **Current status:** Phase 1 is in progress. 1a and 1b are done: automatic checks, the database with access rules and photo storage, one-tap guest sign-in with bot protection, automatic profiles, rate limits and security headers. The home page is still a placeholder.
+- **Recent changes (20 Oct 2026):** 1b done: guest sign-in with Cloudflare Turnstile (checked on your iPhone), profiles, rate limits and security headers; tests create test guests with the server key. 1a done. You chose one Supabase project in your Pro organization ($10 a month, shared until launch), which puts the running budget at about $50 a month.
 - **Earlier (19 Oct 2026):** Phase 0 done: code review fixes (stale confirmed notes after a voice correction, duplicate budget notes, the demo summary, notes paused instead of crashing, slower wrong-passcode answers). 0g done: you approved the Phase 0 gate (video, voice only and cost passed; Haiku 5.5 for live notes and the camera), recorded in tech spec 1.3. 0f done: a full demo page, 3 test demos, a fix so confirmed notes never disappear. your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
 - **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
 - **What's left:** phases 1 to 7.
 - **Known issues:** live notes are accurate but only 75 to 90% arrive within 2 seconds (target 95%), and demos jotted too many notes. Both get fixed in Phase 2. Open risks are tracked in docs/mvp.md.
-- **Next action:** a plan for 1b (guest sign-in with bot protection, and security basics) for your approval.
+- **Next action:** a plan for 1c (the design system: colors, type, spacing, fonts, icons and base components) for your approval.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -119,8 +119,8 @@
 - [x] Private photo storage with one folder per guest. Done: the private guest-photos bucket, 10 MB per file.
 
 ### 1b. Guest sign-in and security basics
-- [ ] Guest sign-in with Turnstile, and a profile row for every new guest.
-- [ ] Security basics: content security policy, camera and microphone allowed only on the session screen, and rate limits.
+- [x] Guest sign-in with Turnstile, and a profile row for every new guest. Done 20 Oct 2026, checked on your iPhone: one tap, the same guest after reopening, and a new guest in a private tab.
+- [x] Security basics: content security policy, camera and microphone allowed only on the session screen, and rate limits. Done: the limits are ready in the database and get switched on as each feature is built.
 
 ### 1c. Design system
 - [ ] Design tokens from design.md in Tailwind (colors, type, spacing, radius, shadows, motion), the Newsreader and Figtree fonts, and Lucide icons.
