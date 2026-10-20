@@ -26,5 +26,5 @@ export async function POST() {
 
   const result = await startConversation(sessionDeps(), guest.id);
   if (!result.ok) return refuse(result.reason);
-  return Response.json({ sessionId: result.sessionId, resumed: result.resumed, call: result.call, seconds: result.seconds });
+  return Response.json({ sessionId: result.sessionId, resumed: result.resumed, call: result.call, seconds: result.seconds, endsBecause: result.endsBecause });
 }

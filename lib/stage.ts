@@ -1,7 +1,7 @@
 import type { ConversationEvent } from "@/connectors/conversation/types";
 
 // The stylist stage's state in words (R8, design 4.1), worked out from the conversation's events.
-// Pure rules, so every state has a test. Voice only arrives in 6c, and Time is up in 2e.
+// Pure rules, so every state has a test. Voice only arrives in 6c.
 
 export type StageLabel =
   | "Ready"
@@ -12,6 +12,7 @@ export type StageLabel =
   | "Muted"
   | "Reconnecting"
   | "Microphone needed"
+  | "Time is up"
   | "Ended";
 
 export type MicrophoneProblem = "blocked" | "missing" | "failed";
@@ -27,6 +28,8 @@ export type Stage = {
   microphone: MicrophoneProblem | null;
   /** The shopper has spoken or tapped a phrase: the sample phrases go away (R70). */
   shopperHasSpoken: boolean;
+  /** The day's (or month's) conversation time ran out and the call ended (R13). */
+  timeUp: boolean;
 };
 
 export const READY: Stage = {
@@ -37,6 +40,7 @@ export const READY: Stage = {
   muted: false,
   microphone: null,
   shopperHasSpoken: false,
+  timeUp: false,
 };
 
 /** What the screen itself does, besides the call's events. */
@@ -45,7 +49,8 @@ export type StageAction =
   | { type: "starting" }
   | { type: "muted"; muted: boolean }
   | { type: "phrase-sent" }
-  | { type: "stopped" };
+  | { type: "stopped" }
+  | { type: "time-up" };
 
 export function nextStage(stage: Stage, action: StageAction): Stage {
   switch (action.type) {
@@ -53,6 +58,8 @@ export function nextStage(stage: Stage, action: StageAction): Stage {
       return { ...READY, connection: "connecting" };
     case "stopped":
       return { ...READY, connection: "ended" };
+    case "time-up":
+      return { ...READY, connection: "ended", timeUp: true };
     case "connection":
       if (action.state === "ended") return { ...stage, connection: "ended", stylistSpeaking: false, shopperSpeaking: false, awaitingReply: false };
       return { ...stage, connection: action.state };
@@ -78,6 +85,7 @@ export function nextStage(stage: Stage, action: StageAction): Stage {
 
 export function stageLabel(stage: Stage): StageLabel {
   if (stage.microphone) return "Microphone needed";
+  if (stage.timeUp) return "Time is up";
   switch (stage.connection) {
     case "idle":
       return "Ready";
@@ -100,3 +108,10 @@ export const showSamplePhrases = (stage: Stage) =>
 
 /** Someone is talking, so screen reader updates wait (R68: never over the conversation). */
 export const someoneSpeaking = (stage: Stage) => stage.stylistSpeaking || stage.shopperSpeaking;
+
+/** Time left, shown in the last 2 minutes (R13): "2 minutes left", then "1 minute left". */
+export function timeLeftLabel(secondsLeft: number): string | null {
+  if (secondsLeft > 120 || secondsLeft <= 0) return null;
+  const minutes = Math.ceil(secondsLeft / 60);
+  return `${minutes} minute${minutes === 1 ? "" : "s"} left`;
+}

@@ -1,10 +1,13 @@
 import { timingSafeEqual } from "node:crypto";
 import { deleteGuest } from "@/lib/guest-cleanup";
+import { sessionDeps } from "@/lib/session-deps";
+import { endLeftBehindCalls } from "@/lib/sessions";
 import { serverKeyDb } from "@/lib/supabase/admin";
 
 // The daily clean-up job (1f). Vercel's scheduler calls it once a day (vercel.json) with
-// CRON_SECRET; nobody else can. It closes idle sessions, tidies old records, and deletes guests
-// unused for 7 days (R3) and test guests a test run left behind.
+// CRON_SECRET; nobody else can. It closes idle sessions (the database's own timer does too, every 10
+// minutes) and ends any call they left behind at Tavus, tidies old records, and deletes guests unused
+// for 7 days (R3) and test guests a test run left behind.
 const IDLE_DAYS = 7;
 const TEST_GUEST_HOURS = 24;
 const MAX_GUESTS_PER_RUN = 200;
@@ -26,6 +29,7 @@ export async function GET(request: Request) {
   const db = serverKeyDb();
   const tidy = await db.rpc("daily_tidy");
   if (tidy.error) return Response.json({ error: `tidy failed: ${tidy.error.message}` }, { status: 500 });
+  const callsEnded = await endLeftBehindCalls(sessionDeps());
 
   const expired = await db.rpc("expired_guests", {
     idle_days: IDLE_DAYS,
@@ -46,7 +50,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const summary = { ...tidy.data, guests_deleted: deleted, guests_failed: failures.length };
+  const summary = { ...tidy.data, calls_ended: callsEnded, guests_deleted: deleted, guests_failed: failures.length };
   console.log(`daily job: ${JSON.stringify(summary)}${failures.length ? `; first failure: ${failures[0]}` : ""}`);
   return Response.json(summary, { status: failures.length ? 500 : 200 });
 }

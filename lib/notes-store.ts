@@ -56,8 +56,16 @@ export async function saveNotes(db: SupabaseClient, sessionId: string, expected:
     removed: n.removed,
   }));
   const { data, error } = await db.rpc("save_notes", { session: sessionId, expected_version: expected, rows });
+  if (error?.message.includes("session ended")) throw new SessionEndedError();
   if (error) throw new Error(`saving notes failed: ${error.message}`);
   return data as number | null;
+}
+
+/** The session ended (End, or 30 minutes idle) while notes were being read: they're not saved (2e). */
+export class SessionEndedError extends Error {
+  constructor() {
+    super("the session has ended");
+  }
 }
 
 /** The sequence number for words that just arrived (R22). */

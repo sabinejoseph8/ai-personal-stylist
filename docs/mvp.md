@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.10
+**Status:** Living document, version 1.11
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.2, tech spec 1.13 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.3, tech spec 1.14 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -93,7 +93,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
 | 9 | Recognition reads garments wrong | Phase 3 (3b) | Open |
-| 10 | Provider data handling for audio and words | Phase 0 (0f) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation will be hard-deleted when the session ends (2e) |
+| 10 | Provider data handling for audio and words | Phase 0 (0f), Phase 2 (2e) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation is hard-deleted when its call ends. Checked with a real call in 2e: Tavus no longer has it afterwards. Notes are deleted at End and within about 40 minutes of going idle |
 | 11 | The database is down when a recruiter clicks the link | Phase 1 (1f) and the uptime check | Lower: the database is on Supabase Pro, which doesn't pause |
 | 12 | Phone browser quirks | Phase 0 (0f) | Open. Android isn't tested in v1 (accepted risk) |
 | 13 | Sample catalog quality and image rights | Phase 1 (1e) | Handled in 1e: one photo style for all 140 products, no real brands, each photo's source recorded, and every photo approved by Sabine |
@@ -124,6 +124,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 2e plan: idle sessions are ended and their notes deleted by a database timer every 10 minutes (Supabase Cron), not just by the daily job (Q1). Time left and Time is up are checked by automated tests with a sped-up clock, and the iPhone check covers reconnecting and End, to save 10 Tavus minutes (Q2) | Sabine | tech spec 1.14 |
+| 20 Oct 2026 | 2e: the fonts come from the Fontsource packages instead of Google at build time, because the Google download had started failing builds (on GitHub twice in 2c, then every local build in 2e). Moved forward from the 2f list, since it blocked testing | Claude, recorded for Sabine | tech spec 1.14 |
 | 20 Oct 2026 | 2d plan: saved preferences in the notebook aren't tappable until Profile and privacy exists in Phase 6 (Q1), and the shopping, style and budget from setup stay in a small From your profile section under the notebook until then (Q2) | Sabine | design 1.2 |
 | 20 Oct 2026 | 2c, note speed: option 3. The notes reader runs Haiku 5.5 with thinking off, readings overlap, and words are sent about twice a second. It was the only setup tested that met R17. The agreed setup (low effort, once a second, one reading at a time) got 35 to 57% within 2 seconds. Notes cost about 14 cents a demo instead of about 6 | Sabine | tech spec 1.12 |
 | 20 Oct 2026 | 2c plan: a clear voice correction keeps the note's status, so a confirmed budget stays confirmed when changed to $350 (Q1). At most 12 notes a session, saved preferences not counted, with one place kept for the budget (Q2) | Sabine | tech spec 1.12, core/notes/merge.ts |
@@ -318,6 +320,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.11 (20 Oct 2026):** 2e decisions (Q1, Q2), the fonts from Fontsource, and risk 10 updated.
 - **1.10 (20 Oct 2026):** 2d decisions (Q1 and Q2).
 - **1.9 (20 Oct 2026):** 2c: your option 3 for note speed and the Q1 and Q2 answers, the notes eval results, risk 2 met in the eval, risk 5 handled for notes, and the per-demo cost at about $0.45.
 - **1.8 (20 Oct 2026):** 2b decisions: only working controls, the three sample phrases, the pinned bar moved to 2d, and the controls under the stage.

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { type BudgetLimits, createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { type BudgetLimits, createBudgetGuard, endsBecause, readBudgetLimits } from "@/lib/budget-guard";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
@@ -13,6 +13,13 @@ describe("budget limits", () => {
       monthlyClaudeUsd: 12,
       monthlyOpenaiUsd: 4,
     });
+  });
+
+  it("says which limit ends a call: today's time, or the month's video minutes when they run out first (R13)", () => {
+    expect(endsBecause(600, 600, 600)).toBe("day");
+    expect(endsBecause(240, 600, 240)).toBe("day"); // 4 minutes left today
+    expect(endsBecause(120, 600, 600)).toBe("month"); // the month has 2 minutes left
+    expect(endsBecause(60, 60, 600)).toBe("day"); // only asked for a minute
   });
 
   it("can be changed with settings, ignoring values that aren't numbers", () => {

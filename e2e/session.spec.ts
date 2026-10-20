@@ -5,10 +5,10 @@ import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
 import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/microphone";
 
-// 2a to 2d: the styling session with the fake engine and notes reader (playwright.config.ts): the
+// 2a to 2e: the styling session with the fake engine and notes reader (playwright.config.ts): the
 // microphone card (R6), Start conversation, End and resuming (R12), her state in words (R8),
-// interrupting (R7), Mute, tap to try (R70), live notes (R17 to R21) and the notebook (R15, R16, R20,
-// R23 to R25, R68).
+// interrupting (R7), Mute, tap to try (R70), live notes (R17 to R21), the notebook (R15, R16, R20,
+// R23 to R25, R68), time limits (R13), connection problems (R14) and notes deleted at End (R63).
 test.describe("the stylist stage", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -254,6 +254,60 @@ test.describe("the stylist stage", () => {
     await page.getByRole("button", { name: "End session" }).click();
     await expect(page.getByText("Conversation ended.")).toBeVisible();
     await expect(notebook.getByRole("list", { name: "Notes" }).getByRole("listitem")).toHaveCount(0);
+    // Deleted on the server too (R63).
+    await expect.poll(async () => (await serverDb().from("session_notes").select("id").eq("user_id", guest.id)).data?.length).toBe(0);
+  });
+
+  // 2e: time limits (R13) and connection problems (R14).
+  test("shows the time left in the last 2 minutes, then Time is up, keeping the notes (R13)", async ({ page }) => {
+    await page.clock.install();
+    await weddingNotes(page);
+    const timeLeft = page.getByRole("region", { name: "Your stylist" }).getByRole("status");
+    await page.clock.fastForward("08:05");
+    await expect(timeLeft).toHaveText("2 minutes left");
+    await page.clock.fastForward("01:00");
+    await expect(timeLeft).toHaveText("1 minute left");
+    await page.clock.fastForward("01:00");
+    await expect(state(page)).toHaveText("Time is up");
+    await expect(page.getByText("You've used today's 10 minutes with your stylist.", { exact: false })).toBeVisible();
+    await expect(note(page, "Elegant")).toBeVisible();
+    await expect(page.getByRole("button", { name: /conversation$/ })).toHaveCount(0);
+    await expect.poll(sessions).toEqual([expect.objectContaining({ status: "paused" })]);
+    await noSeriousA11yProblems(page);
+  });
+
+  test("shows Reconnecting while the connection comes back (R14)", async ({ page }) => {
+    await inCall(page);
+    await playInCall(page, { type: "connection", state: "reconnecting" });
+    await expect(state(page)).toHaveText("Reconnecting");
+    await playInCall(page, { type: "connection", state: "connected" });
+    await expect(state(page)).toHaveText("Listening");
+  });
+
+  test("a dropped call starts again by itself, keeping the session and its notes (R14)", async ({ page }) => {
+    await weddingNotes(page);
+    await playInCall(page, { type: "connection", state: "ended" });
+    await expect(state(page)).toHaveText("Reconnecting");
+    await expect(page.getByRole("button", { name: "End", exact: true })).toBeEnabled({ timeout: 10_000 });
+    await expect(state(page)).toHaveText(/^(Speaking|Listening)$/);
+    await expect(note(page, "Elegant")).toBeVisible();
+    await expect.poll(sessions).toEqual([expect.objectContaining({ status: "active" })]);
+  });
+
+  test("after 3 failed tries to bring back a dropped call, it offers Try again (R14)", async ({ page }) => {
+    await weddingNotes(page);
+    let starts = 0;
+    await page.route("**/api/sessions", (route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      starts++;
+      return route.fulfill({ status: 500, json: { error: "Something went wrong." } });
+    });
+    await playInCall(page, { type: "connection", state: "ended" });
+    await expect(page.getByText("We couldn't reconnect to your stylist.", { exact: false })).toBeVisible({ timeout: 15_000 });
+    expect(starts).toBe(3);
+    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    await expect(note(page, "Elegant")).toBeVisible();
+    await noSeriousA11yProblems(page);
   });
 
   test("while notes are paused, confirming by touch still works (R25)", async ({ page }) => {

@@ -19,8 +19,9 @@ test("the fonts load from our own site under the security policy", async ({ page
   await page.goto("/design-system");
   await page.evaluate(() => document.fonts.ready);
   const families = await page.evaluate(() => [...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family));
-  expect(families.join(" ")).toMatch(/Newsreader/);
-  expect(families.join(" ")).toMatch(/Figtree/);
+  // Local fonts are named after their variable in the layout, in lower case (2e).
+  expect(families.join(" ")).toMatch(/newsreader/i);
+  expect(families.join(" ")).toMatch(/figtree/i);
   expect(blocked).toEqual([]);
 });
 

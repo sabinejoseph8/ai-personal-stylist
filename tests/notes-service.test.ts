@@ -73,6 +73,21 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     expect(texts(last).filter((t) => t.toLowerCase().includes("wedding"))).toHaveLength(1);
   });
 
+  it("a reading still running when the shopper taps End saves nothing afterwards (2e, R63)", async () => {
+    let release = () => {};
+    const waiting = new Promise<void>((r) => (release = r));
+    const slow: NotesReader = { read: async (input) => (await waiting, createFakeNotesReader().read(input)) };
+    const updates: NotesUpdate[] = [];
+    const hearing = hearWords(deps({ reader: slow }), guest.id, sessionId, { words: WEDDING, stylistSaid: "", final: true }, (u) => updates.push(u));
+    await expect.poll(() => updates.length).toBe(1); // money and dates, before the reading
+    await db.from("sessions").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", sessionId).throwOnError();
+    await db.rpc("delete_session_data", { session: sessionId }).throwOnError();
+    release();
+    expect(await hearing).toBe(true);
+    expect(updates).toHaveLength(1);
+    expect((await db.from("session_notes").select("id").eq("session_id", sessionId)).data).toEqual([]);
+  });
+
   it("a confirm by touch beats a slow reading of words heard before the tap (R22)", async () => {
     await hear("something elegant");
     const elegant = (await db.from("session_notes").select("id").eq("session_id", sessionId).eq("note_text", "Elegant").single()).data!.id;
