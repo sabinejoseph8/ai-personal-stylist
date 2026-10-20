@@ -74,7 +74,12 @@ test.describe("the stylist stage", () => {
     await expect(state(page)).toHaveText("Microphone needed");
     await expect(page.getByText("The stylist needs your microphone to hear you")).toBeVisible();
     await expect(page.getByText(/tap aA in Safari's address bar/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    // A changed setting only applies after a reload, so the button reloads the page (found on Sabine's iPhone in 2f).
+    await expect(page.getByText(/then reload the page/)).toBeVisible();
+    const reload = page.waitForEvent("load");
+    await page.getByRole("button", { name: "Reload page" }).click();
+    await reload;
+    await expect(page.getByRole("button", { name: /conversation$/ })).toBeVisible();
     expect(await sessions()).toEqual([]);
   });
 

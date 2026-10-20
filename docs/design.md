@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.4 (20 Oct 2026)
+**Status:** Agreed, version 1.5 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -174,7 +174,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Frame: on desktops, a 4:5 frame that fills the stylist column. On phones, a full-width 4:5 frame before the session starts, then a 3:2 band (head and shoulders) once it starts. The video is cropped to the center so the stylist's head and shoulders stay in view.
 - States: Ready, Connecting, Listening, Thinking, Speaking, Muted, Reconnecting, Voice only, Microphone needed, Time is up, Connection lost, Ended.
 - **Voice only:** a still portrait of the same stylist with the speaking ring, and a line that says why: "Video unavailable. Continuing with voice." or "The video stylist is with another visitor. Continuing with voice." When the shopper chose it, the line reads "Voice only" with **Turn video on**. When the switch happens mid-conversation, the stylist also says out loud: "I'm switching to voice only, so I'll sound a little different." The voice only voice is chosen to sound as close as possible to the video stylist.
-- **Microphone needed:** shown when the microphone is blocked, missing or not working. It says "The stylist needs your microphone to hear you" and how to turn it on. The conversation can't start or carry on until it works.
+- **Microphone needed:** shown when the microphone is blocked, missing or not working. It says "The stylist needs your microphone to hear you" and how to turn it on. The conversation can't start or carry on until it works. When it's blocked, the button reads **Reload page**, because browsers apply a changed microphone setting only after a reload (found on your iPhone in 2f); otherwise it reads **Try again**.
 - **Time is up:** when the day's or month's conversation time runs out, the stage says so and the conversation ends. Notes and looks stay on screen. A banner says which limit ran out, for example "You've used today's 10 minutes with your stylist. Come back tomorrow to talk again.", and Resume conversation isn't offered; End still clears the notes (2e).
 - **Reconnecting:** shown while a weak connection comes back. If the call drops, a fresh call starts by itself up to 3 times, 2, 4 and 6 seconds apart, with Reconnecting showing. While the phone is offline (Wi-Fi off), it first waits up to 90 seconds for the connection to come back, so the tries aren't used up while nothing can work (found on your iPhone in 2e). If it still can't connect, the stage reads **Connection lost**, with "We couldn't reconnect to your stylist. Check your connection, then tap Try again. Your notes are still here." and **Try again** (R14, 2e).
 - The moment the shopper talks over the stylist, voice and video stop together and the state switches to Listening.
@@ -557,6 +557,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.5 (20 Oct 2026):** 2f, after your iPhone check: Reload page for a blocked microphone (4.1).
 - **1.4 (20 Oct 2026):** 2e, after your iPhone check: a dropped call waits for the connection to come back before trying again, and the Connection lost state (4.1).
 - **1.3 (20 Oct 2026):** 2e: what Time is up and Reconnecting show, and where the time left sits (4.1).
 - **1.2 (20 Oct 2026):** 2d: your answers to Q1 (saved preferences become tappable with Profile and privacy in Phase 6) and Q2 (From your profile under the notebook until then), notes sitting on the ruled lines, the highlighter as a stroke behind the words, and the removed line with Undo (4.2).
