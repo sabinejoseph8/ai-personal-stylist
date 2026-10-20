@@ -126,6 +126,11 @@ export default function DemoTest() {
           confirmedText.current.delete(n.key); // the shopper changed it by voice: back to pencil
           return { ...n, status: "to_confirm" as const };
         });
+      // Confirmed notes always stay on screen until the shopper removes or changes them.
+      const kept = new Set(next.map((n) => n.key));
+      for (const old of notesRef.current) {
+        if (old.status === "confirmed" && !kept.has(old.key) && !removedKeys.current.has(old.key)) next.push(old);
+      }
       setNotes(next);
       sendContext(next, seenRef.current);
     } finally {
