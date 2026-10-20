@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.6
+**Status:** Living document, version 1.7
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.9 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.10 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -124,6 +124,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 2a builds the Tavus and fake engines. The 2a task's "text engine" was left over from before text only was removed (19 Oct), and the voice-only engine (GPT-Live) stays in 6c | Sabine | progress.md (2a) |
+| 20 Oct 2026 | Until voice only arrives in 6c, when the video stylist is unavailable (another visitor on a call, or the month's video minutes used), the app says so and the conversation doesn't start | Sabine | tech spec 1.10 (4.1) |
 | 20 Oct 2026 | Phase 1 code review, decision A: from Phase 2, the records only the app should change (session state, looks, check results, the bag) are read-only for visitors, and the server writes them with the server key after checking the session is theirs. Built as each feature arrives | Sabine | tech spec 1.8 (6), progress.md (2a) |
 | 20 Oct 2026 | Phase 1 code review, decision B: AI calls at the same moment may run a few cents over the AI limits. No change, because the monthly ceilings sit below the provider limits | Sabine | tech spec 1.8 (6) |
 | 20 Oct 2026 | 1f limits: per guest per day, 10 minutes of conversation and $1 of AI; per month for the whole demo, 110 minutes of video (10 of Tavus's 120 kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit. Days and months count in UTC. Each limit is a Vercel setting | Sabine | tech spec 1.7 (6) |
@@ -173,6 +175,7 @@ Filled in during task group 0f.
 | Test | Pass mark | Result | Date | Notes |
 |---|---|---|---|---|
 | Video start time | 5 seconds or less | Fast, by Sabine's eye on an iPad. The exact seconds get measured in the 0f test demos | 18 Oct 2026 | Test page event log |
+| Video start time in the app (2a) | 5 seconds or less | About 15 seconds from tapping Start conversation to the stylist's video, in one automated test call from a Mac (headless Chrome, a fake microphone). To measure on Sabine's iPhone in the 2a check, and work on in 2b if it holds | 20 Oct 2026 | One real Tavus call, about 20 seconds of video minutes |
 | Stylist stops when interrupted | Half a second or less | Works by voice and button. The button path took 0.7 seconds, including the network | 18 Oct 2026 | Talking over her felt immediate to Sabine. A precise voice timing comes in 0f |
 | Lip sync | Looks natural to Sabine | "As natural as we can expect" | 18 Oct 2026 | Anna - Casual, Phoenix 4.5 |
 | Tavus live words for notes | Shopper's words arrive while speaking | Yes: conversation.utterance.streaming carries role "user" partial text while the shopper speaks | 18 Oct 2026 | The stylist replied about 1.3 seconds after the shopper stopped |
@@ -307,6 +310,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.7 (20 Oct 2026):** 2a decisions (the engines in 2a, and no conversation when video is unavailable until 6c), and the first measured video start in the app.
 - **1.6 (20 Oct 2026):** The Phase 1 code review: 13 findings, 11 fixed, decisions A and B, and the setup bug from your iPhone check.
 - **1.5 (20 Oct 2026):** 1f decisions: the budget limits, the server key for usage records, last-active time on every visit, and the daily job's rules. Risk 4 updated.
 - **1.4 (20 Oct 2026):** 1e decisions: the image generator and quality setting, the half-price batch, 140 products, photos served from the site, the catalog load script and the private review page. Risk 13 updated.

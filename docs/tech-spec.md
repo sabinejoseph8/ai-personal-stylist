@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.9 (20 Oct 2026)
+**Status:** Agreed, version 1.10 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -119,7 +119,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **profiles** | One row per guest | departments, style words, sizes, default budget (amount, currency, meaning), last active time | Until deleted, or 7 days without use |
 | **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule (for example heel height over 5 cm), version | Same as profile |
 | **consents** | Separate permissions (R64) | wardrobe photos, remember preferences, camera explained, with times | Same as profile |
-| **sessions** | One styling conversation | status, engine (video, voice, text), started and last activity times, versions for notes, feedback, anchor and profile | Ends after End or 30 minutes idle, then the row is closed |
+| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile. At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle, then the row is closed |
 | **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, budget, other and so on), hidden details for looks and checks, status, confidence, source, source turn, update time, version, removed | Deleted when the session ends (R63) |
 | **session_feedback** | Likes, Dislikes, Requested changes, Items to keep | look, item or attribute, scope, status, source, version | Deleted when the session ends |
 | **session_exceptions** | "This session only" permissions | saved preference, confirmed time | Deleted when the session ends |
@@ -143,9 +143,9 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 
 | Endpoint | Used for |
 |---|---|
-| **POST /api/sessions** | Start a session. Picks the engine from limits and availability, then returns a Tavus call link or a GPT-Live connection. If neither is available, it says so and the conversation doesn't start. |
+| **POST /api/sessions** | Start conversation: picks up the guest's open session or opens one (5 starts an hour), reserves their time with the budget guard, and starts the call with that time as its longest length. Returns the call's join link only. Until voice only arrives (6c), if video is unavailable (another visitor, or the month's minutes used) it says so and the conversation doesn't start (your decision, 2a). |
 | **POST /api/sessions/:id/voice** | Exchanges the browser's connection offer with OpenAI for GPT-Live. The OpenAI key never reaches the browser. |
-| **POST /api/sessions/:id/end** | Ends the call, records usage, and deletes session-only data. |
+| **POST /api/sessions/:id/end** | End: ends the call, hard-deletes the Tavus conversation and gives back the reserved time the call didn't use. With keep: true (the call stopped by itself, or the shopper left the page) the session pauses and can be resumed for 30 minutes. Deleting session-only data comes in 2e. |
 | **POST /api/sessions/:id/words** | New words heard. Returns note and feedback updates, the next question and new versions. |
 | **PATCH /api/sessions/:id/notes/:noteId** | Confirm or remove a note by touch (R20). |
 | **POST /api/sessions/:id/assets** | Upload a photo or a captured still. Returns the asset ID at once, then recognition runs. |
@@ -163,7 +163,8 @@ Every engine implements the same small interface, so the rest of the app never k
 
 - **Commands:** start, end, mute, unmute, send a tap-to-try phrase, update the stylist's context (notes, looks, next question), say a short scripted line, interrupt.
 - **Events:** words heard (speaker, text so far, final or not, turn ID), stylist started or stopped speaking, stylist request, connection state, error. Words heard feed the notes reader and are never shown on screen.
-- **Tavus engine:** joins the call with Daily. Context goes in through Tavus's context interaction, scripted lines through **conversation.echo**, and interruptions through **conversation.interrupt**, all sent as Daily app messages. Live words arrive as **conversation.utterance.streaming** events. The Tavus setup ("PAL") uses **pipeline_mode: "full"**, a stock female face, perception turned off (the camera stays with us), and recording turned off.
+- **Files:** the interface is **connectors/conversation/types.ts**: a server side that starts and ends calls (it holds the keys) and a browser side that joins them. The Tavus engine is in **connectors/conversation/tavus/**, and a **fake engine** (**connectors/conversation/fake.ts**) plays scripted conversations for tests. The fake is only used when **CONVERSATION_ENGINE=fake**, and never on Vercel's live site. The shared contract tests are in **tests/support/conversation-contract.ts**.
+- **Tavus engine:** joins the call with Daily, with **avoidEval** on, so the site's strict security policy holds on the session screen. Context goes in through Tavus's context interaction, scripted lines through **conversation.echo**, and interruptions through **conversation.interrupt**, all sent as Daily app messages. Live words arrive as **conversation.utterance.streaming** events. The Tavus setup ("PAL") uses **pipeline_mode: "full"**, a stock female face, perception turned off (the camera stays with us), and recording turned off.
 - **GPT-Live engine:** a browser WebRTC call set up through our server, which sends the browser's offer to **POST /v1/live/sessions** and returns only the answer, never the key. The session must set **delegation: { type: "client" }** (OpenAI rejects null). Uses the same stylist instructions. Live words arrive as **session.input_transcript.delta**. Facts go in through **session.thinking.append**, and exact lines through **session.instructions.append**. The browser's data channel should be limited so only our server can feed facts (Phase 6). The voice is **quartz** (picked in Phase 0).
 - **Switching to voice only:** GPT-Live uses the OpenAI voice that sounds closest to the Tavus face, picked in Phase 0. When the shopper taps Voice only, the Tavus stylist first says "I'm switching to voice only, so I'll sound a little different." through **conversation.echo**. Then the video call ends and GPT-Live picks up with the current notes and a short recap. If video drops without warning, GPT-Live says the same line as its first words. If video is unavailable from the start (another visitor is using it, or the month's video minutes are used up), the stylist starts in voice only and says why.
 - **Stylist requests are limited to three:** capture the item on camera, open saved looks, end the session. The stylist never changes notes, looks or the bag itself.
@@ -271,7 +272,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - **Scheduled job:** a Vercel cron job runs daily at 08:00 UTC (4 am in New York). It closes sessions idle for 30 minutes, deletes guests unused for 7 days with their photos (R3), deletes test guests older than a day that a test run left behind, and deletes usage records older than 90 days and old rate-limit counts. Only anonymous guests and test guests are ever deleted. A guest's last-active time is updated on every page visit, at most once an hour (your decision, 20 Oct 2026). Keeping the database awake isn't needed on Pro.
 - **Tavus setup:** the stylist's Tavus configuration (PAL, face, conversation model, timeouts) is kept as a file in the repository and applied by a script, so it is versioned like code.
 - **Address:** the free vercel.app address for v1 (default). A custom domain can be added later.
-- **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, and the daily and monthly limits (section 6, Cost limits).
+- **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, and the daily and monthly limits (section 6, Cost limits). **CONVERSATION_ENGINE=fake** is for automated tests only.
 - **Monitoring:** Vercel logs and alerts for errors, a usage table for minutes and spend, and a weekly check of provider dashboards.
 
 ## 8. Testing approach
@@ -365,6 +366,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.10 (20 Oct 2026):** 2a: the conversation connector's files and fake engine, Start conversation and End as built, server-owned sessions with the call and its reserved time, and your answer that, until 6c, the conversation doesn't start when video is unavailable.
 - **1.9 (20 Oct 2026):** System pattern 11, screens start from saved data, after your iPhone check found setup showing and saving old answers.
 - **1.8 (20 Oct 2026):** Phase 1 code review: rows can only point at the same guest's session, look, preference or check result; from Phase 2 the app's own records are read-only for guests and written by the server (your decision A); the few-cents AI overshoot is accepted (your decision B).
 - **1.7 (20 Oct 2026):** 1f: your limits (10 minutes and $1 of AI per guest per day; 110 video minutes, $12 of Claude and $4 of OpenAI a month, counted in UTC), the server key also used for the budget guard's records, last-active time updated on every visit, how the guard reserves and records, and what the daily job does.
