@@ -3,8 +3,11 @@ import { SUPABASE_URL } from "@/lib/public-config";
 // Browser protections (tech spec section 6).
 const supabase = new URL(SUPABASE_URL).host;
 
-/** The content security policy: the browser may only talk to our site and the services we use. */
-export function contentSecurityPolicy(nonce: string, dev: boolean): string {
+/**
+ * The content security policy: the browser may only talk to our site and the services we use.
+ * `local` is true on this computer's test server, which has no https, so requests aren't upgraded there.
+ */
+export function contentSecurityPolicy(nonce: string, dev: boolean, local = dev): string {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://challenges.cloudflare.com${dev ? " 'unsafe-eval'" : ""}`,
@@ -19,7 +22,7 @@ export function contentSecurityPolicy(nonce: string, dev: boolean): string {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    ...(dev ? [] : ["upgrade-insecure-requests"]),
+    ...(local ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 }
 

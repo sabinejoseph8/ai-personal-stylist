@@ -7,7 +7,8 @@ import { contentSecurityPolicy, isPhase0TestPage, permissionsPolicy } from "@/li
 // Runs before every page: keeps the guest's sign-in fresh and adds the browser protections.
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = contentSecurityPolicy(nonce, process.env.NODE_ENV === "development");
+  const local = ["localhost", "127.0.0.1"].includes(request.nextUrl.hostname);
+  const csp = contentSecurityPolicy(nonce, process.env.NODE_ENV === "development", local);
   const path = request.nextUrl.pathname;
 
   const requestHeaders = new Headers(request.headers);

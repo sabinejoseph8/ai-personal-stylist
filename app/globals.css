@@ -1,7 +1,206 @@
-body {
-  margin: 0;
-  padding: 24px 16px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #1f2a44;
-  background: #eceeec;
+@import "tailwindcss";
+
+/*
+  Design tokens from docs/design.md section 3 (agreed 1.0). Every screen uses these names.
+  Light theme only in v1 (DQ2). Sizes are in rem, so text can be enlarged to 200%.
+*/
+@theme {
+  /* 3.1 Colors */
+  --color-*: initial;
+  --color-showroom: #eceeec;
+  --color-page: #ffffff;
+  --color-ink: #1f2a44;
+  --color-graphite: #575e6a;
+  --color-emerald: #0b6b4f;
+  --color-highlighter: #ffe38a;
+  --color-red-pen: #b42318;
+  --color-emerald-wash: #e3f1ea;
+  --color-red-wash: #fdecea;
+  --color-control-edge: #7a818b;
+  --color-focus: #2457c5;
+  --color-rule-blue: #c8d7ea;
+  --color-margin-pink: #e8a1a6;
+  --color-hairline: #d9dde0;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+
+  /* 3.2 Families (set by next/font in app/layout.tsx) */
+  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-figtree), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* 3.3 Spacing: base unit 4 px */
+  --spacing: 0.25rem;
+  --spacing-touch: 2.75rem; /* 44 px minimum touch target */
+
+  /* 3.4 Corner radius */
+  --radius-paper: 4px;
+  --radius-print: 2px;
+  --radius-image: 8px;
+  --radius-panel: 12px;
+  --radius-control: 10px;
+  --radius-sheet: 20px;
+  --radius-pill: 9999px;
+
+  /* 3.5 Shadows, tinted with Ink */
+  --shadow-paper: 0 1px 1px rgb(31 42 68 / 0.08), 0 12px 24px -8px rgb(31 42 68 / 0.2);
+  --shadow-photo: 0 1px 3px rgb(31 42 68 / 0.25);
+  --shadow-overlay: 0 16px 40px rgb(31 42 68 / 0.24);
+
+  /* 3.6 Motion */
+  --duration-quick: 120ms;
+  --duration-standard: 200ms;
+  --duration-large: 320ms;
+  --duration-ink-in: 500ms;
+  --ease-arrive: cubic-bezier(0.2, 0, 0, 1);
+  --ease-leave: cubic-bezier(0.4, 0, 1, 1);
+
+  --breakpoint-tablet: 48rem;
+  --breakpoint-desktop: 64rem;
+}
+
+/* 3.2 Type styles: phone sizes first, desktop sizes from 64rem. */
+@utility type-display {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  @media (width >= 64rem) {
+    font-size: 3rem;
+    line-height: 3.25rem;
+  }
+}
+@utility type-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.75rem;
+  line-height: 2.125rem;
+  @media (width >= 64rem) {
+    font-size: 2rem;
+    line-height: 2.375rem;
+  }
+}
+@utility type-notebook-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.75rem;
+}
+@utility type-heading {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.3125rem;
+  line-height: 1.75rem;
+}
+@utility type-note {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: 1.75rem; /* matches the 28 px ruled lines */
+}
+@utility type-subheading {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+}
+@utility type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+@utility type-label {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+@utility type-small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+@utility price {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus: a 2 px Focus ring with a 2 px white gap on every interactive element (design section 6). */
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-page), 0 0 0 4px var(--color-focus);
+  }
+}
+
+@layer base {
+  html {
+    background: var(--color-showroom);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced motion: no animations or transitions anywhere (design section 3.6). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Durations as utilities, from the motion tokens. */
+@utility duration-quick {
+  transition-duration: var(--duration-quick);
+}
+@utility duration-standard {
+  transition-duration: var(--duration-standard);
+}
+@utility duration-large {
+  transition-duration: var(--duration-large);
+}
+
+/* Sheets slide up, dialogs and overlays fade, toasts rise (3.6). Reduced motion turns these off above. */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@utility sheet-slide {
+  &[data-state="open"] {
+    animation: sheet-up var(--duration-large) var(--ease-arrive);
+  }
+}
+@utility overlay-fade {
+  &[data-state="open"] {
+    animation: fade-in var(--duration-standard) var(--ease-arrive);
+  }
+}
+@utility dialog-pop {
+  &[data-state="open"] {
+    animation: fade-in var(--duration-standard) var(--ease-arrive);
+  }
+}
+@utility toast-rise {
+  &[data-state="open"] {
+    animation: fade-in var(--duration-standard) var(--ease-arrive);
+  }
 }

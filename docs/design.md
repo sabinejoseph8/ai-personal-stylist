@@ -1,7 +1,7 @@
 # AI Personal Stylist: Design
 
-**Status:** Draft, version 0.7
-**Last updated:** 19 Oct 2026
+**Status:** Agreed, version 1.0 (20 Oct 2026)
+**Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
 
@@ -130,7 +130,7 @@ This keeps the notebook visibly on top of everything else.
 
 ### 3.7 Icons
 
-- One set of simple outline icons with a 1.5 px stroke, at 20 and 24 px.
+- One set of simple outline icons with a 1.5 px stroke, at 20 and 24 px (Lucide). Lucide has no hanger, so that one is drawn to match.
 - Icon-only buttons always have an accessible name, and a visible label wherever space allows.
 - Each icon keeps one meaning everywhere:
 
@@ -552,6 +552,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.0 (20 Oct 2026):** Agreed by you before the design system was built (1c). Same content as 0.7, plus a note that the hanger icon is drawn to match Lucide. Any later change gets a new version number.
 - **0.7 (19 Oct 2026):** Updated for product spec 1.4. My Styling Notes is now a free-form notebook of jotted notes, with Confirm and Remove by touch and no editor. Captions, the message box and Text only mode are removed, and Microphone needed and Time is up are new stylist states. Principle 6 and the screen sketches are redrawn.
 - **0.6 (18 Oct 2026):** The About page now links the planning files in docs/, where they moved.
 - **0.5 (18 Oct 2026):** Added the welcome screen's resting state (product spec R13).
