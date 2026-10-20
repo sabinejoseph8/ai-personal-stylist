@@ -1,15 +1,29 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ConversationEvent } from "@/connectors/conversation/types";
 import type { NextQuestion } from "@/core/notes/types";
 
-// The browser's side of My Styling Notes (2c): it sends the shopper's words about twice a second while
-// they talk (R17, Sabine's option 3 in 2c), and right away when they finish, and shows the notes the server sends back. Each send
-// starts its own reading, so readings overlap and the server merges them. A late answer never replaces
-// a newer one (R22): each update carries the notebook's version.
+// The browser's side of My Styling Notes (2c, 2d): it sends the shopper's words about twice a second
+// while they talk (R17, Sabine's option 3 in 2c), and right away when they finish, and shows the notes
+// the server sends back. Each send starts its own reading, so readings overlap and the server merges
+// them. A late answer never replaces a newer one (R22): each update carries the notebook's version.
+// Confirm, Remove and Undo by touch (R20) go to the server too.
 
 export type ShownNote = { id: string; kind: string; text: string; status: "to_confirm" | "confirmed" };
+export type TouchAction = "confirm" | "remove" | "restore";
+type Touch = { action: TouchAction; note: ShownNote; index: number };
+
+/** The notes with touches still on their way to the server laid on top, so a tap shows at once. */
+function withTouches(notes: ShownNote[], touches: Map<string, Touch>) {
+  let shown = notes;
+  for (const [id, { action, note, index }] of touches) {
+    if (action === "confirm") shown = shown.map((n) => (n.id === id ? { ...n, status: "confirmed" } : n));
+    if (action === "remove") shown = shown.filter((n) => n.id !== id);
+    if (action === "restore" && !shown.some((n) => n.id === id)) shown = [...shown.slice(0, index), note, ...shown.slice(index)];
+  }
+  return shown;
+}
 type Update = { version?: number; notes?: ShownNote[]; question?: NextQuestion; seq?: number; context?: string; paused?: boolean; error?: string };
 
 const SEND_EVERY_MS = 500;
@@ -124,6 +138,56 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     if (e.final) flush(true);
   }
 
+  const [touches, setTouches] = useState(new Map<string, Touch>());
+  const shown = useMemo(() => withTouches(notes, touches), [notes, touches]);
+  // Touches on one note go to the server one after another: Undo then Remove in quick succession must
+  // arrive in that order, or the note would come back.
+  const inOrder = useRef(new Map<string, Promise<unknown>>());
+
+  /**
+   * Confirm, Remove or Undo (restore) by touch (R20). It shows at once; the server's answer then takes
+   * over. `index` is where an undone note goes back. Resolves false if it couldn't be saved.
+   */
+  function touch(note: ShownNote, action: TouchAction, index = 0): Promise<boolean> {
+    const mine: Touch = { action, note, index };
+    setTouches((t) => new Map(t).set(note.id, mine));
+    const done = (inOrder.current.get(note.id) ?? Promise.resolve()).then(() => send(note, action, mine));
+    inOrder.current.set(note.id, done);
+    return done;
+  }
+
+  async function send(note: ShownNote, action: TouchAction, mine: Touch): Promise<boolean> {
+    const id = session.current;
+    let saved = false;
+    try {
+      if (!id) throw new Error("no session");
+      const res = await fetch(`/api/sessions/${id}/notes/${note.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        const u = (await res.json()) as Update;
+        // Readings may still be paused: a touch's answer only updates the notes and her context.
+        if (u.version !== undefined && u.version >= version.current) {
+          version.current = u.version;
+          if (u.notes) setNotes(u.notes);
+          if (u.context) context.current(u.context);
+        }
+        saved = true;
+      }
+    } catch {
+      // Not saved: the note goes back to how it was.
+    }
+    setTouches((t) => {
+      if (t.get(note.id) !== mine) return t; // a newer touch on this note is on its way
+      const next = new Map(t);
+      next.delete(note.id);
+      return next;
+    });
+    return saved;
+  }
+
   const phrases = useRef(0);
   // About twice a second while the shopper talks (tech spec 1.2).
   useEffect(() => {
@@ -135,18 +199,20 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
   }, [live]);
 
   return {
-    notes,
+    notes: shown,
     question,
     paused,
     onEvent,
     /** A tapped phrase or quick reply, sent as if spoken. */
     say: (text: string) => void post(`phrase-${++phrases.current}`, text, true),
+    touch,
     clearQuestion: () => {
       asked.current = { ...asked.current, key: "", question: null };
       setQuestion(null);
     },
     reset: () => {
       version.current = 0;
+      setTouches(new Map());
       asked.current = { key: "", question: null, seq: 0 };
       setNotes([]);
       setQuestion(null);

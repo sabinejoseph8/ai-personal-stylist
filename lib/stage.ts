@@ -19,6 +19,8 @@ export type MicrophoneProblem = "blocked" | "missing" | "failed";
 export type Stage = {
   connection: "idle" | "connecting" | "connected" | "reconnecting" | "ended";
   stylistSpeaking: boolean;
+  /** The shopper is talking right now: screen reader updates wait until they stop (R68). */
+  shopperSpeaking: boolean;
   /** The shopper finished speaking (or tapped a phrase) and she hasn't started answering yet. */
   awaitingReply: boolean;
   muted: boolean;
@@ -30,6 +32,7 @@ export type Stage = {
 export const READY: Stage = {
   connection: "idle",
   stylistSpeaking: false,
+  shopperSpeaking: false,
   awaitingReply: false,
   muted: false,
   microphone: null,
@@ -51,15 +54,15 @@ export function nextStage(stage: Stage, action: StageAction): Stage {
     case "stopped":
       return { ...READY, connection: "ended" };
     case "connection":
-      if (action.state === "ended") return { ...stage, connection: "ended", stylistSpeaking: false, awaitingReply: false };
+      if (action.state === "ended") return { ...stage, connection: "ended", stylistSpeaking: false, shopperSpeaking: false, awaitingReply: false };
       return { ...stage, connection: action.state };
     case "stylist-speaking":
       return { ...stage, stylistSpeaking: action.speaking, awaitingReply: false };
     case "shopper-speaking":
       // Talking over her stops her at once (R7): the stage goes straight to Listening.
       return action.speaking
-        ? { ...stage, stylistSpeaking: false, awaitingReply: false, shopperHasSpoken: true }
-        : { ...stage, awaitingReply: true };
+        ? { ...stage, stylistSpeaking: false, shopperSpeaking: true, awaitingReply: false, shopperHasSpoken: true }
+        : { ...stage, shopperSpeaking: false, awaitingReply: true };
     case "words":
       return action.speaker === "shopper" ? { ...stage, shopperHasSpoken: true } : stage;
     case "phrase-sent":
@@ -94,3 +97,6 @@ export function stageLabel(stage: Stage): StageLabel {
 /** The sample phrases show once she's connected and before the shopper first speaks (R70). */
 export const showSamplePhrases = (stage: Stage) =>
   stage.connection === "connected" && !stage.shopperHasSpoken && !stage.microphone;
+
+/** Someone is talking, so screen reader updates wait (R68: never over the conversation). */
+export const someoneSpeaking = (stage: Stage) => stage.stylistSpeaking || stage.shopperSpeaking;

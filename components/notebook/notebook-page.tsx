@@ -3,7 +3,7 @@ import { Icon } from "@/components/ui/icons";
 
 // My Styling Notes as a notebook page (design.md sections 3 and 4.2): ruled lines every
 // 28 px, a margin line, notes jotted in pencil (To confirm) or ink (Confirmed).
-// Reused by the welcome hero now and the real notebook in Phase 2.
+// Used by the welcome hero; the session's notebook is my-styling-notes.tsx (2d).
 
 export type JottedNote = { id: string; text: string; status: "to_confirm" | "confirmed" };
 
@@ -21,11 +21,8 @@ export function NoteLine({ note, inkIn = false, delayMs = 0 }: { note: JottedNot
   const pencil = note.status === "to_confirm";
   return (
     <li className="flex min-h-7 items-center justify-between gap-3 pl-[calc(var(--margin-x)+0.75rem)] pr-4">
-      <span
-        className={`type-note ${inkIn ? "ink-in" : ""} ${pencil ? "rounded-[3px] bg-highlighter px-1 text-graphite" : "text-ink"}`}
-        style={inkIn ? { animationDelay: `${delayMs}ms` } : undefined}
-      >
-        {note.text}
+      <span className={`type-note ${inkIn ? "ink-in" : ""}`} style={inkIn ? { animationDelay: `${delayMs}ms` } : undefined}>
+        <span className={`px-0.5 ${pencil ? "highlighter-mark text-graphite" : "text-ink"}`}>{note.text}</span>
       </span>
       <span className={`type-small inline-flex shrink-0 items-center gap-1 ${pencil ? "text-graphite" : "text-emerald"}`}>
         <Icon name={pencil ? "toConfirm" : "confirmed"} />

@@ -215,7 +215,8 @@
     var(--color-rule-blue) calc(1.75rem - 1px),
     var(--color-rule-blue) 1.75rem
   );
-  background-position: 0 2.5rem;
+  /* Lines sit just under the text's baseline, so notes sit on them (6 px above each 28 px row's end). */
+  background-position: 0 calc(2.5rem - 0.375rem);
   &::before {
     content: "";
     position: absolute;
@@ -228,6 +229,13 @@
   @media (width >= 64rem) {
     --margin-x: 2.25rem;
   }
+}
+
+/* A highlighter stroke behind a pencil note's words, wrapping with them (design.md 4.2). */
+@utility highlighter-mark {
+  background: linear-gradient(to bottom, transparent 30%, var(--color-highlighter) 30%, var(--color-highlighter) 92%, transparent 92%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* "Ink in", the signature moment: a note writes itself in from left to right (design.md 3.6). */

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.1 (20 Oct 2026)
+**Status:** Agreed, version 1.2 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -214,18 +214,19 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Order on the page: saved preferences that apply, jotted at the top; Style around this item (only with a photo); the stylist's notes in the order they were jotted, newest at the bottom, like writing down a page; then feedback under a small heading for each look (only once a look exists). Session exceptions are jotted where they happen, marked This session only.
 - States: expanded; collapsed (one line, for example "6 notes, 1 to confirm", plus the photo thumbnail); empty (a blank ruled page with the hint line); writing (a note is inking in); paused ("Notes paused. You can still confirm or remove notes.").
 - **Hide** and **Show** keep everything as it was.
-- Look: a white page, Rule blue lines every 28 px, a Margin pink line on the left, and the Paper shadow. The lines sit under the text and are light enough not to affect reading.
+- Look: a white page, Rule blue lines every 28 px, a Margin pink line on the left, and the Paper shadow. The lines sit under the text and are light enough not to affect reading. Every row in the notebook (notes, the hint line, the buttons under a note) is a whole number of lines, so the words always sit on a line (2d).
+- Until Profile and privacy arrives (Phase 6), a small **From your profile** section sits under the notebook: shopping, style and budget from setup, with **Edit your profile** (your answer to Q2 in 2d).
 
 **Jotted note**
 - One or two lines of Newsreader sitting on the ruled lines, in the stylist's words: short summaries, never quotes. For example "Outdoor wedding, November" or "Budget: up to $500".
 - A small status chip at the end of the line.
 - States:
-  - To confirm: written in Graphite on a Highlighter mark, with a To confirm chip.
+  - To confirm: written in Graphite on a Highlighter mark, with a To confirm chip. The mark is a highlighter stroke behind the words, wrapping with them, not a block over the lines (2d).
   - Confirmed: written in Ink, with a Confirmed chip and an Emerald check.
   - Writing: the note inks in from left to right, then screen readers hear, for example, "Noted: budget up to $350, confirmed."
   - Corrected by voice: the old words are struck through for a moment, then the new words ink in.
   - Selected: after a tap, **Confirm** and **Remove** appear beside the note.
-  - Removed: the note fades out, with **Undo** for 5 seconds.
+  - Removed: the note's line reads "Removed:" with its words struck through, and **Undo** for 5 seconds. Focus moves to Undo, and Undo puts the note back where it was (2d).
 - The whole note is one tap target.
 - While the shopper is speaking, screen reader updates are grouped, for example "3 notes added", so they do not talk over the conversation.
 
@@ -261,7 +262,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Before any feedback, nothing shows under the look's heading.
 
 **Saved preferences and session exceptions**
-- Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a bookmark icon. Tapping one opens it in Profile and privacy.
+- Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a Saved preference chip and its bookmark icon. Tapping one opens it in Profile and privacy, from Phase 6. Until then they aren't tappable (your answer to Q1 in 2d).
 - This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**.
 
 ### 4.3 Looks
@@ -555,6 +556,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.2 (20 Oct 2026):** 2d: your answers to Q1 (saved preferences become tappable with Profile and privacy in Phase 6) and Q2 (From your profile under the notebook until then), notes sitting on the ruled lines, the highlighter as a stroke behind the words, and the removed line with Undo (4.2).
 - **1.1 (20 Oct 2026):** 2b: added the microphone, crossed-out microphone and hang-up icons that Mute and End use (4.1) to the icon table (3.7). No other change.
 - **1.0 (20 Oct 2026):** Agreed by you before the design system was built (1c). Same content as 0.7, plus a note that the hanger icon is drawn to match Lucide. Any later change gets a new version number.
 - **0.7 (19 Oct 2026):** Updated for product spec 1.4. My Styling Notes is now a free-form notebook of jotted notes, with Confirm and Remove by touch and no editor. Captions, the message box and Text only mode are removed, and Microphone needed and Time is up are new stylist states. Principle 6 and the screen sketches are redrawn.

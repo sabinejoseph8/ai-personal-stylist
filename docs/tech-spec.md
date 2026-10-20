@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.12 (20 Oct 2026)
+**Status:** Agreed, version 1.13 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -216,6 +216,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
    - A reading never drops a confirmed note, and a removed note never comes back from older words or after a touch.
    - Because readings overlap, the merge also folds repeated notes together: "November" next to "Outdoor wedding, November", or the same idea jotted by two readings at once. The newer words win.
    - Saving uses the notebook's version as a check, and tries again if another reading saved first.
+   - Confirm, Remove and Undo by touch (2d) show on screen at once, laid over the notes until the server answers. Touches on the same note are sent one after another, because the server could otherwise handle Undo and a quick second Remove in either order and bring the note back (found by the 2d browser tests).
 6. **One publishing gate.** A look reaches the screen or the bag through a single function. That function requires a passing check of that exact look against the current versions (FR-30). Rules run in code first: budget, Never and Must have rules, colors to avoid, outfit type, kept items and the owned item. A missing required detail is a fail. Claude then judges only subjective fit, and any uncertainty becomes "needs clarification".
 7. **Code for facts, AI for language and taste.** Money, totals, dates, filters and firm rules are plain code. AI answers are always shape-checked before use.
 8. **Degrade, never break.** Video falls back to voice only. If voice drops, the conversation pauses and reconnects, and notes and looks stay on screen. A failed check holds the look. A failed notes reader pauses notes while confirming and removing notes by touch keeps working.
@@ -377,6 +378,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.13 (20 Oct 2026):** 2d: touches on a note show at once and are sent in order (section 5, pattern 5).
 - **1.12 (20 Oct 2026):** 2c: the notes reader as built. Words twice a second with overlapping readings, Haiku 5.5 with thinking off (your option 3), notes saved only by the server, the words sequence and merge rules, the words and notes endpoints, and the notes eval.
 - **1.11 (20 Oct 2026):** 2b: the connector's microphone event, and the stage's state worked out from the events in one tested rule set (lib/stage.ts). The microphone is checked before the server starts a call, so a blocked microphone never uses Tavus minutes.
 - **1.10 (20 Oct 2026):** 2a: the conversation connector's files and fake engine, Start conversation and End as built, server-owned sessions with the call and its reserved time, and your answer that, until 6c, the conversation doesn't start when video is unavailable.

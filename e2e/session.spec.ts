@@ -5,15 +5,16 @@ import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
 import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/microphone";
 
-// 2a and 2b: the stylist stage with the fake engine (playwright.config.ts): the microphone card (R6),
-// Start conversation, End and resuming (R12), her state in words (R8), interrupting (R7), Mute and
-// tap to try (R70).
+// 2a to 2d: the styling session with the fake engine and notes reader (playwright.config.ts): the
+// microphone card (R6), Start conversation, End and resuming (R12), her state in words (R8),
+// interrupting (R7), Mute, tap to try (R70), live notes (R17 to R21) and the notebook (R15, R16, R20,
+// R23 to R25, R68).
 test.describe("the stylist stage", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
   let guest: TestGuest;
   const sessions = async () => (await serverDb().from("sessions").select("id, status").eq("user_id", guest.id)).data ?? [];
-  const state = (page: Page) => page.locator("p[aria-live]");
+  const state = (page: Page) => page.getByRole("region", { name: "Your stylist" }).locator("p[aria-live]");
 
   /** Opens the session page and starts a call, with the microphone already allowed. */
   async function inCall(page: Page) {
@@ -36,6 +37,7 @@ test.describe("the stylist stage", () => {
     await db.from("sessions").delete().eq("user_id", guest.id).throwOnError();
     await db.from("usage").delete().eq("user_id", guest.id).throwOnError();
     await db.from("rate_limits").delete().eq("user_id", guest.id).throwOnError();
+    await db.from("saved_preferences").delete().eq("user_id", guest.id).throwOnError();
     await context.addCookies(shared.cookies);
   });
 
@@ -121,7 +123,7 @@ test.describe("the stylist stage", () => {
     for (const note of ["Outdoor wedding, November", "Elegant", "Emerald green, preferred", "Budget: up to $500"]) {
       await expect(notebook.getByText(note, { exact: true })).toBeVisible();
     }
-    await expect(notebook.getByText("To confirm")).toHaveCount(4);
+    await expect(notebook.getByText("To confirm", { exact: true })).toHaveCount(4);
     const replies = page.getByRole("group", { name: "Quick replies: Dress or pantsuit?" });
     await expect(replies.getByRole("button")).toHaveText(["Dress", "Pantsuit", "Not sure yet"]);
     await expect
@@ -159,6 +161,138 @@ test.describe("the stylist stage", () => {
     await page.route("**/words", (route) => route.abort("internetdisconnected"));
     await playInCall(page, { type: "words", speaker: "shopper", text: "Something elegant", final: true, turnId: "1" });
     await expect(page.getByText("Notes paused")).toBeVisible();
+  });
+
+  // 2d: the notebook.
+  const notebookOf = (page: Page) => page.getByRole("region", { name: "My Styling Notes" });
+  /** A jotted note's tap target, named by its words and then its status. */
+  const note = (page: Page, text: string) => notebookOf(page).getByRole("button", { name: new RegExp(`^${text} (To confirm|Confirmed)$`) });
+
+  /** In a call, with the wedding phrase's four notes jotted (R18). */
+  async function weddingNotes(page: Page) {
+    await inCall(page);
+    await page.getByRole("button", { name: `“${SAMPLE_PHRASES[0]}”` }).click();
+    await expect(note(page, "Emerald green, preferred")).toBeVisible();
+    return notebookOf(page);
+  }
+
+  test("saved preferences sit at the top of the notebook, under the hint line (R15, R24, R25)", async ({ page }) => {
+    await serverDb().from("saved_preferences").insert({ user_id: guest.id, kind: "never", words: "high heels" }).throwOnError();
+    await fakeMicrophone(page, "allowed");
+    await page.goto("/session");
+    const notebook = notebookOf(page);
+    await expect(notebook.getByText("Notes appear here as you talk. Tap a note to confirm or remove it, or say a correction.")).toBeVisible();
+    const preferences = notebook.getByRole("list", { name: "Saved preferences" });
+    await expect(preferences).toContainText("Never: high heels");
+    await expect(preferences).toContainText("Saved preference");
+    await expect(notebook.getByRole("list", { name: "Notes" }).getByRole("listitem")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "From your profile" })).toBeVisible();
+    await noSeriousA11yProblems(page);
+  });
+
+  test("a tapped Confirm turns a note to ink within a second, with focus on Confirm and then back on the note (R20, S7)", async ({ page }) => {
+    const notebook = await weddingNotes(page);
+    await note(page, "Elegant").click();
+    await expect(note(page, "Elegant")).toHaveAttribute("aria-expanded", "true");
+    const confirm = notebook.getByRole("button", { name: "Confirm", exact: true });
+    await expect(confirm).toBeFocused();
+    await noSeriousA11yProblems(page);
+    await confirm.click();
+    await expect(note(page, "Elegant")).toHaveAccessibleName("Elegant Confirmed", { timeout: 1000 });
+    await expect(note(page, "Elegant")).toBeFocused();
+    await expect
+      .poll(async () => (await serverDb().from("session_notes").select("status").eq("user_id", guest.id).eq("note_text", "Elegant")).data?.[0]?.status)
+      .toBe("confirmed");
+    // A confirmed note only offers Remove, and Escape closes the buttons.
+    await note(page, "Elegant").click();
+    await expect(notebook.getByRole("button", { name: "Remove", exact: true })).toBeFocused();
+    await expect(notebook.getByRole("button", { name: "Confirm", exact: true })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(note(page, "Elegant")).toBeFocused();
+    await expect(note(page, "Elegant")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("Remove takes a note out with Undo for 5 seconds, and without Undo it stays gone (R20, R22)", async ({ page }) => {
+    const notebook = await weddingNotes(page);
+    await note(page, "Elegant").click();
+    await notebook.getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(notebook.getByText("Removed:")).toBeVisible();
+    const undo = notebook.getByRole("button", { name: "Undo" });
+    await expect(undo).toBeFocused();
+    await noSeriousA11yProblems(page);
+    await undo.click();
+    await expect(note(page, "Elegant")).toBeFocused();
+
+    await note(page, "Elegant").click();
+    await notebook.getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(undo).toBeHidden({ timeout: 7000 });
+    await expect(note(page, "Elegant")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "My Styling Notes" })).toBeFocused();
+    // Coming back to the session (it resumes) doesn't bring it back.
+    await page.reload();
+    await expect(note(page, "Emerald green, preferred")).toBeVisible();
+    await expect(note(page, "Elegant")).toHaveCount(0);
+  });
+
+  test("Hide folds the notebook to one line, and Show brings back every note and status (R23)", async ({ page }) => {
+    const notebook = await weddingNotes(page);
+    await note(page, "Elegant").click();
+    await notebook.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(note(page, "Elegant")).toHaveAccessibleName("Elegant Confirmed");
+    await notebook.getByRole("button", { name: "Hide" }).click();
+    await expect(notebook.getByText("4 notes, 3 to confirm")).toBeVisible();
+    await expect(note(page, "Elegant")).toBeHidden();
+    await noSeriousA11yProblems(page);
+    await notebook.getByRole("button", { name: "Show" }).click();
+    await expect(note(page, "Elegant")).toHaveAccessibleName("Elegant Confirmed");
+    await expect(notebook.getByText("To confirm", { exact: true })).toHaveCount(3);
+  });
+
+  test("ending the session clears the notes", async ({ page }) => {
+    const notebook = await weddingNotes(page);
+    await page.getByRole("button", { name: "End", exact: true }).click();
+    await page.getByRole("button", { name: "End session" }).click();
+    await expect(page.getByText("Conversation ended.")).toBeVisible();
+    await expect(notebook.getByRole("list", { name: "Notes" }).getByRole("listitem")).toHaveCount(0);
+  });
+
+  test("while notes are paused, confirming by touch still works (R25)", async ({ page }) => {
+    const notebook = await weddingNotes(page);
+    await page.route("**/words", (route) => route.abort("internetdisconnected"));
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Something in navy", final: true, turnId: "9" });
+    await expect(notebook.getByText("Notes paused. You can still confirm or remove notes.")).toBeVisible();
+    await note(page, "Elegant").click();
+    await notebook.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(note(page, "Elegant")).toHaveAccessibleName("Elegant Confirmed");
+  });
+
+  test("screen readers hear note changes, grouped and held while someone is talking (R68)", async ({ page }) => {
+    await inCall(page);
+    const heard = notebookOf(page).locator("p[aria-live]");
+    await playInCall(page, { type: "shopper-speaking", speaking: true });
+    await playInCall(page, { type: "words", speaker: "shopper", text: "It's for a gala, something elegant", final: true, turnId: "1" });
+    await expect(note(page, "Elegant")).toBeVisible();
+    await expect(heard).toHaveText("");
+    await playInCall(page, { type: "shopper-speaking", speaking: false });
+    await expect(heard).toHaveText("2 notes added");
+    await note(page, "Elegant").click();
+    await notebookOf(page).getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(heard).toHaveText("Confirmed: Elegant.");
+  });
+
+  test("on phones, the pinned bar appears once the stylist scrolls away, and its summary goes back to the notebook", async ({ page }, info) => {
+    test.skip(info.project.name !== "phone", "the pinned bar is for phones");
+    await weddingNotes(page);
+    const bar = page.getByRole("complementary", { name: "Your stylist and notes" });
+    await expect(bar).toBeHidden();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(bar).toBeVisible();
+    await expect(bar).toContainText("Thinking"); // the fake stylist doesn't answer the phrase
+    await noSeriousA11yProblems(page);
+    await bar.getByRole("button", { name: "Mute" }).click();
+    await expect(bar.getByRole("button", { name: "Muted" })).toHaveAttribute("aria-pressed", "true");
+    await bar.getByRole("button", { name: "4 notes, 4 to confirm" }).click();
+    await expect(page.getByRole("heading", { name: "My Styling Notes" })).toBeFocused();
   });
 
   test("End asks first: Keep talking carries on, End session ends it (R12)", async ({ page }) => {
