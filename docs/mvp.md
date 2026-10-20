@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.4
+**Status:** Living document, version 1.5
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.6 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.7 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -87,7 +87,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
 | 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 | Open: accurate on Haiku 5.5, but 75 to 90% within 2 seconds. Closed in Phase 2 with the target unchanged |
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
-| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Open |
+| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on) |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c) | Open |
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
@@ -124,6 +124,10 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 1f limits: per guest per day, 10 minutes of conversation and $1 of AI; per month for the whole demo, 110 minutes of video (10 of Tavus's 120 kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit. Days and months count in UTC. Each limit is a Vercel setting | Sabine | tech spec 1.7 (6) |
+| 20 Oct 2026 | The server key is also used by the budget guard, so only the server writes usage records and visitors can't fake or inflate them. It never reaches the browser | Sabine | tech spec 1.7 (6) |
+| 20 Oct 2026 | A guest's last-active time is updated on every page visit (at most once an hour), so "7 days without use" means 7 days without a visit, not 7 days without saving setup | Sabine | tech spec 1.7 (7) |
+| 20 Oct 2026 | The daily job runs at 08:00 UTC, deletes only anonymous guests and test guests, removes test guests a crashed run left behind once they're a day old, and keeps deleted guests' usage rows (without the guest) so monthly totals stay right | Claude | tech spec 1.7 (7) |
 | 20 Oct 2026 | 1e image generator: only OpenAI's generator was tested (no Google key), comparing its two quality settings on the same 10 products. Setting A (medium quality) won: the same look on a phone for about a quarter of the cost of high | Sabine | tech spec 1.6 |
 | 20 Oct 2026 | The other 130 photos were made with OpenAI's half-price Batch API (about $3.50, done in about an hour instead of the 24 hours allowed). Sabine added $5 of credit and raised the OpenAI limit to $10 for it, to go back to $5 afterwards | Sabine | tech spec 1.6 |
 | 20 Oct 2026 | The sample catalog has 140 products (76 womenswear, 64 menswear), within the "about 150" default. It covers the example conversations (emerald dresses, shoes from flat to 12 cm heels) and three looks for common occasions across budgets | Claude, within the agreed default | catalog/products.json |
@@ -279,6 +283,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.5 (20 Oct 2026):** 1f decisions: the budget limits, the server key for usage records, last-active time on every visit, and the daily job's rules. Risk 4 updated.
 - **1.4 (20 Oct 2026):** 1e decisions: the image generator and quality setting, the half-price batch, 140 products, photos served from the site, the catalog load script and the private review page. Risk 13 updated.
 - **1.3 (20 Oct 2026):** One Supabase project on Pro, the budget about $50, and risk 11 updated.
 - **1.2 (19 Oct 2026):** Phase 0 results and the 0g decisions, risks 1, 2, 3 and 7 updated, assumptions checked, and about 12 demos a month.
