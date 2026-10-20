@@ -19,6 +19,8 @@ export type NotesUpdate = {
   notes: ShownNote[];
   /** Present when the server has a view on the next question; null means none to ask now. */
   question?: NextQuestion;
+  /** The words sequence the question comes from: a slower reading of older words never replaces it. */
+  seq?: number;
   /** For the stylist, after every change. */
   context?: string;
   /** The reading failed or the AI allowance is used up: notes pause (R25). */
@@ -104,7 +106,7 @@ export async function hearWords(deps: NotesDeps, guestId: string, sessionId: str
   });
   const preferences = await preferencesOf(deps.db, guestId);
   const question = reading.question ?? heard.asked ?? null;
-  emit({ version: done.version, notes: shown(done.notes), question, context: stylistContext(done.notes, preferences, question) });
+  emit({ version: done.version, notes: shown(done.notes), question, seq, context: stylistContext(done.notes, preferences, question) });
   return true;
 }
 

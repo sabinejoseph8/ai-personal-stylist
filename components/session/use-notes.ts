@@ -10,7 +10,7 @@ import type { NextQuestion } from "@/core/notes/types";
 // a newer one (R22): each update carries the notebook's version.
 
 export type ShownNote = { id: string; kind: string; text: string; status: "to_confirm" | "confirmed" };
-type Update = { version?: number; notes?: ShownNote[]; question?: NextQuestion; context?: string; paused?: boolean; error?: string };
+type Update = { version?: number; notes?: ShownNote[]; question?: NextQuestion; seq?: number; context?: string; paused?: boolean; error?: string };
 
 const SEND_EVERY_MS = 500;
 
@@ -48,8 +48,9 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
   });
 
   // The question on screen, and the turn whose reading asked it: it's sent back with that turn's words,
-  // so a reading that leaves the question out doesn't clear it.
-  const asked = useRef<{ key: string; question: NextQuestion }>({ key: "", question: null });
+  // so a reading that leaves the question out doesn't clear it. Readings overlap, so only a reading of
+  // newer words (a higher sequence) replaces it.
+  const asked = useRef<{ key: string; question: NextQuestion; seq: number }>({ key: "", question: null, seq: 0 });
 
   function apply(u: Update, key: string) {
     if (u.error || u.version === undefined) {
@@ -59,8 +60,8 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     if (u.version < version.current) return;
     version.current = u.version;
     if (u.notes) setNotes(u.notes);
-    if (u.question !== undefined) {
-      asked.current = { key, question: u.question };
+    if (u.question !== undefined && (u.seq ?? 0) >= asked.current.seq) {
+      asked.current = { key, question: u.question, seq: u.seq ?? 0 };
       setQuestion(u.question);
     }
     setPaused(Boolean(u.paused));
@@ -141,12 +142,12 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
     /** A tapped phrase or quick reply, sent as if spoken. */
     say: (text: string) => void post(`phrase-${++phrases.current}`, text, true),
     clearQuestion: () => {
-      asked.current = { key: "", question: null };
+      asked.current = { ...asked.current, key: "", question: null };
       setQuestion(null);
     },
     reset: () => {
       version.current = 0;
-      asked.current = { key: "", question: null };
+      asked.current = { key: "", question: null, seq: 0 };
       setNotes([]);
       setQuestion(null);
       setPaused(false);
