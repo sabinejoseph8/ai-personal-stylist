@@ -1,6 +1,6 @@
 "use client";
 
-import { type Ref, useEffect, useRef, useState } from "react";
+import { type ReactNode, type Ref, useEffect, useRef, useState } from "react";
 import type { ShownNote, TouchAction } from "@/components/session/use-notes";
 import { Button } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/status-chip";
@@ -10,6 +10,7 @@ import { announcement, type NoteChange, noteChanges, notesSummary } from "@/lib/
 // not a form. Saved preferences sit at the top, then the stylist's notes in the order she jotted them,
 // in pencil (To confirm) or ink (Confirmed). Tapping a note shows Confirm and Remove; a removed note
 // can be undone for 5 seconds. Every row is a multiple of the 28 px ruled lines, so text sits on them.
+// Style around this item (3a) sits between the saved preferences and the notes.
 
 const UNDO_MS = 5000;
 const STRIKE_MS = 600;
@@ -137,6 +138,8 @@ export function MyStylingNotes({
   onTouch,
   holdAnnouncements,
   titleRef,
+  styleAround,
+  thumbnail,
 }: {
   notes: ShownNote[];
   /** Saved preferences that apply, in words, such as "Never: high heels" (R24). */
@@ -148,6 +151,10 @@ export function MyStylingNotes({
   /** Someone is talking: screen reader updates wait, then come grouped (R68). */
   holdAnnouncements: boolean;
   titleRef?: Ref<HTMLHeadingElement>;
+  /** Style around this item, with Add a photo (3a). */
+  styleAround?: ReactNode;
+  /** The active photo's thumbnail, shown with the summary when the notebook is hidden (R27). */
+  thumbnail?: ReactNode;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [removed, setRemoved] = useState<Removed[]>([]);
@@ -240,7 +247,12 @@ export function MyStylingNotes({
         </button>
       </div>
 
-      {!open && <p className={`${ROW} type-body m-0 leading-7 text-graphite`}>{summary}</p>}
+      {!open && (
+        <div className={`${ROW} flex flex-wrap items-center justify-between gap-x-3 gap-y-1`}>
+          <p className="type-body m-0 leading-7 text-graphite">{summary}</p>
+          {thumbnail}
+        </div>
+      )}
 
       <div id="notebook-notes" hidden={!open}>
         <p className={`${ROW} type-small m-0 leading-7 text-graphite`}>
@@ -259,6 +271,8 @@ export function MyStylingNotes({
             ))}
           </ul>
         )}
+
+        {styleAround}
 
         <ul aria-label="Notes" className={`m-0 list-none p-0 ${rows.length ? "" : "min-h-28"}`}>
           {rows.map((row) =>

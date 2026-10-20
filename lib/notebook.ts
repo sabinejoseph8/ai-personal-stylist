@@ -57,3 +57,21 @@ export function announcement(changes: NoteChange[]) {
     .map(([n, c], i) => (i === 0 ? `${plural(n, "note")} ${c}` : `${n} ${c}`));
   return parts.join(", ");
 }
+
+export type NotebookPhoto = { key: string; state: "uploading" | "ready" | "failed"; active: boolean };
+
+/** What screen readers hear when the photo to style around changes (3a, R68): short sentences, or nothing. */
+export function photoAnnouncement(before: NotebookPhoto[], after: NotebookPhoto[]) {
+  const old = new Map(before.map((p) => [p.key, p]));
+  const parts: string[] = [];
+  after.forEach((p, i) => {
+    const was = old.get(p.key);
+    if (!was) parts.push("Photo added.");
+    else if (was.state !== "uploading" && p.state === "uploading") parts.push("Photo replaced.");
+    else if (was.state === "uploading" && p.state === "ready") parts.push("Photo ready.");
+    else if (was.state !== "failed" && p.state === "failed") parts.push("The photo didn't upload. Use Try again to send it again.");
+    else if (!was.active && p.active && after.length > 1) parts.push(`Now styling around photo ${i + 1} of ${after.length}.`);
+  });
+  if (before.some((p) => !after.some((a) => a.key === p.key))) parts.unshift("Photo removed.");
+  return parts.join(" ");
+}

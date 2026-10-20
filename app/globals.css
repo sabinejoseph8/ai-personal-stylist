@@ -238,6 +238,25 @@
   -webkit-box-decoration-break: clone;
 }
 
+/* A photo's upload progress (3a): a thin Emerald line on a Hairline track. */
+@utility photo-progress {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-hairline);
+  overflow: hidden;
+  &::-webkit-progress-bar {
+    background: var(--color-hairline);
+  }
+  &::-webkit-progress-value {
+    background: var(--color-emerald);
+    transition: width var(--duration-standard) var(--ease-arrive);
+  }
+  &::-moz-progress-bar {
+    background: var(--color-emerald);
+  }
+}
+
 /* "Ink in", the signature moment: a note writes itself in from left to right (design.md 3.6). */
 @keyframes ink-in {
   from { clip-path: inset(0 100% 0 0); }

@@ -2,9 +2,11 @@
 
 import { type ButtonHTMLAttributes, type ReactNode, type Ref, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MyStylingNotes } from "@/components/notebook/my-styling-notes";
+import { PhotoThumbnail, StyleAroundThisItem } from "@/components/notebook/pasted-photo";
 import { PinnedBar } from "@/components/session/pinned-bar";
 import { useConversation } from "@/components/session/use-conversation";
 import { type ShownNote, useNotes } from "@/components/session/use-notes";
+import { type ShownPhoto, usePhotos } from "@/components/session/use-photos";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
@@ -17,9 +19,10 @@ import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/li
 // The styling session (design 4.1, 4.2, 5.3 and 5.6). The stylist stage (R6 to R8, R70): the video
 // stylist with her state in words, Mute and End, the microphone card, and tap-to-try phrases, with no
 // captions, transcript or message box (R10, R11). Camera (Phase 3) and Voice only (6c) join the
-// controls when they exist. Then My Styling Notes (2d), which takes the second column on desktops, and
-// the pinned bar on phones once the stylist scrolls out of view. The call itself runs in
-// use-conversation.ts, and the notes in use-notes.ts.
+// controls when they exist. Then My Styling Notes (2d), with the photo to style around (3a), which
+// takes the second column on desktops, and the pinned bar on phones once the stylist scrolls out of
+// view. The call itself runs in use-conversation.ts, the notes in use-notes.ts and the photos in
+// use-photos.ts.
 
 const MICROPHONE_HELP: Record<MicrophoneProblem, string> = {
   // Browsers apply a changed microphone setting only after the page reloads (found on Sabine's iPhone in 2f).
@@ -67,11 +70,13 @@ function ControlButton({
 export function StylingSession({
   openSessionId,
   initialNotes = [],
+  initialPhotos = [],
   preferences,
   children,
 }: {
   openSessionId: string | null;
   initialNotes?: ShownNote[];
+  initialPhotos?: ShownPhoto[];
   /** Saved preferences in words, shown at the top of the notebook (R24). */
   preferences: string[];
   /** Shown under the notebook: what the profile says (Sabine's answer to Q2 in 2d). */
@@ -84,11 +89,16 @@ export function StylingSession({
   const call = useConversation(openSessionId, { video, audio }, {
     onEvent: (e) => notes.onEvent(e),
     onPhrase: (text) => notes.say(text),
-    onEnd: () => notes.reset(),
+    onEnd: () => {
+      notes.reset();
+      photos.reset();
+    },
   });
   // My Styling Notes (2c, 2d): words go to the server, notes and the next question come back, and the
   // stylist is told every change, including Confirm and Remove by touch.
   const notes = useNotes(call.sessionId, call.flow === "live", initialNotes, (context) => call.updateContext(context));
+  // The item to style around (3a). The stylist learns what's in it with the photo reader (3b).
+  const photos = usePhotos(call.sessionId, initialPhotos);
   const [notebookOpen, setNotebookOpen] = useState(true);
   const notebookTitle = useRef<HTMLHeadingElement>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -292,6 +302,22 @@ export function StylingSession({
           onTouch={notes.touch}
           holdAnnouncements={someoneSpeaking(stage)}
           titleRef={notebookTitle}
+          styleAround={
+            <StyleAroundThisItem
+              photos={photos.photos}
+              active={photos.active}
+              canAdd={Boolean(call.sessionId)}
+              problem={photos.problem}
+              holdAnnouncements={someoneSpeaking(stage)}
+              onAdd={photos.add}
+              onReplace={photos.replace}
+              onRemove={photos.remove}
+              onChoose={photos.choose}
+              onRetry={photos.retry}
+              onLinkExpired={photos.refresh}
+            />
+          }
+          thumbnail={photos.active && <PhotoThumbnail photo={photos.active} />}
         />
         {children}
       </div>

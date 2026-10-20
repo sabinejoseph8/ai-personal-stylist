@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.5 (20 Oct 2026)
+**Status:** Agreed, version 1.6 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -244,9 +244,11 @@ Grouped by where they appear. Each lists its states and how it behaves.
 **Pasted photo ("Style around this item")**
 - The shopper's photo, uploaded or captured from the camera, with a white print border, a 1 degree tilt and two strips of tape. The label beside it is never tilted.
 - Label: the item name (for example "Navy wool blazer"), where it came from (Uploaded or From your camera), and its ownership: You own this, Inspiration, or Ownership: To confirm.
-- Controls: **Enlarge**, **Replace**, **Remove**.
+- Controls: **Enlarge**, **Replace**, **Remove**. Tapping the photo also enlarges it.
+- Adding one: **Add a photo**, a secondary button in My Styling Notes, where Style around this item appears (after the saved preferences, before the notes). It shows once the conversation has started, because a photo belongs to a session, and opens the phone's own choice of Photo Library, Take Photo or Choose File. With a photo, it reads **Add another photo**, up to 5 photos (your answers to Q2 and Q3 in 3a).
+- Until the photo reader arrives (3b), the label reads "Your item" and "Uploaded".
 - Several photos: a row of thumbnails, with the active one outlined in Ink and labeled "Active".
-- States: loading (a preview with progress), analyzing, recognized, details to confirm, several items found, recognition failed ("Couldn't recognize this item. Describe it instead."), upload failed (with **Try again**), removed.
+- States: loading (a preview from the shopper's device straight away, with "Uploading" and a thin Emerald progress line; "Preparing preview" where the browser can't show a HEIC photo), analyzing, recognized, details to confirm, several items found, recognition failed ("Couldn't recognize this item. Describe it instead."), upload failed (with **Try again**), removed.
 - Collapsed notebook: a 40 px thumbnail with the label.
 - Enlarge shows the full photo, untilted, with its description.
 
@@ -557,6 +559,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.6 (20 Oct 2026):** 3a: where Add a photo sits, the pasted photo's states as built, and its label until 3b (4.2).
 - **1.5 (20 Oct 2026):** 2f, after your iPhone check: Reload page for a blocked microphone (4.1).
 - **1.4 (20 Oct 2026):** 2e, after your iPhone check: a dropped call waits for the connection to come back before trying again, and the Connection lost state (4.1).
 - **1.3 (20 Oct 2026):** 2e: what Time is up and Reconnecting show, and where the time left sits (4.1).

@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.12
+**Status:** Living document, version 1.13
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.5, tech spec 1.15 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.6, tech spec 1.16 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -88,7 +88,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 (2c) | Met in the 2c eval with your option 3: 97 to 99% of notes within 2 seconds, 96 to 99% right, target unchanged. The eval leaves out the phone's connection and the database; on Sabine's iPhone the notes felt quick (2c check, 20 Oct 2026). Closed |
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
 | 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on) |
-| 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. The item to style around, feedback and looks follow the same pattern as they're built |
+| 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. Handled for the item to style around in 3a: every photo has a version, and the database refuses a late result for a replaced one (tested). Feedback and looks follow the same pattern as they're built |
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
@@ -124,6 +124,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 3a plan, all recommended answers. Q1: the browser sends a photo straight to the private photo store with a one-time upload link, and the server then checks and cleans it, because Vercel refuses anything over 4.5 MB and the agreed limit is 10 MB (the other option was shrinking photos in the browser, which would have left the 10 MB check to the browser and couldn't shrink HEIC in Chrome). Q2: Add a photo sits in My Styling Notes, where Style around this item appears, once the conversation has started. Q3: up to 5 photos per session. Q4: photos of sessions that ended from being idle are deleted on the next Start conversation or by the daily job, at most a day later, because the database timer can't delete files and Vercel's free plan only runs daily jobs | Sabine | tech spec 1.16, design 1.6 |
 | 20 Oct 2026 | Phase 2 code review: A, split the session screen's code now, before the camera joins it (recommended). B, a call a closed browser left behind is counted until the shopper's last activity plus the 30 seconds Tavus waits, rather than its whole reserved time (Claude recommended the whole time, which can't undercount; Sabine chose the estimate, accepting it can undercount a call left running with nobody there) | Sabine | tech spec 1.15 |
 | 20 Oct 2026 | 2e plan: idle sessions are ended and their notes deleted by a database timer every 10 minutes (Supabase Cron), not just by the daily job (Q1). Time left and Time is up are checked by automated tests with a sped-up clock, and the iPhone check covers reconnecting and End, to save 10 Tavus minutes (Q2) | Sabine | tech spec 1.14 |
 | 20 Oct 2026 | 2e: the fonts come from the Fontsource packages instead of Google at build time, because the Google download had started failing builds (on GitHub twice in 2c, then every local build in 2e). Moved forward from the 2f list, since it blocked testing | Claude, recorded for Sabine | tech spec 1.14 |
@@ -307,7 +308,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 | D05 | Live voice session | Phase 2 (2a, 2b), Phase 6 (6c) | Planned |
 | D06 | Photorealistic female stylist | Phase 2 (2a, 2b) | Planned |
 | D07 | Styling conversation | Phase 2 (2c), Phase 4 (4c) | Planned |
-| D08 | Photo capture and upload | Phase 3 (3a) | Planned |
+| D08 | Photo capture and upload | Phase 3 (3a) | Upload built in 3a; capture in 3c |
 | D09 | Live camera item showing | Phase 3 (3c) | Planned |
 | D10 | Clothing recognition and correction | Phase 3 (3b) | Planned |
 | D11 | Wardrobe | Phase 3 (3d) | Planned |
@@ -334,8 +335,8 @@ Where every backlog item from PRD v1.8 lives in the plan.
 | D32 | Revisions and repeated feedback | Phase 5 (5b, 5c) | Planned |
 | D33 | Explaining and comparing revisions | Phase 5 (5b, 5c) | Planned |
 | D34 | Feedback acceptance | Phase 5 tests and checks | Planned |
-| D35 | Session photos and thumbnails | Phase 3 (3a) | Planned |
-| D36 | The item photo in the notebook | Phase 3 (3a) | Planned |
+| D35 | Session photos and thumbnails | Phase 3 (3a) | Built in 3a |
+| D36 | The item photo in the notebook | Phase 3 (3a) | Built in 3a |
 | D37 | Keeping the photo item through refinement | Phase 3 (3a), Phase 5 (5b) | Planned |
 | D38 | Notebook photo acceptance | Phase 3 tests and checks | Planned |
 | D39 | Saved preference rules | Phase 4 (4a) | Planned |
@@ -352,6 +353,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.13 (20 Oct 2026):** 3a decisions (Q1 to Q4), risk 5 handled for the item to style around, and D08, D35 and D36 built.
 - **1.12 (20 Oct 2026):** The Phase 2 code review: 15 findings, decisions A and B, and the tidying done in 2f.
 - **1.11 (20 Oct 2026):** 2e decisions (Q1, Q2), the fonts from Fontsource, and risk 10 updated.
 - **1.10 (20 Oct 2026):** 2d decisions (Q1 and Q2).

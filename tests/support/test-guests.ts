@@ -45,12 +45,24 @@ async function newGuest() {
   return { db, id: created.data.user.id };
 }
 
+/** Every file in a folder of the photo store, including its subfolders (a session's photos, uploads on their way). */
+async function photoFiles(folder: string): Promise<string[]> {
+  const items = (await serverDb().storage.from("guest-photos").list(folder, { limit: 1000 })).data ?? [];
+  const nested = await Promise.all(items.map((f) => (f.id ? [`${folder}/${f.name}`] : photoFiles(`${folder}/${f.name}`))));
+  return nested.flat();
+}
+
+/** Deletes everything in a guest's photo folder. */
+export async function clearPhotos(id: string) {
+  const files = await photoFiles(id);
+  if (files.length) await serverDb().storage.from("guest-photos").remove(files);
+}
+
 /** Deletes a test guest and everything they left (usage records outlive deleted guests, so tests remove their own). */
 async function deleteGuest(db: SupabaseClient, id: string) {
   const server = serverDb();
   await db.auth.signOut();
-  const files = (await server.storage.from("guest-photos").list(id)).data ?? [];
-  if (files.length) await server.storage.from("guest-photos").remove(files.map((f) => `${id}/${f.name}`));
+  await clearPhotos(id);
   await server.from("usage").delete().eq("user_id", id);
   await server.auth.admin.deleteUser(id);
 }
@@ -58,14 +70,10 @@ async function deleteGuest(db: SupabaseClient, id: string) {
 /** Puts a guest back to how a new guest starts: no sessions, usage, counts or saved things, and a fresh profile. */
 async function resetGuest(id: string) {
   const server = serverDb();
-  const clearPhotos = async () => {
-    const files = (await server.storage.from("guest-photos").list(id)).data ?? [];
-    if (files.length) await server.storage.from("guest-photos").remove(files.map((f) => `${id}/${f.name}`));
-  };
   // All at once, as tests on GitHub run far from the database. A session's notes, feedback, photos,
   // looks and checks go with it.
   const tables = ["sessions", "saved_looks", "bag_items", "wardrobe_items", "saved_preferences", "usage", "rate_limits"];
-  await Promise.all([clearPhotos(), ...tables.map(async (table) => void (await server.from(table).delete().eq("user_id", id).throwOnError()))]);
+  await Promise.all([clearPhotos(id), ...tables.map(async (table) => void (await server.from(table).delete().eq("user_id", id).throwOnError()))]);
   await Promise.all(
     ["profiles", "consents"].map(async (table) => {
       await server.from(table).delete().eq("user_id", id).throwOnError();
