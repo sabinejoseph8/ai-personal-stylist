@@ -49,6 +49,8 @@ export async function createTestGuest(): Promise<TestGuest> {
       await db.auth.signOut();
       const files = (await server.storage.from("guest-photos").list(id)).data ?? [];
       if (files.length) await server.storage.from("guest-photos").remove(files.map((f) => `${id}/${f.name}`));
+      // Usage records outlive deleted guests (they count toward the month), so tests remove their own.
+      await server.from("usage").delete().eq("user_id", id);
       await server.auth.admin.deleteUser(id);
     },
   };

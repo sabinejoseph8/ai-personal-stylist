@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.6 (20 Oct 2026)
+**Status:** Agreed, version 1.7 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -51,7 +51,7 @@
 | **AI connector** | The only place that calls Claude. Each job has its own prompt, model setting and output shape. |
 | **Catalog connector** | The only place that reads products. v1 has the sample catalog. ASOS or FARFETCH would be new connectors with the same shape (PRD D02). |
 | **Database and storage** | Supabase: guest sign-in, data tables with per-guest access rules, and private photo storage. |
-| **Scheduled jobs** | Run daily: delete guest data unused for 7 days, reset daily limits, and keep the database awake. |
+| **Scheduled jobs** | Run daily: delete guests unused for 7 days and leftover test guests, close idle sessions, and tidy old usage and rate-limit records. Daily limits reset on their own, because usage is counted per UTC day. |
 
 ### 1.2 How a spoken turn flows (video mode)
 
@@ -130,7 +130,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **check_results** | Preference check decisions | look, versions checked, verdict (pass, conflict, needs clarification), reasons per rule and item | Deleted with the session. Holds no transcripts, audio or photos (FR-33) |
 | **saved_looks** | Looks the shopper saved | a copy of the look, saved time | Until removed, or 7 days without use |
 | **bag_items** | Demo bag | product, size, the check that allowed it | Same as profile |
-| **usage** | Time and spending | per guest per day: video seconds, voice seconds, AI cost estimate. Per month: totals | 90 days, with no personal content |
+| **usage** | Time and spending | per guest per UTC day: video seconds, voice seconds, Claude cost and OpenAI cost (in millionths of a dollar). Monthly totals are added up from these rows. When a guest is deleted, their rows stay without the guest, so the month's totals stay right | 90 days, with no personal content |
 | **event_log** | Behind the scenes entries | session, entry type, plain-language summary, time | Deleted with the session |
 
 What is never stored anywhere we control: raw audio, full transcripts and camera video. The live words that feed the notes are never shown on screen, and are thrown away once read (product spec R10).
@@ -155,7 +155,7 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **/api/wardrobe**, **/api/saved-looks**, **/api/bag** | Add, edit, list and delete. Adding to the bag runs the preference check first. |
 | **GET /api/me/export**, **DELETE /api/me** | Download my data and delete all my data (R65). |
 | **POST /api/webhooks/tavus** | Tavus reports a call's end, so usage is exact. |
-| **GET /api/cron/daily** | Clean-up, limit resets and database keep-awake. Only Vercel's scheduler can call it. |
+| **GET /api/cron/daily** | The daily clean-up, at 08:00 UTC (vercel.json). Only Vercel's scheduler can call it, because it sends **CRON_SECRET**. |
 
 ### 4.2 Conversation connector
 
@@ -209,7 +209,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 7. **Code for facts, AI for language and taste.** Money, totals, dates, filters and firm rules are plain code. AI answers are always shape-checked before use.
 8. **Degrade, never break.** Video falls back to voice only. If voice drops, the conversation pauses and reconnects, and notes and looks stay on screen. A failed check holds the look. A failed notes reader pauses notes while confirming and removing notes by touch keeps working.
 9. **Private by default.** Session data is deleted when the session ends. Photos sit in private storage behind links that expire in minutes. Decision records hold versions and reasons only.
-10. **Every paid call passes the budget guard.** Before any call to Tavus, OpenAI or Claude, the server checks the guest's daily limits and the monthly limit.
+10. **Every paid call passes the budget guard** (**lib/budget-guard.ts**). Before a video or voice call, the server reserves the guest's conversation time in one database step, so two tabs can't share the same minutes, and the call is created with the time granted as its longest length. After the call, the time really used replaces the reservation. Before a Claude or OpenAI call, the server checks the guest's AI money for the day and the provider's money for the month, and records the cost afterwards. If the guard can't answer, the paid call doesn't happen.
 
 ## 6. Security
 
@@ -223,7 +223,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 ### Access
 - Database access rules on every table: a guest can only read and change their own rows.
 - Photo storage is split into one private folder per guest, with the same rule.
-- The server key that bypasses those rules is used only by scheduled jobs, account deletion, and automated tests that create test guests (decided 20 Oct 2026, because bot protection blocks normal sign-in in tests). It never reaches the app or the browser.
+- The server key that bypasses those rules is used only by the budget guard's usage records (decided 20 Oct 2026, so visitors can't fake or inflate usage), scheduled jobs, account deletion, and automated tests that create test guests (decided 20 Oct 2026, because bot protection blocks normal sign-in in tests). It lives in **lib/supabase/admin.ts** and never reaches the browser. The guard's database functions can only be run with it.
 
 ### Secrets
 - The Tavus, OpenAI, Anthropic and Supabase server keys live only in Vercel's environment settings. They are never committed and never sent to the browser.
@@ -241,9 +241,11 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Building looks: 20 per guest per hour.
 
 ### Cost limits
-- Per guest per day: 10 minutes of conversation, all with video when it is available (R13).
+- Per guest per day: 10 minutes of conversation, all with video when it is available (R13), and $1 of AI (a full demo uses about $0.35).
 - Tavus: each call is created with **max_call_duration** set to the guest's remaining conversation time, and **participant_left_timeout** of 30 seconds, so an abandoned call stops at once. The Tavus plan's own minute cap is the final backstop.
-- OpenAI and Anthropic: spending limits set in their consoles, plus a monthly ceiling in our budget guard.
+- Per month, for the whole demo: 110 minutes of video (Tavus Starter has 120; 10 are kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit ($15 and $5), so the app stops politely before a provider refuses.
+- Days and months are counted in UTC (8 pm in New York). Each limit is a Vercel setting: **BUDGET_DAILY_CONVERSATION_MINUTES**, **BUDGET_DAILY_AI_USD**, **BUDGET_MONTHLY_VIDEO_MINUTES**, **BUDGET_MONTHLY_CLAUDE_USD** and **BUDGET_MONTHLY_OPENAI_USD**, with the values above as defaults (your decision, 20 Oct 2026).
+- OpenAI and Anthropic: spending limits set in their consoles as the final backstop.
 - When the monthly allowance runs out, the conversation ends for now (R13). If AI is used up too, the welcome screen says the demo is resting until the 1st of next month (TQ4).
 
 ### Privacy
@@ -262,10 +264,10 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - **Code:** a GitHub repository, public so it can be linked from your portfolio (default). Secrets are never committed.
 - **Deploys:** Vercel builds every pull request into its own preview link. Merging to main deploys production.
 - **Database:** one Supabase project, **ai-personal-stylist** in your Pro organization, shared by development, previews and the live site until launch (your decision, 20 Oct 2026). Tests clean up the rows they create. A separate production database can be added before launch. Table changes ship as migration files in the repository (supabase/migrations).
-- **Scheduled job:** a Vercel cron job runs daily. It deletes guest data unused for 7 days, closes idle sessions, and touches the database, which matters less now: Pro projects don't pause after a week without activity.
+- **Scheduled job:** a Vercel cron job runs daily at 08:00 UTC (4 am in New York). It closes sessions idle for 30 minutes, deletes guests unused for 7 days with their photos (R3), deletes test guests older than a day that a test run left behind, and deletes usage records older than 90 days and old rate-limit counts. Only anonymous guests and test guests are ever deleted. A guest's last-active time is updated on every page visit, at most once an hour (your decision, 20 Oct 2026). Keeping the database awake isn't needed on Pro.
 - **Tavus setup:** the stylist's Tavus configuration (PAL, face, conversation model, timeouts) is kept as a file in the repository and applied by a script, so it is versioned like code.
 - **Address:** the free vercel.app address for v1 (default). A custom domain can be added later.
-- **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, daily and monthly limits.
+- **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, and the daily and monthly limits (section 6, Cost limits).
 - **Monitoring:** Vercel logs and alerts for errors, a usage table for minutes and spend, and a weekly check of provider dashboards.
 
 ## 8. Testing approach
@@ -359,6 +361,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.7 (20 Oct 2026):** 1f: your limits (10 minutes and $1 of AI per guest per day; 110 video minutes, $12 of Claude and $4 of OpenAI a month, counted in UTC), the server key also used for the budget guard's records, last-active time updated on every visit, how the guard reserves and records, and what the daily job does.
 - **1.6 (20 Oct 2026):** 1e: the image generator you picked (OpenAI gpt-image-2 at medium quality, through the half-price Batch API), photos served from the site itself, the catalog connector's filters and required details, and the catalog's load and check scripts.
 - **1.5 (20 Oct 2026):** 1b: the server key may also create test guests in automated tests (your decision), guest profiles are created by a trigger, rate limits live in the database, and the security policy details.
 - **1.4 (20 Oct 2026):** One Supabase project in your Pro organization, shared until launch ($10 a month), the running budget now about $50, and risk 11 updated, because Pro projects don't pause.
