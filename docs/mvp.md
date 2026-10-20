@@ -175,7 +175,7 @@ Filled in during task group 0f.
 | Test | Pass mark | Result | Date | Notes |
 |---|---|---|---|---|
 | Video start time | 5 seconds or less | Fast, by Sabine's eye on an iPad. The exact seconds get measured in the 0f test demos | 18 Oct 2026 | Test page event log |
-| Video start time in the app (2a) | 5 seconds or less | About 15 seconds from tapping Start conversation to the stylist's video, in one automated test call from a Mac (headless Chrome, a fake microphone). To measure on Sabine's iPhone in the 2a check, and work on in 2b if it holds | 20 Oct 2026 | One real Tavus call, about 20 seconds of video minutes |
+| Video start time in the app (2a) | 5 seconds or less | About 15 seconds from tapping Start conversation to the stylist's video, in one automated test call from a Mac (headless Chrome, a fake microphone). On Sabine's iPhone in the 2a check: **about 4 seconds, pass**. The slower test-browser time was most likely its setup (a headless browser with a fake microphone) | 20 Oct 2026 | One real Tavus call in a test browser, then Sabine's iPhone check |
 | Stylist stops when interrupted | Half a second or less | Works by voice and button. The button path took 0.7 seconds, including the network | 18 Oct 2026 | Talking over her felt immediate to Sabine. A precise voice timing comes in 0f |
 | Lip sync | Looks natural to Sabine | "As natural as we can expect" | 18 Oct 2026 | Anna - Casual, Phoenix 4.5 |
 | Tavus live words for notes | Shopper's words arrive while speaking | Yes: conversation.utterance.streaming carries role "user" partial text while the shopper speaks | 18 Oct 2026 | The stylist replied about 1.3 seconds after the shopper stopped |
