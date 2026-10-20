@@ -2,13 +2,13 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task groups 0e and 0f. In 0e the camera test is done, and the voice-only test and the voice pick wait for a quiet moment. In 0f the provider data review is done; the iPhone and laptop check and the 3 cost demos are still to do.
-- **Current status:** Phase 0 is in progress. 0a to 0d are done, and 0e and 0f are partly done. The camera test named items in about 1 second on Haiku 5.5 and 1.5 to 2 seconds on Opus 5.5; both sometimes mistook the quilted tote for a jacket. Live notes missed the 2-second target on both models: Opus 5.5 was accurate but slow, and Haiku 5.5 was fast and cheap but less accurate. An extra run on Sonnet 5.5 was accurate, with 53% within 2 seconds. An improved Haiku reader (better instructions plus plain code for money and dates) got every note right, with 75 to 90% within 2 seconds, at about $0.07 a demo. You decide TQ3 in 0g. The video stylist test passed on your devices: Anna appears fast, live words stream while you speak, and interrupting works. Earlier: accounts, credit and limits are set, the keys are in .env.local and in Vercel (Production), the code is on GitHub, and a placeholder page is live at https://ai-personal-stylist-inky.vercel.app.
-- **Recent changes (19 Oct 2026):** the portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
+- **Current focus:** Phase 0, task group 0f: the iPhone and laptop check, and 3 full test demos to measure real costs.
+- **Current status:** Phase 0 is in progress. 0a to 0e are done. Voice only works with live words, and you picked the quartz voice. In 0f, the data-privacy review is done. Live notes: an improved Haiku 5.5 reader got every note right. The camera names items in about 1 second on Haiku, but both models sometimes mistook a tote for a jacket.
+- **Recent changes (19 Oct 2026):** 0e done: voice only passed, and quartz picked as the voice. the portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
 - **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
-- **What's left:** the rest of Phase 0 (0e voice only, 0f phones and costs, 0g decisions, 0h code review), then phases 1 to 7.
+- **What's left:** the rest of Phase 0 (0f iPhone and laptop check and 3 test demos, 0g decisions, 0h code review), then phases 1 to 7.
 - **Known issues:** tech spec section 9 still says Tavus Starter has 60 minutes (about 6 demos). It gets updated in 0g. Live notes on Opus 5.5 may cost about $2.70 a demo, not $0.60, which matters for the cost gate in 0g. Open assumptions and risks are tracked in docs/mvp.md.
-- **Next action:** you try the voice-only test page somewhere quiet and pick the voice (0e). Then the iPhone and laptop check and the 3 cost demos (0f).
+- **Next action:** a plan for the rest of 0f (iPhone and laptop check, 3 test demos) for your approval.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -61,8 +61,8 @@
 - [x] Run the same test on Claude Haiku 5.5, so TQ3 can be decided with real numbers. Done: 83% within 2 seconds at about a fortieth of the cost, but less accurate. Results are in docs/mvp.md.
 
 ### 0e. Voice only and camera tests
-- [ ] GPT-Live test: start a voice-only call through our server, check that live words arrive for notes (risk 7), and check that our server can feed it facts.
-- [ ] **You:** pick the OpenAI voice that sounds closest to the chosen Tavus face, and listen to the switch line in both voices.
+- [x] GPT-Live test: start a voice-only call through our server, check that live words arrive for notes (risk 7), and check that our server can feed it facts. Done 19 Oct 2026: live words arrive, and notes, interrupting and the switch line all work.
+- [x] **You:** pick the OpenAI voice that sounds closest to the chosen Tavus face, and listen to the switch line in both voices. You picked quartz.
 - [x] Camera test: send one frame every 2 seconds to a first camera reader, and record how long it takes to name an item. Done 18 Oct 2026: about 1 second on Haiku 5.5 and 1.5 to 2 seconds on Opus 5.5. Both sometimes mistook the quilted tote for a jacket. Details are in docs/mvp.md.
 
 ### 0f. Phones, privacy and costs
