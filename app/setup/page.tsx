@@ -9,5 +9,9 @@ export const metadata: Metadata = { title: "Set up your profile · AI Personal S
 export default async function SetupPage() {
   const guest = await currentGuest();
   if (!guest) redirect("/");
-  return <SetupFlow initial={await loadProfile(guest.db, guest.id)} />;
+  const profile = await loadProfile(guest.db, guest.id);
+  // Next.js keeps a page's state when the shopper navigates away and back (Activity). Keying on the
+  // saved profile makes setup start again from what's saved whenever that changes, for example after
+  // Use a sample profile, instead of showing old answers and saving them over the new ones.
+  return <SetupFlow key={JSON.stringify(profile)} initial={profile} />;
 }

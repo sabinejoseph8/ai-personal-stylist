@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,9 @@ export function StartDemo({ nonce }: { nonce?: string }) {
   const [state, setState] = useState<"idle" | "starting" | "failed">("idle");
   const box = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
+
+  // Next.js keeps this page while it's hidden: coming back shows Try the demo, not "Starting your demo…".
+  useLayoutEffect(() => () => setState("idle"), []);
 
   function fail() {
     if (widget.current) window.turnstile?.reset(widget.current);
