@@ -1,7 +1,7 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.5 (20 Oct 2026)
-**Last updated:** 19 Oct 2026
+**Status:** Agreed, version 1.6 (20 Oct 2026)
+**Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
 
@@ -108,7 +108,7 @@ The **core** folder never imports an outside service directly. That keeps it tes
 | Browser state | **Zustand** | A small, predictable store for live session state and versions. |
 | Bot protection | **Cloudflare Turnstile** on Try the demo | Stops bots from creating guests and spending the budget. Supabase supports it for anonymous sign-in. |
 | Tests | **Vitest**, **Playwright**, **axe-core** | Fast unit tests, real-browser tests on phone and desktop sizes, and automatic accessibility checks. |
-| Sample catalog images | AI-generated product photos, reviewed by hand | Rights-safe images with no real brands (PRD D03). The generator is picked in Phase 1 by testing 10 images. |
+| Sample catalog images | **OpenAI gpt-image-2** at medium quality, made through OpenAI's half-price **Batch API**, every photo reviewed by hand | Rights-safe images with no real brands (PRD D03). Picked in 1e by comparing medium and high quality on 10 test images: the same look on a phone for about a quarter of the cost. The photos are 800 px JPEGs served from the site itself (**public/catalog**), so they cost nothing to serve and change with the code. |
 
 ## 3. Data model
 
@@ -125,7 +125,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **session_exceptions** | "This session only" permissions | saved preference, confirmed time | Deleted when the session ends |
 | **session_assets** | Items to style around | private photo path, thumbnail path, source (upload or camera), recognized details, ownership, active flag, version | Deleted when the session ends, unless saved to the wardrobe |
 | **wardrobe_items** | Saved owned items | photo path, name, category, details | Until deleted by the shopper, or 7 days without use |
-| **catalog_products** | The sample catalog | provider ("sample"), department, category, name, colors, style tags, price in cents, currency, sizes, attributes (heel height, sleeve length, coverage, formality), image path, can be bought (always false), availability date (empty) | Permanent |
+| **catalog_products** | The sample catalog | slug (the catalog's own id and the photo's file name), provider ("sample"), department, category, name, colors, style tags, price in cents, currency, sizes, attributes (heel height, toe, sleeve length, neckline, coverage, formality, material, pattern), image path, image description (read by screen readers), image source (generator, model, prompt, date and your review), can be bought (always false), availability date (empty) | Permanent |
 | **looks** | Every candidate and published look | items (product, wardrobe or photo IDs), total, reason, revision of, input versions, status (building, checking, published, held, needs a new check, saved) | Deleted when the session ends, except saved looks |
 | **check_results** | Preference check decisions | look, versions checked, verdict (pass, conflict, needs clarification), reasons per rule and item | Deleted with the session. Holds no transcripts, audio or photos (FR-33) |
 | **saved_looks** | Looks the shopper saved | a copy of the look, saved time | Until removed, or 7 days without use |
@@ -172,10 +172,13 @@ Every engine implements the same small interface, so the rest of the app never k
 
 The same contract the PRD asks for (D02), so a real retailer can be added later.
 
-- **search**(filters), **getProduct**(id), **getAvailability**(ids), **capabilities** (checkout, cart transfer, order tracking).
-- Every product has normalized IDs, variants, price with currency, region, image rights, availability time, retailer attribution and purchase link.
-- The sample connector reports every capability as off, and "can be bought" is always false (R62).
-- One shared contract test suite runs against every connector (PRD D19).
+- **search**(filters), **getProduct**(id), **getAvailability**(ids), **capabilities** (checkout, cart transfer, order tracking). The interface is in **connectors/catalog/types.ts**.
+- Search filters: department, categories, sizes ("One size" always matches), price range, style tags and color words (ignoring case), products to leave out, and a limit. Results come cheapest first. Firm rules such as Never and Must have are applied by the core, not the connector.
+- Every product has normalized IDs (our own id plus the provider's), variants (one per size), price with currency, the details the preference check reads, region, image rights, availability time, retailer attribution and purchase link.
+- **connectors/catalog/required-details.ts** lists the details each category must have (for example heel height and toe for shoes, sleeve, neckline and coverage for dresses and tops). A missing detail is a fail.
+- The sample connector reports every capability as off, "can be bought" is always false, and availability is never "in stock" (R62).
+- One shared contract test suite (**tests/support/catalog-contract.ts**) runs against every connector (PRD D19).
+- The sample products live in **catalog/products.json**, and each photo's source and review in **catalog/image-sources.json**. **npm run catalog:load** loads them into the database with the server key, matched by slug, and refuses any photo you haven't approved. **npm run catalog:check** reports the count and anything missing.
 
 ### 4.4 AI connector jobs
 
@@ -356,6 +359,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.6 (20 Oct 2026):** 1e: the image generator you picked (OpenAI gpt-image-2 at medium quality, through the half-price Batch API), photos served from the site itself, the catalog connector's filters and required details, and the catalog's load and check scripts.
 - **1.5 (20 Oct 2026):** 1b: the server key may also create test guests in automated tests (your decision), guest profiles are created by a trigger, rate limits live in the database, and the security policy details.
 - **1.4 (20 Oct 2026):** One Supabase project in your Pro organization, shared until launch ($10 a month), the running budget now about $50, and risk 11 updated, because Pro projects don't pause.
 - **1.3 (19 Oct 2026):** Phase 0 results and your 0g decisions: TQ3 (Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest), the stock face (TQ5), the quartz voice, GPT-Live session details, Tavus conversations hard-deleted, Android not tested in v1, Tavus Starter's 120 minutes (about 12 demos), and the measured cost per demo.

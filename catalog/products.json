@@ -1,0 +1,4191 @@
+[
+ {
+  "slug": "w-emerald-satin-midi-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Emerald satin midi dress",
+  "colors": [
+   "emerald green"
+  ],
+  "style_tags": [
+   "elegant",
+   "classic"
+  ],
+  "price_cents": 18900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "three_quarter",
+   "neckline": "v",
+   "coverage": "midi",
+   "formality": 4,
+   "material": "satin",
+   "pattern": "solid"
+  },
+  "image_description": "emerald green satin midi dress with three-quarter sleeves and a V-neck"
+ },
+ {
+  "slug": "w-navy-wrap-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Navy wrap dress",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "v",
+   "coverage": "knee",
+   "formality": 3,
+   "material": "jersey",
+   "pattern": "solid"
+  },
+  "image_description": "navy jersey wrap dress, knee length, long sleeves"
+ },
+ {
+  "slug": "w-blush-pleated-maxi-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Blush pleated maxi dress",
+  "colors": [
+   "blush pink"
+  ],
+  "style_tags": [
+   "romantic",
+   "elegant"
+  ],
+  "price_cents": 21900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "short",
+   "neckline": "round",
+   "coverage": "maxi",
+   "formality": 4,
+   "material": "chiffon",
+   "pattern": "solid"
+  },
+  "image_description": "blush pink pleated chiffon maxi dress with flutter short sleeves"
+ },
+ {
+  "slug": "w-black-column-gown",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Black column gown",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "elegant",
+   "minimal"
+  ],
+  "price_cents": 32900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "high",
+   "coverage": "maxi",
+   "formality": 5,
+   "material": "crepe",
+   "pattern": "solid"
+  },
+  "image_description": "black crepe floor-length column gown with long sleeves and a high neck"
+ },
+ {
+  "slug": "w-floral-tea-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Floral tea dress",
+  "colors": [
+   "cream",
+   "rose"
+  ],
+  "style_tags": [
+   "romantic"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "short",
+   "neckline": "sweetheart",
+   "coverage": "midi",
+   "formality": 3,
+   "material": "viscose",
+   "pattern": "floral"
+  },
+  "image_description": "cream tea dress with a small rose floral print, short puff sleeves, midi length"
+ },
+ {
+  "slug": "w-rust-linen-shirt-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Rust linen shirt dress",
+  "colors": [
+   "rust"
+  ],
+  "style_tags": [
+   "relaxed",
+   "bohemian"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "elbow",
+   "neckline": "collared",
+   "coverage": "midi",
+   "formality": 2,
+   "material": "linen",
+   "pattern": "solid"
+  },
+  "image_description": "rust linen button-front shirt dress, midi length, roll-up sleeves"
+ },
+ {
+  "slug": "w-ivory-lace-sheath-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Ivory lace sheath dress",
+  "colors": [
+   "ivory"
+  ],
+  "style_tags": [
+   "romantic",
+   "classic"
+  ],
+  "price_cents": 24900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "cap",
+   "neckline": "round",
+   "coverage": "knee",
+   "formality": 4,
+   "material": "lace",
+   "pattern": "lace"
+  },
+  "image_description": "ivory lace sheath dress, knee length, cap sleeves"
+ },
+ {
+  "slug": "w-cobalt-one-shoulder-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Cobalt one-shoulder dress",
+  "colors": [
+   "cobalt blue"
+  ],
+  "style_tags": [
+   "bold",
+   "elegant"
+  ],
+  "price_cents": 19900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "sleeveless",
+   "neckline": "one_shoulder",
+   "coverage": "knee",
+   "formality": 4,
+   "material": "crepe",
+   "pattern": "solid"
+  },
+  "image_description": "cobalt blue one-shoulder cocktail dress, knee length"
+ },
+ {
+  "slug": "w-striped-knit-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Striped knit dress",
+  "colors": [
+   "navy",
+   "white"
+  ],
+  "style_tags": [
+   "relaxed",
+   "preppy"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "boat",
+   "coverage": "knee",
+   "formality": 2,
+   "material": "cotton knit",
+   "pattern": "striped"
+  },
+  "image_description": "navy and white horizontal striped knit dress, knee length, long sleeves"
+ },
+ {
+  "slug": "w-sage-slip-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Sage slip dress",
+  "colors": [
+   "sage green"
+  ],
+  "style_tags": [
+   "minimal",
+   "romantic"
+  ],
+  "price_cents": 13900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "sleeveless",
+   "neckline": "cowl",
+   "coverage": "midi",
+   "formality": 3,
+   "material": "silk",
+   "pattern": "solid"
+  },
+  "image_description": "sage green silk slip dress with thin straps, midi length"
+ },
+ {
+  "slug": "w-burgundy-velvet-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Burgundy velvet dress",
+  "colors": [
+   "burgundy"
+  ],
+  "style_tags": [
+   "elegant",
+   "classic"
+  ],
+  "price_cents": 20900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "square",
+   "coverage": "midi",
+   "formality": 4,
+   "material": "velvet",
+   "pattern": "solid"
+  },
+  "image_description": "burgundy velvet midi dress with long sleeves and a square neck"
+ },
+ {
+  "slug": "w-yellow-sundress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Yellow sundress",
+  "colors": [
+   "sunflower yellow"
+  ],
+  "style_tags": [
+   "relaxed",
+   "bold"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "sleeveless",
+   "neckline": "square",
+   "coverage": "knee",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "sunflower yellow cotton sundress with wide straps, knee length"
+ },
+ {
+  "slug": "w-charcoal-sweater-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Charcoal sweater dress",
+  "colors": [
+   "charcoal grey"
+  ],
+  "style_tags": [
+   "minimal",
+   "relaxed"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "turtleneck",
+   "coverage": "midi",
+   "formality": 2,
+   "material": "wool blend",
+   "pattern": "solid"
+  },
+  "image_description": "charcoal grey ribbed sweater dress, midi length, long sleeves, turtleneck"
+ },
+ {
+  "slug": "w-polka-dot-midi-dress",
+  "department": "womenswear",
+  "category": "dress",
+  "name": "Polka dot midi dress",
+  "colors": [
+   "black",
+   "white"
+  ],
+  "style_tags": [
+   "romantic",
+   "classic"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "elbow",
+   "neckline": "v",
+   "coverage": "midi",
+   "formality": 3,
+   "material": "crepe",
+   "pattern": "polka dot"
+  },
+  "image_description": "black midi dress with small white polka dots, elbow sleeves"
+ },
+ {
+  "slug": "w-white-silk-blouse",
+  "department": "womenswear",
+  "category": "top",
+  "name": "White silk blouse",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "silk",
+   "pattern": "solid"
+  },
+  "image_description": "white silk blouse with long sleeves and a soft collar"
+ },
+ {
+  "slug": "w-black-fitted-tee",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Black fitted tee",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "minimal"
+  ],
+  "price_cents": 2900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "short",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "plain black fitted cotton crew-neck t-shirt"
+ },
+ {
+  "slug": "w-breton-striped-top",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Breton striped top",
+  "colors": [
+   "navy",
+   "cream"
+  ],
+  "style_tags": [
+   "preppy",
+   "classic"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "boat",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cotton",
+   "pattern": "striped"
+  },
+  "image_description": "cream and navy Breton striped long-sleeve top"
+ },
+ {
+  "slug": "w-camel-cashmere-sweater",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Camel cashmere sweater",
+  "colors": [
+   "camel"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 15900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cashmere",
+   "pattern": "solid"
+  },
+  "image_description": "camel cashmere crew-neck sweater"
+ },
+ {
+  "slug": "w-emerald-satin-camisole",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Emerald satin camisole",
+  "colors": [
+   "emerald green"
+  ],
+  "style_tags": [
+   "elegant",
+   "romantic"
+  ],
+  "price_cents": 5900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "sleeveless",
+   "neckline": "v",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "satin",
+   "pattern": "solid"
+  },
+  "image_description": "emerald green satin camisole with thin straps"
+ },
+ {
+  "slug": "w-cream-cable-knit-sweater",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Cream cable-knit sweater",
+  "colors": [
+   "cream"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "wool",
+   "pattern": "cable knit"
+  },
+  "image_description": "cream chunky cable-knit wool sweater"
+ },
+ {
+  "slug": "w-ruffled-chiffon-blouse",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Ruffled chiffon blouse",
+  "colors": [
+   "blush pink"
+  ],
+  "style_tags": [
+   "romantic"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "ruffle",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "chiffon",
+   "pattern": "solid"
+  },
+  "image_description": "blush pink chiffon blouse with ruffled neckline and long sleeves"
+ },
+ {
+  "slug": "w-olive-utility-shirt",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Olive utility shirt",
+  "colors": [
+   "olive green"
+  ],
+  "style_tags": [
+   "relaxed",
+   "edgy"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "olive green cotton utility shirt with chest pockets"
+ },
+ {
+  "slug": "w-ivory-knit-tank",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Ivory knit tank",
+  "colors": [
+   "ivory"
+  ],
+  "style_tags": [
+   "minimal"
+  ],
+  "price_cents": 3900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "sleeveless",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cotton knit",
+   "pattern": "solid"
+  },
+  "image_description": "ivory fine-rib knit tank top"
+ },
+ {
+  "slug": "w-burgundy-turtleneck",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Burgundy turtleneck",
+  "colors": [
+   "burgundy"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "turtleneck",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "merino wool",
+   "pattern": "solid"
+  },
+  "image_description": "burgundy merino wool turtleneck sweater"
+ },
+ {
+  "slug": "w-leopard-print-blouse",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Leopard print blouse",
+  "colors": [
+   "tan",
+   "black"
+  ],
+  "style_tags": [
+   "bold",
+   "edgy"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "v",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "satin",
+   "pattern": "animal print"
+  },
+  "image_description": "leopard print satin blouse with long sleeves"
+ },
+ {
+  "slug": "w-linen-button-up-shirt",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Linen button-up shirt",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "relaxed",
+   "minimal"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "linen",
+   "pattern": "solid"
+  },
+  "image_description": "white linen button-up shirt, relaxed fit, long sleeves"
+ },
+ {
+  "slug": "w-sage-cropped-cardigan",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Sage cropped cardigan",
+  "colors": [
+   "sage green"
+  ],
+  "style_tags": [
+   "romantic",
+   "relaxed"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "v",
+   "coverage": "waist",
+   "formality": 2,
+   "material": "cotton knit",
+   "pattern": "solid"
+  },
+  "image_description": "sage green cropped knit cardigan with pearl buttons"
+ },
+ {
+  "slug": "w-black-sequin-top",
+  "department": "womenswear",
+  "category": "top",
+  "name": "Black sequin top",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "bold",
+   "elegant"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "sleeveless",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "sequin",
+   "pattern": "sequin"
+  },
+  "image_description": "black sequin shell top, sleeveless"
+ },
+ {
+  "slug": "w-black-tailored-trousers",
+  "department": "womenswear",
+  "category": "trousers",
+  "name": "Black tailored trousers",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 3,
+   "material": "wool blend",
+   "pattern": "solid"
+  },
+  "image_description": "women's black tailored straight-leg trousers, folded neatly"
+ },
+ {
+  "slug": "w-cream-wide-leg-trousers",
+  "department": "womenswear",
+  "category": "trousers",
+  "name": "Cream wide-leg trousers",
+  "colors": [
+   "cream"
+  ],
+  "style_tags": [
+   "elegant",
+   "minimal"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 3,
+   "material": "crepe",
+   "pattern": "solid"
+  },
+  "image_description": "women's cream wide-leg pleated trousers, folded neatly"
+ },
+ {
+  "slug": "w-mid-blue-straight-jeans",
+  "department": "womenswear",
+  "category": "jeans",
+  "name": "Mid-blue straight jeans",
+  "colors": [
+   "mid blue"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 1,
+   "material": "denim",
+   "pattern": "solid"
+  },
+  "image_description": "women's mid-blue straight-leg denim jeans, folded neatly"
+ },
+ {
+  "slug": "w-black-skinny-jeans",
+  "department": "womenswear",
+  "category": "jeans",
+  "name": "Black skinny jeans",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "minimal"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 1,
+   "material": "denim",
+   "pattern": "solid"
+  },
+  "image_description": "women's black skinny denim jeans, folded neatly"
+ },
+ {
+  "slug": "w-camel-pleated-midi-skirt",
+  "department": "womenswear",
+  "category": "skirt",
+  "name": "Camel pleated midi skirt",
+  "colors": [
+   "camel"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "midi",
+   "formality": 3,
+   "material": "polyester",
+   "pattern": "solid"
+  },
+  "image_description": "camel pleated midi skirt"
+ },
+ {
+  "slug": "w-black-leather-mini-skirt",
+  "department": "womenswear",
+  "category": "skirt",
+  "name": "Black leather mini skirt",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "bold"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "mini",
+   "formality": 2,
+   "material": "faux leather",
+   "pattern": "solid"
+  },
+  "image_description": "black faux-leather mini skirt"
+ },
+ {
+  "slug": "w-floral-wrap-skirt",
+  "department": "womenswear",
+  "category": "skirt",
+  "name": "Floral wrap skirt",
+  "colors": [
+   "navy",
+   "white"
+  ],
+  "style_tags": [
+   "romantic",
+   "bohemian"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "midi",
+   "formality": 2,
+   "material": "viscose",
+   "pattern": "floral"
+  },
+  "image_description": "navy wrap midi skirt with a small white floral print"
+ },
+ {
+  "slug": "w-olive-cargo-trousers",
+  "department": "womenswear",
+  "category": "trousers",
+  "name": "Olive cargo trousers",
+  "colors": [
+   "olive green"
+  ],
+  "style_tags": [
+   "relaxed",
+   "edgy"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "women's olive green cargo trousers with side pockets, folded neatly"
+ },
+ {
+  "slug": "w-linen-shorts",
+  "department": "womenswear",
+  "category": "shorts",
+  "name": "Linen shorts",
+  "colors": [
+   "sand beige"
+  ],
+  "style_tags": [
+   "relaxed"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "mid_thigh",
+   "formality": 1,
+   "material": "linen",
+   "pattern": "solid"
+  },
+  "image_description": "women's sand beige linen shorts"
+ },
+ {
+  "slug": "w-emerald-velvet-trousers",
+  "department": "womenswear",
+  "category": "trousers",
+  "name": "Emerald velvet trousers",
+  "colors": [
+   "emerald green"
+  ],
+  "style_tags": [
+   "bold",
+   "elegant"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "24",
+   "26",
+   "28",
+   "30",
+   "32",
+   "34"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 4,
+   "material": "velvet",
+   "pattern": "solid"
+  },
+  "image_description": "women's emerald green velvet straight trousers, folded neatly"
+ },
+ {
+  "slug": "w-navy-wool-blazer",
+  "department": "womenswear",
+  "category": "blazer",
+  "name": "Navy wool blazer",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 17900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "women's navy wool single-breasted blazer"
+ },
+ {
+  "slug": "w-ivory-tailored-blazer",
+  "department": "womenswear",
+  "category": "blazer",
+  "name": "Ivory tailored blazer",
+  "colors": [
+   "ivory"
+  ],
+  "style_tags": [
+   "elegant",
+   "minimal"
+  ],
+  "price_cents": 18900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "crepe",
+   "pattern": "solid"
+  },
+  "image_description": "women's ivory double-breasted tailored blazer"
+ },
+ {
+  "slug": "w-check-wool-blazer",
+  "department": "womenswear",
+  "category": "blazer",
+  "name": "Check wool blazer",
+  "colors": [
+   "brown",
+   "cream"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 16900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "wool",
+   "pattern": "check"
+  },
+  "image_description": "women's brown and cream check wool blazer"
+ },
+ {
+  "slug": "w-black-trouser-suit",
+  "department": "womenswear",
+  "category": "suit",
+  "name": "Black trouser suit",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 29900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "full_length",
+   "formality": 5,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "women's black two-piece trouser suit, jacket and trousers laid flat together"
+ },
+ {
+  "slug": "w-emerald-pantsuit",
+  "department": "womenswear",
+  "category": "suit",
+  "name": "Emerald pantsuit",
+  "colors": [
+   "emerald green"
+  ],
+  "style_tags": [
+   "bold",
+   "elegant"
+  ],
+  "price_cents": 28900,
+  "currency": "USD",
+  "sizes": [
+   "2",
+   "4",
+   "6",
+   "8",
+   "10",
+   "12",
+   "14"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "full_length",
+   "formality": 4,
+   "material": "crepe",
+   "pattern": "solid"
+  },
+  "image_description": "women's emerald green two-piece pantsuit, jacket and wide-leg trousers laid flat together"
+ },
+ {
+  "slug": "w-rust-trench-coat",
+  "department": "womenswear",
+  "category": "coat",
+  "name": "Rust trench coat",
+  "colors": [
+   "rust"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 22900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "knee",
+   "formality": 3,
+   "material": "cotton gabardine",
+   "pattern": "solid"
+  },
+  "image_description": "rust brown belted cotton trench coat"
+ },
+ {
+  "slug": "w-camel-wool-coat",
+  "department": "womenswear",
+  "category": "coat",
+  "name": "Camel wool coat",
+  "colors": [
+   "camel"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 27900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "knee",
+   "formality": 4,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "women's camel wool wrap coat, knee length"
+ },
+ {
+  "slug": "w-black-leather-jacket",
+  "department": "womenswear",
+  "category": "jacket",
+  "name": "Black leather jacket",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "bold"
+  ],
+  "price_cents": 24900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "waist",
+   "formality": 2,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "women's black leather biker jacket"
+ },
+ {
+  "slug": "w-light-denim-jacket",
+  "department": "womenswear",
+  "category": "jacket",
+  "name": "Light denim jacket",
+  "colors": [
+   "light blue"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "waist",
+   "formality": 1,
+   "material": "denim",
+   "pattern": "solid"
+  },
+  "image_description": "women's light blue denim jacket"
+ },
+ {
+  "slug": "w-navy-puffer-coat",
+  "department": "womenswear",
+  "category": "coat",
+  "name": "Navy puffer coat",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "sporty",
+   "relaxed"
+  ],
+  "price_cents": 18900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "hood",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "nylon",
+   "pattern": "quilted"
+  },
+  "image_description": "women's navy quilted puffer coat, hip length, with a hood"
+ },
+ {
+  "slug": "w-cream-boucle-jacket",
+  "department": "womenswear",
+  "category": "jacket",
+  "name": "Cream boucl\u00e9 jacket",
+  "colors": [
+   "cream"
+  ],
+  "style_tags": [
+   "elegant",
+   "classic"
+  ],
+  "price_cents": 19900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "round",
+   "coverage": "waist",
+   "formality": 4,
+   "material": "boucl\u00e9",
+   "pattern": "textured"
+  },
+  "image_description": "women's cream boucl\u00e9 cropped jacket with no collar"
+ },
+ {
+  "slug": "w-grey-long-cardigan",
+  "department": "womenswear",
+  "category": "cardigan",
+  "name": "Grey long cardigan",
+  "colors": [
+   "heather grey"
+  ],
+  "style_tags": [
+   "relaxed",
+   "minimal"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "XS",
+   "S",
+   "M",
+   "L",
+   "XL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "v",
+   "coverage": "knee",
+   "formality": 2,
+   "material": "wool blend",
+   "pattern": "solid"
+  },
+  "image_description": "women's heather grey long knit cardigan"
+ },
+ {
+  "slug": "w-nude-block-heel-pumps",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Nude block-heel pumps",
+  "colors": [
+   "nude"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 6,
+   "toe": "closed",
+   "formality": 4,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of nude leather block-heel pumps with a 6 cm heel"
+ },
+ {
+  "slug": "w-black-stiletto-pumps",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Black stiletto pumps",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "elegant",
+   "bold"
+  ],
+  "price_cents": 13900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 10,
+   "toe": "closed",
+   "formality": 5,
+   "material": "patent leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of black patent leather stiletto pumps with a 10 cm heel"
+ },
+ {
+  "slug": "w-gold-strappy-sandals",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Gold strappy sandals",
+  "colors": [
+   "gold"
+  ],
+  "style_tags": [
+   "elegant",
+   "romantic"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 9,
+   "toe": "open",
+   "formality": 5,
+   "material": "metallic leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of gold strappy high-heel sandals with a 9 cm heel"
+ },
+ {
+  "slug": "w-silver-low-heel-sandals",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Silver low-heel sandals",
+  "colors": [
+   "silver"
+  ],
+  "style_tags": [
+   "elegant",
+   "romantic"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 3,
+   "toe": "open",
+   "formality": 4,
+   "material": "metallic leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of silver low block-heel strappy sandals with a 3 cm heel"
+ },
+ {
+  "slug": "w-tan-leather-loafers",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Tan leather loafers",
+  "colors": [
+   "tan"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of women's tan leather penny loafers"
+ },
+ {
+  "slug": "w-black-ballet-flats",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Black ballet flats",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 0,
+   "toe": "closed",
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of black leather ballet flats"
+ },
+ {
+  "slug": "w-white-leather-sneakers",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "White leather sneakers",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "minimal",
+   "sporty"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 1,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of plain white leather low-top sneakers"
+ },
+ {
+  "slug": "w-black-ankle-boots",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Black ankle boots",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "classic"
+  ],
+  "price_cents": 14900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 5,
+   "toe": "closed",
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of women's black leather ankle boots with a 5 cm block heel"
+ },
+ {
+  "slug": "w-emerald-velvet-mules",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Emerald velvet mules",
+  "colors": [
+   "emerald green"
+  ],
+  "style_tags": [
+   "bold",
+   "elegant"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 5,
+   "toe": "closed",
+   "formality": 4,
+   "material": "velvet",
+   "pattern": "solid"
+  },
+  "image_description": "pair of emerald green velvet mules with a 5 cm kitten heel"
+ },
+ {
+  "slug": "w-cognac-knee-boots",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Cognac knee boots",
+  "colors": [
+   "cognac"
+  ],
+  "style_tags": [
+   "classic",
+   "bohemian"
+  ],
+  "price_cents": 19900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 4,
+   "toe": "closed",
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of cognac leather knee-high boots with a 4 cm heel"
+ },
+ {
+  "slug": "w-nude-slingback-flats",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Nude slingback flats",
+  "colors": [
+   "nude"
+  ],
+  "style_tags": [
+   "elegant",
+   "minimal"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 1,
+   "toe": "closed",
+   "formality": 4,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of nude leather pointed slingback flats"
+ },
+ {
+  "slug": "w-raffia-espadrilles",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Raffia espadrilles",
+  "colors": [
+   "natural"
+  ],
+  "style_tags": [
+   "relaxed",
+   "bohemian"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 1,
+   "toe": "closed",
+   "formality": 1,
+   "material": "raffia",
+   "pattern": "solid"
+  },
+  "image_description": "pair of natural raffia flat espadrilles"
+ },
+ {
+  "slug": "w-black-platform-heels",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Black platform heels",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "bold",
+   "edgy"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 12,
+   "toe": "closed",
+   "formality": 4,
+   "material": "suede",
+   "pattern": "solid"
+  },
+  "image_description": "pair of black suede platform heels with a 12 cm heel"
+ },
+ {
+  "slug": "w-blush-wedge-sandals",
+  "department": "womenswear",
+  "category": "shoes",
+  "name": "Blush wedge sandals",
+  "colors": [
+   "blush pink"
+  ],
+  "style_tags": [
+   "romantic",
+   "relaxed"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "5",
+   "6",
+   "7",
+   "8",
+   "9",
+   "10"
+  ],
+  "attributes": {
+   "heel_cm": 7,
+   "toe": "open",
+   "formality": 3,
+   "material": "suede",
+   "pattern": "solid"
+  },
+  "image_description": "pair of blush pink wedge sandals with a 7 cm wedge"
+ },
+ {
+  "slug": "w-camel-leather-tote",
+  "department": "womenswear",
+  "category": "bag",
+  "name": "Camel leather tote",
+  "colors": [
+   "camel"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 15900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "structured camel leather tote bag"
+ },
+ {
+  "slug": "w-gold-clutch",
+  "department": "womenswear",
+  "category": "bag",
+  "name": "Gold clutch",
+  "colors": [
+   "gold"
+  ],
+  "style_tags": [
+   "elegant",
+   "bold"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 5,
+   "material": "metallic leather",
+   "pattern": "solid"
+  },
+  "image_description": "small gold metallic evening clutch"
+ },
+ {
+  "slug": "w-black-crossbody-bag",
+  "department": "womenswear",
+  "category": "bag",
+  "name": "Black crossbody bag",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "minimal",
+   "classic"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 2,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "small black leather crossbody bag"
+ },
+ {
+  "slug": "w-woven-straw-basket-bag",
+  "department": "womenswear",
+  "category": "bag",
+  "name": "Woven straw basket bag",
+  "colors": [
+   "natural"
+  ],
+  "style_tags": [
+   "bohemian",
+   "relaxed"
+  ],
+  "price_cents": 5900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 1,
+   "material": "straw",
+   "pattern": "solid"
+  },
+  "image_description": "woven straw basket bag with leather handles"
+ },
+ {
+  "slug": "w-emerald-satin-clutch",
+  "department": "womenswear",
+  "category": "bag",
+  "name": "Emerald satin clutch",
+  "colors": [
+   "emerald green"
+  ],
+  "style_tags": [
+   "elegant"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "satin",
+   "pattern": "solid"
+  },
+  "image_description": "emerald green satin evening clutch"
+ },
+ {
+  "slug": "w-cream-shoulder-bag",
+  "department": "womenswear",
+  "category": "bag",
+  "name": "Cream shoulder bag",
+  "colors": [
+   "cream"
+  ],
+  "style_tags": [
+   "romantic",
+   "minimal"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "cream leather shoulder bag with a short strap"
+ },
+ {
+  "slug": "w-pearl-drop-earrings",
+  "department": "womenswear",
+  "category": "accessory",
+  "name": "Pearl drop earrings",
+  "colors": [
+   "ivory"
+  ],
+  "style_tags": [
+   "elegant",
+   "romantic"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "pearl",
+   "pattern": "solid"
+  },
+  "image_description": "pair of pearl drop earrings"
+ },
+ {
+  "slug": "w-gold-hoop-earrings",
+  "department": "womenswear",
+  "category": "accessory",
+  "name": "Gold hoop earrings",
+  "colors": [
+   "gold"
+  ],
+  "style_tags": [
+   "classic",
+   "bold"
+  ],
+  "price_cents": 3900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 3,
+   "material": "gold-plated metal",
+   "pattern": "solid"
+  },
+  "image_description": "pair of small gold hoop earrings"
+ },
+ {
+  "slug": "w-silk-print-scarf",
+  "department": "womenswear",
+  "category": "accessory",
+  "name": "Silk print scarf",
+  "colors": [
+   "navy",
+   "rust"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 5900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 3,
+   "material": "silk",
+   "pattern": "geometric"
+  },
+  "image_description": "silk square scarf with a navy and rust geometric print, folded"
+ },
+ {
+  "slug": "w-tan-leather-belt",
+  "department": "womenswear",
+  "category": "accessory",
+  "name": "Tan leather belt",
+  "colors": [
+   "tan"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 4500,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L"
+  ],
+  "attributes": {
+   "formality": 2,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "women's tan leather belt with a gold buckle, coiled"
+ },
+ {
+  "slug": "w-wide-brim-sun-hat",
+  "department": "womenswear",
+  "category": "accessory",
+  "name": "Wide-brim sun hat",
+  "colors": [
+   "natural"
+  ],
+  "style_tags": [
+   "bohemian",
+   "relaxed"
+  ],
+  "price_cents": 5500,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 1,
+   "material": "straw",
+   "pattern": "solid"
+  },
+  "image_description": "natural straw wide-brim sun hat"
+ },
+ {
+  "slug": "w-grey-wool-scarf",
+  "department": "womenswear",
+  "category": "accessory",
+  "name": "Grey wool scarf",
+  "colors": [
+   "heather grey"
+  ],
+  "style_tags": [
+   "minimal",
+   "relaxed"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 2,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "heather grey wool scarf, folded"
+ },
+ {
+  "slug": "m-light-blue-oxford-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "Light blue oxford shirt",
+  "colors": [
+   "light blue"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's light blue cotton oxford button-down shirt, long sleeves"
+ },
+ {
+  "slug": "m-white-dress-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "White dress shirt",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's crisp white cotton dress shirt, long sleeves"
+ },
+ {
+  "slug": "m-pale-pink-dress-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "Pale pink dress shirt",
+  "colors": [
+   "pale pink"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's pale pink cotton dress shirt, long sleeves"
+ },
+ {
+  "slug": "m-navy-linen-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "Navy linen shirt",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "relaxed"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "linen",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy linen shirt, long sleeves"
+ },
+ {
+  "slug": "m-green-flannel-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "Green flannel shirt",
+  "colors": [
+   "forest green",
+   "navy"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 5900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "cotton flannel",
+   "pattern": "check"
+  },
+  "image_description": "men's forest green and navy check flannel shirt"
+ },
+ {
+  "slug": "m-floral-short-sleeve-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "Floral short-sleeve shirt",
+  "colors": [
+   "navy",
+   "white"
+  ],
+  "style_tags": [
+   "bold",
+   "relaxed"
+  ],
+  "price_cents": 5500,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "short",
+   "neckline": "camp",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "viscose",
+   "pattern": "floral"
+  },
+  "image_description": "men's navy short-sleeve camp collar shirt with a white floral print"
+ },
+ {
+  "slug": "m-white-crew-tee",
+  "department": "menswear",
+  "category": "t-shirt",
+  "name": "White crew tee",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "minimal"
+  ],
+  "price_cents": 2500,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "short",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's plain white cotton crew-neck t-shirt"
+ },
+ {
+  "slug": "m-navy-polo-shirt",
+  "department": "menswear",
+  "category": "t-shirt",
+  "name": "Navy polo shirt",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "preppy",
+   "sporty"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "short",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cotton pique",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy pique polo shirt"
+ },
+ {
+  "slug": "m-charcoal-merino-sweater",
+  "department": "menswear",
+  "category": "knitwear",
+  "name": "Charcoal merino sweater",
+  "colors": [
+   "charcoal grey"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "round",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "merino wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's charcoal grey merino crew-neck sweater"
+ },
+ {
+  "slug": "m-oatmeal-quarter-zip",
+  "department": "menswear",
+  "category": "knitwear",
+  "name": "Oatmeal quarter-zip",
+  "colors": [
+   "oatmeal"
+  ],
+  "style_tags": [
+   "relaxed",
+   "preppy"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "zip",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cotton knit",
+   "pattern": "solid"
+  },
+  "image_description": "men's oatmeal knit quarter-zip sweater"
+ },
+ {
+  "slug": "m-navy-cable-cardigan",
+  "department": "menswear",
+  "category": "knitwear",
+  "name": "Navy cable cardigan",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "v",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "wool",
+   "pattern": "cable knit"
+  },
+  "image_description": "men's navy cable-knit cardigan"
+ },
+ {
+  "slug": "m-black-turtleneck",
+  "department": "menswear",
+  "category": "knitwear",
+  "name": "Black turtleneck",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "minimal",
+   "edgy"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "turtleneck",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "merino wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's black fine-knit turtleneck sweater"
+ },
+ {
+  "slug": "m-olive-henley",
+  "department": "menswear",
+  "category": "t-shirt",
+  "name": "Olive henley",
+  "colors": [
+   "olive green"
+  ],
+  "style_tags": [
+   "relaxed"
+  ],
+  "price_cents": 3900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "henley",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's olive green long-sleeve henley shirt"
+ },
+ {
+  "slug": "m-black-dress-shirt",
+  "department": "menswear",
+  "category": "shirt",
+  "name": "Black dress shirt",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "elegant"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's black cotton dress shirt, long sleeves"
+ },
+ {
+  "slug": "m-khaki-chinos",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Khaki chinos",
+  "colors": [
+   "khaki"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 2,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's khaki cotton chino trousers, folded neatly"
+ },
+ {
+  "slug": "m-navy-chinos",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Navy chinos",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 2,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy cotton chino trousers, folded neatly"
+ },
+ {
+  "slug": "m-charcoal-wool-trousers",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Charcoal wool trousers",
+  "colors": [
+   "charcoal grey"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 4,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's charcoal grey wool dress trousers, folded neatly"
+ },
+ {
+  "slug": "m-dark-indigo-jeans",
+  "department": "menswear",
+  "category": "jeans",
+  "name": "Dark indigo jeans",
+  "colors": [
+   "indigo"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 1,
+   "material": "denim",
+   "pattern": "solid"
+  },
+  "image_description": "men's dark indigo straight denim jeans, folded neatly"
+ },
+ {
+  "slug": "m-black-slim-jeans",
+  "department": "menswear",
+  "category": "jeans",
+  "name": "Black slim jeans",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "minimal"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 1,
+   "material": "denim",
+   "pattern": "solid"
+  },
+  "image_description": "men's black slim denim jeans, folded neatly"
+ },
+ {
+  "slug": "m-olive-cargo-trousers",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Olive cargo trousers",
+  "colors": [
+   "olive green"
+  ],
+  "style_tags": [
+   "relaxed",
+   "sporty"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's olive green cargo trousers, folded neatly"
+ },
+ {
+  "slug": "m-navy-chino-shorts",
+  "department": "menswear",
+  "category": "shorts",
+  "name": "Navy chino shorts",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "relaxed",
+   "preppy"
+  ],
+  "price_cents": 4500,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "above_knee",
+   "formality": 1,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy chino shorts"
+ },
+ {
+  "slug": "m-stone-linen-trousers",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Stone linen trousers",
+  "colors": [
+   "stone beige"
+  ],
+  "style_tags": [
+   "relaxed",
+   "minimal"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 2,
+   "material": "linen",
+   "pattern": "solid"
+  },
+  "image_description": "men's stone beige linen drawstring trousers, folded neatly"
+ },
+ {
+  "slug": "m-grey-check-trousers",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Grey check trousers",
+  "colors": [
+   "grey"
+  ],
+  "style_tags": [
+   "classic",
+   "bold"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 3,
+   "material": "wool",
+   "pattern": "check"
+  },
+  "image_description": "men's grey Prince of Wales check wool trousers, folded neatly"
+ },
+ {
+  "slug": "m-black-tuxedo-trousers",
+  "department": "menswear",
+  "category": "trousers",
+  "name": "Black tuxedo trousers",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "elegant"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "28",
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "coverage": "full_length",
+   "formality": 5,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's black tuxedo trousers with a satin side stripe, folded neatly"
+ },
+ {
+  "slug": "m-charcoal-two-piece-suit",
+  "department": "menswear",
+  "category": "suit",
+  "name": "Charcoal two-piece suit",
+  "colors": [
+   "charcoal grey"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 39900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "full_length",
+   "formality": 5,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's charcoal grey wool two-piece suit, jacket and trousers laid flat together"
+ },
+ {
+  "slug": "m-navy-two-piece-suit",
+  "department": "menswear",
+  "category": "suit",
+  "name": "Navy two-piece suit",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 39900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "full_length",
+   "formality": 5,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy wool two-piece suit, jacket and trousers laid flat together"
+ },
+ {
+  "slug": "m-light-grey-summer-suit",
+  "department": "menswear",
+  "category": "suit",
+  "name": "Light grey summer suit",
+  "colors": [
+   "light grey"
+  ],
+  "style_tags": [
+   "classic",
+   "relaxed"
+  ],
+  "price_cents": 34900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "full_length",
+   "formality": 4,
+   "material": "linen blend",
+   "pattern": "solid"
+  },
+  "image_description": "men's light grey linen-blend two-piece suit, jacket and trousers laid flat together"
+ },
+ {
+  "slug": "m-black-tuxedo-jacket",
+  "department": "menswear",
+  "category": "suit",
+  "name": "Black tuxedo jacket",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "elegant"
+  ],
+  "price_cents": 29900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 5,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's black tuxedo jacket with satin peak lapels"
+ },
+ {
+  "slug": "m-navy-blazer",
+  "department": "menswear",
+  "category": "blazer",
+  "name": "Navy blazer",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "preppy",
+   "classic"
+  ],
+  "price_cents": 22900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy wool blazer with two buttons"
+ },
+ {
+  "slug": "m-brown-tweed-blazer",
+  "department": "menswear",
+  "category": "blazer",
+  "name": "Brown tweed blazer",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 24900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "wool tweed",
+   "pattern": "herringbone"
+  },
+  "image_description": "men's brown herringbone tweed blazer"
+ },
+ {
+  "slug": "m-charcoal-suit-jacket",
+  "department": "menswear",
+  "category": "blazer",
+  "name": "Charcoal suit jacket",
+  "colors": [
+   "charcoal grey"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 22900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 4,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's charcoal grey wool suit jacket, two buttons, notch lapels"
+ },
+ {
+  "slug": "m-burgundy-velvet-jacket",
+  "department": "menswear",
+  "category": "blazer",
+  "name": "Burgundy velvet jacket",
+  "colors": [
+   "burgundy"
+  ],
+  "style_tags": [
+   "bold",
+   "elegant"
+  ],
+  "price_cents": 26900,
+  "currency": "USD",
+  "sizes": [
+   "36",
+   "38",
+   "40",
+   "42",
+   "44",
+   "46"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 5,
+   "material": "velvet",
+   "pattern": "solid"
+  },
+  "image_description": "men's burgundy velvet dinner jacket with shawl lapels"
+ },
+ {
+  "slug": "m-camel-overcoat",
+  "department": "menswear",
+  "category": "coat",
+  "name": "Camel overcoat",
+  "colors": [
+   "camel"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 32900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "knee",
+   "formality": 4,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's camel wool overcoat, knee length"
+ },
+ {
+  "slug": "m-navy-pea-coat",
+  "department": "menswear",
+  "category": "coat",
+  "name": "Navy pea coat",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 24900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "hip",
+   "formality": 3,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy wool double-breasted pea coat"
+ },
+ {
+  "slug": "m-brown-suede-jacket",
+  "department": "menswear",
+  "category": "jacket",
+  "name": "Brown suede jacket",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "classic",
+   "relaxed"
+  ],
+  "price_cents": 28900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "waist",
+   "formality": 2,
+   "material": "suede",
+   "pattern": "solid"
+  },
+  "image_description": "men's brown suede trucker jacket"
+ },
+ {
+  "slug": "m-black-bomber-jacket",
+  "department": "menswear",
+  "category": "jacket",
+  "name": "Black bomber jacket",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "sporty",
+   "edgy"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "ribbed",
+   "coverage": "waist",
+   "formality": 1,
+   "material": "nylon",
+   "pattern": "solid"
+  },
+  "image_description": "men's black nylon bomber jacket"
+ },
+ {
+  "slug": "m-olive-field-jacket",
+  "department": "menswear",
+  "category": "jacket",
+  "name": "Olive field jacket",
+  "colors": [
+   "olive green"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 15900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "hip",
+   "formality": 2,
+   "material": "cotton",
+   "pattern": "solid"
+  },
+  "image_description": "men's olive green cotton field jacket with four pockets"
+ },
+ {
+  "slug": "m-beige-trench-coat",
+  "department": "menswear",
+  "category": "coat",
+  "name": "Beige trench coat",
+  "colors": [
+   "beige"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 27900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "lapel",
+   "coverage": "knee",
+   "formality": 3,
+   "material": "cotton gabardine",
+   "pattern": "solid"
+  },
+  "image_description": "men's beige belted trench coat"
+ },
+ {
+  "slug": "m-navy-rain-jacket",
+  "department": "menswear",
+  "category": "jacket",
+  "name": "Navy rain jacket",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "sporty"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "hood",
+   "coverage": "hip",
+   "formality": 1,
+   "material": "nylon",
+   "pattern": "solid"
+  },
+  "image_description": "men's navy lightweight hooded rain jacket"
+ },
+ {
+  "slug": "m-light-denim-jacket",
+  "department": "menswear",
+  "category": "jacket",
+  "name": "Light denim jacket",
+  "colors": [
+   "light blue"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 8900,
+  "currency": "USD",
+  "sizes": [
+   "S",
+   "M",
+   "L",
+   "XL",
+   "XXL"
+  ],
+  "attributes": {
+   "sleeve": "long",
+   "neckline": "collared",
+   "coverage": "waist",
+   "formality": 1,
+   "material": "denim",
+   "pattern": "solid"
+  },
+  "image_description": "men's light blue denim jacket"
+ },
+ {
+  "slug": "m-brown-leather-brogues",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Brown leather brogues",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 15900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 4,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's brown leather brogue shoes"
+ },
+ {
+  "slug": "m-black-oxford-shoes",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Black oxford shoes",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 16900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 5,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's black polished leather oxford shoes"
+ },
+ {
+  "slug": "m-tan-suede-loafers",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Tan suede loafers",
+  "colors": [
+   "tan"
+  ],
+  "style_tags": [
+   "relaxed",
+   "preppy"
+  ],
+  "price_cents": 12900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 3,
+   "material": "suede",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's tan suede loafers"
+ },
+ {
+  "slug": "m-white-leather-sneakers",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "White leather sneakers",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "minimal",
+   "sporty"
+  ],
+  "price_cents": 9900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 1,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's plain white leather low-top sneakers"
+ },
+ {
+  "slug": "m-brown-chelsea-boots",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Brown chelsea boots",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "classic",
+   "edgy"
+  ],
+  "price_cents": 17900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 3,
+   "toe": "closed",
+   "formality": 3,
+   "material": "suede",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's brown suede chelsea boots"
+ },
+ {
+  "slug": "m-black-chelsea-boots",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Black chelsea boots",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "edgy",
+   "minimal"
+  ],
+  "price_cents": 17900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 3,
+   "toe": "closed",
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's black leather chelsea boots"
+ },
+ {
+  "slug": "m-navy-canvas-sneakers",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Navy canvas sneakers",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "relaxed",
+   "sporty"
+  ],
+  "price_cents": 5900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 1,
+   "material": "canvas",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's navy canvas low-top sneakers"
+ },
+ {
+  "slug": "m-black-patent-dress-shoes",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Black patent dress shoes",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "elegant"
+  ],
+  "price_cents": 18900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 5,
+   "material": "patent leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's black patent leather dress shoes"
+ },
+ {
+  "slug": "m-brown-leather-sandals",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Brown leather sandals",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "relaxed"
+  ],
+  "price_cents": 6900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 1,
+   "toe": "open",
+   "formality": 1,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's brown leather slide sandals"
+ },
+ {
+  "slug": "m-grey-running-sneakers",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Grey running sneakers",
+  "colors": [
+   "grey"
+  ],
+  "style_tags": [
+   "sporty"
+  ],
+  "price_cents": 10900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 3,
+   "toe": "closed",
+   "formality": 1,
+   "material": "mesh",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's grey mesh running sneakers"
+ },
+ {
+  "slug": "m-burgundy-penny-loafers",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Burgundy penny loafers",
+  "colors": [
+   "burgundy"
+  ],
+  "style_tags": [
+   "classic",
+   "preppy"
+  ],
+  "price_cents": 13900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 4,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's burgundy leather penny loafers"
+ },
+ {
+  "slug": "m-desert-boots",
+  "department": "menswear",
+  "category": "shoes",
+  "name": "Desert boots",
+  "colors": [
+   "sand beige"
+  ],
+  "style_tags": [
+   "relaxed",
+   "classic"
+  ],
+  "price_cents": 11900,
+  "currency": "USD",
+  "sizes": [
+   "8",
+   "9",
+   "10",
+   "11",
+   "12",
+   "13"
+  ],
+  "attributes": {
+   "heel_cm": 2,
+   "toe": "closed",
+   "formality": 2,
+   "material": "suede",
+   "pattern": "solid"
+  },
+  "image_description": "pair of men's sand beige suede desert boots"
+ },
+ {
+  "slug": "m-brown-leather-briefcase",
+  "department": "menswear",
+  "category": "bag",
+  "name": "Brown leather briefcase",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 19900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "brown leather briefcase"
+ },
+ {
+  "slug": "m-navy-canvas-backpack",
+  "department": "menswear",
+  "category": "bag",
+  "name": "Navy canvas backpack",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "relaxed",
+   "sporty"
+  ],
+  "price_cents": 7900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 1,
+   "material": "canvas",
+   "pattern": "solid"
+  },
+  "image_description": "navy canvas backpack with leather trim"
+ },
+ {
+  "slug": "m-black-leather-weekender",
+  "department": "menswear",
+  "category": "bag",
+  "name": "Black leather weekender",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "minimal",
+   "classic"
+  ],
+  "price_cents": 22900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 2,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "black leather weekender bag"
+ },
+ {
+  "slug": "m-navy-silk-tie",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Navy silk tie",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "elegant"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "silk",
+   "pattern": "solid"
+  },
+  "image_description": "navy silk tie, rolled"
+ },
+ {
+  "slug": "m-burgundy-patterned-tie",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Burgundy patterned tie",
+  "colors": [
+   "burgundy",
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "bold"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "silk",
+   "pattern": "geometric"
+  },
+  "image_description": "burgundy silk tie with a small navy pattern, rolled"
+ },
+ {
+  "slug": "m-black-bow-tie",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Black bow tie",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "elegant"
+  ],
+  "price_cents": 3900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 5,
+   "material": "silk",
+   "pattern": "solid"
+  },
+  "image_description": "black silk bow tie"
+ },
+ {
+  "slug": "m-brown-leather-belt",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Brown leather belt",
+  "colors": [
+   "brown"
+  ],
+  "style_tags": [
+   "classic"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "formality": 3,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "men's brown leather belt with a silver buckle, coiled"
+ },
+ {
+  "slug": "m-black-leather-belt",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Black leather belt",
+  "colors": [
+   "black"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "30",
+   "32",
+   "34",
+   "36",
+   "38"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "leather",
+   "pattern": "solid"
+  },
+  "image_description": "men's black leather belt with a silver buckle, coiled"
+ },
+ {
+  "slug": "m-white-pocket-square",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "White pocket square",
+  "colors": [
+   "white"
+  ],
+  "style_tags": [
+   "elegant",
+   "classic"
+  ],
+  "price_cents": 2500,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 4,
+   "material": "linen",
+   "pattern": "solid"
+  },
+  "image_description": "white linen pocket square, folded"
+ },
+ {
+  "slug": "m-silver-watch",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Silver watch",
+  "colors": [
+   "silver"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 19900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 3,
+   "material": "stainless steel",
+   "pattern": "solid"
+  },
+  "image_description": "men's silver wristwatch with a white dial and steel bracelet, no logo"
+ },
+ {
+  "slug": "m-grey-wool-beanie",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Grey wool beanie",
+  "colors": [
+   "heather grey"
+  ],
+  "style_tags": [
+   "relaxed",
+   "sporty"
+  ],
+  "price_cents": 2900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 1,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "heather grey knit wool beanie"
+ },
+ {
+  "slug": "m-navy-wool-scarf",
+  "department": "menswear",
+  "category": "accessory",
+  "name": "Navy wool scarf",
+  "colors": [
+   "navy"
+  ],
+  "style_tags": [
+   "classic",
+   "minimal"
+  ],
+  "price_cents": 4900,
+  "currency": "USD",
+  "sizes": [
+   "One size"
+  ],
+  "attributes": {
+   "formality": 2,
+   "material": "wool",
+   "pattern": "solid"
+  },
+  "image_description": "navy wool scarf, folded"
+ }
+]
