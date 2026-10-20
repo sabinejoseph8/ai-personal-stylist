@@ -58,14 +58,20 @@ async function deleteGuest(db: SupabaseClient, id: string) {
 /** Puts a guest back to how a new guest starts: no sessions, usage, counts or saved things, and a fresh profile. */
 async function resetGuest(id: string) {
   const server = serverDb();
-  const files = (await server.storage.from("guest-photos").list(id)).data ?? [];
-  if (files.length) await server.storage.from("guest-photos").remove(files.map((f) => `${id}/${f.name}`));
-  // A session's notes, feedback, photos, looks and checks go with it.
-  for (const table of ["sessions", "saved_looks", "bag_items", "wardrobe_items", "saved_preferences", "usage", "rate_limits", "consents", "profiles"]) {
-    await server.from(table).delete().eq("user_id", id).throwOnError();
-  }
-  await server.from("profiles").insert({ user_id: id }).throwOnError();
-  await server.from("consents").insert({ user_id: id }).throwOnError();
+  const clearPhotos = async () => {
+    const files = (await server.storage.from("guest-photos").list(id)).data ?? [];
+    if (files.length) await server.storage.from("guest-photos").remove(files.map((f) => `${id}/${f.name}`));
+  };
+  // All at once, as tests on GitHub run far from the database. A session's notes, feedback, photos,
+  // looks and checks go with it.
+  const tables = ["sessions", "saved_looks", "bag_items", "wardrobe_items", "saved_preferences", "usage", "rate_limits"];
+  await Promise.all([clearPhotos(), ...tables.map(async (table) => void (await server.from(table).delete().eq("user_id", id).throwOnError()))]);
+  await Promise.all(
+    ["profiles", "consents"].map(async (table) => {
+      await server.from(table).delete().eq("user_id", id).throwOnError();
+      await server.from(table).insert({ user_id: id }).throwOnError();
+    }),
+  );
 }
 
 // The pool (Phase 2 review). Supabase allows about 30 sign-ins every 5 minutes, and every test file
@@ -127,9 +133,11 @@ export async function createTestGuest(options: { fresh?: boolean } = {}): Promis
     return {
       db,
       id,
+      // The full reset happens when the guest is next taken. Usage is cleared now, because it counts
+      // toward the month's totals, which the live site shares.
       remove: async () => {
         try {
-          await resetGuest(id);
+          await serverDb().from("usage").delete().eq("user_id", id);
           await save();
         } finally {
           release();
