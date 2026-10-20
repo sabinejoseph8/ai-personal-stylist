@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated and throwaway files
+    "tools/memory-site/**",
+    "spikes/**",
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 
