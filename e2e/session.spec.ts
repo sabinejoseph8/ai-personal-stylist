@@ -3,7 +3,7 @@ import { SAMPLE_PHRASES } from "../lib/sample-phrases";
 import { canRunDatabaseTests, serverDb, type TestGuest } from "../tests/support/test-guests";
 import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
-import { commandsSent, fakeMicrophone, playInCall } from "./support/microphone";
+import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/microphone";
 
 // 2a and 2b: the stylist stage with the fake engine (playwright.config.ts): the microphone card (R6),
 // Start conversation, End and resuming (R12), her state in words (R8), interrupting (R7), Mute and
@@ -21,7 +21,9 @@ test.describe("the stylist stage", () => {
     await page.goto("/session");
     await page.getByRole("button", { name: "Start conversation" }).click();
     await expect(page.getByRole("button", { name: "End", exact: true })).toBeEnabled();
-    await expect(state(page)).toHaveText("Listening"); // after her greeting
+    // Her greeting plays first; on a slow machine it can still be on its way after Listening shows.
+    await expect.poll(() => scriptDone(page)).toBe(true);
+    await expect(state(page)).toHaveText("Listening");
   }
 
   test.beforeAll(async () => {

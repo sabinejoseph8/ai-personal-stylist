@@ -33,3 +33,8 @@ export async function playInCall(page: Page, event: Record<string, unknown>) {
 export async function commandsSent(page: Page): Promise<{ name: string; value?: unknown }[]> {
   return page.evaluate(() => (window as unknown as { fakeConversation: { commands: { name: string; value?: unknown }[] } }).fakeConversation.commands);
 }
+
+/** True once the fake call's scripted greeting has fully played. */
+export async function scriptDone(page: Page): Promise<boolean> {
+  return page.evaluate(() => Boolean((window as unknown as { fakeConversation?: { scriptDone: boolean } }).fakeConversation?.scriptDone));
+}

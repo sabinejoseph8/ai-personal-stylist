@@ -29,6 +29,8 @@ export type FakeEngine = ConversationEngine & {
   readonly commands: { name: string; value?: unknown }[];
   /** Plays one more event, as if it came from the call. */
   play(event: ConversationEvent): void;
+  /** True once the call is up and every scripted event has played, so tests don't race the greeting. */
+  readonly scriptDone: boolean;
 };
 
 export function createFakeEngine(script: FakeStep[] = GREETING): FakeEngine {
@@ -51,6 +53,9 @@ function makeFakeEngine(script: FakeStep[]): FakeEngine {
 
   return {
     commands,
+    get scriptDone() {
+      return state === "connected" && timers.size === 0;
+    },
 
     async join() {
       if (state === "connected") return;
