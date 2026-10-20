@@ -57,6 +57,9 @@ const MEANINGS: Record<IconName, string> = {
   switchCamera: "Switch camera",
   capture: "Capture",
   voiceOnly: "Voice only",
+  microphone: "Mute (microphone on)",
+  muted: "Muted",
+  end: "End the conversation",
 };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

@@ -26,8 +26,15 @@ describe("budget limits", () => {
 describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
   const db = serverDb();
   let guest: TestGuest;
-  const limits = (change: Partial<BudgetLimits>) => ({ ...readBudgetLimits({}), ...change });
-  const month = async () => (await db.rpc("budget_status", { guest: guest.id }).throwOnError()).data as Record<string, number>;
+  // The month's totals are shared with the live site and with other test files running at the same
+  // moment, so tests never depend on them: monthly limits are out of reach unless a test sets one to 0.
+  const limits = (change: Partial<BudgetLimits>) => ({
+    ...readBudgetLimits({}),
+    monthlyVideoSeconds: 1e9,
+    monthlyClaudeUsd: 1e6,
+    monthlyOpenaiUsd: 1e6,
+    ...change,
+  });
   const today = async () => {
     const { data } = await db.from("usage").select("*").eq("user_id", guest.id).maybeSingle().throwOnError();
     return data;
@@ -62,9 +69,7 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
   });
 
   it("refuses video once the demo's video minutes for the month are used, but still allows voice only", async () => {
-    const used = (await month()).month_video_seconds;
-    const guard = createBudgetGuard(db, limits({ monthlyVideoSeconds: used + 45 }));
-    expect(await guard.reserveTime(guest.id, "video", 60)).toMatchObject({ ok: true, reservation: { seconds: 45 } });
+    const guard = createBudgetGuard(db, limits({ monthlyVideoSeconds: 0 }));
     expect(await guard.reserveTime(guest.id, "video", 60)).toEqual({ ok: false, reason: "monthly_video_used" });
     expect(await guard.reserveTime(guest.id, "voice", 60)).toMatchObject({ ok: true, reservation: { seconds: 60 } });
   });
@@ -79,17 +84,13 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
   });
 
   it("refuses Claude once the month's Claude money is used, without blocking OpenAI", async () => {
-    const used = (await month()).month_claude_microdollars / 1_000_000;
-    const guard = createBudgetGuard(db, limits({ monthlyClaudeUsd: used + 0.002 }));
-    await guard.recordAi(guest.id, "claude", 0.003);
+    const guard = createBudgetGuard(db, limits({ monthlyClaudeUsd: 0 }));
     expect(await guard.checkAi(guest.id, "claude")).toEqual({ ok: false, reason: "monthly_claude_used" });
     expect(await guard.checkAi(guest.id, "openai")).toEqual({ ok: true });
   });
 
   it("refuses voice only once the month's OpenAI money is used, without blocking video", async () => {
-    const used = (await month()).month_openai_microdollars / 1_000_000;
-    const guard = createBudgetGuard(db, limits({ monthlyOpenaiUsd: used + 0.001 }));
-    await guard.recordAi(guest.id, "openai", 0.002);
+    const guard = createBudgetGuard(db, limits({ monthlyOpenaiUsd: 0 }));
     expect(await guard.reserveTime(guest.id, "voice", 60)).toEqual({ ok: false, reason: "monthly_openai_used" });
     expect(await guard.reserveTime(guest.id, "video", 60)).toMatchObject({ ok: true });
   });

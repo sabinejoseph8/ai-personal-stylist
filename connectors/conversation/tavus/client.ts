@@ -70,6 +70,17 @@ export function createTavusEngine(): ConversationEngine {
         emit({ type: "connection", state: "ended" });
       });
       call.on("error", (e) => emit({ type: "error", message: e?.errorMsg ?? "call_error" }));
+      // Daily reports microphone trouble as a "camera" error (R6). Video is off, so it's the microphone.
+      call.on("camera-error", (e) => {
+        const kind = e?.error?.type;
+        if (e?.errorMsg?.audioOk) return;
+        emit({ type: "microphone", problem: kind === "permissions" ? "blocked" : kind === "not-found" ? "missing" : "failed" });
+      });
+      call.on("participant-updated", (e) => {
+        const blocked = e?.participant?.local ? e.participant.tracks?.audio?.blocked : undefined;
+        if (!blocked) return;
+        emit({ type: "microphone", problem: blocked.byPermissions ? "blocked" : blocked.byDeviceMissing ? "missing" : "failed" });
+      });
       await call.join({ url: target.joinUrl });
       emit({ type: "connection", state: "connected" });
     },

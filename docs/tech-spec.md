@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.10 (20 Oct 2026)
+**Status:** Agreed, version 1.11 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -162,9 +162,9 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 Every engine implements the same small interface, so the rest of the app never knows which one is running.
 
 - **Commands:** start, end, mute, unmute, send a tap-to-try phrase, update the stylist's context (notes, looks, next question), say a short scripted line, interrupt.
-- **Events:** words heard (speaker, text so far, final or not, turn ID), stylist started or stopped speaking, stylist request, connection state, error. Words heard feed the notes reader and are never shown on screen.
+- **Events:** words heard (speaker, text so far, final or not, turn ID), stylist or shopper started or stopped speaking, stylist request, connection state, a microphone problem (blocked, missing or stopped working, R6), error. Words heard feed the notes reader and are never shown on screen.
 - **Files:** the interface is **connectors/conversation/types.ts**: a server side that starts and ends calls (it holds the keys) and a browser side that joins them. The Tavus engine is in **connectors/conversation/tavus/**, and a **fake engine** (**connectors/conversation/fake.ts**) plays scripted conversations for tests. The fake is only used when **CONVERSATION_ENGINE=fake**, and never on Vercel's live site. The shared contract tests are in **tests/support/conversation-contract.ts**.
-- **Tavus engine:** joins the call with Daily, with **avoidEval** on, so the site's strict security policy holds on the session screen. Context goes in through Tavus's context interaction, scripted lines through **conversation.echo**, and interruptions through **conversation.interrupt**, all sent as Daily app messages. Live words arrive as **conversation.utterance.streaming** events. The Tavus setup ("PAL") uses **pipeline_mode: "full"**, a stock female face, perception turned off (the camera stays with us), and recording turned off.
+- **Tavus engine:** joins the call with Daily, with **avoidEval** on, so the site's strict security policy holds on the session screen. Daily reports microphone trouble as a camera error, which the engine turns into the microphone event. Context goes in through Tavus's context interaction, scripted lines through **conversation.echo**, and interruptions through **conversation.interrupt**, all sent as Daily app messages. Live words arrive as **conversation.utterance.streaming** events. The Tavus setup ("PAL") uses **pipeline_mode: "full"**, a stock female face, perception turned off (the camera stays with us), and recording turned off.
 - **GPT-Live engine:** a browser WebRTC call set up through our server, which sends the browser's offer to **POST /v1/live/sessions** and returns only the answer, never the key. The session must set **delegation: { type: "client" }** (OpenAI rejects null). Uses the same stylist instructions. Live words arrive as **session.input_transcript.delta**. Facts go in through **session.thinking.append**, and exact lines through **session.instructions.append**. The browser's data channel should be limited so only our server can feed facts (Phase 6). The voice is **quartz** (picked in Phase 0).
 - **Switching to voice only:** GPT-Live uses the OpenAI voice that sounds closest to the Tavus face, picked in Phase 0. When the shopper taps Voice only, the Tavus stylist first says "I'm switching to voice only, so I'll sound a little different." through **conversation.echo**. Then the video call ends and GPT-Live picks up with the current notes and a short recap. If video drops without warning, GPT-Live says the same line as its first words. If video is unavailable from the start (another visitor is using it, or the month's video minutes are used up), the stylist starts in voice only and says why.
 - **Stylist requests are limited to three:** capture the item on camera, open saved looks, end the session. The stylist never changes notes, looks or the bag itself.
@@ -366,6 +366,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.11 (20 Oct 2026):** 2b: the connector's microphone event, and the stage's state worked out from the events in one tested rule set (lib/stage.ts). The microphone is checked before the server starts a call, so a blocked microphone never uses Tavus minutes.
 - **1.10 (20 Oct 2026):** 2a: the conversation connector's files and fake engine, Start conversation and End as built, server-owned sessions with the call and its reserved time, and your answer that, until 6c, the conversation doesn't start when video is unavailable.
 - **1.9 (20 Oct 2026):** System pattern 11, screens start from saved data, after your iPhone check found setup showing and saving old answers.
 - **1.8 (20 Oct 2026):** Phase 1 code review: rows can only point at the same guest's session, look, preference or check result; from Phase 2 the app's own records are read-only for guests and written by the server (your decision A); the few-cents AI overshoot is accepted (your decision B).
