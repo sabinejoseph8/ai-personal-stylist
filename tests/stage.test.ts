@@ -53,6 +53,11 @@ describe("the stylist's state in words", () => {
 });
 
 describe("time limits (R13)", () => {
+  it("says Connection lost when a dropped call couldn't be brought back, until Try again (R14)", () => {
+    expect(label(...connected, { type: "connection-lost" })).toBe("Connection lost");
+    expect(label(...connected, { type: "connection-lost" }, { type: "starting" })).toBe("Connecting");
+  });
+
   it("says Time is up when the time runs out, until a new start", () => {
     expect(label(...connected, { type: "time-up" })).toBe("Time is up");
     expect(label(...connected, { type: "time-up" }, { type: "starting" })).toBe("Connecting");

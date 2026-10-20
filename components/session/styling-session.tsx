@@ -25,7 +25,7 @@ import { type MicrophoneProblem, nextStage, READY, showSamplePhrases, someoneSpe
 type Flow = "idle" | "explain" | "declined" | "starting" | "live" | "ending";
 
 const NO_CONNECTION = "We couldn't reach your stylist. Check your connection and try again.";
-const NO_RECONNECT = "We couldn't reconnect to your stylist. Check your connection, then try again.";
+const NO_RECONNECT = "We couldn't reconnect to your stylist. Check your connection, then tap Try again. Your notes are still here.";
 
 /** What Time is up says, by the limit that ended the call (R13). */
 const TIME_UP = {
@@ -35,9 +35,29 @@ const TIME_UP = {
 type Limit = keyof typeof TIME_UP;
 const TIME_USED = new Set(["daily_time_used", "monthly_video_used"]);
 
-/** A dropped call is started again by itself up to 3 times, this far apart (R14). */
+/**
+ * A dropped call is started again by itself up to 3 times, 2, 4 and 6 seconds apart (R14). While the
+ * phone is offline (Wi-Fi off), it first waits up to 90 seconds for the connection to come back, so the
+ * tries aren't used up while nothing can work (found on Sabine's iPhone in 2e).
+ */
 const RETRIES = 3;
-const RETRY_MS = 1500;
+const RETRY_MS = 2000;
+const OFFLINE_WAIT_MS = 90_000;
+
+/** True once the browser is online (at once if it is), false if it's still offline after `ms`. */
+function waitUntilOnline(ms: number) {
+  if (navigator.onLine) return Promise.resolve(true);
+  return new Promise<boolean>((resolve) => {
+    const done = (online: boolean) => {
+      clearTimeout(timer);
+      window.removeEventListener("online", onOnline);
+      resolve(online);
+    };
+    const onOnline = () => done(true);
+    const timer = setTimeout(() => done(false), ms);
+    window.addEventListener("online", onOnline);
+  });
+}
 
 /** How starting a call went. `final` means trying again won't help (a refusal or the microphone). */
 type Outcome = { ok: true } | { ok: false; final: boolean; message?: string; reason?: string };
@@ -240,13 +260,18 @@ export function StylingSession({
     setFlow("starting");
     dispatch({ type: "connection", state: "reconnecting" });
     for (let i = 0; i < RETRIES; i++) {
-      await new Promise((r) => setTimeout(r, RETRY_MS));
+      if (!(await waitUntilOnline(OFFLINE_WAIT_MS))) break;
+      await new Promise((r) => setTimeout(r, RETRY_MS * (i + 1)));
       if (attempt.current !== mine || !shown.current) return;
       const outcome = await connect({ reconnecting: true });
       if (outcome.ok || attempt.current !== mine) return;
       if (outcome.final) return settle(outcome);
     }
-    settle({ ok: false, final: true, message: NO_RECONNECT });
+    if (attempt.current !== mine || !shown.current) return;
+    // The session isn't over: the notes stay, and Try again picks it up (R14).
+    setFlow("idle");
+    setProblem(NO_RECONNECT);
+    dispatch({ type: "connection-lost" });
   }
 
   function onEvent(e: ConversationEvent) {
@@ -393,7 +418,11 @@ export function StylingSession({
           <audio ref={audio} autoPlay />
           {!showVideo && (
             <p className="type-body absolute inset-0 m-0 flex items-center justify-center p-6 text-center text-white/80">
-              {label === "Ended" || label === "Time is up" ? "Conversation ended." : "Your stylist will appear here."}
+              {label === "Ended" || label === "Time is up"
+                ? "Conversation ended."
+                : label === "Connection lost"
+                  ? "Connection lost."
+                  : "Your stylist will appear here."}
             </p>
           )}
           <p aria-live="polite" className="type-label absolute left-3 top-3 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white">
