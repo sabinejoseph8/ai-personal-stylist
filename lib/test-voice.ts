@@ -22,7 +22,7 @@ export async function startTestVoiceSession(sdp: string, voice: string) {
         model: "gpt-live-1",
         instructions: `${stylist.system_prompt} You are now in voice only, with no video. Never offer to look things up or delegate tasks.`,
         audio: { output: { voice } },
-        delegation: null,
+        delegation: { type: "client" },
       },
       transport: { type: "webrtc", sdp },
     });
