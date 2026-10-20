@@ -38,3 +38,7 @@ npm-debug.log*
 # Playwright output
 /playwright-report/
 /test-results/
+
+# Original catalog images (published copies live in public/catalog)
+/catalog/raw/
+/catalog/batch.json

@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "catalog:check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON catalog/scripts/check-catalog.mjs",
+    "catalog:load": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON catalog/scripts/load-catalog.mjs",
     "tavus:apply": "node scripts/apply-tavus-pal.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "e2e": "playwright test"

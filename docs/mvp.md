@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.1
-**Last updated:** 19 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.5 and progress.md
+**Status:** Living document, version 1.4
+**Last updated:** 20 Oct 2026
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.6 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -96,7 +96,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 10 | Provider data handling for audio and words | Phase 0 (0f) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation will be hard-deleted when the session ends (2e) |
 | 11 | The database is down when a recruiter clicks the link | Phase 1 (1f) and the uptime check | Lower: the database is on Supabase Pro, which doesn't pause |
 | 12 | Phone browser quirks | Phase 0 (0f) | Open. Android isn't tested in v1 (accepted risk) |
-| 13 | Sample catalog quality and image rights | Phase 1 (1e) | Open |
+| 13 | Sample catalog quality and image rights | Phase 1 (1e) | Handled in 1e: one photo style for all 140 products, no real brands, each photo's source recorded, and every photo approved by Sabine |
 | 14 | Outside services change quickly | Every phase | Open |
 | 15 | The scope is large for one builder | Task groups, and the cut list in progress.md | Open |
 | 16 | Looks feel generic or badly matched (the PRD's "fashion relevance" risk) | Phase 4 looks evals, and you reviewing sample looks | Open |
@@ -124,6 +124,11 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 1e image generator: only OpenAI's generator was tested (no Google key), comparing its two quality settings on the same 10 products. Setting A (medium quality) won: the same look on a phone for about a quarter of the cost of high | Sabine | tech spec 1.6 |
+| 20 Oct 2026 | The other 130 photos were made with OpenAI's half-price Batch API (about $3.50, done in about an hour instead of the 24 hours allowed). Sabine added $5 of credit and raised the OpenAI limit to $10 for it, to go back to $5 afterwards | Sabine | tech spec 1.6 |
+| 20 Oct 2026 | The sample catalog has 140 products (76 womenswear, 64 menswear), within the "about 150" default. It covers the example conversations (emerald dresses, shoes from flat to 12 cm heels) and three looks for common occasions across budgets | Claude, within the agreed default | catalog/products.json |
+| 20 Oct 2026 | Photos are 800 px JPEGs served from the site itself (public/catalog, about 13 MB in the repository) rather than a storage bucket: free to serve, fast, and versioned with the code. They skip the per-page security step, which only pages need. The catalog is loaded by a script (npm run catalog:load) from catalog/products.json and catalog/image-sources.json, not by a database migration, and it refuses any photo Sabine hasn't approved | Claude | tech spec 1.6 (4.3) |
+| 20 Oct 2026 | The photo review page is a private page in Sabine's Claude account rather than a passcode page in the app, so no review code ships with the app. Her answers are copied into catalog/image-sources.json with each photo's source | Claude | catalog/scripts/apply-review.mjs |
 | 19 Oct 2026 | Scope change: no word-for-word transcript or captions on screen, so the stylist's voice and My Styling Notes are the only output. My Styling Notes becomes a free-form notebook with no fixed fields, where the stylist jots down any relevant details. Typing to the stylist is out of scope for v1, to be reviewed in a future version. A working microphone is required: without one, the shopper can't use the app | Sabine | product spec 1.4 (R6, R10, R11, R15), design 0.7, tech spec 1.2, progress.md |
 | 19 Oct 2026 | Defaults accepted with the scope change: notes are confirmed or removed by touch, with Undo, and changed by voice. Uncertain notes are jotted in pencil as To confirm. The details looks need are read in the background. Feedback is jotted under its look. Text only mode is removed, so the conversation pauses or ends with notes and looks kept. Tap-to-try phrases work only once the conversation is running | Sabine | product spec 1.4 (R13, R14, R16, R20, R47, R70) |
 | 19 Oct 2026 | Accepted trade-off: with no captions and no typing, people who are deaf, hard of hearing or can't speak can't use the conversation in v1. Captions and typing are listed as future features | Sabine | product spec 1.4 (R67, section 9), risk 17 |
@@ -274,6 +279,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.4 (20 Oct 2026):** 1e decisions: the image generator and quality setting, the half-price batch, 140 products, photos served from the site, the catalog load script and the private review page. Risk 13 updated.
 - **1.3 (20 Oct 2026):** One Supabase project on Pro, the budget about $50, and risk 11 updated.
 - **1.2 (19 Oct 2026):** Phase 0 results and the 0g decisions, risks 1, 2, 3 and 7 updated, assumptions checked, and about 12 demos a month.
 - **1.1 (19 Oct 2026):** Sabine's scope change: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook. Updated the summary, the in and out lists, the PRD table, the success criteria, risk 17, an assumption, the decisions log and the backlog map to match product spec 1.4, design 0.7 and tech spec 1.2.

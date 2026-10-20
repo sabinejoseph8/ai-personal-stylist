@@ -1,0 +1,2232 @@
+{
+ "w-emerald-satin-midi-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single emerald green satin midi dress with three-quarter sleeves and a V-neck. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.354949+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:03:49.952Z"
+  }
+ },
+ "w-navy-wool-blazer": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's navy wool single-breasted blazer. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.358178+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-nude-block-heel-pumps": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of nude leather block-heel pumps with a 6 cm heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.360057+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-white-leather-sneakers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of plain white leather low-top sneakers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.363039+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-camel-leather-tote": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single structured camel leather tote bag. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.366877+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-charcoal-suit-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's charcoal grey wool suit jacket, two buttons, notch lapels. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.371620+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-light-blue-oxford-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's light blue cotton oxford button-down shirt, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.374029+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-khaki-chinos": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's khaki cotton chino trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.380143+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-cream-cable-knit-sweater": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single cream chunky cable-knit wool sweater. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.383336+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-rust-trench-coat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single rust brown belted cotton trench coat. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:23:59.385734+00:00",
+  "output_tokens": 1756,
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-navy-wrap-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single navy jersey wrap dress, knee length, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.170Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:03:54.152Z"
+  }
+ },
+ "w-blush-pleated-maxi-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single blush pink pleated chiffon maxi dress with flutter short sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.176Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-black-column-gown": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single black crepe floor-length column gown with long sleeves and a high neck. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.177Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-floral-tea-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single cream tea dress with a small rose floral print, short puff sleeves, midi length. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.179Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-rust-linen-shirt-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single rust linen button-front shirt dress, midi length, roll-up sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.181Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-ivory-lace-sheath-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single ivory lace sheath dress, knee length, cap sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.182Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-cobalt-one-shoulder-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single cobalt blue one-shoulder cocktail dress, knee length. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.183Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-striped-knit-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single navy and white horizontal striped knit dress, knee length, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.185Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-sage-slip-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single sage green silk slip dress with thin straps, midi length. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.186Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-burgundy-velvet-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single burgundy velvet midi dress with long sleeves and a square neck. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.187Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.187Z"
+  }
+ },
+ "w-yellow-sundress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single sunflower yellow cotton sundress with wide straps, knee length. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.189Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-charcoal-sweater-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single charcoal grey ribbed sweater dress, midi length, long sleeves, turtleneck. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.190Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-polka-dot-midi-dress": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single black midi dress with small white polka dots, elbow sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.191Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-white-silk-blouse": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single white silk blouse with long sleeves and a soft collar. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.192Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-fitted-tee": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single plain black fitted cotton crew-neck t-shirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.193Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-breton-striped-top": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single cream and navy Breton striped long-sleeve top. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.195Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-camel-cashmere-sweater": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single camel cashmere crew-neck sweater. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.197Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-emerald-satin-camisole": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single emerald green satin camisole with thin straps. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.198Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-ruffled-chiffon-blouse": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single blush pink chiffon blouse with ruffled neckline and long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.200Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-olive-utility-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single olive green cotton utility shirt with chest pockets. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.201Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-ivory-knit-tank": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single ivory fine-rib knit tank top. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.203Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-burgundy-turtleneck": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single burgundy merino wool turtleneck sweater. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.204Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-leopard-print-blouse": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single leopard print satin blouse with long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.206Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-linen-button-up-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single white linen button-up shirt, relaxed fit, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.207Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-sage-cropped-cardigan": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single sage green cropped knit cardigan with pearl buttons. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.209Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-sequin-top": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single black sequin shell top, sleeveless. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.211Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-tailored-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's black tailored straight-leg trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.213Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-cream-wide-leg-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's cream wide-leg pleated trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.214Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-mid-blue-straight-jeans": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's mid-blue straight-leg denim jeans, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.223Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-skinny-jeans": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's black skinny denim jeans, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.224Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-camel-pleated-midi-skirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single camel pleated midi skirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.226Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-leather-mini-skirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single black faux-leather mini skirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.227Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-floral-wrap-skirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single navy wrap midi skirt with a small white floral print. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.228Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-olive-cargo-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's olive green cargo trousers with side pockets, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.229Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-linen-shorts": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's sand beige linen shorts. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.231Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-emerald-velvet-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's emerald green velvet straight trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.232Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-ivory-tailored-blazer": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's ivory double-breasted tailored blazer. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.233Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-check-wool-blazer": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's brown and cream check wool blazer. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.235Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-trouser-suit": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's black two-piece trouser suit, jacket and trousers laid flat together. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.236Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-emerald-pantsuit": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's emerald green two-piece pantsuit, jacket and wide-leg trousers laid flat together. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.238Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-camel-wool-coat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's camel wool wrap coat, knee length. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.239Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-leather-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's black leather biker jacket. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.240Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-light-denim-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's light blue denim jacket. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.242Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-navy-puffer-coat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's navy quilted puffer coat, hip length, with a hood. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.243Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-grey-long-cardigan": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's heather grey long knit cardigan. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.246Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-stiletto-pumps": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of black patent leather stiletto pumps with a 10 cm heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.248Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-gold-strappy-sandals": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of gold strappy high-heel sandals with a 9 cm heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.249Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-silver-low-heel-sandals": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of silver low block-heel strappy sandals with a 3 cm heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.250Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-tan-leather-loafers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of women's tan leather penny loafers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.251Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-ballet-flats": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of black leather ballet flats. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.252Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-ankle-boots": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of women's black leather ankle boots with a 5 cm block heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.253Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-emerald-velvet-mules": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of emerald green velvet mules with a 5 cm kitten heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.255Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-cognac-knee-boots": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of cognac leather knee-high boots with a 4 cm heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.256Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-nude-slingback-flats": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of nude leather pointed slingback flats. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.257Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-raffia-espadrilles": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of natural raffia flat espadrilles. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.258Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-platform-heels": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of black suede platform heels with a 12 cm heel. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.259Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-blush-wedge-sandals": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of blush pink wedge sandals with a 7 cm wedge. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.260Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-gold-clutch": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single small gold metallic evening clutch. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.262Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-black-crossbody-bag": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single small black leather crossbody bag. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.263Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-woven-straw-basket-bag": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single woven straw basket bag with leather handles. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.264Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-emerald-satin-clutch": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single emerald green satin evening clutch. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.266Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-cream-shoulder-bag": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single cream leather shoulder bag with a short strap. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.267Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-pearl-drop-earrings": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of pearl drop earrings. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.268Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-gold-hoop-earrings": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of small gold hoop earrings. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.268Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-silk-print-scarf": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single silk square scarf with a navy and rust geometric print, folded. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.270Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-tan-leather-belt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's tan leather belt with a gold buckle, coiled. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.271Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-wide-brim-sun-hat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single natural straw wide-brim sun hat. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.273Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-grey-wool-scarf": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single heather grey wool scarf, folded. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.274Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-white-dress-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's crisp white cotton dress shirt, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.275Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-pale-pink-dress-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's pale pink cotton dress shirt, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.276Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-linen-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy linen shirt, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.278Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-green-flannel-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's forest green and navy check flannel shirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.279Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-floral-short-sleeve-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy short-sleeve camp collar shirt with a white floral print. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.281Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-white-crew-tee": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's plain white cotton crew-neck t-shirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.282Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-polo-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy pique polo shirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.283Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-charcoal-merino-sweater": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's charcoal grey merino crew-neck sweater. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.285Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-oatmeal-quarter-zip": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's oatmeal knit quarter-zip sweater. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.287Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-cable-cardigan": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy cable-knit cardigan. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.288Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-turtleneck": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black fine-knit turtleneck sweater. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.290Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-olive-henley": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's olive green long-sleeve henley shirt. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.291Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-dress-shirt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black cotton dress shirt, long sleeves. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.292Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-chinos": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy cotton chino trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.293Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-charcoal-wool-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's charcoal grey wool dress trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.295Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-dark-indigo-jeans": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's dark indigo straight denim jeans, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.297Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-slim-jeans": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black slim denim jeans, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.299Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-olive-cargo-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's olive green cargo trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.300Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-chino-shorts": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy chino shorts. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.301Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-stone-linen-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's stone beige linen drawstring trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.303Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-grey-check-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's grey Prince of Wales check wool trousers, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.304Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-tuxedo-trousers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black tuxedo trousers with a satin side stripe, folded neatly. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.306Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-charcoal-two-piece-suit": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's charcoal grey wool two-piece suit, jacket and trousers laid flat together. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.307Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-two-piece-suit": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy wool two-piece suit, jacket and trousers laid flat together. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.309Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-light-grey-summer-suit": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's light grey linen-blend two-piece suit, jacket and trousers laid flat together. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.310Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-tuxedo-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black tuxedo jacket with satin peak lapels. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.312Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-blazer": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy wool blazer with two buttons. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.313Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-tweed-blazer": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's brown herringbone tweed blazer. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.315Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-burgundy-velvet-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's burgundy velvet dinner jacket with shawl lapels. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.317Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-camel-overcoat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's camel wool overcoat, knee length. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.318Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-pea-coat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy wool double-breasted pea coat. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.319Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-suede-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's brown suede trucker jacket. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.321Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-bomber-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black nylon bomber jacket. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.322Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-olive-field-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's olive green cotton field jacket with four pockets. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.324Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-beige-trench-coat": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's beige belted trench coat. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.325Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-rain-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's navy lightweight hooded rain jacket. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.326Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-light-denim-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's light blue denim jacket. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.328Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-leather-brogues": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's brown leather brogue shoes. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.329Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-oxford-shoes": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's black polished leather oxford shoes. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.330Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-tan-suede-loafers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's tan suede loafers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.332Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-white-leather-sneakers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's plain white leather low-top sneakers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.333Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-chelsea-boots": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's brown suede chelsea boots. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.334Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-chelsea-boots": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's black leather chelsea boots. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.336Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-canvas-sneakers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's navy canvas low-top sneakers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.337Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-patent-dress-shoes": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's black patent leather dress shoes. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.339Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-leather-sandals": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's brown leather slide sandals. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.340Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-grey-running-sneakers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's grey mesh running sneakers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.341Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-burgundy-penny-loafers": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's burgundy leather penny loafers. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.342Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-desert-boots": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single pair of men's sand beige suede desert boots. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.346Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-leather-briefcase": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single brown leather briefcase. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.352Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-canvas-backpack": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single navy canvas backpack with leather trim. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.354Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-leather-weekender": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single black leather weekender bag. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.356Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-silk-tie": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single navy silk tie, rolled. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.357Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-burgundy-patterned-tie": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single burgundy silk tie with a small navy pattern, rolled. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.360Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-bow-tie": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single black silk bow tie. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.361Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-brown-leather-belt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's brown leather belt with a silver buckle, coiled. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.362Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-black-leather-belt": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's black leather belt with a silver buckle, coiled. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.364Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-white-pocket-square": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single white linen pocket square, folded. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.366Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-silver-watch": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single men's silver wristwatch with a white dial and steel bracelet, no logo. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.367Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-grey-wool-beanie": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single heather grey knit wool beanie. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.369Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "m-navy-wool-scarf": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single navy wool scarf, folded. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.370Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ },
+ "w-cream-boucle-jacket": {
+  "generator": "OpenAI",
+  "model": "gpt-image-2",
+  "quality": "medium",
+  "prompt": "Studio product photo of a single women's cream bouclé cropped jacket with no collar. Clean e-commerce catalog style: the item alone, centered, fully in frame, shown front-on or at a gentle three-quarter angle. Plain warm light-grey seamless background (#ECEEEC), soft even studio lighting, a faint natural shadow beneath. No person, no mannequin, no hanger, no props, no text, no logos, no brand marks, no labels. Photorealistic, true-to-life color and fabric texture, sharp focus.",
+  "created_at": "2026-10-20T07:38:55.245Z",
+  "output_tokens": 1756,
+  "batch": "batch_6ad718aa84588190a06ef7541815947d",
+  "review": {
+   "verdict": "approved",
+   "reasons": [],
+   "note": "",
+   "by": "Sabine",
+   "at": "2026-10-20T08:05:10.188Z"
+  }
+ }
+}

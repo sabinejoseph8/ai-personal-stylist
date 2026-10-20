@@ -41,7 +41,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: "/((?!_next/static|_next/image|favicon.ico).*)",
+      // Static files skip it: the sign-in check isn't needed for a catalog photo.
+      source: "/((?!_next/static|_next/image|favicon.ico|catalog/).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },
