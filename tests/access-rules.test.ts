@@ -17,9 +17,10 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     // Sessions are the app's own record: only the server creates them (decision A).
     const s = await serverDb().from("sessions").insert({ user_id: a.id }).select("id").single().throwOnError();
     sessionId = s.data!.id;
-    const n = await a.db
+    // Notes are the app's own record too (2c): only the server writes them.
+    const n = await serverDb()
       .from("session_notes")
-      .insert({ session_id: sessionId, note_text: "Budget: up to $500", kind: "budget" })
+      .insert({ user_id: a.id, session_id: sessionId, note_text: "Budget: up to $500", kind: "budget" })
       .select("id")
       .single()
       .throwOnError();

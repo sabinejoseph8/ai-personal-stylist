@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.8
+**Status:** Living document, version 1.9
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.1, tech spec 1.11 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.1, tech spec 1.12 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -85,10 +85,10 @@ The tech spec's risk table has the full detail. This list tracks status.
 | # | Risk | Handled in | Status |
 |---|---|---|---|
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
-| 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 | Open: accurate on Haiku 5.5, but 75 to 90% within 2 seconds. Closed in Phase 2 with the target unchanged |
+| 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 (2c) | Met in the 2c eval with your option 3: 97 to 99% of notes within 2 seconds, 96 to 99% right, target unchanged. The eval leaves out the phone's connection and the database, so the 2c iPhone check confirms it |
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
 | 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on) |
-| 5 | Late updates overwrite newer choices | Phase 2 (2c) | Open |
+| 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. The item to style around, feedback and looks follow the same pattern as they're built |
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
@@ -111,7 +111,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | GPT-Live costs $0.05 a minute and needs a paid OpenAI account | OpenAI's model page, 17 Oct 2026 | Phase 0 |
 | GPT-Live sends live words that the notes reader can use | Confirmed in 0e (session.input_transcript.delta) | Closed |
 | Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens; Haiku 5.5 costs $0.10 and $0.50 | Anthropic's model table, Oct 2026 | Phase 0 costs |
-| A full demo uses about $1.10 of AI with Opus 5.5 for every job | Tech spec section 9 estimate | Measured in 0f: about $0.05 for notes and camera on Haiku 5.5. With looks and checks on Opus, about $0.35. Looks and checks get measured in Phase 4 |
+| A full demo uses about $1.10 of AI with Opus 5.5 for every job | Tech spec section 9 estimate | Measured in 0f: about $0.05 for notes and camera on Haiku 5.5. With looks and checks on Opus, about $0.35. Notes sent twice a second (2c) bring it to about $0.45. Looks and checks get measured in Phase 4 |
 | Supabase pauses free projects after 7 days without activity, and a daily job prevents it | Third-party pricing guides | No longer applies: the project is on Sabine's Pro organization (20 Oct 2026) |
 | Vercel's free Hobby plan allows this personal, non-commercial portfolio project | Vercel's Hobby plan docs (checked 18 Oct 2026): personal, non-commercial use only, which fits a portfolio project with no money-making. Hobby also limits functions to 5 minutes and keeps runtime logs for 1 hour | Checked in 0b |
 | About 150 sample products are enough for three different looks for common occasions | Estimate | Phase 1 (1e) and Phase 4 |
@@ -124,6 +124,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 2c, note speed: option 3. The notes reader runs Haiku 5.5 with thinking off, readings overlap, and words are sent about twice a second. It was the only setup tested that met R17. The agreed setup (low effort, once a second, one reading at a time) got 35 to 57% within 2 seconds. Notes cost about 14 cents a demo instead of about 6 | Sabine | tech spec 1.12 |
+| 20 Oct 2026 | 2c plan: a clear voice correction keeps the note's status, so a confirmed budget stays confirmed when changed to $350 (Q1). At most 12 notes a session, saved preferences not counted, with one place kept for the budget (Q2) | Sabine | tech spec 1.12, core/notes/merge.ts |
 | 20 Oct 2026 | 2b: the stage shows only controls that work. Camera joins in Phase 3 and Voice only (with More on phones) in 6c, instead of disabled buttons that do nothing | Sabine | progress.md (2b) |
 | 20 Oct 2026 | 2b: the three tap-to-try phrases are the wedding example (R18), a job interview next week (smart but comfortable, under $300) and a friend's birthday dinner on Saturday (relaxed, nothing too bright) | Sabine | lib/sample-phrases.ts |
 | 20 Oct 2026 | 2b: the phones' pinned bar (a live circle of the stylist, Mute and the notes count) is built in 2d with the notebook, since it shows the notes count | Sabine | progress.md (2d) |
@@ -190,6 +192,7 @@ Filled in during task group 0f.
 | Live notes on Sonnet 5.5 (extra run you asked for) | 95% within 2 seconds | Fail on speed: 53% within 2 seconds (95th percentile 3.1 s, each call about 1.7 s). Pass on accuracy: all 30 notes right, including R18 and the $350 correction. Cost $0.37 for the 11 test sentences | 18 Oct 2026 | Same prompt and settings. Rough estimate: about $1.35 of notes per demo |
 | GPT-Live live words | Available | Pass. The shopper's words arrive while they speak (session.input_transcript.delta). Sending notes mid-call (session.thinking.append), talking over the stylist and the scripted switch line (session.instructions.append) all worked | 19 Oct 2026 | Sabine on her iPhone. The session must use delegation type "client", because OpenAI rejects null |
 | Camera naming time | A few seconds | Pass. Haiku 5.5: about 1 second (0.7 to 1.3 s). Opus 5.5: about 1.5 to 2 seconds (up to 3.2 s). Accuracy needs work on both: Sabine showed an avocado earbud case, a camo Herschel pouch and a black quilted tote bag, and both models sometimes called the quilted tote a "quilted jacket" that wasn't there. Haiku also once called the tote brown and once replied in a full sentence. Opus wobbled between charcoal and dark gray | 18 Oct 2026 | One frame every 2 seconds, 640 px, low effort, iPhone back camera. Rough cost for 2 minutes of camera: under 1 cent on Haiku, about 18 cents on Opus. Phase 3 needs the R28 confirm step, plus a rule to only name an item after the same answer on two frames in a row |
+| Live notes in the app (2c), the 30-sentence eval | 95% within 2 seconds, at least 90% right | Five setups compared (each run about 4 to 10 cents). The agreed setup (Haiku 5.5 at low effort, words once a second, one reading at a time): 94 to 100% right, but only 35 to 57% within 2 seconds. About half of each reading was Claude thinking before it answered. With thinking off, readings overlapping and words twice a second (option 3): **96 to 99% right, 97 to 99% within 2 seconds over three runs, pass** (95th percentile 1.9 seconds) | 20 Oct 2026 | Thinking off at first repeated notes and inked notes nobody confirmed, so two code rules were added: repeated notes fold into one, and ink by voice only answers the stylist. Running setups side by side slowed Claude, so the final runs were one at a time |
 | A second Tavus call during the first | Behavior understood | Refused within 2 seconds: HTTP 400, "User has reached maximum concurrent conversations" | 18 Oct 2026 | Phase 6 can catch this exact error and switch to voice only |
 | iPhone Safari and laptop (Android dropped for v1) | All work | Pass: the microphone prompt, sound after a tap, video and the iPhone's back camera all worked | 19 Oct 2026 | On the /test/demo page |
 | AI cost per demo | About $1.10 or less | Pass. Three 10-minute demos on /test/demo (video, jotted notes on improved Haiku 5.5, camera): Claude cost $0.049, $0.050 and $0.060 for notes and camera, about $0.05 a demo. Video used 10.1 minutes each (30.3 of the 120 Starter minutes, about $1.84 of the plan per demo). OpenAI: none, because voice only wasn't needed. Looks and checks aren't built yet; the tech spec estimates about $0.30 for them, so the full AI cost should be about $0.35 a demo | 19 Oct 2026 | Notes quality to tune in Phase 2: demos jotted 16 to 22 notes, some wordy or not really preferences ("Skiing is top priority", "Denim at black-tie party?"). A note cap, merging and a no-questions rule are needed. Confirmations held after the 19 Oct fix (4 confirmed in demo 3) |
@@ -314,6 +317,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.9 (20 Oct 2026):** 2c: your option 3 for note speed and the Q1 and Q2 answers, the notes eval results, risk 2 met in the eval, risk 5 handled for notes, and the per-demo cost at about $0.45.
 - **1.8 (20 Oct 2026):** 2b decisions: only working controls, the three sample phrases, the pinned bar moved to 2d, and the controls under the stage.
 - **1.7 (20 Oct 2026):** 2a decisions (the engines in 2a, and no conversation when video is unavailable until 6c), and the first measured video start in the app.
 - **1.6 (20 Oct 2026):** The Phase 1 code review: 13 findings, 11 fixed, decisions A and B, and the setup bug from your iPhone check.

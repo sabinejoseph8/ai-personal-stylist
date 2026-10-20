@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.11 (20 Oct 2026)
+**Status:** Agreed, version 1.12 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -56,10 +56,10 @@
 ### 1.2 How a spoken turn flows (video mode)
 
 1. The shopper talks. Tavus hears it and streams the words to the browser while the shopper is still speaking (**conversation.utterance.streaming**, which covers both the shopper and the stylist).
-2. The browser sends new words to the server about once a second, with the note versions it has seen.
-3. The notes and feedback reader turns the words into short jotted notes in the stylist's words, for example "Budget: up to $500", each with a status (To confirm or Confirmed) and a source. Behind each note it keeps the hidden details that looks and checks need, for example a budget maximum of 500 US dollars.
-4. The server applies the "latest word wins" rules (section 5), saves the notes with a new version number, and returns them. The browser inks them in.
-5. The server also works out the next useful question (for example "Outfit type: dress or pantsuit?"). The browser shows it as quick replies and passes the notes and the question to Tavus as context, so the stylist knows what to say next.
+2. The browser sends the turn's words so far to the server about twice a second (your option 3 in 2c), and once more when the turn ends.
+3. Plain code reads money and dates at once, and the server streams that update back straight away. Then Claude's notes reader turns the words into short jotted notes in the stylist's words, for example "Outdoor wedding, November", each with a status (To confirm or Confirmed) and a source. Behind each note it keeps the hidden details that looks and checks need, for example month=november and setting=outdoor. Each send starts its own reading, so readings overlap.
+4. The server merges each reading's changes with the "latest word wins" rules (section 5), saves the notes with a new version number, and streams them back. The browser shows the newest version it has.
+5. The reader also gives the next useful question (for example "Dress or pantsuit?"). The browser shows it as quick replies, and the server passes the notes and the question to Tavus as context, so the stylist knows what to say next. A question stays until a reading of a later turn replaces it, because Claude sometimes leaves it out of one reading.
 6. When the occasion and any firm requirements are confirmed (R39), the server starts building looks.
 
 ### 1.3 How a look reaches the screen
@@ -119,8 +119,8 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **profiles** | One row per guest | departments, style words, sizes, default budget (amount, currency, meaning), last active time | Until deleted, or 7 days without use |
 | **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule (for example heel height over 5 cm), version | Same as profile |
 | **consents** | Separate permissions (R64) | wardrobe photos, remember preferences, camera explained, with times | Same as profile |
-| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile. At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle, then the row is closed |
-| **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, budget, other and so on), hidden details for looks and checks, status, confidence, source, source turn, update time, version, removed | Deleted when the session ends (R63) |
+| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, and the words sequence (one number per send of words, for latest word wins). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle, then the row is closed |
+| **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, colors, style, budget, outfit, owned item, fit, other), hidden details for looks and checks, status, source (voice or touch), the words sequence that last changed it, created and update times, version, removed. At most 12 per session, saved preferences not counted (your answer to Q2 in 2c). Read-only for guests: the server saves them through **save_notes**, which only saves if nothing else saved in between (decision A, done in 2c) | Deleted when the session ends (R63) |
 | **session_feedback** | Likes, Dislikes, Requested changes, Items to keep | look, item or attribute, scope, status, source, version | Deleted when the session ends |
 | **session_exceptions** | "This session only" permissions | saved preference, confirmed time | Deleted when the session ends |
 | **session_assets** | Items to style around | private photo path, thumbnail path, source (upload or camera), recognized details, ownership, active flag, version | Deleted when the session ends, unless saved to the wardrobe |
@@ -146,8 +146,8 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **POST /api/sessions** | Start conversation: picks up the guest's open session or opens one (5 starts an hour), reserves their time with the budget guard, and starts the call with that time as its longest length. Returns the call's join link only. Until voice only arrives (6c), if video is unavailable (another visitor, or the month's minutes used) it says so and the conversation doesn't start (your decision, 2a). |
 | **POST /api/sessions/:id/voice** | Exchanges the browser's connection offer with OpenAI for GPT-Live. The OpenAI key never reaches the browser. |
 | **POST /api/sessions/:id/end** | End: ends the call, hard-deletes the Tavus conversation and gives back the reserved time the call didn't use. With keep: true (the call stopped by itself, or the shopper left the page) the session pauses and can be resumed for 30 minutes. Deleting session-only data comes in 2e. |
-| **POST /api/sessions/:id/words** | New words heard. Returns note and feedback updates, the next question and new versions. |
-| **PATCH /api/sessions/:id/notes/:noteId** | Confirm or remove a note by touch (R20). |
+| **POST /api/sessions/:id/words** | New words heard: the turn's words so far, what the stylist last said, whether the turn has ended, and the question on screen from this turn. Streams one line of JSON per update: first the plain-code money and dates, then the notes after Claude's reading, with the next question and the stylist's context. Feedback updates come in Phase 5. |
+| **PATCH /api/sessions/:id/notes/:noteId** | Confirm, remove or restore (Undo) a note by touch (R20). |
 | **POST /api/sessions/:id/assets** | Upload a photo or a captured still. Returns the asset ID at once, then recognition runs. |
 | **POST /api/sessions/:id/camera-frame** | One small camera frame for live recognition (R34). The frame is read and thrown away. |
 | **POST /api/sessions/:id/looks** | Build looks. Also swap, refine, restore and compare actions on a look. |
@@ -187,7 +187,7 @@ Each job has its own prompt, a strict output shape (structured outputs, because 
 
 | Job | Input | Output | Default model and effort |
 |---|---|---|---|
-| Notes and feedback reader | New words, current notes with their ids, removed notes, the visible look | Short jotted notes in the stylist's words, each with an id, a status and confidence, plus the hidden details looks and checks need | Haiku 5.5, low, with plain code for money and dates |
+| Notes and feedback reader | New words, what the stylist last said, current notes with short ids, removed notes, the visible look (Phase 4) | Only the changes: notes to add, update (by id) and remove, each with a status and the hidden details looks and checks need, plus the next question with up to 3 options | Haiku 5.5 with thinking off (your option 3 in 2c), with plain code for money and dates |
 | Camera reader | One small frame | Is one item clearly shown? If so, type, colors, pattern. An item is named only after two frames in a row agree, and the shopper confirms it | Haiku 5.5, low |
 | Photo reader | One photo | Items found, details with confidence | Opus 5.5, low |
 | Looks builder | Filtered products, notes, anchor, feedback | Up to 5 candidate looks by product ID, each with a reason | Opus 5.5, medium |
@@ -196,6 +196,12 @@ Each job has its own prompt, a strict output shape (structured outputs, because 
 | Preference rule maker | The shopper's words, such as "no high heels" | A structured rule, such as heel height over 5 cm, shown to the shopper to confirm | Opus 5.5, low |
 
 Shared settings: stable prompt parts are cached to cut cost, answers come back as structured output, and refusals use Anthropic's built-in fallback option.
+
+**The notes reader as built (2c).** The files are **core/notes/** (the reader, merge rules and plain code) and **connectors/ai/claude.ts**.
+- Its answer uses short keys (k, t, s, d, i, q) to keep it small.
+- Claude never jots budgets (plain code does), and it can't change or remove the budget note.
+- A note turns to ink by voice only when it answers something the stylist said.
+- Thinking is off, because in the 2c tests it took about half of each reading's time without making the notes better.
 
 ## 5. System patterns
 
@@ -206,6 +212,10 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 3. **Outside services sit behind connectors.** Conversation, AI, catalog and storage can each be swapped without touching the core.
 4. **One source of truth.** The server's session state decides everything. The stylist engines only listen and speak.
 5. **Versions on everything, newest wins.** Notes, feedback, the item to style around and the profile each carry a version number. Every request says which versions it was based on, and the server drops results built on old versions. A spoken correction, or a note confirmed or removed by touch, always beats a later-arriving update from earlier speech. This covers R22, R48, R52 and R58.
+   - For notes (2c, **core/notes/merge.ts**), each send of words gets the next words sequence number, and a reading may only change a note that nothing newer has changed. A touch is stamped with the current sequence, so it beats every reading of words heard before it.
+   - A reading never drops a confirmed note, and a removed note never comes back from older words or after a touch.
+   - Because readings overlap, the merge also folds repeated notes together: "November" next to "Outdoor wedding, November", or the same idea jotted by two readings at once. The newer words win.
+   - Saving uses the notebook's version as a check, and tries again if another reading saved first.
 6. **One publishing gate.** A look reaches the screen or the bag through a single function. That function requires a passing check of that exact look against the current versions (FR-30). Rules run in code first: budget, Never and Must have rules, colors to avoid, outfit type, kept items and the owned item. A missing required detail is a fail. Claude then judges only subjective fit, and any uncertainty becomes "needs clarification".
 7. **Code for facts, AI for language and taste.** Money, totals, dates, filters and firm rules are plain code. AI answers are always shape-checked before use.
 8. **Degrade, never break.** Video falls back to voice only. If voice drops, the conversation pauses and reconnects, and notes and looks stay on screen. A failed check holds the look. A failed notes reader pauses notes while confirming and removing notes by touch keeps working.
@@ -225,7 +235,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 ### Access
 - Database access rules on every table: a guest can only read and change their own rows.
 - A row that points at a session, look, saved preference or check result must point at one of the same guest's. Two-column foreign keys (the id plus the guest) enforce it in the database (Phase 1 code review).
-- From Phase 2, the records only the app should change (session state, looks, check results and the bag) are read-only for guests. The server writes them with the server key, after checking the session belongs to the guest, so nobody can mark a look as passed or fill the bag without the check by calling the database directly (your decision, Phase 1 code review, 20 Oct 2026). Guests keep write access to what they change themselves, such as their profile and saved preferences.
+- From Phase 2, the records only the app should change (session state, notes, looks, check results and the bag) are read-only for guests. The server writes them with the server key, after checking the session belongs to the guest, so nobody can mark a look as passed or fill the bag without the check by calling the database directly (your decision, Phase 1 code review, 20 Oct 2026). Guests keep write access to what they change themselves, such as their profile and saved preferences.
 - Photo storage is split into one private folder per guest, with the same rule.
 - The server key that bypasses those rules is used only by the budget guard's usage records (decided 20 Oct 2026, so visitors can't fake or inflate usage), the app's own records from Phase 2 (above), scheduled jobs, account deletion, and automated tests that create test guests (decided 20 Oct 2026, because bot protection blocks normal sign-in in tests). It lives in **lib/supabase/admin.ts** and never reaches the browser. The guard's database functions can only be run with it.
 
@@ -245,7 +255,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Building looks: 20 per guest per hour.
 
 ### Cost limits
-- Per guest per day: 10 minutes of conversation, all with video when it is available (R13), and $1 of AI (a full demo uses about $0.35).
+- Per guest per day: 10 minutes of conversation, all with video when it is available (R13), and $1 of AI (a full demo uses about $0.45).
 - Tavus: each call is created with **max_call_duration** set to the guest's remaining conversation time, and **participant_left_timeout** of 30 seconds, so an abandoned call stops at once. The Tavus plan's own minute cap is the final backstop.
 - Per month, for the whole demo: 110 minutes of video (Tavus Starter has 120; 10 are kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit ($15 and $5), so the app stops politely before a provider refuses.
 - Days and months are counted in UTC (8 pm in New York). Each limit is a Vercel setting: **BUDGET_DAILY_CONVERSATION_MINUTES**, **BUDGET_DAILY_AI_USD**, **BUDGET_MONTHLY_VIDEO_MINUTES**, **BUDGET_MONTHLY_CLAUDE_USD** and **BUDGET_MONTHLY_OPENAI_USD**, with the values above as defaults (your decision, 20 Oct 2026).
@@ -280,7 +290,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - **Unit tests** for the rules that must never break: latest word wins, version checks, budget parsing ("under 350", "between 200 and 300"), totals without owned items, preference rules, and the publishing gate.
 - **Contract tests:** the same suite runs against every catalog connector (PRD D19) and every conversation engine, using a fake engine that plays scripted conversations.
 - **AI evals:** saved sets of examples with expected answers, run on every prompt or model change. They track pass rate, speed and cost.
-  - Notes: about 30 utterances, including the wedding example (R18), corrections, unclear speech and long turns.
+  - Notes: 30 utterances, including the wedding example (R18), corrections, unclear speech and long turns (**tests/evals/notes-cases.json**, run with **npm run eval:notes**, about 10 cents). It replays each sentence at 2.5 words a second with the app's sending and merging. It checks the notes, repeated notes, wrong ink and the question, and times each note from its phrase. In 2c it scored 96 to 99% right, with 97 to 99% of notes within 2 seconds.
   - Checker: about 30 looks, including high heels with "Never: high heels", budget edges, and a missing heel height.
   - Photos: about 20 sample photos with known details.
 - **End-to-end tests** with Playwright on phone and desktop sizes. The fake engine replaces live voice, so tests are free and repeatable. They cover the success checks that do not need a real voice (S4 to S20).
@@ -298,11 +308,11 @@ Estimates behind the TQ2 budget, with what Phase 0 measured in three 10-minute d
 |---|---|---|
 | Tavus video, 10 minutes | Comes out of the plan's included minutes | Same |
 | OpenAI voice only | Nothing, unless video fails or is busy ($0.05 a minute) | Same |
-| Claude: reading notes and feedback | About $0.60 (Phase 0 measured closer to $2.70) | Measured: about $0.05 for notes and camera together |
+| Claude: reading notes and feedback | About $0.60 (Phase 0 measured closer to $2.70) | Phase 0 measured about $0.05 for notes and camera together. With your option 3 in 2c (words twice a second), notes alone are about $0.14, if the shopper talks for 5 of the 10 minutes |
 | Claude: camera and photo | About $0.15 | Included above, plus a few cents for a photo on Opus |
 | Claude: looks and checks | About $0.30 | About $0.30 |
 | Claude: voice-only facts | About $0.05, only in voice only | Same |
-| **Per demo, apart from the Tavus plan** | **About $1.10** | **About $0.35** (looks and checks still to be measured in Phase 4) |
+| **Per demo, apart from the Tavus plan** | **About $1.10** | **About $0.45** (looks and checks still to be measured in Phase 4) |
 
 Fixed monthly costs: the Tavus plan ($22) and the Supabase project (about $10). Vercel stays free at this scale. GPT-Live needs a paid OpenAI account, which means a small prepaid credit, because the free tier doesn't support it.
 
@@ -349,6 +359,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
 | 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A). Now about $50, with the Supabase project ($10) from 20 Oct 2026 | Your decision |
+| 20 Oct 2026 | 2c, note speed (option 3): the notes reader runs Haiku 5.5 with thinking off, readings overlap, and words are sent about twice a second, within the existing limit of 2 a second. It's the only setup tested that meets R17 (97 to 99% of notes within 2 seconds, 96 to 99% right). Notes cost about 14 cents a demo instead of about 6. Also from the 2c plan: a clear voice correction keeps the note's status (Q1), and at most 12 notes a session, saved preferences not counted (Q2) | Your decision |
 | 20 Oct 2026 | One Supabase project in your Pro organization ($10 a month), shared by development and the live site until launch, instead of two free projects. Your organization was already on Pro, where each project costs about $10 | Your decision |
 | 19 Oct 2026 | Phase 0 gate (0g): video passed and stays on for the whole conversation; GPT-Live passed, with the quartz voice; cost passed at about $0.35 of AI per demo. Live notes are accurate but below the 95%-within-2-seconds target, so the gap is closed in Phase 2 with the target unchanged. TQ3: Haiku 5.5 for live notes and the camera, Opus 5.5 for the rest. Stock face TQ5: Anna - Casual | Your decision |
 | 19 Oct 2026 | Product spec 1.4: no transcript or captions, no typing, a working microphone required, and free-form jotted notes. The connector has two engines, and the notes reader writes jotted notes plus hidden details | Your decision |
@@ -366,6 +377,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.12 (20 Oct 2026):** 2c: the notes reader as built. Words twice a second with overlapping readings, Haiku 5.5 with thinking off (your option 3), notes saved only by the server, the words sequence and merge rules, the words and notes endpoints, and the notes eval.
 - **1.11 (20 Oct 2026):** 2b: the connector's microphone event, and the stage's state worked out from the events in one tested rule set (lib/stage.ts). The microphone is checked before the server starts a call, so a blocked microphone never uses Tavus minutes.
 - **1.10 (20 Oct 2026):** 2a: the conversation connector's files and fake engine, Start conversation and End as built, server-owned sessions with the call and its reserved time, and your answer that, until 6c, the conversation doesn't start when video is unavailable.
 - **1.9 (20 Oct 2026):** System pattern 11, screens start from saved data, after your iPhone check found setup showing and saving old answers.

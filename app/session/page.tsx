@@ -27,11 +27,22 @@ export default async function SessionPage() {
   const budget = describeBudget(profile.budget);
   // Within 30 minutes, the shopper can carry on the same session (R12).
   const resumable = open.data && !isIdle(open.data.last_activity_at) ? open.data.id : null;
+  // A resumed session keeps its notes (guests can read their own).
+  const notes = resumable
+    ? ((
+        await guest.db
+          .from("session_notes")
+          .select("id, kind, text:note_text, status")
+          .eq("session_id", resumable)
+          .eq("removed", false)
+          .order("created_at")
+      ).data ?? [])
+    : [];
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:px-6 desktop:grid desktop:max-w-5xl desktop:grid-cols-[320px_minmax(0,440px)] desktop:items-start desktop:gap-x-12 desktop:px-8">
       <h1 className="type-title m-0 desktop:col-span-2">Your styling session</h1>
-      <StylistStage openSessionId={resumable} />
+      <StylistStage openSessionId={resumable} initialNotes={notes} />
       <div className="flex flex-col gap-6">
         <p className="type-body m-0 text-graphite">Here&apos;s what your stylist already knows about you.</p>
         <NotebookPage title="Your saved preferences">
