@@ -1,11 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/public-config";
 import { GUEST_COOKIE } from "@/lib/supabase/cookies";
 import { contentSecurityPolicy, isPhase0TestPage, permissionsPolicy } from "@/lib/security-headers";
 
-// Runs before every page: keeps the guest's sign-in fresh and adds the browser protections.
-export async function proxy(request: NextRequest) {
+// Runs before every page: keeps the guest's sign-in fresh, marks the guest's visit, and adds the browser protections.
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const local = ["localhost", "127.0.0.1"].includes(request.nextUrl.hostname);
   const csp = contentSecurityPolicy(nonce, process.env.NODE_ENV === "development", local);
@@ -29,7 +29,13 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  await db.auth.getClaims();
+  const { data } = await db.auth.getClaims();
+
+  // A visit keeps the guest from being deleted after 7 days without use (R3). The database writes
+  // at most once an hour, and the page doesn't wait for it.
+  if (data?.claims?.sub && request.method === "GET" && request.headers.get("accept")?.includes("text/html")) {
+    event.waitUntil(Promise.resolve(db.rpc("touch_last_active")).then(() => undefined, () => undefined));
+  }
 
   if (!isPhase0TestPage(path)) response.headers.set("Content-Security-Policy", csp);
   response.headers.set("Permissions-Policy", permissionsPolicy(path));
