@@ -69,7 +69,13 @@ export function createTavusEngine(): ConversationEngine {
         ended = true;
         emit({ type: "connection", state: "ended" });
       });
-      call.on("error", (e) => emit({ type: "error", message: e?.errorMsg ?? "call_error" }));
+      // Daily's "error" is fatal: the call is over, so the app treats it as a dropped call (R14).
+      call.on("error", (e) => {
+        emit({ type: "error", message: e?.errorMsg ?? "call_error" });
+        if (ended) return;
+        ended = true;
+        emit({ type: "connection", state: "ended" });
+      });
       // Daily reports microphone trouble as a "camera" error (R6). Video is off, so it's the microphone.
       call.on("camera-error", (e) => {
         const kind = e?.error?.type;
@@ -81,7 +87,16 @@ export function createTavusEngine(): ConversationEngine {
         if (!blocked) return;
         emit({ type: "microphone", problem: blocked.byPermissions ? "blocked" : blocked.byDeviceMissing ? "missing" : "failed" });
       });
-      await call.join({ url: target.joinUrl });
+      try {
+        await call.join({ url: target.joinUrl });
+      } catch (e) {
+        // Daily allows one call per page: a call that couldn't join is destroyed, or every later
+        // try would fail too (Phase 2 review).
+        const failed = call;
+        call = null;
+        await failed?.destroy().catch(() => undefined);
+        throw e;
+      }
       emit({ type: "connection", state: "connected" });
     },
 

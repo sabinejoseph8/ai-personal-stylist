@@ -4,16 +4,16 @@ import { stylistContext } from "@/core/notes/context";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
 import type { NotesReader } from "@/core/notes/reader";
-import { active, type NextQuestion, type Note } from "@/core/notes/types";
+import { active, type NextQuestion, type Note, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
-import { loadNotes, nextWordsSeq, SessionEndedError, saveNotes } from "@/lib/notes-store";
+import { loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
 
 // My Styling Notes on the server (2c): words in, notes out, with latest word wins (R22).
 
 export type NotesDeps = { db: SupabaseClient; guard: BudgetGuard; reader: NotesReader };
 
+export type { ShownNote };
 /** What the browser gets: the notes it shows, never their hidden details. */
-export type ShownNote = { id: string; kind: string; text: string; status: Note["status"] };
 export type NotesUpdate = {
   version: number;
   notes: ShownNote[];
@@ -32,10 +32,11 @@ export type HeardWords = {
   stylistSaid: string;
   final: boolean;
   /**
-   * The question on screen from earlier readings in this turn. Claude sometimes leaves the question out
-   * of one reading, so it stays until a reading of a later turn replaces it (measured in 2c).
+   * The browser's label for the shopper's current turn. Claude sometimes leaves the question out of one
+   * reading, so the session's question stays until a reading of a later turn replaces it (2c). It's
+   * kept on the server, never taken from the browser (Phase 2 review).
    */
-  asked?: NextQuestion;
+  turn?: string;
 };
 
 const shown = (notes: Note[]): ShownNote[] => active(notes).map(({ id, kind, text, status }) => ({ id, kind, text, status }));
@@ -115,7 +116,12 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     return { notes: after.notes, changed: [...new Map([...merged.changed, ...after.changed].map((n) => [n.id, n])).values()] };
   });
   const preferences = await preferencesOf(deps.db, guestId);
-  const question = reading.question ?? heard.asked ?? null;
+  let question = reading.question;
+  if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);
+  else if (heard.turn) {
+    const kept = await loadQuestion(deps.db, sessionId);
+    if (kept.turn === heard.turn) question = kept.question;
+  }
   emit({ version: done.version, notes: shown(done.notes), question, seq, context: stylistContext(done.notes, preferences, question) });
 }
 

@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Note, NoteKind } from "@/core/notes/types";
+import type { NextQuestion, Note, NoteKind } from "@/core/notes/types";
 
 // Reads and saves a session's notes with the server key (notes are the app's own record, decision A).
 
@@ -66,6 +66,20 @@ export class SessionEndedError extends Error {
   constructor() {
     super("the session has ended");
   }
+}
+
+/**
+ * Keeps the next question with the session (R19), unless a reading of newer words already set one. The
+ * turn is the browser's label for the shopper's turn: the question stays while the turn does.
+ */
+export async function saveQuestion(db: SupabaseClient, sessionId: string, seq: number, turn: string, question: NonNullable<NextQuestion>) {
+  await db.from("sessions").update({ question, question_turn: turn, question_seq: seq }).eq("id", sessionId).lt("question_seq", seq).throwOnError();
+}
+
+/** The session's kept question and the turn it belongs to. */
+export async function loadQuestion(db: SupabaseClient, sessionId: string): Promise<{ question: NextQuestion; turn: string | null }> {
+  const { data } = await db.from("sessions").select("question, question_turn").eq("id", sessionId).single().throwOnError();
+  return { question: (data.question as NextQuestion) ?? null, turn: data.question_turn };
 }
 
 /** The sequence number for words that just arrived (R22). */

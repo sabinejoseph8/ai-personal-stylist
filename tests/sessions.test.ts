@@ -90,15 +90,29 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(await row(started.sessionId)).toMatchObject({ status: "ended", call_id: null, reserved_seconds: null });
   });
 
-  it("the daily job's sweep ends every call left behind, and gives back its unused minutes", async () => {
+  it("the daily job's sweep ends every call left behind, counting it until the last activity plus 30 seconds (Sabine's answer to B)", async () => {
     const started = await startConversation(deps(), guest.id);
     if (!started.ok) throw new Error(started.reason);
-    await db.from("sessions").update({ status: "ended", call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+    await db.from("sessions").update({ status: "ended", call_started_at: minutesAgo(20), last_activity_at: minutesAgo(18) }).eq("id", started.sessionId).throwOnError();
     expect(await endLeftBehindCalls(deps(), guest.id)).toBe(1);
     expect(ended).toEqual([started.call.callId]);
     expect(await row(started.sessionId)).toMatchObject({ call_id: null });
-    expect(await usedToday()).toBeLessThan(120);
+    const used = await usedToday(); // 2 minutes of use, plus Tavus's 30 seconds
+    expect(used).toBeGreaterThanOrEqual(145);
+    expect(used).toBeLessThanOrEqual(155);
     expect(await endLeftBehindCalls(deps(), guest.id)).toBe(0);
+  });
+
+  it("two ends of the same call arriving together end it and give its time back only once (Phase 2 review)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    await db.from("sessions").update({ call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    await Promise.all([endConversation(deps(), guest.id, started.sessionId), endConversation(deps(), guest.id, started.sessionId, true)]);
+    expect(ended).toEqual([started.call.callId]);
+    const used = await usedToday();
+    expect(used).toBeGreaterThanOrEqual(60);
+    expect(used).toBeLessThan(70);
   });
 
   it("a call that stops by itself pauses the session, and the next start resumes it", async () => {

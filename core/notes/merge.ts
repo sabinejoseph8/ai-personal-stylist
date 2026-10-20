@@ -1,4 +1,4 @@
-import { active, type Detail, type Note, NOTE_CAP, type NoteChanges, type NoteKind } from "./types";
+import { active, type Detail, type Note, NOTE_CAP, type NoteChanges, type NoteKind, sameDetails } from "./types";
 
 // Latest word wins (R22, tech spec 5, pattern 5). Readings can finish out of order, so each one
 // carries the sequence number its words arrived with, and only changes notes nothing newer has
@@ -14,21 +14,19 @@ const norm = (s: string) =>
 
 // Words that don't tell two notes apart ("Navy, preferred" and "Emerald green, preferred").
 const COMMON = new Set(
-  "a an the and or but not no nothing never too very for with of in on at to my her his their this that some something maybe like likes want wants prefer preferred owns owned own avoid wear wears worn usually".split(
+  "a an the and or but not no nothing never too very for with of in on at to my her his their this that some something maybe like likes want wants prefer prefers preferred owns owned own avoid wear wears worn usually".split(
     " ",
   ),
 );
 const keyWords = (s: string) => norm(s).split(" ").filter((w) => (w.length > 2 || /[0-9]/.test(w)) && !COMMON.has(w));
-const shareWord = (a: string, b: string) => keyWords(a).some((w) => keyWords(b).includes(w));
+/** The two share a describing word, and both say yes or both say no ("Emerald green" isn't "Not green shoes"). */
+export const shareWord = (a: string, b: string) => negative(a) === negative(b) && keyWords(a).some((w) => keyWords(b).includes(w));
 const negative = (s: string) => /\b(not|no|nothing|never|avoid)\b/.test(norm(s));
 /** Every describing word of `small` is in `big`, and both say yes or both say no ("Navy" isn't in "Not navy"). */
 function within(small: string, big: string) {
   const words = keyWords(small);
   return words.length > 0 && negative(small) === negative(big) && words.every((w) => keyWords(big).includes(w));
 }
-
-const sameDetails = (a: Detail[], b: Detail[]) =>
-  a.length === b.length && a.every((d) => b.some((e) => e.name === d.name && e.value === d.value));
 
 export type Merged = { notes: Note[]; changed: Note[] };
 
@@ -84,9 +82,11 @@ export function mergeNotes(
     const text = a.text.trim();
     if (!text) continue;
     const all = [...byId.values()];
-    // Never bring back a note the shopper removed by touch, and never let a reading of older words
-    // bring back one removed by voice (a newer reading may, after a merge).
-    if (all.some((n) => n.removed && norm(n.text) === norm(text) && (n.source === "touch" || seq <= n.changedSeq))) continue;
+    // Never bring back a note the shopper removed by touch, even reworded ("Emerald green" after
+    // "Emerald green, preferred", Phase 2 review), and never let a reading of older words bring back
+    // one removed by voice (a newer reading may, after a merge).
+    const sameIdea = (n: Note) => norm(n.text) === norm(text) || within(text, n.text) || within(n.text, text);
+    if (all.some((n) => n.removed && sameIdea(n) && (n.source === "touch" || seq <= n.changedSeq))) continue;
     // The same idea again keeps the note's wording; a second budget is a correction of the first.
     if (active(all).some((n) => norm(n.text) === norm(text))) continue;
     const twin = seen && active(all).find((n) => !seen.has(n.id) && !added.has(n.id) && n.kind === a.kind && shareWord(n.text, text));

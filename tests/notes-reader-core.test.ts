@@ -69,10 +69,14 @@ describe("notes reader", () => {
     expect(reading?.question).toEqual({ text: "Dress or pantsuit?", options: ["Dress", "Pantsuit"] });
   });
 
-  it("inks a note by voice only when it answers something the stylist said (R16)", async () => {
+  it("inks a note by voice only when it answers the stylist's question about that note (R16, Phase 2 review)", async () => {
     const claude = standIn({ add: [], update: [{ i: "n1", t: "Jeans", s: "c", d: [] }], remove: [], q: { t: "", o: [] } });
-    const reading = await createNotesReader(claude.ask).read({ stylistSaid: "", words: "jeans are fine", notes: [note("j", "Jeans", "outfit")] });
-    expect(reading?.changes.update[0].status).toBe("to_confirm");
+    const reader = createNotesReader(claude.ask);
+    const jeans = [note("j", "Jeans", "outfit")];
+    for (const stylistSaid of ["", "What are you dressing for?", "Jeans sound great."]) {
+      expect((await reader.read({ stylistSaid, words: "jeans are fine", notes: jeans }))?.changes.update[0].status).toBe("to_confirm");
+    }
+    expect((await reader.read({ stylistSaid: "So jeans are fine, right?", words: "yes", notes: jeans }))?.changes.update[0].status).toBe("confirmed");
   });
 
   it("asks one short question, with at most three short options", () => {

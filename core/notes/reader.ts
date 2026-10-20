@@ -1,3 +1,4 @@
+import { shareWord } from "./merge";
 import { active, KINDS, type Note, NOTE_CAP, type NextQuestion, type NoteChanges, type NoteKind } from "./types";
 
 // The notes reader (R15 to R19, tech spec 4.4): Claude Haiku 5.5 at low effort reads the shopper's words
@@ -135,10 +136,14 @@ export function createNotesReader(ask: Ask): NotesReader {
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
       const isBudget = (id: string) => live.find((n) => n.id === id)?.kind === "budget";
-      // Ink by voice only answers something the stylist said ("Is that right?" "Yes"), so a note
-      // isn't confirmed just because the shopper mentioned it (R16).
-      const status = (id: string, s: "p" | "c") =>
-        s === "c" && (stylistSaid.trim() || live.find((n) => n.id === id)?.status === "confirmed") ? ("confirmed" as const) : ("to_confirm" as const);
+      // Ink by voice only answers the stylist's question about that note ("So a garden party in May,
+      // is that right?" "Yes"), so a note isn't confirmed just because the shopper mentioned it (R16).
+      // Her greeting is a question too, so the question has to name the note (Phase 2 review).
+      const askedAbout = (note: Note) => stylistSaid.includes("?") && shareWord(note.text, stylistSaid);
+      const status = (id: string, s: "p" | "c") => {
+        const note = live.find((n) => n.id === id);
+        return s === "c" && note && (note.status === "confirmed" || askedAbout(note)) ? ("confirmed" as const) : ("to_confirm" as const);
+      };
       return {
         changes: {
           add: raw.add.filter((a) => a.k !== "budget").map((a) => ({ kind: a.k, text: a.t, status: "to_confirm" as const, details: toDetails(a.d) })),

@@ -2,7 +2,9 @@
 // (R23, design 4.1 and 4.2), and what screen readers hear when notes change (R68). Pure rules, tested
 // in tests/notebook.test.ts.
 
-export type NotebookNote = { id: string; text: string; status: "to_confirm" | "confirmed" };
+import type { ShownNote } from "@/core/notes/types";
+
+export type NotebookNote = Pick<ShownNote, "id" | "text" | "status">;
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 

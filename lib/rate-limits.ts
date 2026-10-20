@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const LIMITS = {
   startSession: { max: 5, windowSeconds: 3600 },
   newWords: { max: 2, windowSeconds: 1 },
+  touchNote: { max: 4, windowSeconds: 1 },
   photo: { max: 10, windowSeconds: 3600 },
   cameraFrame: { max: 1, windowSeconds: 2 },
   buildLooks: { max: 20, windowSeconds: 3600 },

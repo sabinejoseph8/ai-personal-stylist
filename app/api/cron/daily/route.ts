@@ -29,7 +29,11 @@ export async function GET(request: Request) {
   const db = serverKeyDb();
   const tidy = await db.rpc("daily_tidy");
   if (tidy.error) return Response.json({ error: `tidy failed: ${tidy.error.message}` }, { status: 500 });
-  const callsEnded = await endLeftBehindCalls(sessionDeps());
+  // A failure here mustn't stop the guest deletions below (R3, Phase 2 review).
+  const callsEnded = await endLeftBehindCalls(sessionDeps()).catch((e) => {
+    console.error(`daily job: ending left-behind calls failed: ${e instanceof Error ? e.message : e}`);
+    return 0;
+  });
 
   const expired = await db.rpc("expired_guests", {
     idle_days: IDLE_DAYS,

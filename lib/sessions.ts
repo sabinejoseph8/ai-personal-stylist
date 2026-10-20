@@ -46,25 +46,25 @@ export type StartResult =
 
 export const isIdle = (lastActivityAt: string, now = Date.now()) => now - Date.parse(lastActivityAt) > IDLE_MINUTES * 60_000;
 
+/** Tavus ends a call 30 seconds after the shopper leaves it (participant_left_timeout, tavus/server.ts). */
+const LEFT_TIMEOUT_MS = 30_000;
+
+/**
+ * When a call left behind stopped being used: the shopper's last activity, plus the 30 seconds Tavus
+ * waits before ending it (Sabine's answer to B in the Phase 2 review). It can undercount a call left
+ * running with nobody there, which she accepted.
+ */
+const lastUse = (s: Session) => Math.min(Date.now(), Date.parse(s.last_activity_at) + LEFT_TIMEOUT_MS);
+
 /**
  * Ends the session's call, if it has one, and gives back the reserved time it didn't use. The Tavus
- * conversation is hard-deleted as it ends (connectors/conversation/tavus/server.ts). An ended session's
- * notes are deleted (R63).
+ * conversation is hard-deleted as it ends (connectors/conversation/tavus/server.ts), and an ended
+ * session's notes are deleted (R63). The call is claimed first, so when two ends arrive together (End
+ * and the tab closing) only one ends it and gives back its time (Phase 2 review).
  */
-async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "ended") {
-  if (s.call_id) {
-    await deps.provider.end(s.call_id).catch((e) => console.error(`ending a call failed: ${e instanceof Error ? e.message : e}`));
-    if (s.reserved_seconds !== null && s.reserved_day) {
-      const ran = s.call_started_at ? (Date.now() - Date.parse(s.call_started_at)) / 1000 : 0;
-      await deps.guard.settleTime(
-        s.user_id,
-        { engine: s.engine, seconds: s.reserved_seconds, day: s.reserved_day },
-        Math.min(s.reserved_seconds, Math.max(0, ran)),
-      );
-    }
-  }
+async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "ended", usedUntil = Date.now()) {
   const now = new Date().toISOString();
-  await deps.db
+  let claim = deps.db
     .from("sessions")
     .update({
       status,
@@ -75,23 +75,47 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
       reserved_seconds: null,
       reserved_day: null,
     })
-    .eq("id", s.id)
-    .throwOnError();
+    .eq("id", s.id);
+  claim = s.call_id ? claim.eq("call_id", s.call_id) : claim.is("call_id", null);
+  const { data: claimed } = await claim.select("id").throwOnError();
+
+  if (claimed?.length && s.call_id) {
+    await deps.provider.end(s.call_id).catch((e) => console.error(`ending a call failed: ${e instanceof Error ? e.message : e}`));
+    if (s.reserved_seconds !== null && s.reserved_day) {
+      const ran = s.call_started_at ? (usedUntil - Date.parse(s.call_started_at)) / 1000 : 0;
+      await deps.guard.settleTime(
+        s.user_id,
+        { engine: s.engine, seconds: s.reserved_seconds, day: s.reserved_day },
+        Math.min(s.reserved_seconds, Math.max(0, ran)),
+      );
+    }
+  } else if (!claimed?.length && status === "ended") {
+    // Another request finished the call first: End still ends the session.
+    await deps.db.from("sessions").update({ status: "ended", ended_at: now }).eq("id", s.id).throwOnError();
+  }
   if (status === "ended") await deps.db.rpc("delete_session_data", { session: s.id }).throwOnError();
 }
 
 /**
  * Calls left behind: sessions the database timer ended after 30 idle minutes while they still had a
  * call (the browser closed without saying goodbye). Their call is ended and deleted at Tavus, and the
- * minutes it didn't use given back. Runs for the guest on Start conversation, and for everyone in the
- * daily job. Returns how many it ended.
+ * minutes after the shopper's last activity given back. Runs for the guest on Start conversation, and
+ * for everyone in the daily job, where one failure doesn't stop the rest. Returns how many it ended.
  */
 export async function endLeftBehindCalls(deps: SessionDeps, guestId?: string, limit = 50) {
   let query = deps.db.from("sessions").select(COLUMNS).eq("status", "ended").not("call_id", "is", null).limit(limit);
   if (guestId) query = query.eq("user_id", guestId);
   const { data } = await query.returns<Session[]>().throwOnError();
-  for (const s of data ?? []) await finishCall(deps, s, "ended");
-  return data?.length ?? 0;
+  let ended = 0;
+  for (const s of data ?? []) {
+    try {
+      await finishCall(deps, s, "ended", lastUse(s));
+      ended++;
+    } catch (e) {
+      console.error(`ending a left-behind call failed: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+  return ended;
 }
 
 /** The guest's open session, or null. A session left 30 minutes without activity is ended first (R12). */
@@ -105,7 +129,7 @@ export async function openSession(deps: SessionDeps, guestId: string): Promise<S
     .throwOnError();
   if (!data) return null;
   if (isIdle(data.last_activity_at)) {
-    await finishCall(deps, data, "ended");
+    await finishCall(deps, data, "ended", lastUse(data));
     return null;
   }
   return data;

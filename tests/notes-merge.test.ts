@@ -37,6 +37,15 @@ describe("latest word wins (R22)", () => {
     expect(texts(mergeNotes(notes, add("colors", "not black."), 5).notes)).toEqual([]);
   });
 
+  it("a note removed by touch doesn't come back in other words (R22, Phase 2 review)", () => {
+    let { notes } = mergeNotes([], add("colors", "Emerald green, preferred"), 1, 12, newId);
+    notes = touchNote(notes, notes[0].id, "remove", 1).notes;
+    for (const reworded of ["Emerald green", "Prefers emerald green", "emerald green, preferred."]) {
+      expect(texts(mergeNotes(notes, add("colors", reworded), 5, 12, newId).notes)).toEqual([]);
+    }
+    expect(texts(mergeNotes(notes, add("colors", "Navy"), 5, 12, newId).notes)).toEqual(["Navy"]);
+  });
+
   it("a confirm by touch beats a reading of words heard before the tap", () => {
     let { notes } = mergeNotes([], add("style", "Elegant"), 1, 12, newId);
     const id = notes[0].id;
@@ -122,6 +131,13 @@ describe("latest word wins (R22)", () => {
     expect(active(dated)).toMatchObject([{ kind: "occasion", text: "Sister's graduation, June 14th" }]);
   });
 
+  it("overlapping readings never merge a yes and a no into one note (Phase 2 review)", () => {
+    const seen = new Set<string>();
+    let notes = mergeNotes([], add("colors", "Emerald green, preferred"), 1, 12, newId, seen).notes;
+    notes = mergeNotes(notes, add("colors", "Not green shoes"), 2, 12, newId, seen).notes;
+    expect(texts(notes)).toEqual(["Emerald green, preferred", "Not green shoes"]);
+  });
+
   it("replays readings in any order to the same final notebook", () => {
     // Three readings of a growing sentence, arriving 3, 1, 2.
     const readings: [number, NoteChanges][] = [
@@ -147,8 +163,20 @@ describe("money and dates in plain code", () => {
     expect(parseBudget(words)?.text).toBe(text);
   });
 
-  it("finds no budget when none is said", () => {
+  it("finds no budget when none is said, or when the number isn't money (Phase 2 review)", () => {
     expect(parseBudget("something elegant for a wedding")).toBeNull();
+    expect(parseBudget("it'll be below 40 degrees")).toBeNull();
+    expect(parseBudget("the ceremony is about 30 minutes")).toBeNull();
+    expect(parseBudget("under 100 guests, budget around 400")?.text).toBe("Budget: around $400");
+  });
+
+  it("reads May and March as months only when they're used like one (Phase 2 review)", () => {
+    expect(parseMonth("I may need a coat")).toBeNull();
+    expect(parseMonth("we march down the aisle")).toBeNull();
+    expect(parseMonth("a garden party in May")?.month).toBe("may");
+    expect(parseMonth("on March 3rd")).toEqual({ month: "march", day: "3", season: "spring" });
+    const { notes } = mergeNotes([], add("colors", "Maybe sage green"), 1, 12, newId);
+    expect(plainChanges(notes, "a garden party in May").update).toEqual([]); // "Maybe" doesn't name May
   });
 
   it("reads the month, day and season, and adds them to the note that mentions the month", () => {
