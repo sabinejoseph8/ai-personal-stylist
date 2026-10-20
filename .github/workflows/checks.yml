@@ -20,6 +20,9 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+        env:
+          # Lets the database tests create test guests (Sabine's decision, 1b).
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run e2e
       - uses: actions/upload-artifact@v4
