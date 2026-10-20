@@ -1,19 +1,22 @@
 import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
+import { photoReadingDeps } from "@/lib/photo-deps";
 import { PHOTO_MESSAGES } from "@/lib/photos";
-import { type FinishRefusal, finishPhoto } from "@/lib/photos-service";
+import { type FinishRefusal, finishPhoto, readPhoto } from "@/lib/photos-service";
 import { withinLimit } from "@/lib/rate-limits";
-import { serverKeyDb } from "@/lib/supabase/admin";
+import { sessionContext } from "@/lib/session-context";
 
 // The browser has sent the photo to its upload link: the server checks its real type and size,
-// cleans it (no location or camera details) and keeps it (FR-27). The answer carries the photo's
-// short-lived links, or why it was turned away. It shares the 4-a-second limit on photo changes.
+// cleans it (no location or camera details) and keeps it (FR-27). It shares the 4-a-second limit on
+// photo changes. The answer streams one line of JSON per update: first the kept photo, with its
+// short-lived links, showing Analyzing; then what the photo reader found (3b), with the stylist's
+// context. If the browser goes away meanwhile, the reading still finishes and is saved.
 
 const Body = z.object({ version: z.number().int().positive() });
 
 const REFUSED: Record<FinishRefusal, number> = { type: 415, size: 413, unreadable: 422, missing: 409 };
 
-// Converting a large HEIC photo can take a few seconds.
+// Converting a large HEIC photo can take a few seconds, and reading it a few more.
 export const maxDuration = 60;
 
 export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[id]/assets/[assetId]/ready">) {
@@ -25,9 +28,41 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
   if (!body.success) return Response.json({ error: "That request isn't valid." }, { status: 400 });
   if (!(await withinLimit(guest.db, "changePhoto"))) return Response.json({ error: "Too many changes at once." }, { status: 429 });
 
-  const result = await finishPhoto(serverKeyDb(), guest.id, id, assetId, body.data.version);
+  const deps = photoReadingDeps();
+  const result = await finishPhoto(deps.db, guest.id, id, assetId, body.data.version);
   // Replaced or removed meanwhile, or the session ended.
   if (!result) return Response.json({ reason: "photo", error: PHOTO_MESSAGES.photo }, { status: 404 });
   if (!result.ok) return Response.json({ reason: result.reason, error: PHOTO_MESSAGES[result.reason] }, { status: REFUSED[result.reason] });
-  return Response.json({ photo: result.photo });
+  const { photo, jpeg } = result;
+
+  const encoder = new TextEncoder();
+  let listening = true;
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (line: object) => {
+        if (!listening) return;
+        try {
+          controller.enqueue(encoder.encode(`${JSON.stringify(line)}\n`));
+        } catch {
+          listening = false;
+        }
+      };
+      send({ photo });
+      try {
+        const item = await readPhoto(deps, guest.id, assetId, photo.version, jpeg);
+        // Null: replaced or removed while it was being read, so its answer is dropped (R31).
+        if (item) send({ id: assetId, version: photo.version, item, context: await sessionContext(deps.db, guest.id, id) });
+      } catch (e) {
+        console.error(`photos: reading a photo failed: ${e instanceof Error ? e.message : e}`);
+        send({ id: assetId, version: photo.version, item: { reading: { state: "failed", items: [], chosen: null }, ownership: null } });
+      } finally {
+        if (listening) controller.close();
+        listening = false;
+      }
+    },
+    cancel() {
+      listening = false;
+    },
+  });
+  return new Response(stream, { headers: { "Content-Type": "application/x-ndjson", "Cache-Control": "no-store" } });
 }

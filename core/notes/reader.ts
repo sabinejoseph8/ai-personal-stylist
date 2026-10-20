@@ -1,3 +1,5 @@
+import type { Ask } from "../ask";
+import { chosenItem, DETAIL_NAMES, type DetailName, type ItemChange, itemForReader, type StyleItem } from "../photos/item";
 import { shareWord } from "./merge";
 import { active, KINDS, type Note, NOTE_CAP, type NextQuestion, type NoteChanges, type NoteKind } from "./types";
 
@@ -74,9 +76,33 @@ export const SCHEMA = {
   required: ["add", "update", "remove", "q"],
 };
 
-export type AskResult = { data: unknown | null; costUsd: number };
-/** One structured call to Claude. Null data means refused, cut off or unreadable: notes pause (R25). */
-export type Ask = (request: { system: string; user: string; schema: object; maxTokens: number }) => Promise<AskResult>;
+/** One structured call to Claude (core/ask.ts). For notes, null data pauses them (R25). */
+export type { Ask, AskResult } from "../ask";
+
+// The photo to style around (3b, Sabine's answer to Q3): when there is one, the same reading also
+// catches what the shopper says about it. Without a photo the prompt and answer are unchanged, so notes
+// stay as quick as the 2c eval measured.
+export const PHOTO_RULES = `
+
+The shopper has added a photo of something to style around, described after the notebook. Changes to it go in p, never in notes:
+- c: the number of the item the shopper picked to style around ("the first one", "the jacket"), otherwise 0.
+- o: "m" only when they plainly say it's theirs ("it's mine", "I own it"), "i" when they say it isn't ("just an inspiration", "I saw it online"), otherwise "". Wanting to wear it doesn't say whose it is.
+- d: details of it they stated or corrected, as name=value with the names type, colors, pattern and style: "it's black, not navy" gives "colors=black". If the photo couldn't be read and they describe the item, give its type and colors.
+- k: names of details they confirmed when you asked about them ("yes, it's navy" gives "colors").
+- Never jot a note about the photo's item itself, such as "Owns a navy blazer": the photo already shows it.`;
+
+export const PHOTO_SCHEMA_PART = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    c: { type: "integer" },
+    o: { type: "string", enum: ["", "m", "i"] },
+    d: { type: "array", items: { type: "string" } },
+    k: { type: "array", items: { type: "string", enum: DETAIL_NAMES } },
+  },
+  required: ["c", "o", "d", "k"],
+};
+const SCHEMA_WITH_PHOTO = { ...SCHEMA, properties: { ...SCHEMA.properties, p: PHOTO_SCHEMA_PART }, required: [...SCHEMA.required, "p"] };
 
 export type ReaderInput = {
   /** What the stylist last said, so short answers like "the pantsuit" make sense. */
@@ -84,9 +110,11 @@ export type ReaderInput = {
   /** The shopper's words in this turn so far. */
   words: string;
   notes: Note[];
+  /** The photo to style around, when there is one (3b). */
+  item?: StyleItem;
 };
 
-export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number };
+export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange };
 
 export interface NotesReader {
   read(input: ReaderInput): Promise<Reading | null>;
@@ -97,7 +125,24 @@ type Raw = {
   update: { i: string; t: string; s: "p" | "c"; d: string[] }[];
   remove: string[];
   q: { t: string; o: string[] };
+  p?: { c: number; o: "" | "m" | "i"; d: string[]; k: string[] };
 };
+
+const isDetail = (name: string): name is DetailName => (DETAIL_NAMES as readonly string[]).includes(name);
+
+/** What the shopper said about the photo, as a change to its item. Nothing when they said nothing about it. */
+export function photoChange(p: Raw["p"]): ItemChange | undefined {
+  if (!p) return undefined;
+  const change: ItemChange = {};
+  if (p.c > 0) change.choose = p.c - 1;
+  if (p.o === "m") change.ownership = "owned";
+  if (p.o === "i") change.ownership = "inspiration";
+  const set = toDetails(p.d).flatMap(({ name, value }) => (isDetail(name) && value ? [{ name, value }] : []));
+  if (set.length) change.set = set;
+  const confirm = p.k.filter(isDetail);
+  if (confirm.length) change.confirm = confirm;
+  return Object.keys(change).length ? change : undefined;
+}
 
 /** "month=november" to { name: "month", value: "november" }. */
 const toDetails = (d: string[]) =>
@@ -116,7 +161,7 @@ export function cleanQuestion(q: { text: string; options: string[] } | undefined
 
 export function createNotesReader(ask: Ask): NotesReader {
   return {
-    async read({ stylistSaid, words, notes }) {
+    async read({ stylistSaid, words, notes, item }) {
       const live = active(notes);
       // Short ids keep the prompt small and stop Claude inventing ids.
       const shortIds = new Map(live.map((n, i) => [`n${i + 1}`, n.id]));
@@ -127,11 +172,14 @@ export function createNotesReader(ask: Ask): NotesReader {
         `The shopper is saying: "${words}"`,
         `The notebook (${live.length} of at most ${NOTE_CAP} notes):\n${lines.length ? lines.join("\n") : "(empty)"}`,
         removed.length ? `Removed by the shopper, never jot again:\n${removed.join("\n")}` : "",
+        item ? itemForReader(item) : "",
       ]
         .filter(Boolean)
         .join("\n\n");
 
-      const { data, costUsd } = await ask({ system: SYSTEM, user, schema: SCHEMA, maxTokens: 1200 });
+      const { data, costUsd } = await ask(
+        item ? { system: SYSTEM + PHOTO_RULES, user, schema: SCHEMA_WITH_PHOTO, maxTokens: 1300 } : { system: SYSTEM, user, schema: SCHEMA, maxTokens: 1200 },
+      );
       if (!data) return null;
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
@@ -144,9 +192,13 @@ export function createNotesReader(ask: Ask): NotesReader {
         const note = live.find((n) => n.id === id);
         return s === "c" && note && (note.status === "confirmed" || askedAbout(note)) ? ("confirmed" as const) : ("to_confirm" as const);
       };
+      // Claude sometimes still jots the photo's own item ("Owns a navy wool blazer") when the shopper
+      // says it's theirs, though the photo already shows it (found by the notes eval in 3b).
+      const photoType = item ? chosenItem(item.reading)?.details.type.value.toLowerCase() : undefined;
+      const aboutPhoto = (a: Raw["add"][number]) => !!photoType && a.k === "owned_item" && a.t.toLowerCase().includes(photoType);
       return {
         changes: {
-          add: raw.add.filter((a) => a.k !== "budget").map((a) => ({ kind: a.k, text: a.t, status: "to_confirm" as const, details: toDetails(a.d) })),
+          add: raw.add.filter((a) => a.k !== "budget" && !aboutPhoto(a)).map((a) => ({ kind: a.k, text: a.t, status: "to_confirm" as const, details: toDetails(a.d) })),
           update: raw.update.flatMap((u) => {
             const id = real(u.i);
             return id && !isBudget(id) ? [{ id, text: u.t, status: status(id, u.s), details: toDetails(u.d) }] : [];
@@ -155,6 +207,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         },
         question: cleanQuestion({ text: raw.q.t, options: raw.q.o }),
         costUsd,
+        ...(item ? { photo: photoChange(raw.p) } : {}),
       };
     },
   };

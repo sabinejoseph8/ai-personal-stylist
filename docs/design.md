@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.6 (20 Oct 2026)
+**Status:** Agreed, version 1.7 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -246,17 +246,19 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Label: the item name (for example "Navy wool blazer"), where it came from (Uploaded or From your camera), and its ownership: You own this, Inspiration, or Ownership: To confirm.
 - Controls: **Enlarge**, **Replace**, **Remove**. Tapping the photo also enlarges it.
 - Adding one: **Add a photo**, a secondary button in My Styling Notes, where Style around this item appears (after the saved preferences, before the notes). It shows once the conversation has started, because a photo belongs to a session, and opens the phone's own choice of Photo Library, Take Photo or Choose File. With a photo, it reads **Add another photo**, up to 5 photos (your answers to Q2 and Q3 in 3a).
-- Until the photo reader arrives (3b), the label reads "Your item" and "Uploaded".
+- Before the photo reader has named it, the label reads "Your item". While it reads the photo, the label says **Analyzing**. Ownership shows once an item is chosen.
 - Several photos: a row of thumbnails, with the active one outlined in Ink and labeled "Active".
 - States: loading (a preview from the shopper's device straight away, with "Uploading" and a thin Emerald progress line; "Preparing preview" where the browser can't show a HEIC photo), analyzing, recognized, details to confirm, several items found, recognition failed ("Couldn't recognize this item. Describe it instead."), upload failed (with **Try again**), removed.
 - Collapsed notebook: a 40 px thumbnail with the label.
 - Enlarge shows the full photo, untilted, with its description.
 
 **Item details review**
-- Shown after analysis: type, colors, pattern and style, each with a status chip. Tap a detail to confirm it, or say a correction.
-- Asks "Is this yours or an inspiration?" with **It's mine** and **Inspiration**.
+- Shown after analysis, under the photo on the ruled lines: type, colors, pattern and style, each with a status chip. Details the photo reader is sure of are in ink (Confirmed), the rest in pencil with To confirm. Tap a pencil detail for **Confirm**, or say a correction, which puts the new value in ink and renames the item ("Black wool blazer").
+- Asks "Is this yours or an inspiration?" with **It's mine** and **Inspiration**, which then show in the label as "You own this" or "Inspiration".
 - **Save to wardrobe** appears only for owned items. The first use asks for photo storage permission.
-- Several items found: a numbered list ("1. Denim jacket", "2. White T-shirt") so the shopper can tap one or say "the first one". The matching area on the photo is outlined when it is known.
+- Several items found: a numbered list ("1. Denim jacket", "2. White T-shirt") under "Which item should we style around?", so the shopper can tap one or say "the first one". The chosen one is filled in Emerald with a check, under "Styling around", and its details follow. The matching area on the photo is outlined when it is known; in v1 it never is, because the photo reader's positions aren't reliable enough to draw (3b).
+- Recognition failed: "Couldn't recognize this item. Describe it instead." under the photo. What the shopper then says fills in the item.
+- Screen readers hear "Recognized: Navy wool blazer.", "Found 2 items. Which one should we style around?", "Styling around: White T-shirt." and "Marked as yours.", held while anyone is talking.
 
 **Feedback jotted under a look**
 - Feedback is jotted like any other note, under a small heading for the look it's about, for example "Look 1".
@@ -559,6 +561,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.7 (20 Oct 2026):** 3b: Analyzing in the label, the item details review as built, the several-items list, the failed-recognition line and what screen readers hear (4.2).
 - **1.6 (20 Oct 2026):** 3a: where Add a photo sits, the pasted photo's states as built, and its label until 3b (4.2).
 - **1.5 (20 Oct 2026):** 2f, after your iPhone check: Reload page for a blocked microphone (4.1).
 - **1.4 (20 Oct 2026):** 2e, after your iPhone check: a dropped call waits for the connection to come back before trying again, and the Connection lost state (4.1).

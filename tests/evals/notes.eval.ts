@@ -5,6 +5,7 @@ import { mergeNotes } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
 import { createNotesReader } from "@/core/notes/reader";
 import { active, type NextQuestion, type Note, NOTE_CAP } from "@/core/notes/types";
+import { changeItem, chosenItem, type DetailName, itemForReader, type StyleItem } from "@/core/photos/item";
 import { setting } from "../support/test-guests";
 
 // The notes evaluation (tech spec 8, Phase 2): about 30 sentences against the real Claude, replayed the
@@ -13,6 +14,8 @@ import { setting } from "../support/test-guests";
 // Pass marks: at least 90% of checks right, and 95% of notes within 2 seconds of their phrase (R17).
 // Run: npm run eval:notes. It costs about 10 cents. To compare setups (2c), set NOTES_EVAL_EFFORT (off or
 // low), NOTES_EVAL_OVERLAP=0 (one reading at a time), NOTES_EVAL_SEND_MS and NOTES_EVAL_OUT (results file).
+// Cases with a photo (3b, Sabine's answer to Q3) give the reader the item to style around, and check
+// what the shopper's words changed about it, while the notes are timed as usual.
 
 type Expect = { after: string; has: string[]; lacks?: string[]; status?: "confirmed" };
 type Case = {
@@ -22,6 +25,9 @@ type Case = {
   forbid?: string[];
   maxNotes?: number;
   question?: { has: string[] };
+  /** The photo to style around, and what the words should change about it (3b). */
+  item?: StyleItem;
+  photo?: { ownership?: "owned" | "inspiration"; chosen?: number; detail?: { name: DetailName; has: string; status?: "confirmed" } };
 };
 
 const cases: Case[] = JSON.parse(readFileSync("tests/evals/notes-cases.json", "utf8"));
@@ -52,6 +58,7 @@ async function replay(c: Case) {
   const t0 = performance.now();
   const now = () => performance.now() - t0;
   let notes: Note[] = [];
+  let item = c.item ?? null;
   let seq = 0;
   let question = null as NextQuestion;
   let questionSeq = 0;
@@ -74,11 +81,12 @@ async function replay(c: Case) {
     const turnNo = turnAt;
     const started = now();
     const seen = new Set(active(notes).map((n) => n.id));
-    const reading: Promise<void> = reader.read({ stylistSaid, words, notes }).then((r) => {
+    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined }).then((r) => {
       durations.push(now() - started);
       running.delete(reading);
       if (!r) return void paused++;
       cost += r.costUsd;
+      if (item && r.photo) item = changeItem(item, r.photo);
       const merged = mergeNotes(notes, r.changes, mine, NOTE_CAP, undefined, seen);
       notes = mergeNotes(merged.notes, plainChanges(merged.notes, words), mine).notes;
       // A question stays until a reading of a later turn replaces it (or finds nothing to ask).
@@ -139,6 +147,15 @@ async function replay(c: Case) {
   checks.push({ what: "no repeated notes", ok: !repeats(notes) });
   if (!c.turns.some((t) => t.stylist)) checks.push({ what: "no ink without a question", ok: !active(notes).some((n) => n.status === "confirmed") });
   if (c.maxNotes !== undefined) checks.push({ what: `at most ${c.maxNotes} notes`, ok: active(notes).length <= c.maxNotes });
+  if (c.photo && item) {
+    const { ownership, chosen, detail } = c.photo;
+    if (ownership) checks.push({ what: `photo ${ownership}`, ok: item.ownership === ownership });
+    if (chosen !== undefined) checks.push({ what: `photo item ${chosen + 1} chosen`, ok: item.reading.chosen === chosen });
+    if (detail) {
+      const d = chosenItem(item.reading)?.details[detail.name];
+      checks.push({ what: `photo ${detail.name} ${detail.has}`, ok: !!d && lower(d.value).includes(detail.has) && (!detail.status || d.status === detail.status) });
+    }
+  }
   if (c.question) {
     const q = question;
     const asked = q ? lower(`${q.text} ${q.options.join(" ")}`) : "";
@@ -148,6 +165,7 @@ async function replay(c: Case) {
     id: c.id,
     checks,
     notes: active(notes).map((n) => `${n.text} [${n.status === "confirmed" ? "ink" : "pencil"}]`),
+    photo: item ? itemForReader(item).replace(/\n/g, " | ") : undefined,
     question,
     cost,
     paused,
@@ -165,6 +183,7 @@ it("notes evaluation: at least 90% right, 95% within 2 seconds", async () => {
     const times = r.checks.filter((c) => c.seconds !== undefined).map((c) => `${c.what}=${c.seconds === null ? "MISSED" : `${c.seconds!.toFixed(1)}s`}`);
     console.log(`${r.id.padEnd(30)} ${wrong.length ? `WRONG: ${wrong.join(", ")}  ` : ""}${times.join("  ")}`);
     console.log(`${"".padEnd(30)} ${r.notes.join(" | ") || "(no notes)"}${r.question ? `  -> ${r.question.text} [${r.question.options.join(", ")}]` : ""}`);
+    if (r.photo) console.log(`${"".padEnd(30)} photo: ${r.photo}`);
   }
   const all = results.flatMap((r) => r.checks);
   const timed = all.filter((c) => c.seconds !== undefined);

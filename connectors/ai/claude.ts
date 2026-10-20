@@ -1,11 +1,13 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Ask } from "@/core/notes/reader";
+import type { Ask } from "@/core/ask";
 
 // The AI connector (tech spec 4.4): structured calls to Claude, with the cost of each call worked out
 // for the budget guard. Haiku 5.5 runs live notes and the camera; Opus 5.5 the rest (TQ3).
 
 export const LIVE_MODEL = "claude-haiku-5-5";
+/** The photo reader runs on Opus 5.5, where accuracy matters more than speed (tech spec 4.4). */
+export const PHOTO_MODEL = "claude-opus-5-5";
 
 /** Dollars per million tokens (input, output). */
 const PRICES: Record<string, [number, number]> = { "claude-opus-5-5": [4, 20], "claude-haiku-5-5": [0.1, 0.5] };

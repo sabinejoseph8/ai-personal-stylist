@@ -4,9 +4,11 @@ import { stylistContext } from "@/core/notes/context";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
 import type { NotesReader } from "@/core/notes/reader";
+import type { StyleItem } from "@/core/photos/item";
 import { active, type NextQuestion, type Note, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
+import { activePhoto, changePhoto } from "@/lib/photos-service";
 
 // My Styling Notes on the server (2c): words in, notes out, with latest word wins (R22).
 
@@ -25,6 +27,8 @@ export type NotesUpdate = {
   context?: string;
   /** The reading failed or the AI allowance is used up: notes pause (R25). */
   paused?: boolean;
+  /** The photo's item, when the shopper's words changed it (3b). */
+  photo?: { id: string; item: StyleItem };
 };
 
 export type HeardWords = {
@@ -54,7 +58,7 @@ async function ownSession(db: SupabaseClient, guestId: string, sessionId: string
   return data;
 }
 
-async function preferencesOf(db: SupabaseClient, guestId: string) {
+export async function preferencesOf(db: SupabaseClient, guestId: string) {
   const { data } = await db.from("saved_preferences").select("kind, words").eq("user_id", guestId).order("created_at").throwOnError();
   return data ?? [];
 }
@@ -99,7 +103,14 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     return;
   }
 
-  const reading = await deps.reader.read({ stylistSaid: heard.stylistSaid, words: heard.words, notes: quick.notes });
+  // The photo to style around, so what the shopper says about it reaches it (3b).
+  const photo = await activePhoto(deps.db, sessionId);
+  const reading = await deps.reader.read({
+    stylistSaid: heard.stylistSaid,
+    words: heard.words,
+    notes: quick.notes,
+    item: photo?.item,
+  });
   if (!reading) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
     return;
@@ -115,14 +126,23 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     const after = mergeNotes(merged.notes, plainChanges(merged.notes, heard.words), seq);
     return { notes: after.notes, changed: [...new Map([...merged.changed, ...after.changed].map((n) => [n.id, n])).values()] };
   });
-  const preferences = await preferencesOf(deps.db, guestId);
+  // A change for a photo replaced meanwhile is dropped (its version no longer matches).
+  const changed = photo && reading.photo ? await changePhoto(deps.db, guestId, sessionId, photo.id, reading.photo, photo.version) : null;
+  const [preferences, latest] = await Promise.all([preferencesOf(deps.db, guestId), photo ? activePhoto(deps.db, sessionId) : null]);
   let question = reading.question;
   if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);
   else if (heard.turn) {
     const kept = await loadQuestion(deps.db, sessionId);
     if (kept.turn === heard.turn) question = kept.question;
   }
-  emit({ version: done.version, notes: shown(done.notes), question, seq, context: stylistContext(done.notes, preferences, question) });
+  emit({
+    version: done.version,
+    notes: shown(done.notes),
+    question,
+    seq,
+    context: stylistContext(done.notes, preferences, question, latest?.item ?? null),
+    ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
+  });
 }
 
 /** Confirm, Remove or Undo by touch (PATCH /api/sessions/:id/notes/:noteId, R20). Null if not the guest's. */
@@ -137,6 +157,6 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
   }
-  const preferences = await preferencesOf(deps.db, guestId);
-  return { version: done.version, notes: shown(done.notes), context: stylistContext(done.notes, preferences, null) } satisfies NotesUpdate;
+  const [preferences, photo] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId)]);
+  return { version: done.version, notes: shown(done.notes), context: stylistContext(done.notes, preferences, null, photo?.item ?? null) } satisfies NotesUpdate;
 }

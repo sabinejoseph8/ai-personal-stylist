@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.13
+**Status:** Living document, version 1.14
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.6, tech spec 1.16 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.7, tech spec 1.17 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -92,7 +92,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
-| 9 | Recognition reads garments wrong | Phase 3 (3b) | Open |
+| 9 | Recognition reads garments wrong | Phase 3 (3b) | Handled in 3b: the photo eval had 94% of details right (pass mark 85%) and found every item in two-item photos; uncertain details show To confirm, and any detail can be confirmed by touch or corrected by voice. Catalog photos are cleaner than phone photos, so real photos are checked on Sabine's iPhone |
 | 10 | Provider data handling for audio and words | Phase 0 (0f), Phase 2 (2e) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation is hard-deleted when its call ends. Checked with a real call in 2e: Tavus no longer has it afterwards. Notes are deleted at End and within about 40 minutes of going idle |
 | 11 | The database is down when a recruiter clicks the link | Phase 1 (1f) and the uptime check | Lower: the database is on Supabase Pro, which doesn't pause |
 | 12 | Phone browser quirks | Phase 0 (0f) | Open. Android isn't tested in v1 (accepted risk) |
@@ -124,6 +124,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 3b plan, all recommended answers. Q1: once a photo is read, the stylist speaks up, naming the item and asking which one or whose it is (R29 says she asks). Q2: the photo eval uses 20 sample catalog photos plus 4 two-item photos made from them: free, rights-safe, with the right answers from the catalog, though cleaner than real phone photos (the other options were about $0.65 of generated "phone photos", waiting for November's OpenAI allowance, or Sabine's own photos kept private). Q3: what the shopper says about the photo reaches it through the notes reader in the same reading, checked with the notes eval (the other option was a second small reading, about 2 cents more a demo) | Sabine | tech spec 1.17, design 1.7 |
+| 20 Oct 2026 | 3b: the photo's matching area isn't outlined in v1, because the photo reader's positions aren't reliable enough to draw. The design asks for an outline only when the position is known | Claude, in the 3b plan Sabine approved | design 1.7 |
 | 20 Oct 2026 | 3a plan, all recommended answers. Q1: the browser sends a photo straight to the private photo store with a one-time upload link, and the server then checks and cleans it, because Vercel refuses anything over 4.5 MB and the agreed limit is 10 MB (the other option was shrinking photos in the browser, which would have left the 10 MB check to the browser and couldn't shrink HEIC in Chrome). Q2: Add a photo sits in My Styling Notes, where Style around this item appears, once the conversation has started. Q3: up to 5 photos per session. Q4: photos of sessions that ended from being idle are deleted on the next Start conversation or by the daily job, at most a day later, because the database timer can't delete files and Vercel's free plan only runs daily jobs | Sabine | tech spec 1.16, design 1.6 |
 | 20 Oct 2026 | Phase 2 code review: A, split the session screen's code now, before the camera joins it (recommended). B, a call a closed browser left behind is counted until the shopper's last activity plus the 30 seconds Tavus waits, rather than its whole reserved time (Claude recommended the whole time, which can't undercount; Sabine chose the estimate, accepting it can undercount a call left running with nobody there) | Sabine | tech spec 1.15 |
 | 20 Oct 2026 | 2e plan: idle sessions are ended and their notes deleted by a database timer every 10 minutes (Supabase Cron), not just by the daily job (Q1). Time left and Time is up are checked by automated tests with a sped-up clock, and the iPhone check covers reconnecting and End, to save 10 Tavus minutes (Q2) | Sabine | tech spec 1.14 |
@@ -310,7 +312,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 | D07 | Styling conversation | Phase 2 (2c), Phase 4 (4c) | Planned |
 | D08 | Photo capture and upload | Phase 3 (3a) | Upload built in 3a; capture in 3c |
 | D09 | Live camera item showing | Phase 3 (3c) | Planned |
-| D10 | Clothing recognition and correction | Phase 3 (3b) | Planned |
+| D10 | Clothing recognition and correction | Phase 3 (3b) | Built in 3b |
 | D11 | Wardrobe | Phase 3 (3d) | Planned |
 | D12 | Outfit recommendations | Phase 4 (4a, 4b) | Planned |
 | D13 | Visual outfit builder | Phase 4 (4c) | Planned |
@@ -353,6 +355,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.14 (20 Oct 2026):** 3b decisions (Q1 to Q3), no outline on the photo in v1, risk 9 handled with the photo eval result, and D10 built.
 - **1.13 (20 Oct 2026):** 3a decisions (Q1 to Q4), risk 5 handled for the item to style around, and D08, D35 and D36 built.
 - **1.12 (20 Oct 2026):** The Phase 2 code review: 15 findings, decisions A and B, and the tidying done in 2f.
 - **1.11 (20 Oct 2026):** 2e decisions (Q1, Q2), the fonts from Fontsource, and risk 10 updated.

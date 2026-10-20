@@ -17,7 +17,7 @@ export default defineConfig({
     url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    // Conversations and notes in browser tests use fakes: free, and the same every time.
-    env: { CONVERSATION_ENGINE: "fake", NOTES_READER: "fake" },
+    // Conversations, notes and photo readings in browser tests use fakes: free, and the same every time.
+    env: { CONVERSATION_ENGINE: "fake", NOTES_READER: "fake", PHOTO_READER: "fake" },
   },
 });

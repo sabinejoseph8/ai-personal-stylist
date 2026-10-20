@@ -18,7 +18,7 @@ const note = (id: string, text: string, kind: Note["kind"] = "style", status: No
 function standIn(answer: unknown) {
   const prompts: string[] = [];
   const ask: Ask = async ({ user }) => {
-    prompts.push(user);
+    prompts.push(typeof user === "string" ? user : JSON.stringify(user));
     return { data: answer, costUsd: 0.0001 };
   };
   return { ask, prompts };

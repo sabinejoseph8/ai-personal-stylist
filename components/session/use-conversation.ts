@@ -295,6 +295,16 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     dispatch({ type: "phrase-sent" });
   }
 
+  /**
+   * A line the stylist answers as if the shopper said it, kept out of the notes: after a photo is read
+   * she names the item and asks about it (Q1 in 3b).
+   */
+  function prompt(text: string) {
+    if (!engine.current) return;
+    engine.current.sendPhrase(text);
+    dispatch({ type: "phrase-sent" });
+  }
+
   async function end() {
     const current = live.current;
     const id = current?.sessionId ?? sessionId;
@@ -331,6 +341,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     end,
     toggleMute,
     sendPhrase,
+    prompt,
     explainMicrophone: (declined: boolean) => setFlow(declined ? "declined" : "explain"),
     turnOnSound: () =>
       audio.current?.play().then(
