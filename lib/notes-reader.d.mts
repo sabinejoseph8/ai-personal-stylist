@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 export type JottedNote = {
+  id: string;
   kind: string;
   text: string;
   status: "to_confirm" | "confirmed";
@@ -17,4 +18,6 @@ export function readNotes(
   model: string,
   words: string,
   effort?: "low" | "medium" | "high",
+  current?: { id: string; text: string; status: string }[],
+  removed?: string[],
 ): Promise<{ notes: JottedNote[]; usage: unknown; costUSD: number }>;

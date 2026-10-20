@@ -47,8 +47,11 @@ export default function DemoTest() {
   const version = useRef(0);
   const applied = useRef(0);
   const inFlight = useRef(false);
-  const confirmedKeys = useRef(new Set<string>());
-  const removedKeys = useRef(new Set<string>());
+  // Confirmations and removals are tracked by note id, so rewording can't undo them (R22).
+  const confirmedText = useRef(new Map<string, string>()); // id -> text the shopper confirmed
+  const removedKeys = useRef(new Set<string>()); // ids and normalized texts
+  const removedTexts = useRef<string[]>([]);
+  const nextId = useRef(1);
   const lastFrame = useRef<string | null>(null);
   const videoStart = useRef<number | null>(null);
   const claudeRef = useRef(0);
@@ -96,7 +99,12 @@ export default function DemoTest() {
       const res = await fetch("/api/test/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passcode, words: text }),
+        body: JSON.stringify({
+          passcode,
+          words: text,
+          current: notesRef.current.map((n) => ({ id: n.key, text: n.text, status: n.status })),
+          removed: removedTexts.current,
+        }),
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -104,10 +112,20 @@ export default function DemoTest() {
       setCounts((c) => ({ ...c, notesCalls: c.notesCalls + 1 }));
       if (v < applied.current) return; // a newer reading already landed (latest word wins)
       applied.current = v;
+      const known = new Set(notesRef.current.map((n) => n.key));
       const next: Note[] = (data.notes ?? [])
-        .map((n: Omit<Note, "key">) => ({ ...n, key: norm(n.text) }))
-        .filter((n: Note) => n.key && !removedKeys.current.has(n.key))
-        .map((n: Note) => (confirmedKeys.current.has(n.key) ? { ...n, status: "confirmed" as const } : n));
+        .map((n: Omit<Note, "key"> & { id: string }) => ({
+          ...n,
+          key: known.has(n.id) ? n.id : `n${nextId.current++}`,
+        }))
+        .filter((n: Note) => n.text && !removedKeys.current.has(n.key) && !removedKeys.current.has(norm(n.text)))
+        .map((n: Note) => {
+          const confirmed = confirmedText.current.get(n.key);
+          if (confirmed === undefined) return { ...n, status: "to_confirm" as const };
+          if (norm(confirmed) === norm(n.text)) return { ...n, status: "confirmed" as const };
+          confirmedText.current.delete(n.key); // the shopper changed it by voice: back to pencil
+          return { ...n, status: "to_confirm" as const };
+        });
       setNotes(next);
       sendContext(next, seenRef.current);
     } finally {
@@ -121,8 +139,10 @@ export default function DemoTest() {
     doneTurns.current = [];
     liveTurn.current = "";
     lastSent.current = "";
-    confirmedKeys.current.clear();
+    confirmedText.current.clear();
     removedKeys.current.clear();
+    removedTexts.current = [];
+    nextId.current = 1;
     claudeRef.current = 0;
     setClaudeUSD(0);
     setVideoSeconds(0);
@@ -206,7 +226,8 @@ export default function DemoTest() {
   }
 
   function confirmNote(key: string) {
-    confirmedKeys.current.add(key);
+    const note = notes.find((n) => n.key === key);
+    if (note) confirmedText.current.set(key, note.text);
     const next = notes.map((n) => (n.key === key ? { ...n, status: "confirmed" as const } : n));
     setNotes(next);
     setOpen(null);
@@ -217,6 +238,8 @@ export default function DemoTest() {
     const note = notes.find((n) => n.key === key);
     if (!note) return;
     removedKeys.current.add(key);
+    removedKeys.current.add(norm(note.text));
+    removedTexts.current = [...removedTexts.current, note.text];
     const next = notes.filter((n) => n.key !== key);
     setNotes(next);
     setOpen(null);
@@ -228,6 +251,8 @@ export default function DemoTest() {
   function undoRemove() {
     if (!removed) return;
     removedKeys.current.delete(removed.note.key);
+    removedKeys.current.delete(norm(removed.note.text));
+    removedTexts.current = removedTexts.current.filter((t) => t !== removed.note.text);
     const next = [...notes, removed.note];
     setNotes(next);
     setRemoved(null);
