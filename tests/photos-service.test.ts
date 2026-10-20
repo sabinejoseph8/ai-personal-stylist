@@ -1,6 +1,21 @@
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { addPhoto, choosePhoto, deleteEndedSessionPhotos, deleteSessionPhotos, finishPhoto, listPhotos, PHOTO_BUCKET, removePhoto } from "@/lib/photos-service";
+import type { PhotoItem } from "@/core/photos/item";
+import type { PhotoReader } from "@/core/photos/reader";
+import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import {
+  addPhoto,
+  changePhoto,
+  choosePhoto,
+  deleteEndedSessionPhotos,
+  deleteSessionPhotos,
+  finishPhoto,
+  listPhotos,
+  PHOTO_BUCKET,
+  readPhoto,
+  removePhoto,
+} from "@/lib/photos-service";
+import { sessionContext } from "@/lib/session-context";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // 3a: photos to style around against the real database and photo store (R26, R27, R31, FR-27).
@@ -140,5 +155,80 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     expect(await deleteEndedSessionPhotos(db, a.id)).toBe(1);
     expect(await rows()).toEqual([]);
     expect(await files(`${a.id}/${session}`)).toEqual([]);
+  });
+
+  // 3b: the photo reader (R28 to R32), with a stand-in for Claude.
+  const blazer: PhotoItem = {
+    name: "Navy wool blazer",
+    details: {
+      type: { value: "blazer", status: "confirmed" },
+      colors: { value: "navy", status: "to_confirm" },
+      pattern: { value: "solid", status: "confirmed" },
+      style: { value: "classic", status: "to_confirm" },
+    },
+  };
+  const tee: PhotoItem = { ...blazer, name: "White T-shirt", details: { ...blazer.details, type: { value: "t-shirt", status: "confirmed" } } };
+  const standIn = (items: PhotoItem[] | null, costUsd = 0.0125): PhotoReader => ({ read: async () => (items ? { items, costUsd } : null) });
+  const guard = (dailyAiUsd = 1) =>
+    createBudgetGuard(db, { ...readBudgetLimits({}), dailyAiUsd, monthlyClaudeUsd: 1e6, monthlyOpenaiUsd: 1e6, monthlyVideoSeconds: 1e9 });
+  const spent = async () => (await db.from("usage").select("claude_microdollars").eq("user_id", a.id).maybeSingle()).data?.claude_microdollars ?? 0;
+
+  /** A kept photo, as the browser and the ready step make one. */
+  async function kept(color = "#1f2a44", replaces: string | null = null) {
+    const { id, version, finished } = await upload(a, await jpeg(color), replaces);
+    if (!finished?.ok) throw new Error("not kept");
+    return { id, version, finished };
+  }
+
+  it("a kept photo shows Analyzing, then the photo reader's answer is saved and charged to the AI allowance (R28)", async () => {
+    await db.from("usage").delete().eq("user_id", a.id).throwOnError();
+    const { id, version, finished } = await kept();
+    expect(finished.photo.item.reading.state).toBe("analyzing");
+    expect((await listPhotos(db, a.id, session))[0].item.reading.state).toBe("analyzing");
+
+    const item = await readPhoto({ db, guard: guard(), reader: standIn([blazer]) }, a.id, id, version, finished.jpeg);
+    expect(item).toEqual({ reading: { state: "read", items: [blazer], chosen: 0 }, ownership: null });
+    expect((await listPhotos(db, a.id, session))[0].item).toEqual(item);
+    expect(await spent()).toBe(12500);
+    // The stylist is told the item, and what to ask (Q1 in 3b).
+    expect(await sessionContext(db, a.id, session)).toContain("Navy wool blazer");
+  });
+
+  it("a reading for a photo replaced meanwhile is dropped, so it never lands on the new photo (R31)", async () => {
+    const first = await kept();
+    const second = await addPhoto(db, a.id, session, "upload", first.id);
+    if (!second.ok) throw new Error(second.reason);
+    expect(await readPhoto({ db, guard: guard(), reader: standIn([blazer]) }, a.id, first.id, first.version, first.finished.jpeg)).toBeNull();
+    expect((await rows())[0]).toMatchObject({ version: 2, recognized_details: {} });
+  });
+
+  it("a failed reading, or the day's AI used up, leaves the photo with Describe it instead (R32)", async () => {
+    const one = await kept();
+    expect((await readPhoto({ db, guard: guard(), reader: standIn(null) }, a.id, one.id, one.version, one.finished.jpeg))?.reading.state).toBe("failed");
+    const nothing = await readPhoto({ db, guard: guard(), reader: standIn([]) }, a.id, one.id, one.version, one.finished.jpeg);
+    expect(nothing?.reading.state).toBe("failed");
+    let asked = false;
+    const watching: PhotoReader = { read: async () => ((asked = true), { items: [blazer], costUsd: 0 }) };
+    const broke = await readPhoto({ db, guard: guard(0), reader: watching }, a.id, one.id, one.version, one.finished.jpeg);
+    expect(broke?.reading.state).toBe("failed");
+    expect(asked).toBe(false);
+    expect(await sessionContext(db, a.id, session)).toContain("Ask them to describe it");
+  });
+
+  it("taps confirm a detail, pick one of several items and say whose it is; changes at the same moment both land (R28 to R30)", async () => {
+    const { id, version, finished } = await kept();
+    await readPhoto({ db, guard: guard(), reader: standIn([blazer, tee]) }, a.id, id, version, finished.jpeg);
+    expect(await sessionContext(db, a.id, session)).toContain("Ask which one to style around");
+    expect((await changePhoto(db, a.id, session, id, { choose: 1 }))?.reading.chosen).toBe(1);
+    // A tap and a spoken "it's mine" together: one is tried again on the other's result.
+    await Promise.all([changePhoto(db, a.id, session, id, { confirm: ["style"] }), changePhoto(db, a.id, session, id, { ownership: "owned" })]);
+    const [photo] = await listPhotos(db, a.id, session);
+    expect(photo.item.ownership).toBe("owned");
+    expect(photo.item.reading.items[1].details.style.status).toBe("confirmed");
+    expect(await sessionContext(db, a.id, session)).toContain("White T-shirt");
+    // Guest B can't change it.
+    expect(await changePhoto(db, b.id, session, id, { ownership: "inspiration" })).toBeNull();
+    // A change for an old version of the photo is dropped.
+    expect(await changePhoto(db, a.id, session, id, { ownership: "inspiration" }, version + 1)).toBeNull();
   });
 });

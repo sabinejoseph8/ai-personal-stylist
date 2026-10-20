@@ -58,9 +58,19 @@ export function announcement(changes: NoteChange[]) {
   return parts.join(", ");
 }
 
-export type NotebookPhoto = { key: string; state: "uploading" | "ready" | "failed"; active: boolean };
+export type NotebookPhoto = {
+  key: string;
+  state: "uploading" | "ready" | "failed";
+  active: boolean;
+  /** What the photo reader made of it (3b). */
+  reading?: "analyzing" | "read" | "failed";
+  /** The chosen item's name. */
+  name?: string;
+  items?: number;
+  ownership?: "owned" | "inspiration" | null;
+};
 
-/** What screen readers hear when the photo to style around changes (3a, R68): short sentences, or nothing. */
+/** What screen readers hear when the photo to style around changes (3a, 3b, R68): short sentences, or nothing. */
 export function photoAnnouncement(before: NotebookPhoto[], after: NotebookPhoto[]) {
   const old = new Map(before.map((p) => [p.key, p]));
   const parts: string[] = [];
@@ -71,6 +81,14 @@ export function photoAnnouncement(before: NotebookPhoto[], after: NotebookPhoto[
     else if (was.state === "uploading" && p.state === "ready") parts.push("Photo ready.");
     else if (was.state !== "failed" && p.state === "failed") parts.push("The photo didn't upload. Use Try again to send it again.");
     else if (!was.active && p.active && after.length > 1) parts.push(`Now styling around photo ${i + 1} of ${after.length}.`);
+    if (!was || !p.active) return;
+    // What the photo reader found, and the shopper's choices about it (3b).
+    if (was.reading !== p.reading && p.reading === "read") {
+      if (p.name) parts.push(`Recognized: ${p.name}.`);
+      else if ((p.items ?? 0) > 1) parts.push(`Found ${p.items} items. Which one should we style around?`);
+    } else if (was.reading !== p.reading && p.reading === "failed") parts.push("Couldn't recognize this item. Describe it instead.");
+    else if (p.reading === "read" && p.name && was.name !== p.name) parts.push(`Styling around: ${p.name}.`);
+    if (was.ownership !== p.ownership && p.ownership) parts.push(p.ownership === "owned" ? "Marked as yours." : "Marked as an inspiration.");
   });
   if (before.some((p) => !after.some((a) => a.key === p.key))) parts.unshift("Photo removed.");
   return parts.join(" ");

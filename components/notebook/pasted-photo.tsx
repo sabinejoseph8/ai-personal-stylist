@@ -2,23 +2,40 @@
 
 import * as RadixDialog from "@radix-ui/react-dialog";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { ItemDetails, OwnershipLabel } from "@/components/notebook/item-details";
 import type { PagePhoto } from "@/components/session/use-photos";
 import { Button } from "@/components/ui/button";
-import { photoAnnouncement } from "@/lib/notebook";
+import { chosenItem, type DetailName } from "@/core/photos/item";
+import { type NotebookPhoto, photoAnnouncement } from "@/lib/notebook";
 import { MAX_PHOTOS } from "@/lib/photos";
 
 // Style around this item (3a; R26, R27, R31, R32, R68; design 4.2). The shopper's photo is pasted into
 // the notebook with a white print border, a 1 degree tilt and two strips of tape; the label beside it
 // is never tilted. Its shape is kept: it's never cropped. Enlarge shows it full size and untilted.
 // Replace and Remove act on it, and with several photos a row of thumbnails shows the active one.
-// The item's name and Owned or Inspiration come with the photo reader (3b).
+// The photo reader (3b) names the item; its details and whose it is are reviewed under the photo.
 
 const ROW = "pl-[calc(var(--margin-x)+0.75rem)] pr-4";
 
 const sourceWords = (p: PagePhoto) => (p.source === "camera" ? "From your camera" : "Uploaded");
-/** Every photo has a description (R68). The item's name joins it in 3b. */
-const describe = (p: PagePhoto, index: number, count: number) =>
-  `Your item to style around${count > 1 ? `, photo ${index + 1} of ${count}` : ""}, ${sourceWords(p).toLowerCase()}`;
+/** The item's name once the photo reader knows it (and, with several items, once one is chosen). */
+const itemName = (p: PagePhoto) => (p.item ? chosenItem(p.item.reading)?.name : undefined);
+/** Every photo has a description (R68), with the item's name once it's known. */
+const describe = (p: PagePhoto, index: number, count: number) => {
+  const name = itemName(p);
+  return `${name ? `${name}, the item` : "Your item"} to style around${count > 1 ? `, photo ${index + 1} of ${count}` : ""}, ${sourceWords(p).toLowerCase()}`;
+};
+
+/** A photo in the few words announcements compare (R68). */
+const forAnnouncing = (p: PagePhoto): NotebookPhoto => ({
+  key: p.key,
+  state: p.state,
+  active: p.active,
+  reading: p.item?.reading.state,
+  name: itemName(p),
+  items: p.item?.reading.items.length ?? 0,
+  ownership: p.item?.ownership ?? null,
+});
 
 /** The 40 px thumbnail and label in the collapsed notebook's summary line (R27). */
 export function PhotoThumbnail({ photo }: { photo: PagePhoto }) {
@@ -26,7 +43,7 @@ export function PhotoThumbnail({ photo }: { photo: PagePhoto }) {
     <span className="inline-flex items-center gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element -- a short-lived private link, not a site image */}
       <img src={photo.thumbnailUrl} alt="" className="size-10 rounded-print bg-page object-contain shadow-photo" />
-      <span className="type-small text-ink">Your item</span>
+      <span className="type-small text-ink">{itemName(photo) ?? "Your item"}</span>
     </span>
   );
 }
@@ -52,7 +69,7 @@ function EnlargeDialog({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="overlay-fade fixed inset-0 z-40 bg-ink/60" />
         <RadixDialog.Content className="dialog-pop fixed left-1/2 top-1/2 z-50 flex max-h-[92vh] w-[min(94vw,40rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-panel bg-page p-4 shadow-overlay">
-          <RadixDialog.Title className="type-subheading m-0 text-ink">Your item</RadixDialog.Title>
+          <RadixDialog.Title className="type-subheading m-0 text-ink">{itemName(photo) ?? "Your item"}</RadixDialog.Title>
           {/* eslint-disable-next-line @next/next/no-img-element -- a short-lived private link, not a site image */}
           <img src={photo.photoUrl} alt={description} className="max-h-[70vh] w-full rounded-print object-contain" />
           <RadixDialog.Description className="type-small m-0 text-graphite">
@@ -81,6 +98,9 @@ export function StyleAroundThisItem({
   onChoose,
   onRetry,
   onLinkExpired,
+  onConfirm,
+  onChooseItem,
+  onOwnership,
 }: {
   photos: PagePhoto[];
   active: PagePhoto | null;
@@ -95,6 +115,9 @@ export function StyleAroundThisItem({
   onChoose: (photo: PagePhoto) => void;
   onRetry: (photo: PagePhoto) => void;
   onLinkExpired: () => void;
+  onConfirm: (photo: PagePhoto, detail: DetailName) => void;
+  onChooseItem: (photo: PagePhoto, index: number) => void;
+  onOwnership: (photo: PagePhoto, ownership: "owned" | "inspiration") => void;
 }) {
   const picker = useRef<HTMLInputElement>(null);
   const replacing = useRef<PagePhoto | null>(null);
@@ -104,14 +127,13 @@ export function StyleAroundThisItem({
 
   // Polite announcements (R68), held while anyone is talking, like the notes'.
   const live = useRef<HTMLParagraphElement>(null);
-  const before = useRef(photos);
+  const before = useRef(photos.map(forAnnouncing));
   const waiting = useRef<string[]>([]);
   useEffect(() => {
-    if (before.current !== photos) {
-      const said = photoAnnouncement(before.current, photos);
-      if (said) waiting.current.push(said);
-      before.current = photos;
-    }
+    const now = photos.map(forAnnouncing);
+    const said = photoAnnouncement(before.current, now);
+    if (said) waiting.current.push(said);
+    before.current = now;
     const region = live.current;
     if (holdAnnouncements || !waiting.current.length || !region) return;
     const message = waiting.current.join(" ");
@@ -178,8 +200,10 @@ export function StyleAroundThisItem({
             </button>
 
             <div className="flex min-w-0 flex-col items-start gap-1">
-              <p className="type-note m-0 text-ink">Your item</p>
+              <p className="type-note m-0 text-ink">{itemName(active) ?? "Your item"}</p>
               <p className="type-small m-0 text-graphite">{sourceWords(active)}</p>
+              {active.item?.reading.state === "analyzing" && <p className="type-small m-0 text-graphite">Analyzing</p>}
+              {active.item && chosenItem(active.item.reading) && <OwnershipLabel ownership={active.item.ownership} />}
               {active.state === "uploading" && (
                 <div className="flex w-full flex-col gap-1 py-1">
                   <span id="photo-progress" className="type-small text-graphite">
@@ -219,6 +243,15 @@ export function StyleAroundThisItem({
               </Button>
             </div>
           </div>
+
+          {active.state === "ready" && active.item && (
+            <ItemDetails
+              item={active.item}
+              onConfirm={(detail) => onConfirm(active, detail)}
+              onChoose={(index) => onChooseItem(active, index)}
+              onOwnership={(ownership) => onOwnership(active, ownership)}
+            />
+          )}
 
           {photos.length > 1 && (
             <ul aria-label="Your photos" className={`${ROW} m-0 flex h-21 list-none items-start gap-3 p-0 pt-1`}>

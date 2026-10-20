@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ConversationEvent } from "@/connectors/conversation/types";
 import type { NextQuestion, ShownNote } from "@/core/notes/types";
+import type { StyleItem } from "@/core/photos/item";
 
 // The browser's side of My Styling Notes (2c, 2d): it sends the shopper's words about twice a second
 // while they talk (R17, Sabine's option 3 in 2c), and right away when they finish, and shows the notes
@@ -24,12 +25,22 @@ function withTouches(notes: ShownNote[], touches: Map<string, Touch>) {
   }
   return shown;
 }
-type Update = { version?: number; notes?: ShownNote[]; question?: NextQuestion; seq?: number; context?: string; paused?: boolean; error?: string };
+type Update = {
+  version?: number;
+  notes?: ShownNote[];
+  question?: NextQuestion;
+  seq?: number;
+  context?: string;
+  paused?: boolean;
+  error?: string;
+  /** The photo's item, when the shopper's words changed it (3b). */
+  photo?: { id: string; item: StyleItem };
+};
 
 const SEND_EVERY_MS = 500;
 
 /** Reads a streamed answer: one JSON update per line. */
-async function readLines(res: Response, onLine: (u: Update) => void) {
+export async function readLines<T = Update>(res: Response, onLine: (u: T) => void) {
   const reader = res.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -40,14 +51,20 @@ async function readLines(res: Response, onLine: (u: Update) => void) {
     while (newline >= 0) {
       const line = buffer.slice(0, newline).trim();
       buffer = buffer.slice(newline + 1);
-      if (line) onLine(JSON.parse(line) as Update);
+      if (line) onLine(JSON.parse(line) as T);
       newline = buffer.indexOf("\n");
     }
     if (done) return;
   }
 }
 
-export function useNotes(sessionId: string | null, live: boolean, initial: ShownNote[], onContext: (context: string) => void) {
+export function useNotes(
+  sessionId: string | null,
+  live: boolean,
+  initial: ShownNote[],
+  onContext: (context: string) => void,
+  onPhoto?: (id: string, item: StyleItem) => void,
+) {
   const [notes, setNotes] = useState<ShownNote[]>(initial);
   const [question, setQuestion] = useState<NextQuestion>(null);
   const [paused, setPaused] = useState(false);
@@ -56,9 +73,11 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
   const turn = useRef({ id: "", key: "", text: "", sent: "" });
   const stylistSaid = useRef("");
   const context = useRef(onContext);
+  const photo = useRef(onPhoto);
   const session = useRef(sessionId);
   useLayoutEffect(() => {
     context.current = onContext;
+    photo.current = onPhoto;
     session.current = sessionId;
   });
 
@@ -80,6 +99,7 @@ export function useNotes(sessionId: string | null, live: boolean, initial: Shown
       setQuestion(u.question);
     }
     setPaused(Boolean(u.paused));
+    if (u.photo) photo.current?.(u.photo.id, u.photo.item);
     if (u.context) context.current(u.context);
   }
 

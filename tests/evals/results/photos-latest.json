@@ -1,0 +1,688 @@
+{
+ "summary": {
+  "model": "claude-opus-5-5",
+  "effort": "low",
+  "date": "2026-10-20T22:29:59.793Z",
+  "photos": 24,
+  "detailChecks": 80,
+  "detailsRight": 75,
+  "detailsRightPercent": 94,
+  "byDetail": {
+   "type": "17 of 20",
+   "colors": "20 of 20",
+   "pattern": "19 of 20",
+   "style": "19 of 20"
+  },
+  "twoItemChecks": 12,
+  "twoItemChecksRight": 12,
+  "failedReadings": 0,
+  "seconds": {
+   "median": 2.48,
+   "p95": 3.65
+  },
+  "costUSD": 0.3007,
+  "costPerPhotoUSD": 0.0125
+ },
+ "results": [
+  {
+   "id": "m-beige-trench-coat",
+   "expected": "coat; beige; solid; classic",
+   "found": [
+    "Beige double-breasted trench coat [coat, beige, solid, classic]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.475030833,
+   "cost": 0.012536,
+   "failed": false
+  },
+  {
+   "id": "m-black-bomber-jacket",
+   "expected": "jacket; black; solid; sporty/edgy",
+   "found": [
+    "Black nylon bomber jacket [jacket, black, solid, edgy, sporty?]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.4815892089999996,
+   "cost": 0.012616,
+   "failed": false
+  },
+  {
+   "id": "m-black-bow-tie",
+   "expected": "accessory; black; solid; elegant",
+   "found": [
+    "Black satin bow tie [tie, black, solid, classic, elegant]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.3742043749999997,
+   "cost": 0.012516,
+   "failed": false
+  },
+  {
+   "id": "m-black-chelsea-boots",
+   "expected": "shoes; black; solid; edgy/minimal",
+   "found": [
+    "Black leather Chelsea boots [boots, black, solid, classic, minimal]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.290465084,
+   "cost": 0.012576,
+   "failed": false
+  },
+  {
+   "id": "m-black-dress-shirt",
+   "expected": "shirt; black; solid; edgy/elegant",
+   "found": [
+    "Black button-up dress shirt [shirt, black, solid, classic, minimal]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": false
+    }
+   ],
+   "seconds": 2.3728981670000002,
+   "cost": 0.012576,
+   "failed": false
+  },
+  {
+   "id": "m-black-leather-weekender",
+   "expected": "bag; black; solid; minimal/classic",
+   "found": [
+    "Black pebbled leather duffle bag [bag, black, solid, classic, minimal]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 3.8877177910000005,
+   "cost": 0.012616,
+   "failed": false
+  },
+  {
+   "id": "m-black-slim-jeans",
+   "expected": "jeans; black; solid; edgy/minimal",
+   "found": [
+    "Black denim jeans [jeans, black, solid, classic, minimal?]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 3.649330125,
+   "cost": 0.012516,
+   "failed": false
+  },
+  {
+   "id": "m-black-turtleneck",
+   "expected": "knitwear; black; solid; minimal/edgy",
+   "found": [
+    "Black knit turtleneck sweater [knitwear, black, solid, classic, minimal]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 1.766953833,
+   "cost": 0.012636,
+   "failed": false
+  },
+  {
+   "id": "m-black-tuxedo-jacket",
+   "expected": "suit; black; solid; elegant",
+   "found": [
+    "Black peak-lapel tuxedo jacket [blazer, black, solid, elegant, classic]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": false
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 1.9857027500000004,
+   "cost": 0.012696,
+   "failed": false
+  },
+  {
+   "id": "m-black-tuxedo-trousers",
+   "expected": "trousers; black; solid; elegant",
+   "found": [
+    "Black tuxedo trousers with satin side stripe [trousers, black, striped?, elegant, classic]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": false
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.5108545,
+   "cost": 0.012716,
+   "failed": false
+  },
+  {
+   "id": "m-brown-tweed-blazer",
+   "expected": "blazer; brown; herringbone; classic/preppy",
+   "found": [
+    "Brown herringbone tweed blazer [blazer, brown, tan, herringbone, classic, preppy]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.0700833329999995,
+   "cost": 0.012756,
+   "failed": false
+  },
+  {
+   "id": "m-navy-chino-shorts",
+   "expected": "shorts; navy; solid; relaxed/preppy",
+   "found": [
+    "Navy cotton chino shorts [shorts, navy, solid, classic, preppy, relaxed?]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.151168708,
+   "cost": 0.012716,
+   "failed": false
+  },
+  {
+   "id": "m-navy-polo-shirt",
+   "expected": "t-shirt; navy; solid; preppy/sporty",
+   "found": [
+    "Navy piqué polo shirt [shirt, navy, solid, classic, preppy]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": false
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.604483,
+   "cost": 0.012616,
+   "failed": false
+  },
+  {
+   "id": "w-black-column-gown",
+   "expected": "dress; black; solid; elegant/minimal",
+   "found": [
+    "Black turtleneck long-sleeve maxi dress [dress, black, solid, elegant, minimal]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 1.9655232919999999,
+   "cost": 0.012736,
+   "failed": false
+  },
+  {
+   "id": "w-black-fitted-tee",
+   "expected": "top; black; solid; minimal",
+   "found": [
+    "Black crew-neck cotton t-shirt [t-shirt, black, solid, minimal, relaxed]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": false
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 1.9612077090000002,
+   "cost": 0.012756,
+   "failed": false
+  },
+  {
+   "id": "w-black-leather-mini-skirt",
+   "expected": "skirt; black; solid; edgy/bold",
+   "found": [
+    "Black faux leather mini skirt [skirt, black, solid, edgy, minimal?]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.322978332999999,
+   "cost": 0.012616,
+   "failed": false
+  },
+  {
+   "id": "w-grey-long-cardigan",
+   "expected": "cardigan; heather grey; solid; relaxed/minimal",
+   "found": [
+    "Grey longline knit cardigan [cardigan, heather grey, solid, relaxed, minimal]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.0798734999999997,
+   "cost": 0.012716,
+   "failed": false
+  },
+  {
+   "id": "m-burgundy-patterned-tie",
+   "expected": "accessory; burgundy/navy; geometric; classic/bold",
+   "found": [
+    "Burgundy silk micro-pattern tie [tie, burgundy, navy, geometric, classic, elegant]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.595353416,
+   "cost": 0.012796,
+   "failed": false
+  },
+  {
+   "id": "m-floral-short-sleeve-shirt",
+   "expected": "shirt; navy/white; floral; bold/relaxed",
+   "found": [
+    "Navy hibiscus print camp-collar shirt [shirt, navy, white, floral, relaxed, bold]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.58756725,
+   "cost": 0.012796,
+   "failed": false
+  },
+  {
+   "id": "m-green-flannel-shirt",
+   "expected": "shirt; forest green/navy; check; relaxed/classic",
+   "found": [
+    "Navy and green tartan flannel shirt [shirt, navy, forest green, black, check, relaxed, classic?]"
+   ],
+   "checks": [
+    {
+     "what": "type",
+     "ok": true
+    },
+    {
+     "what": "colors",
+     "ok": true
+    },
+    {
+     "what": "pattern",
+     "ok": true
+    },
+    {
+     "what": "style",
+     "ok": true
+    }
+   ],
+   "seconds": 2.602203540999999,
+   "cost": 0.012796,
+   "failed": false
+  },
+  {
+   "id": "m-brown-tweed-blazer + m-black-slim-jeans",
+   "expected": "blazer + jeans",
+   "found": [
+    "Brown herringbone tweed blazer [blazer, brown, taupe, herringbone, classic, preppy]",
+    "Black washed denim jeans [jeans, washed black, solid, relaxed, minimal?]"
+   ],
+   "checks": [
+    {
+     "what": "found 2 or more items",
+     "ok": true
+    },
+    {
+     "what": "found the blazer",
+     "ok": true
+    },
+    {
+     "what": "found the jeans",
+     "ok": true
+    }
+   ],
+   "seconds": 3.2114194160000005,
+   "cost": 0.011932,
+   "failed": false
+  },
+  {
+   "id": "w-blush-pleated-maxi-dress + m-black-patent-dress-shoes",
+   "expected": "dress + shoes",
+   "found": [
+    "Blush pleated chiffon maxi dress [dress, blush pink, pleated, romantic, elegant]",
+    "Black patent cap-toe oxfords [oxfords, black, solid, classic, elegant]"
+   ],
+   "checks": [
+    {
+     "what": "found 2 or more items",
+     "ok": true
+    },
+    {
+     "what": "found the dress",
+     "ok": true
+    },
+    {
+     "what": "found the shoes",
+     "ok": true
+    }
+   ],
+   "seconds": 2.477909625,
+   "cost": 0.011932,
+   "failed": false
+  },
+  {
+   "id": "m-black-dress-shirt + m-black-leather-weekender",
+   "expected": "shirt + bag",
+   "found": [
+    "Black button-down dress shirt [shirt, black, solid, classic, minimal]",
+    "Black pebbled leather duffel bag [bag, black, solid, classic, elegant?]"
+   ],
+   "checks": [
+    {
+     "what": "found 2 or more items",
+     "ok": true
+    },
+    {
+     "what": "found the shirt",
+     "ok": true
+    },
+    {
+     "what": "found the bag",
+     "ok": true
+    }
+   ],
+   "seconds": 2.1709132499999995,
+   "cost": 0.011712,
+   "failed": false
+  },
+  {
+   "id": "m-beige-trench-coat + m-charcoal-wool-trousers",
+   "expected": "coat + trousers",
+   "found": [
+    "Beige double-breasted trench coat [coat, beige, solid, classic]",
+    "Charcoal pleated wool trousers [trousers, charcoal grey, solid?, classic, elegant]"
+   ],
+   "checks": [
+    {
+     "what": "found 2 or more items",
+     "ok": true
+    },
+    {
+     "what": "found the coat",
+     "ok": true
+    },
+    {
+     "what": "found the trousers",
+     "ok": true
+    }
+   ],
+   "seconds": 3.085159540999999,
+   "cost": 0.011792,
+   "failed": false
+  }
+ ]
+}

@@ -1,3 +1,4 @@
+import type { ItemChange } from "../photos/item";
 import type { NotesReader } from "./reader";
 import { active, type NewNote, type NextQuestion } from "./types";
 
@@ -5,11 +6,27 @@ import { active, type NewNote, type NextQuestion } from "./types";
 // the same every time. Only used when NOTES_READER=fake, never on the live site.
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const ORDER = ["first", "second", "third", "fourth"];
+
+/** What the shopper said about the photo (3b): "it's mine", "an inspiration", "the second one", "actually it's black". */
+function photoChange(text: string): ItemChange | undefined {
+  const change: ItemChange = {};
+  if (/\b(it's mine|it is mine|i own it)\b/.test(text)) change.ownership = "owned";
+  if (/\binspiration\b/.test(text)) change.ownership = "inspiration";
+  const which = text.match(/\bthe (first|second|third|fourth) one\b/);
+  if (which) change.choose = ORDER.indexOf(which[1]);
+  const color = text.match(/\bactually it's ([a-z]+)\b/);
+  if (color) change.set = [{ name: "colors", value: color[1] }];
+  const described = text.match(/\bit's a ([a-z]+) (blazer|dress|jacket|coat|skirt|shirt)\b/);
+  if (described) change.set = [{ name: "type", value: described[2] }, { name: "colors", value: described[1] }];
+  return Object.keys(change).length ? change : undefined;
+}
+
 const MONTH = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i;
 
 export function createFakeNotesReader(): NotesReader {
   return {
-    async read({ words, notes }) {
+    async read({ words, notes, item }) {
       const text = words.toLowerCase();
       const found: NewNote[] = [];
       const add = (kind: NewNote["kind"], note: string) => found.push({ kind, text: note, status: "to_confirm", details: [] });
@@ -35,6 +52,7 @@ export function createFakeNotesReader(): NotesReader {
         changes: { add: found.filter((n) => !known.has(n.text.toLowerCase())), update: [], remove: [] },
         question,
         costUsd: 0,
+        ...(item ? { photo: photoChange(text) } : {}),
       };
     },
   };

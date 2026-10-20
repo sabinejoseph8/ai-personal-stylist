@@ -1,6 +1,8 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { readLines } from "@/components/session/use-notes";
+import { changeItem, type ItemChange, type StyleItem } from "@/core/photos/item";
 import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, type PhotoSource, type ShownPhoto, uploadType } from "@/lib/photos";
 
 // The browser's side of the item to style around (3a; R26, R27, R31, R32). A picked photo shows at
@@ -8,6 +10,8 @@ import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, type PhotoSource, type ShownPhoto, upl
 // link, the browser sends the photo straight to private storage, and the app checks and cleans it
 // (Sabine's answer to Q1 in 3a). Every change shows at once and the server's answer then takes over.
 // An answer for a photo that has since been replaced or removed is ignored, so it never comes back.
+// Once kept, the photo reader's answer streams in on the same request (3b), and the shopper confirms
+// details, picks one of several items and says whether it's theirs, each shown at once.
 
 export type { ShownPhoto };
 
@@ -27,9 +31,21 @@ export type PagePhoto = {
   progress: number;
   /** Kept for Try again (R32). */
   file?: File;
+  /** What the photo reader made of it (3b), once the photo is kept. */
+  item: StyleItem | null;
 };
 
 const fromServer = (p: ShownPhoto): PagePhoto => ({ ...p, key: p.id, state: "ready", progress: 1 });
+
+/** The stream from .../ready: the kept photo first, then the photo reader's answer. */
+type ReadyLine = { photo?: ShownPhoto; id?: string; version?: number; item?: StyleItem; context?: string; reason?: string; error?: string };
+
+export type PhotoHooks = {
+  /** What the stylist should now know (3b). */
+  onContext: (context: string) => void;
+  /** The photo reader has answered for a newly kept photo (its key), so the stylist can speak up (Q1 in 3b). */
+  onRead: (key: string) => void;
+};
 
 /** Sends the file to its one-time upload link. Resolves true when it arrived. */
 function sendFile(url: string, file: File, type: string, onProgress: (share: number) => void) {
@@ -52,12 +68,14 @@ const preload = (url: string) =>
     img.src = url;
   });
 
-export function usePhotos(sessionId: string | null, initial: ShownPhoto[]) {
+export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks: PhotoHooks) {
   const [photos, setPhotos] = useState<PagePhoto[]>(() => initial.map(fromServer));
   const [problem, setProblem] = useState<string | null>(null);
   const session = useRef(sessionId);
+  const said = useRef(hooks);
   useLayoutEffect(() => {
     session.current = sessionId;
+    said.current = hooks;
   });
   // Each upload has a ticket. A replaced or removed photo's ticket is withdrawn, so its late answers are ignored.
   const tickets = useRef(new Map<string, number>());
@@ -93,7 +111,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[]) {
     const ticket = ++nextTicket.current;
     tickets.current.set(key, ticket);
     const preview = URL.createObjectURL(file);
-    const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source: "upload" };
+    const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source: "upload", item: null };
     setPhotos((list) => {
       if (photo) return list.map((p) => (p.key === key ? { ...p, ...shown } : p));
       const added: PagePhoto = { key, id: null, version: 0, active: true, ...(shown as Omit<PagePhoto, "key" | "id" | "version" | "active">) };
@@ -137,14 +155,29 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[]) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ version: answer.version }),
       });
-      const result = (await done.json().catch(() => ({}))) as { photo?: ShownPhoto; reason?: string; error?: string };
+      if (done.ok && done.body) {
+        // The kept photo first (Analyzing), then the photo reader's answer.
+        let kept = false;
+        await readLines<ReadyLine>(done, (line) => {
+          if (line.photo && !kept) {
+            kept = true;
+            const p = line.photo;
+            void preload(p.photoUrl).then(() => {
+              if (update(key, ticket, { state: "ready", progress: 1, photoUrl: p.photoUrl, thumbnailUrl: p.thumbnailUrl, version: p.version, file: undefined }))
+                URL.revokeObjectURL(preview);
+            });
+            update(key, ticket, { item: p.item });
+          } else if (line.item && update(key, ticket, { item: line.item })) {
+            if (line.context) said.current.onContext(line.context);
+            said.current.onRead(key);
+          }
+        });
+        if (!kept) failed();
+        return;
+      }
+      const result = (await done.json().catch(() => ({}))) as ReadyLine;
       if (tickets.current.get(key) !== ticket) return;
-      if (done.ok && result.photo) {
-        const kept = result.photo;
-        await preload(kept.photoUrl);
-        if (update(key, ticket, { state: "ready", progress: 1, photoUrl: kept.photoUrl, thumbnailUrl: kept.thumbnailUrl, version: kept.version, file: undefined }))
-          URL.revokeObjectURL(preview);
-      } else if (result.reason === "type" || result.reason === "size" || result.reason === "unreadable" || result.reason === "photo") {
+      if (result.reason === "type" || result.reason === "size" || result.reason === "unreadable" || result.reason === "photo") {
         // The server turned the file away, and removed it.
         drop(key);
         setProblem(result.error ?? PHOTO_MESSAGES.type);
@@ -168,7 +201,42 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[]) {
     if (!res?.ok) {
       setPhotos(before);
       setProblem("That didn't save. Check your connection and try again.");
+      return;
     }
+    const { context } = (await res.json().catch(() => ({}))) as { context?: string };
+    if (context) said.current.onContext(context);
+  }
+
+  /**
+   * Confirm a detail, pick one of several items, or say whether it's the shopper's (R28 to R30). It
+   * shows at once; the server's answer then takes over, or it goes back if it couldn't be saved.
+   */
+  async function change(photo: PagePhoto, what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" }) {
+    setProblem(null);
+    const id = session.current;
+    if (!id || !photo.id || !photo.item) return;
+    const before = photo.item;
+    const local: ItemChange = "confirm" in what ? { confirm: what.confirm } : what;
+    setItem(photo.id, changeItem(before, local));
+    const body = "confirm" in what ? { confirm: what.confirm?.[0] } : what;
+    const res = await fetch(`/api/sessions/${id}/assets/${photo.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => null);
+    const answer = res?.ok ? ((await res.json().catch(() => ({}))) as { item?: StyleItem; context?: string }) : null;
+    if (!answer?.item) {
+      setItem(photo.id, before);
+      setProblem("That didn't save. Check your connection and try again.");
+      return;
+    }
+    setItem(photo.id, answer.item);
+    if (answer.context) said.current.onContext(answer.context);
+  }
+
+  /** A photo's item as the server now has it, from a change by touch or by voice (3b). */
+  function setItem(photoId: string, item: StyleItem) {
+    setPhotos((list) => list.map((p) => (p.id === photoId && p.state === "ready" ? { ...p, item } : p)));
   }
 
   /** Remove (R31). A photo the server never had is simply dropped. */
@@ -179,30 +247,48 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[]) {
     if (!id || !photo.id) return;
     const res = await fetch(`/api/sessions/${id}/assets/${photo.id}`, { method: "DELETE" }).catch(() => null);
     if (!res?.ok && res?.status !== 404) setProblem("That photo couldn't be removed. Check your connection and try again.");
+    const { context } = res?.ok ? ((await res.json().catch(() => ({}))) as { context?: string }) : {};
+    if (context) said.current.onContext(context);
+  }
+
+  /** Fresh links and items for the session's photos. */
+  async function fetchPhotos() {
+    const id = session.current;
+    if (!id) return;
+    const res = await fetch(`/api/sessions/${id}/assets`).catch(() => null);
+    if (!res?.ok) return;
+    const { photos: fresh } = (await res.json()) as { photos: ShownPhoto[] };
+    const latest = new Map(fresh.map((p) => [p.id, p]));
+    setPhotos((list) =>
+      list.map((p) => {
+        const f = p.id && p.state === "ready" ? latest.get(p.id) : undefined;
+        return f && f.version === p.version ? { ...p, photoUrl: f.photoUrl, thumbnailUrl: f.thumbnailUrl, item: f.item } : p;
+      }),
+    );
   }
 
   /** Links last 30 minutes: when one has run out, the page asks for fresh ones. */
   const refreshing = useRef(false);
   async function refresh() {
-    const id = session.current;
-    if (!id || refreshing.current) return;
+    if (refreshing.current) return;
     refreshing.current = true;
     try {
-      const res = await fetch(`/api/sessions/${id}/assets`);
-      if (!res.ok) return;
-      const { photos: fresh } = (await res.json()) as { photos: ShownPhoto[] };
-      const links = new Map(fresh.map((p) => [p.id, p]));
-      setPhotos((list) =>
-        list.map((p) => {
-          const f = p.id && p.state === "ready" ? links.get(p.id) : undefined;
-          return f && f.version === p.version ? { ...p, photoUrl: f.photoUrl, thumbnailUrl: f.thumbnailUrl } : p;
-        }),
-      );
+      await fetchPhotos();
     } finally {
       // At most once a minute, so a photo that won't load doesn't ask over and over.
       setTimeout(() => (refreshing.current = false), 60_000);
     }
   }
+
+  // A photo still being read when the page opened (a reload mid-reading) has no answer on its way to
+  // this page, so the page looks again shortly.
+  const [fromLoad] = useState(() => new Set(initial.map((p) => p.id)));
+  const reloadedWhileReading = photos.some((p) => fromLoad.has(p.key) && p.state === "ready" && p.item?.reading.state === "analyzing");
+  useEffect(() => {
+    if (!reloadedWhileReading) return;
+    const timer = setTimeout(() => void fetchPhotos(), 4000);
+    return () => clearTimeout(timer);
+  }, [reloadedWhileReading, photos]);
 
   return {
     photos,
@@ -213,6 +299,11 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[]) {
     retry: (photo: PagePhoto) => photo.file && void upload(photo.file, photo),
     choose: (photo: PagePhoto) => void choose(photo),
     remove: (photo: PagePhoto) => void remove(photo),
+    confirm: (photo: PagePhoto, detail: NonNullable<ItemChange["confirm"]>[number]) => void change(photo, { confirm: [detail] }),
+    chooseItem: (photo: PagePhoto, index: number) => void change(photo, { choose: index }),
+    setOwnership: (photo: PagePhoto, ownership: "owned" | "inspiration") => void change(photo, { ownership }),
+    /** A change heard in the shopper's words (3b). */
+    setItem,
     refresh: () => void refresh(),
     /** End clears the photos with the notes. */
     reset: () => {

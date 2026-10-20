@@ -1,5 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import sharp from "sharp";
+import { ANALYZING, changeItem, type ItemChange, type Ownership, savedReading, type StyleItem } from "@/core/photos/item";
+import type { PhotoReader } from "@/core/photos/reader";
+import type { BudgetGuard } from "@/lib/budget-guard";
 import { cleanPhoto, type PhotoRefusal } from "@/lib/photo-cleaner";
 import { MAX_PHOTO_BYTES, type PhotoSource, type ShownPhoto } from "@/lib/photos";
 
@@ -8,14 +12,28 @@ import { MAX_PHOTO_BYTES, type PhotoSource, type ShownPhoto } from "@/lib/photos
 // takes two steps, because Vercel refuses anything over 4.5 MB (Sabine's answer to Q1 in 3a): the app
 // gives the browser a one-time upload link into the guest's private folder, then checks and cleans
 // what arrived, keeps the clean copy and deletes the original. Every photo has a version, and a new
-// version gets new files, so nothing late can bring back a replaced photo.
+// version gets new files, so nothing late can bring back a replaced photo. Once kept, the photo reader
+// (3b) works out what the item is, and the shopper confirms or corrects it by touch or voice.
 
 export const PHOTO_BUCKET = "guest-photos";
 /** Links to photos stop working after 30 minutes. The page asks for fresh ones when it needs them. */
 const LINK_SECONDS = 30 * 60;
 
-type Row = { id: string; user_id: string; version: number; source: PhotoSource; active: boolean; photo_path: string; thumbnail_path: string };
-const COLUMNS = "id, user_id, version, source, active, photo_path, thumbnail_path";
+type Row = {
+  id: string;
+  user_id: string;
+  version: number;
+  source: PhotoSource;
+  active: boolean;
+  photo_path: string;
+  thumbnail_path: string;
+  recognized_details: unknown;
+  ownership: Ownership;
+  details_seq: number;
+};
+const COLUMNS = "id, user_id, version, source, active, photo_path, thumbnail_path, recognized_details, ownership, details_seq";
+
+const itemOf = (r: Row): StyleItem => ({ reading: savedReading(r.recognized_details), ownership: r.ownership });
 
 /** Where the browser sends a photo before it's checked. */
 const incomingPath = (owner: string, id: string, version: number) => `${owner}/incoming/${id}-v${version}`;
@@ -42,7 +60,7 @@ export async function shownPhotos(db: SupabaseClient, rows: Row[]): Promise<Show
   return rows.flatMap((r) => {
     const photoUrl = links.get(r.photo_path);
     const thumbnailUrl = links.get(r.thumbnail_path);
-    return photoUrl && thumbnailUrl ? [{ id: r.id, version: r.version, source: r.source, active: r.active, photoUrl, thumbnailUrl }] : [];
+    return photoUrl && thumbnailUrl ? [{ id: r.id, version: r.version, source: r.source, active: r.active, photoUrl, thumbnailUrl, item: itemOf(r) }] : [];
   });
 }
 
@@ -125,9 +143,81 @@ export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId
     await removeFiles(db, [row.photo_path, row.thumbnail_path]).catch(logFailure("deleting an outdated photo"));
     return null;
   }
-  const [photo] = await shownPhotos(db, [row]);
+  // The photo reader starts on it next (3b): until it answers, the photo shows Analyzing.
+  const analyzing = { ...ANALYZING, since: new Date().toISOString() };
+  await db.rpc("save_asset_details", { asset: photoId, expected_version: version, details: analyzing }).throwOnError();
+  const [photo] = await shownPhotos(db, [{ ...row, recognized_details: analyzing, ownership: null }]);
   if (!photo) throw new Error("making photo links failed");
-  return { ok: true as const, photo };
+  return { ok: true as const, photo, jpeg: cleaned.photo };
+}
+
+export type PhotoReadingDeps = { db: SupabaseClient; guard: BudgetGuard; reader: PhotoReader };
+
+/** The photo reader sees a smaller copy: plenty for clothing details, and fewer tokens (3b). */
+const READ_SIDE = 1024;
+
+/**
+ * The photo reader (R28, R29): reads a kept photo through the budget guard and saves what it found
+ * with the photo's version. A failed reading, or the day's AI used up, leaves the photo with "Describe
+ * it instead" (R32). Returns null when the photo was replaced or removed meanwhile.
+ */
+export async function readPhoto(deps: PhotoReadingDeps, guestId: string, photoId: string, version: number, jpeg: Buffer): Promise<StyleItem | null> {
+  let reading: StyleItem["reading"] = { state: "failed", items: [], chosen: null };
+  const money = await deps.guard.checkAi(guestId, "claude");
+  if (money.ok) {
+    const { data, info } = await sharp(jpeg).resize(READ_SIDE, READ_SIDE, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer({ resolveWithObject: true });
+    const read = await deps.reader.read({ jpegBase64: data.toString("base64"), width: info.width, height: info.height }).catch(() => null);
+    if (read && read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
+    if (read?.items.length) reading = { state: "read", items: read.items, chosen: read.items.length === 1 ? 0 : null };
+  }
+  const { data: saved } = await deps.db.rpc("save_asset_details", { asset: photoId, expected_version: version, details: reading }).throwOnError();
+  return saved ? { reading, ownership: null } : null;
+}
+
+/** The session's active photo and its item, for the stylist and the notes reader. */
+export async function activePhoto(db: SupabaseClient, sessionId: string) {
+  const { data } = await db
+    .from("session_assets")
+    .select(COLUMNS)
+    .eq("session_id", sessionId)
+    .eq("active", true)
+    .eq("status", "ready")
+    .maybeSingle<Row>()
+    .throwOnError();
+  return data ? { id: data.id, version: data.version, item: itemOf(data) } : null;
+}
+
+/**
+ * A change to the item by touch or voice (R28 to R30): confirm or correct a detail, pick one of several
+ * items, or say whether it's theirs. Built on the details as last saved, and tried again if another
+ * change saved first. `version` keeps a change for a replaced photo from landing on the new one.
+ * Returns the item, or null when there's no such photo (or it was replaced).
+ */
+export async function changePhoto(db: SupabaseClient, guestId: string, sessionId: string, photoId: string, change: ItemChange, version?: number) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { data: row } = await db
+      .from("session_assets")
+      .select(COLUMNS)
+      .eq("id", photoId)
+      .eq("session_id", sessionId)
+      .eq("user_id", guestId)
+      .eq("status", "ready")
+      .maybeSingle<Row>()
+      .throwOnError();
+    if (!row || (version !== undefined && row.version !== version)) return null;
+    const item = changeItem(itemOf(row), change);
+    const { data: saved } = await db
+      .rpc("change_asset_details", {
+        asset: photoId,
+        expected_version: row.version,
+        expected_seq: row.details_seq,
+        details: item.reading,
+        new_ownership: item.ownership,
+      })
+      .throwOnError();
+    if (saved) return item;
+  }
+  throw new Error("saving a photo change kept clashing");
 }
 
 /** Makes a photo the item to style around (R31). False when there's no such photo. */

@@ -14,7 +14,8 @@ test.describe("the photo to style around", () => {
   let guest: TestGuest;
   const photoRows = async () => (await serverDb().from("session_assets").select("id, version, active, status").eq("user_id", guest.id).order("created_at")).data ?? [];
   const jpeg = (color: string) => sharp({ create: { width: 300, height: 400, channels: 3, background: color } }).jpeg().toBuffer();
-  const pasted = (page: Page) => page.getByRole("img", { name: /^Your item to style around/ });
+  // Its description names the item once the photo reader has read it (3b).
+  const pasted = (page: Page) => page.getByRole("region", { name: "Style around this item" }).getByRole("img", { name: /to style around/ });
   const problem = (page: Page) => page.getByRole("region", { name: "My Styling Notes" }).getByRole("alert");
 
   async function inCall(page: Page) {
@@ -75,14 +76,14 @@ test.describe("the photo to style around", () => {
     await expect(page.getByText("Uploading", { exact: true })).toHaveCount(0);
     expect(await photoRows()).toMatchObject([{ status: "ready", active: true, version: 1 }]);
     // Screen readers hear it too (R68).
-    await expect(page.getByRole("region", { name: "Style around this item" }).locator("p[aria-live]")).toHaveText("Photo ready.");
+    await expect(page.getByRole("region", { name: "Style around this item" }).locator("p[aria-live]")).toHaveText(/Recognized: Navy wool blazer\./);
     await noSeriousA11yProblems(page);
 
     // Enlarge: the full photo, untilted, with its description. Escape closes it, and focus goes back.
     await page.getByRole("button", { name: "Enlarge" }).click();
-    const dialog = page.getByRole("dialog", { name: "Your item" });
-    await expect(dialog.getByRole("img", { name: /^Your item to style around/ })).toBeVisible();
-    await expect(dialog.getByText("Your item to style around, uploaded.")).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "Navy wool blazer" });
+    await expect(dialog.getByRole("img", { name: /to style around/ })).toBeVisible();
+    await expect(dialog.getByText("Navy wool blazer, the item to style around, uploaded.")).toBeVisible();
     // Checked once it has finished fading in, so contrast is measured at full strength.
     await dialog.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
     await noSeriousA11yProblems(page);

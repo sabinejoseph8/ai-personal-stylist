@@ -147,4 +147,39 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
       await other.remove();
     }
   });
+
+  it("what the shopper says about the photo changes it, and the stylist is told (3b, Q3)", async () => {
+    const reading = {
+      state: "read",
+      chosen: 0,
+      items: [
+        {
+          name: "Navy wool blazer",
+          details: {
+            type: { value: "blazer", status: "confirmed" },
+            colors: { value: "navy", status: "to_confirm" },
+            pattern: { value: "solid", status: "confirmed" },
+            style: { value: "classic", status: "to_confirm" },
+          },
+        },
+      ],
+    };
+    const photo = await db
+      .from("session_assets")
+      .insert({ user_id: guest.id, session_id: sessionId, photo_path: "x", source: "upload", status: "ready", recognized_details: reading })
+      .select("id")
+      .single()
+      .throwOnError();
+    const { last } = await hear("Actually it's black. It's mine");
+    expect(last.photo?.id).toBe(photo.data!.id);
+    expect(last.photo?.item.ownership).toBe("owned");
+    expect(last.photo?.item.reading.items[0]).toMatchObject({ name: "Black wool blazer", details: { colors: { value: "black", status: "confirmed" } } });
+    expect(last.context).toContain("Style around this item, from the shopper's photo: Black wool blazer");
+    expect(last.context).toContain("Ownership: theirs");
+    const saved = await db.from("session_assets").select("ownership, recognized_details").eq("id", photo.data!.id).single().throwOnError();
+    expect(saved.data!.ownership).toBe("owned");
+    // Words with nothing about the photo leave it alone.
+    const { last: next } = await hear("It's for a gala");
+    expect(next.photo).toBeUndefined();
+  });
 });

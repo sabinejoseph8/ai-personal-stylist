@@ -32,6 +32,9 @@ const MICROPHONE_HELP: Record<MicrophoneProblem, string> = {
   failed: "Your microphone isn't working. Check that no other app is using it, then try again.",
 };
 
+/** What she hears when a photo has been read: her context then says what's in it and what to ask. */
+const PHOTO_ADDED = "I've added a photo of something I'd like to style around.";
+
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
 function ControlButton({
@@ -94,11 +97,23 @@ export function StylingSession({
       photos.reset();
     },
   });
+  // The item to style around (3a), and what the photo reader makes of it (3b). The stylist is told
+  // every change, and speaks up once a new photo is read (Sabine's answer to Q1 in 3b).
+  const speakUp = useRef<string | null>(null);
+  const photos = usePhotos(call.sessionId, initialPhotos, {
+    onContext: (context) => call.updateContext(context),
+    onRead: (key) => (speakUp.current = key),
+  });
   // My Styling Notes (2c, 2d): words go to the server, notes and the next question come back, and the
-  // stylist is told every change, including Confirm and Remove by touch.
-  const notes = useNotes(call.sessionId, call.flow === "live", initialNotes, (context) => call.updateContext(context));
-  // The item to style around (3a). The stylist learns what's in it with the photo reader (3b).
-  const photos = usePhotos(call.sessionId, initialPhotos);
+  // stylist is told every change, including Confirm and Remove by touch. What the shopper says about
+  // the photo comes back too (3b).
+  const notes = useNotes(
+    call.sessionId,
+    call.flow === "live",
+    initialNotes,
+    (context) => call.updateContext(context),
+    (id, item) => photos.setItem(id, item),
+  );
   const [notebookOpen, setNotebookOpen] = useState(true);
   const notebookTitle = useRef<HTMLHeadingElement>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -134,6 +149,15 @@ export function StylingSession({
   }
 
   const { flow, stage, label } = call;
+
+  // She speaks up about a newly read photo once nobody is talking, if it's still the one to style around.
+  const quiet = flow === "live" && !someoneSpeaking(stage);
+  useEffect(() => {
+    const key = speakUp.current;
+    if (!key || !quiet) return;
+    speakUp.current = null;
+    if (photos.active?.key === key) call.prompt(PHOTO_ADDED);
+  });
   const inCall = flow === "starting" || flow === "live" || flow === "ending";
   const showVideo = inCall && !stage.microphone;
 
@@ -315,6 +339,9 @@ export function StylingSession({
               onChoose={photos.choose}
               onRetry={photos.retry}
               onLinkExpired={photos.refresh}
+              onConfirm={photos.confirm}
+              onChooseItem={photos.chooseItem}
+              onOwnership={photos.setOwnership}
             />
           }
           thumbnail={photos.active && <PhotoThumbnail photo={photos.active} />}
