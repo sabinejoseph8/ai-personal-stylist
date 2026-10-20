@@ -97,8 +97,8 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     });
   };
 
-  /** Uploads a file as a new photo, or as a new version of `photo` (Replace, or Try again). */
-  async function upload(file: File, photo?: PagePhoto) {
+  /** Uploads a file as a new photo, or as a new version of `photo` (Replace, or Try again). A still from the camera is "camera" (3c). */
+  async function upload(file: File, photo?: PagePhoto, source: PhotoSource = photo?.source ?? "upload") {
     setProblem(null);
     const type = uploadType(file);
     if (!type || file.size > MAX_PHOTO_BYTES) {
@@ -111,7 +111,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     const ticket = ++nextTicket.current;
     tickets.current.set(key, ticket);
     const preview = URL.createObjectURL(file);
-    const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source: "upload", item: null };
+    const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source, item: null };
     setPhotos((list) => {
       if (photo) return list.map((p) => (p.key === key ? { ...p, ...shown } : p));
       const added: PagePhoto = { key, id: null, version: 0, active: true, ...(shown as Omit<PagePhoto, "key" | "id" | "version" | "active">) };
@@ -124,7 +124,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       const res = await fetch(`/api/sessions/${id}/assets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "upload", replaces: photo?.id ?? null }),
+        body: JSON.stringify({ source, replaces: photo?.id ?? null }),
       });
       const answer = (await res.json().catch(() => ({}))) as { id?: string; version?: number; uploadUrl?: string; error?: string };
       if (!res.ok || !answer.id || !answer.uploadUrl || !answer.version) {
@@ -294,8 +294,8 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     photos,
     active: photos.find((p) => p.active) ?? photos.at(-1) ?? null,
     problem,
-    add: (file: File) => void upload(file),
-    replace: (photo: PagePhoto, file: File) => void upload(file, photo),
+    add: (file: File, source: PhotoSource = "upload") => void upload(file, undefined, source),
+    replace: (photo: PagePhoto, file: File) => void upload(file, photo, "upload"),
     retry: (photo: PagePhoto) => photo.file && void upload(photo.file, photo),
     choose: (photo: PagePhoto) => void choose(photo),
     remove: (photo: PagePhoto) => void remove(photo),

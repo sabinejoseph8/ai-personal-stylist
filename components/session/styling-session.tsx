@@ -3,7 +3,9 @@
 import { type ButtonHTMLAttributes, type ReactNode, type Ref, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MyStylingNotes } from "@/components/notebook/my-styling-notes";
 import { PhotoThumbnail, StyleAroundThisItem } from "@/components/notebook/pasted-photo";
+import { CameraAnnouncer, CameraView } from "@/components/session/camera-view";
 import { PinnedBar } from "@/components/session/pinned-bar";
+import { CAMERA_MESSAGES, useCamera } from "@/components/session/use-camera";
 import { useConversation } from "@/components/session/use-conversation";
 import { type ShownNote, useNotes } from "@/components/session/use-notes";
 import { type ShownPhoto, usePhotos } from "@/components/session/use-photos";
@@ -12,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
+import { useToast } from "@/components/ui/toast";
+import { asksToCapture, type CameraNote, cameraForStylist } from "@/core/camera/sightings";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
 import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/lib/stage";
@@ -34,6 +38,9 @@ const MICROPHONE_HELP: Record<MicrophoneProblem, string> = {
 
 /** What she hears when a photo has been read: her context then says what's in it and what to ask. */
 const PHOTO_ADDED = "I've added a photo of something I'd like to style around.";
+/** What she hears when the camera names something (3c), or can't be used: her context says the rest. */
+const ON_CAMERA = "I'm holding something up to my camera.";
+const NO_CAMERA = "My camera won't turn on.";
 
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
@@ -90,32 +97,68 @@ export function StylingSession({
   const video = useRef<HTMLVideoElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const call = useConversation(openSessionId, { video, audio }, {
-    onEvent: (e) => notes.onEvent(e),
+    onEvent: (e) => {
+      notes.onEvent(e);
+      // "Use this one" takes the still, heard by plain code while an item is on camera (Q1 in 3c).
+      if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text)) heardCapture.current?.(e.turnId);
+    },
     onPhrase: (text) => notes.say(text),
     onEnd: () => {
       notes.reset();
       photos.reset();
     },
   });
-  // The item to style around (3a), and what the photo reader makes of it (3b). The stylist is told
-  // every change, and speaks up once a new photo is read (Sabine's answer to Q1 in 3b).
-  const speakUp = useRef<string | null>(null);
+  // What the stylist is told: the server's latest context, plus what's on camera (3c), which only the
+  // page knows because frames are thrown away.
+  const told = useRef("");
+  const cameraNote = useRef<CameraNote>(null);
+  const withCamera = () => [told.current, cameraForStylist(cameraNote.current)].filter(Boolean).join("\n");
+  const tell = (context: string) => {
+    told.current = context;
+    call.updateContext(withCamera());
+  };
+  // Things she speaks up about once nobody is talking: a newly read photo (Q1 in 3b), only if it's still
+  // the one to style around, and what's on camera (3c).
+  const speakUp = useRef<{ text: string; photo?: string } | null>(null);
+
+  // The item to style around (3a), and what the photo reader makes of it (3b).
   const photos = usePhotos(call.sessionId, initialPhotos, {
-    onContext: (context) => call.updateContext(context),
-    onRead: (key) => (speakUp.current = key),
+    onContext: tell,
+    onRead: (key) => (speakUp.current = { text: PHOTO_ADDED, photo: key }),
   });
   // My Styling Notes (2c, 2d): words go to the server, notes and the next question come back, and the
   // stylist is told every change, including Confirm and Remove by touch. What the shopper says about
   // the photo comes back too (3b).
-  const notes = useNotes(
-    call.sessionId,
-    call.flow === "live",
-    initialNotes,
-    (context) => call.updateContext(context),
-    (id, item) => photos.setItem(id, item),
-  );
+  const notes = useNotes(call.sessionId, call.flow === "live", initialNotes, tell, (id, item) => photos.setItem(id, item));
+
   const [notebookOpen, setNotebookOpen] = useState(true);
   const notebookTitle = useRef<HTMLHeadingElement>(null);
+
+  // The camera (3c): she names what's shown, and Capture or "use this one" adds a still to the notes.
+  const camera = useCamera(call.sessionId, call.flow === "live", {
+    onSeen: (seen) => seen && (speakUp.current = { text: ON_CAMERA }),
+    onUnavailable: () => (speakUp.current = { text: NO_CAMERA }),
+  });
+  const toast = useToast();
+  const pickPhoto = useRef<(() => void) | null>(null);
+  async function capture() {
+    const file = await camera.capture();
+    if (!file) return;
+    // The still is now the item, so the camera turns off (Sabine's answer to Q2 in 3c).
+    camera.stop();
+    photos.add(file, "camera");
+    setNotebookOpen(true);
+    toast("Photo added to your notes");
+  }
+  const heardCapture = useRef<((turn: string) => void) | null>(null);
+  const capturedTurn = useRef("");
+  useLayoutEffect(() => {
+    heardCapture.current = (turn) => {
+      if (camera.seen?.kind !== "item" || capturedTurn.current === turn) return;
+      capturedTurn.current = turn;
+      void capture();
+    };
+  });
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmEndPaused, setConfirmEndPaused] = useState(false);
   // Leaving the page closes any open End dialog (Next.js keeps the page's state while it's hidden).
@@ -150,13 +193,22 @@ export function StylingSession({
 
   const { flow, stage, label } = call;
 
-  // She speaks up about a newly read photo once nobody is talking, if it's still the one to style around.
+  // She's told what's on camera whenever it changes, before she's asked to speak about it.
+  useEffect(() => {
+    cameraNote.current =
+      camera.state === "on" ? { seen: camera.seen, blocked: false } : camera.state === "blocked" || camera.state === "missing" ? { seen: null, blocked: true } : null;
+    if (flow === "live") call.updateContext(withCamera());
+    // withCamera and call only read refs; this runs when the camera changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [camera.state, camera.seen]);
+
+  // She speaks up once nobody is talking.
   const quiet = flow === "live" && !someoneSpeaking(stage);
   useEffect(() => {
-    const key = speakUp.current;
-    if (!key || !quiet) return;
+    const next = speakUp.current;
+    if (!next || !quiet) return;
     speakUp.current = null;
-    if (photos.active?.key === key) call.prompt(PHOTO_ADDED);
+    if (!next.photo || photos.active?.key === next.photo) call.prompt(next.text);
   });
   const inCall = flow === "starting" || flow === "live" || flow === "ending";
   const showVideo = inCall && !stage.microphone;
@@ -172,10 +224,21 @@ export function StylingSession({
         <div
           ref={frame}
           className={`relative w-full overflow-hidden rounded-panel bg-ink shadow-photo desktop:aspect-[4/5] ${
-            inCall ? "aspect-[3/2]" : "aspect-[4/5] max-w-md"
+            inCall ? (camera.on ? "aspect-[4/5] tablet:aspect-[3/2]" : "aspect-[3/2]") : "aspect-[4/5] max-w-md"
           }`}
         >
-          <video ref={video} autoPlay playsInline muted className={`h-full w-full object-cover ${showVideo ? "" : "hidden"}`} />
+          {/* Phones: while the camera is on, the stylist shrinks to a circle in the corner (design 4.1). */}
+          <video
+            ref={video}
+            autoPlay
+            playsInline
+            muted
+            className={`object-cover ${showVideo ? "" : "hidden"} ${
+              camera.on
+                ? "absolute bottom-3 right-3 z-10 size-20 rounded-pill border-2 border-page tablet:static tablet:size-full tablet:rounded-none tablet:border-0"
+                : "h-full w-full"
+            }`}
+          />
           <audio ref={audio} autoPlay />
           {!showVideo && (
             <p className="type-body absolute inset-0 m-0 flex items-center justify-center p-6 text-center text-white/80">
@@ -186,13 +249,14 @@ export function StylingSession({
                   : "Your stylist will appear here."}
             </p>
           )}
-          <p aria-live="polite" className="type-label absolute left-3 top-3 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white">
+          {camera.on && <CameraView video={camera.video} facing={camera.facing} seen={camera.seen} />}
+          <p aria-live="polite" className="type-label absolute left-3 top-3 z-10 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white">
             {label}
           </p>
           {/* Time left, in the last 2 minutes (R13). Always there, so screen readers hear it change. */}
           <p
             role="status"
-            className={`type-label absolute right-3 top-3 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white ${call.timeLeft ? "" : "sr-only"}`}
+            className={`type-label absolute right-3 top-3 z-10 m-0 rounded-pill bg-ink/70 px-3 py-1 text-white ${call.timeLeft ? "" : "sr-only"}`}
           >
             {call.timeLeft}
           </p>
@@ -227,6 +291,13 @@ export function StylingSession({
               onClick={call.toggleMute}
               disabled={flow !== "live"}
             />
+            <ControlButton
+              icon="camera"
+              label={camera.on ? "Camera on" : "Camera"}
+              pressed={camera.on}
+              onClick={() => (camera.on ? camera.stop() : void camera.begin())}
+              disabled={flow !== "live"}
+            />
             <ConfirmDialog
               open={confirmEnd}
               onOpenChange={setConfirmEnd}
@@ -240,6 +311,40 @@ export function StylingSession({
             />
           </div>
         )}
+
+        {camera.on && (
+          <div className="flex flex-wrap items-center justify-center gap-2 desktop:justify-start">
+            {camera.seen?.kind === "item" && (
+              <Button icon="capture" onClick={() => void capture()}>
+                Capture
+              </Button>
+            )}
+            {camera.canSwitch && (
+              <Button variant="secondary" icon="switchCamera" onClick={camera.switchCamera}>
+                Switch camera
+              </Button>
+            )}
+            <Button variant="secondary" className="tablet:hidden" onClick={camera.stop}>
+              Done showing
+            </Button>
+          </div>
+        )}
+
+        {camera.state === "explain" && <PermissionCard permission="camera" state="ask" onAllow={camera.allow} onNotNow={camera.notNow} />}
+        {camera.message && (
+          <div className="flex flex-col items-start gap-3">
+            <Banner
+              tone={camera.message === CAMERA_MESSAGES.blocked || camera.message === CAMERA_MESSAGES.missing ? "error" : undefined}
+              title={camera.message}
+            />
+            {camera.message !== CAMERA_MESSAGES.timedOut && camera.message !== CAMERA_MESSAGES.allowance && (
+              <Button variant="secondary" onClick={() => pickPhoto.current?.()}>
+                Upload photo
+              </Button>
+            )}
+          </div>
+        )}
+        <CameraAnnouncer seen={camera.seen} hold={someoneSpeaking(stage)} />
 
         {call.soundBlocked && (
           <Button variant="secondary" className="self-start" onClick={call.turnOnSound}>
@@ -339,6 +444,7 @@ export function StylingSession({
               onChoose={photos.choose}
               onRetry={photos.retry}
               onLinkExpired={photos.refresh}
+              pickRef={pickPhoto}
               onConfirm={photos.confirm}
               onChooseItem={photos.chooseItem}
               onOwnership={photos.setOwnership}
@@ -357,6 +463,7 @@ export function StylingSession({
           muteDisabled={flow !== "live"}
           onMute={call.toggleMute}
           summary={notesSummary(notes.notes)}
+          cameraOn={camera.on}
           onShowNotes={showNotes}
         />
       )}

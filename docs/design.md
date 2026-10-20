@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.7 (20 Oct 2026)
+**Status:** Agreed, version 1.8 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -182,7 +182,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Voice controls**
 - **Start conversation** (primary), **Mute**, **Camera**, **Voice only**, **End**.
-- On phones the row shows Mute, Camera, More and End. **More** holds Voice only.
+- On phones the row shows Mute, Camera, More and End. **More** holds Voice only. Until Voice only arrives (6c), the row is Mute, Camera, End.
 - States: enabled, pressed (Mute shows a crossed-out microphone and "Muted", Camera shows "Camera on", Voice only shows "Video off"), disabled while connecting.
 - 48 px circles with a label underneath. In the pinned phone bar they are icon-only, with accessible names.
 - End asks "End this session? Notes you haven't saved will be cleared." with **Keep talking** and **End session**.
@@ -201,11 +201,13 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Camera view**
 - Off until the shopper taps **Camera**. The first time, a permission card explains why before the browser asks.
-- Shows the shopper's own camera in a tile in the corner of the stylist stage, labeled "Camera on" with a Red pen dot, and the line "Video isn't saved."
+- Shows the shopper's own camera in a tile in the corner of the stylist stage, labeled "Camera on" with a Red pen dot, and the line "Video isn't saved." On tablets and desktops the tile takes a little over half the stage's width, with the labels and the item's name inside it.
 - Phones open the back camera first, so the shopper can point at an item while watching the screen. **Switch camera** flips to the front.
-- While an item is being shown on a phone, the camera view and the stylist swap places: the camera fills the stage with a frame guide ("Hold one item in the frame") and the stylist shrinks to a corner circle. **Done showing** swaps them back.
+- While an item is being shown on a phone, the camera view and the stylist swap places: the camera fills the stage, which turns portrait, with a dashed frame guide ("Hold one item in the frame"), and the stylist shrinks to an 80 px circle in the bottom corner. **Done showing** turns the camera off and swaps them back.
+- Under the voice controls while the camera is on: **Capture** (once an item is named), **Switch camera** (only with two cameras) and, on phones, **Done showing**. On tablets and desktops, the pressed Camera button turns it off.
 - When the stylist recognizes an item, its name appears on the view, with a question mark if unsure ("Navy wool blazer?"), and **Capture** appears. The stylist says it out loud too.
-- Capture takes a still, which moves into Style around this item and is then handled like an uploaded photo.
+- Capture takes a still, which moves into Style around this item, labeled "From your camera", and is then handled like an uploaded photo. The camera turns off after Capture (your answer to Q2 in 3c), and the notebook opens.
+- Screen readers hear "On camera: Navy wool blazer, not sure", held while anyone is talking.
 - States: off, asking permission, starting, on, item found, several items found (the stylist asks which), captured (toast: "Photo added to your notes"), turned off after 2 minutes ("Camera turned off. Turn it on again to show another item."), blocked ("Camera blocked. Upload a photo instead." with **Upload photo**), no camera found (the same fallback).
 
 ### 4.2 My Styling Notes
@@ -561,6 +563,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.8 (20 Oct 2026):** 3c: the camera view as built: the tile's size, the swap on phones, Done showing, the camera's buttons, the camera off after Capture, and what screen readers hear (4.1).
 - **1.7 (20 Oct 2026):** 3b: Analyzing in the label, the item details review as built, the several-items list, the failed-recognition line and what screen readers hear (4.2).
 - **1.6 (20 Oct 2026):** 3a: where Add a photo sits, the pasted photo's states as built, and its label until 3b (4.2).
 - **1.5 (20 Oct 2026):** 2f, after your iPhone check: Reload page for a blocked microphone (4.1).

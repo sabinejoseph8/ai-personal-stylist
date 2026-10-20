@@ -14,7 +14,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "e2e": "playwright test",
     "eval:notes": "vitest run --config vitest.evals.config.mts tests/evals/notes.eval.ts",
-    "eval:photos": "vitest run --config vitest.evals.config.mts tests/evals/photos.eval.ts"
+    "eval:photos": "vitest run --config vitest.evals.config.mts tests/evals/photos.eval.ts",
+    "eval:camera": "vitest run --config vitest.evals.config.mts tests/evals/camera.eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

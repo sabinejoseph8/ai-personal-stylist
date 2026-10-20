@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.17 (20 Oct 2026)
+**Status:** Agreed, version 1.18 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -151,7 +151,7 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **POST /api/sessions/:id/assets** | Add a photo or a captured still, or Replace one (a new version of it), 10 an hour. Returns the photo's id and version at once, with a one-time upload link: the browser sends the photo straight to the private photo store, because Vercel refuses anything over 4.5 MB (your answer to Q1 in 3a). Refused when the session already has 5 photos (your Q3). **GET** gives fresh links to the session's photos. |
 | **POST /api/sessions/:id/assets/:assetId/ready** | The photo has arrived: the server checks its real type and size, cleans it (section 6, Checking inputs), keeps the clean copy and its thumbnail, and deletes the original. Streams one line of JSON per update: first the kept photo with 30-minute links, showing Analyzing, then what the photo reader found, with the stylist's context (3b). If the browser goes away meanwhile, the reading still finishes and is saved. Or it answers why the photo was turned away. |
 | **PATCH, DELETE /api/sessions/:id/assets/:assetId** | Make a photo the active one, confirm a detail, pick one of several items, or say whether it's the shopper's (3b), or Remove it (R31), 4 photo changes a second at most. Removing the active photo makes the newest one left active. Each answer carries the stylist's context. |
-| **POST /api/sessions/:id/camera-frame** | One small camera frame for live recognition (R34). The frame is read and thrown away. |
+| **POST /api/sessions/:id/camera-frame** | One small camera frame for live recognition (R34): a JPEG of at most 640 px (400 KB at most), for the guest's open session, one every 2 seconds at most. It's read through the budget guard and thrown away; the answer says whether one item, several or none is shown, and what the item is (3c). |
 | **POST /api/sessions/:id/looks** | Build looks. Also swap, refine, restore and compare actions on a look. |
 | **POST /api/sessions/:id/exceptions** | Allow a saved preference to be broken for this session (R57). |
 | **/api/wardrobe**, **/api/saved-looks**, **/api/bag** | Add, edit, list and delete. Adding to the bag runs the preference check first. |
@@ -190,7 +190,7 @@ Each job has its own prompt, a strict output shape (structured outputs, because 
 | Job | Input | Output | Default model and effort |
 |---|---|---|---|
 | Notes and feedback reader | New words, what the stylist last said, current notes with short ids, removed notes, the visible look (Phase 4) | Only the changes: notes to add, update (by id) and remove, each with a status and the hidden details looks and checks need, plus the next question with up to 3 options | Haiku 5.5 with thinking off (your option 3 in 2c), with plain code for money and dates |
-| Camera reader | One small frame | Is one item clearly shown? If so, type, colors, pattern. An item is named only after two frames in a row agree, and the shopper confirms it | Haiku 5.5, low |
+| Camera reader | One small frame, at most 640 px | One item, several or none; for one item, its name, type and main color, and whether it's sure. An item is named only after two frames in a row agree, and Capture turns it into a photo the photo reader reads | Haiku 5.5, low |
 | Photo reader | One photo, at most 1024 px | Up to 4 items, each with a name and its type, main colors, pattern and style, and how sure it is of each | Opus 5.5, low |
 | Looks builder | Filtered products, notes, anchor, feedback | Up to 5 candidate looks by product ID, each with a reason | Opus 5.5, medium |
 | Preference checker, judgment step | One look plus preferences | Pass, conflict or needs clarification, with reasons | Opus 5.5, medium |
@@ -205,6 +205,13 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - Nothing found, a failed reading or the day's AI used up all leave the photo with "Couldn't recognize this item. Describe it instead." (R32), and what the shopper then says fills in the item.
 - What the shopper says about the photo reaches it through the notes reader (your answer to Q3 in 3b). Only when there's a photo, the same reading gets the item, with numbered items, and returns a small extra part: the item chosen, whose it is, corrected details and confirmed details. Without a photo, the prompt and answer are unchanged. Plain code drops a note that repeats the photo's own item ("Owns a navy wool blazer").
 - The stylist is told the active item, its details and whose it is, and what to ask: which item, or whether it's theirs or an inspiration. Once a new photo is read she speaks up: the page sends her "I've added a photo of something I'd like to style around" as the shopper's words, kept out of the notes, once nobody is talking (your answer to Q1 in 3b).
+
+**The camera reader as built (3c).** The files are **core/camera/** (the reader, its fake for browser tests, and the rules for what's shown) and **lib/camera-service.ts**; the page side is **components/session/use-camera.ts**.
+- While the camera is on, the page sends one 640 px frame about every 2 seconds, one at a time and only while the page is in view. Each frame costs about 0.015 cents.
+- Two frames in a row must agree (the same type, and colors with a word in common) before an item is named, with a question mark unless both frames were sure. Two frames with nothing clear the name. This runs in the page, because frames aren't kept anywhere.
+- The stylist is told what's on camera by the page, added to the server's context, and asked to name it once per new item ("I'm holding something up to my camera."), once nobody is talking. Several items in view: she asks which. Camera blocked or missing: she suggests uploading a photo.
+- **Capture**, or "use this one" (plain code in the page listens for a few phrases while an item is named; your answer to Q1 in 3c), takes a full-size still. It's added as a photo from the camera and read like any photo, and the camera turns off (your answer to Q2 in 3c).
+- The camera turns off after 2 minutes, when the conversation stops or the session ends, and when the page goes away. The call starts with video off, so Tavus never gets the camera.
 
 **The notes reader as built (2c).** The files are **core/notes/** (the reader, merge rules and plain code) and **connectors/ai/claude.ts**.
 - Its answer uses short keys (k, t, s, d, i, q) to keep it small.
@@ -277,7 +284,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - When the monthly allowance runs out, the conversation ends for now (R13). If AI is used up too, the welcome screen says the demo is resting until the 1st of next month (TQ4).
 
 ### Privacy
-- Recording is off for every Tavus call. Tavus never receives the camera. Frames are read by our server and thrown away.
+- Recording is off for every Tavus call. Tavus never receives the camera: the call starts with video off, and the camera is a separate stream only the page uses. Frames are read by our server and thrown away, never saved or logged (3c). Only a still the shopper captures is kept, as a session photo.
 - Each Tavus conversation is hard-deleted when its call ends, because Tavus publishes no retention period (decided 18 Oct 2026). Checked with a real call in 2e: afterwards Tavus answers "Invalid conversation_id". A call a closed browser left behind is ended and deleted on the guest's next start or by the daily job. OpenAI and Anthropic delete API data within 30 days and don't train on it.
 - The browser sends words to our server to update notes. The server keeps only the resulting notes.
 - How Tavus, OpenAI and Anthropic store data is checked in Phase 0 and summarized on the About page.
@@ -307,6 +314,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
   - Notes: 30 utterances, including the wedding example (R18), corrections, unclear speech and long turns (**tests/evals/notes-cases.json**, run with **npm run eval:notes**, about 10 cents). It replays each sentence at 2.5 words a second with the app's sending and merging. It checks the notes, repeated notes, wrong ink and the question, and times each note from its phrase. In 2c it scored 96 to 99% right, with 97 to 99% of notes within 2 seconds.
   - Checker: about 30 looks, including high heels with "Never: high heels", budget edges, and a missing heel height.
   - Photos (3b, your answer to Q2): 20 sample catalog photos, one of each kind plus the patterned ones, and 4 made by putting two catalog items side by side, with the right answers from the catalog's own details (**tests/evals/photos.eval.ts**, run with **npm run eval:photos**, about 30 cents). Pass marks: 85% of details right, and every item found in the two-item photos. First run: 94% right (type 17 of 20, colors 20, pattern 19, style 19), all items found, 2.5 seconds median, about $0.30. The misses were close calls: a tuxedo jacket read as a blazer, a polo as a shirt, a fitted tee as a T-shirt rather than a top. Catalog photos are cleaner than phone photos, so iPhone checks cover real ones.
+  - Camera reader check (3c, **npm run eval:camera**, about a third of a cent): the photo eval's 24 photos shrunk to 640 px. No pass mark. First run at low effort: type right 18 of 20, colors 20 of 20, sure on all 20, every two-item frame read as several items, 1.3 seconds median. With thinking off it was no faster (1.7 seconds median), so low effort stays.
   - The notes eval also has 6 cases with a photo (3b): corrections, "it's mine", an inspiration, "the first one", describing a photo that couldn't be read, and "yes, it's navy".
 - **End-to-end tests** with Playwright on phone and desktop sizes. The fake engine replaces live voice, so tests are free and repeatable. They cover the success checks that do not need a real voice (S4 to S20).
 - **Accessibility:** automatic axe-core checks in every end-to-end test, plus a manual VoiceOver and keyboard pass before each release.
@@ -374,6 +382,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
 | 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A). Now about $50, with the Supabase project ($10) from 20 Oct 2026 | Your decision |
+| 20 Oct 2026 | 3c: "use this one" is heard by plain code in the page while an item is named on camera, rather than by the notes reader (Q1). The camera turns off after Capture (Q2) | Your decision |
 | 20 Oct 2026 | 3b: once a photo is read, the stylist speaks up, naming the item and asking which one or whose it is (Q1). The photo eval uses 20 catalog photos and 4 two-item photos made from them (Q2). What the shopper says about the photo reaches it through the notes reader, in the same reading; three eval runs afterwards had 95 to 96% of notes within 2 seconds (Q3) | Your decision |
 | 20 Oct 2026 | 3a: the browser sends a photo straight to the private photo store with a one-time upload link, and the server then checks and cleans it, keeping the 10 MB limit despite Vercel's 4.5 MB (Q1). Add a photo sits in My Styling Notes once the conversation has started (Q2). Up to 5 photos per session (Q3). Photos of sessions that ended from being idle are deleted on the next Start conversation or by the daily job (Q4) | Your decision |
 | 20 Oct 2026 | Phase 2 code review: A, the session screen's call lifecycle moves into its own hook (components/session/use-conversation.ts) before the camera joins it. B, a call left behind is counted until the shopper's last activity plus 30 seconds, accepting it can undercount a call left running with nobody there | Your decision |
@@ -396,6 +405,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.18 (20 Oct 2026):** 3c: the camera reader and frame endpoint as built, two frames in a row before an item is named, the stylist told by the page, "use this one" in plain code (your Q1), the camera off after Capture (your Q2), the privacy points, and the camera reader check.
 - **1.17 (20 Oct 2026):** 3b: the photo reader as built (Opus 5.5 at low effort, streamed on the ready request, ink for sure details), item changes by touch and voice with the details' revision, the stylist told and speaking up (your Q1), the photo eval (your Q2) and photo cases in the notes eval (your Q3).
 - **1.16 (20 Oct 2026):** 3a: photo upload as built. The browser sends a photo to a one-time upload link and the server checks and cleans it (your Q1), photos are the app's own record with versions and one active photo, up to 5 per session (your Q3), 30-minute links, and photos deleted at End, on the next start or by the daily job (your Q4).
 - **1.15 (20 Oct 2026):** The Phase 2 code review (2f): ending a call claims it, left-behind calls counted until the last activity (your B), the session keeps the next question, a rate limit on note touches, the Phase 0 test pages deleted, the test guest pool, and the conversation hook (your A).
