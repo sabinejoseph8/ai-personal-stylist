@@ -25,6 +25,9 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run e2e
+        env:
+          # The signed-in guest tests (sample profile, setup, last visit) need it too.
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

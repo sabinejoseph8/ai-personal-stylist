@@ -1,17 +1,17 @@
 // 1e: loads the sample products into catalog_products from catalog/products.json and
 // catalog/image-sources.json, with each photo's source and Sabine's review (risk 13).
 // Every product needs a published photo (public/catalog/<slug>.jpg) that she approved.
-// Products are matched by slug, so re-running it updates them. Uses the server key in .env.local,
-// because the catalog is read-only for everyone else.
+// Products are matched by slug, so re-running it updates them. Uses the server key (from the
+// environment or .env.local), because the catalog is read-only for everyone else.
 //   npm run catalog:load
 //   npm run catalog:load -- --draft    also loads photos not reviewed yet (for building, never for launch)
 import { existsSync, readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../lib/public-config.ts";
+import { requiredSetting } from "../../scripts/settings.mjs";
 
 const draft = process.argv.includes("--draft");
-const key = readFileSync(".env.local", "utf8").split("\n").find((l) => l.startsWith("SUPABASE_SECRET_KEY="))?.split("=")[1]?.trim();
-if (!key) throw new Error("SUPABASE_SECRET_KEY is missing from .env.local");
+const key = requiredSetting("SUPABASE_SECRET_KEY");
 const products = JSON.parse(readFileSync("catalog/products.json", "utf8"));
 const sources = JSON.parse(readFileSync("catalog/image-sources.json", "utf8"));
 

@@ -5,13 +5,14 @@
 //   node catalog/scripts/batch-images.mjs collect   saves finished images to catalog/raw
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import OpenAI, { toFile } from "openai";
+import { requiredSetting } from "../../scripts/settings.mjs";
 import { IMAGE_MODEL, IMAGE_QUALITY, imagePrompt } from "../image-style.mjs";
 
 const RAW = "catalog/raw";
 const SOURCES = "catalog/image-sources.json";
 const STATE = "catalog/batch.json";
 mkdirSync(RAW, { recursive: true });
-const key = readFileSync(".env.local", "utf8").split("\n").find((l) => l.startsWith("OPENAI_API_KEY=")).split("=")[1].trim();
+const key = requiredSetting("OPENAI_API_KEY");
 const client = new OpenAI({ apiKey: key });
 const products = JSON.parse(readFileSync("catalog/products.json", "utf8"));
 const command = process.argv[2];

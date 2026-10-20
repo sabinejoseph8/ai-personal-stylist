@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.5
+**Status:** Living document, version 1.6
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.7 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.8 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -124,6 +124,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | Phase 1 code review, decision A: from Phase 2, the records only the app should change (session state, looks, check results, the bag) are read-only for visitors, and the server writes them with the server key after checking the session is theirs. Built as each feature arrives | Sabine | tech spec 1.8 (6), progress.md (2a) |
+| 20 Oct 2026 | Phase 1 code review, decision B: AI calls at the same moment may run a few cents over the AI limits. No change, because the monthly ceilings sit below the provider limits | Sabine | tech spec 1.8 (6) |
 | 20 Oct 2026 | 1f limits: per guest per day, 10 minutes of conversation and $1 of AI; per month for the whole demo, 110 minutes of video (10 of Tavus's 120 kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit. Days and months count in UTC. Each limit is a Vercel setting | Sabine | tech spec 1.7 (6) |
 | 20 Oct 2026 | The server key is also used by the budget guard, so only the server writes usage records and visitors can't fake or inflate them. It never reaches the browser | Sabine | tech spec 1.7 (6) |
 | 20 Oct 2026 | A guest's last-active time is updated on every page visit (at most once an hour), so "7 days without use" means 7 days without a visit, not 7 days without saving setup | Sabine | tech spec 1.7 (7) |
@@ -225,6 +227,28 @@ Reviewed all Phase 0 code (app, lib, tests, scripts, spikes, tavus) at high effo
 
 After the fixes: 14 automated tests pass, and the replay check gives 30 of 30 notes right, with R18 passing.
 
+### Phase 1 code review (1g, 20 Oct 2026)
+
+Reviewed all Phase 1 code (77 files, about 4,600 lines, apart from photos and docs) at extra-high effort. 13 findings:
+
+| Finding | Outcome |
+|---|---|
+| A visitor could reset their own rate limits by calling the counter with a different window size | Fixed: the counter only deletes counts older than a day, with a test |
+| Saving preferences deleted the old list, then saved the new one in a second step, so a failure lost them | Fixed: one database step, all or nothing, with tests |
+| GitHub's browser tests skipped every signed-in guest test, because that step had no database key | Fixed: the step gets the key |
+| Try the demo could stay on "Starting your demo…" forever when the connection dropped | Fixed: shows "We couldn't start your demo" with Try again, with a test |
+| A guest's rows could point at another guest's session, look, preference or check result | Fixed: two-column foreign keys, with a test |
+| A setup save that couldn't reach the server showed an error screen | Fixed: "That didn't save" banner, with a test |
+| Visitors can write the app's own records (session state, looks, check results, the bag) directly | Decision A: read-only for visitors from Phase 2, written by the server |
+| The AI money check and the cost record are separate steps | Decision B: accepted, a few cents at most |
+| The daily job deleted guests one at a time and could run past 60 seconds | Fixed: 5 at a time |
+| Photos skipped the security step by folder name, which would also catch a future /catalog page | Fixed: skipped by file type |
+| The catalog scripts read keys only from .env.local | Fixed: the environment first, then .env.local |
+| .env.example missed the Phase 1 settings | Fixed |
+| A very large budget showed a developer message | Fixed: "Enter a budget up to $100,000.", with a test |
+
+The review also caught one mistake in its own fixes: the first version of the one-step preferences save used a query form PostgreSQL doesn't allow, and the new test found it before it shipped. After the fixes: 96 unit and database tests and 37 browser tests pass.
+
 ## 9. PRD backlog map
 
 Where every backlog item from PRD v1.8 lives in the plan.
@@ -283,6 +307,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.6 (20 Oct 2026):** The Phase 1 code review: 13 findings, 11 fixed, decisions A and B.
 - **1.5 (20 Oct 2026):** 1f decisions: the budget limits, the server key for usage records, last-active time on every visit, and the daily job's rules. Risk 4 updated.
 - **1.4 (20 Oct 2026):** 1e decisions: the image generator and quality setting, the half-price batch, 140 products, photos served from the site, the catalog load script and the private review page. Risk 13 updated.
 - **1.3 (20 Oct 2026):** One Supabase project on Pro, the budget about $50, and risk 11 updated.

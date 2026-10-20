@@ -8,6 +8,7 @@ import { serverKeyDb } from "@/lib/supabase/admin";
 const IDLE_DAYS = 7;
 const TEST_GUEST_HOURS = 24;
 const MAX_GUESTS_PER_RUN = 200;
+const AT_ONCE = 5;
 
 export const maxDuration = 60;
 
@@ -33,14 +34,15 @@ export async function GET(request: Request) {
   });
   if (expired.error) return Response.json({ error: `finding old guests failed: ${expired.error.message}` }, { status: 500 });
 
+  // A few at a time, so a busy week's guests fit within the 60 seconds Vercel allows.
+  const ids = expired.data as string[];
   let deleted = 0;
   const failures: string[] = [];
-  for (const id of expired.data as string[]) {
-    try {
-      await deleteGuest(db, id);
-      deleted++;
-    } catch (e) {
-      failures.push(e instanceof Error ? e.message : String(e));
+  for (let i = 0; i < ids.length; i += AT_ONCE) {
+    const results = await Promise.allSettled(ids.slice(i, i + AT_ONCE).map((id) => deleteGuest(db, id)));
+    for (const r of results) {
+      if (r.status === "fulfilled") deleted++;
+      else failures.push(r.reason instanceof Error ? r.reason.message : String(r.reason));
     }
   }
 

@@ -3,6 +3,7 @@
 // Run: node catalog/scripts/generate-images.mjs [slug ...]
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import OpenAI from "openai";
+import { requiredSetting } from "../../scripts/settings.mjs";
 import { IMAGE_MODEL, IMAGE_QUALITY, imagePrompt } from "../image-style.mjs";
 
 const RAW = "catalog/raw";
@@ -10,7 +11,7 @@ const SOURCES = "catalog/image-sources.json";
 const CONCURRENT = 4;
 mkdirSync(RAW, { recursive: true });
 
-const key = readFileSync(".env.local", "utf8").split("\n").find((l) => l.startsWith("OPENAI_API_KEY=")).split("=")[1].trim();
+const key = requiredSetting("OPENAI_API_KEY");
 const client = new OpenAI({ apiKey: key });
 const products = JSON.parse(readFileSync("catalog/products.json", "utf8"));
 const sources = existsSync(SOURCES) ? JSON.parse(readFileSync(SOURCES, "utf8")) : {};

@@ -31,7 +31,7 @@ export async function saveBudgetAndPreferencesStep(input: unknown): Promise<Resu
   if (!preferences.success) return { ok: false, error: "Some preferences are too long." };
   return asGuest(async (g) => {
     await saveBudget(g.db, g.id, budget.data);
-    await savePreferences(g.db, g.id, preferences.data);
+    await savePreferences(g.db, preferences.data);
   });
 }
 
@@ -41,6 +41,6 @@ export async function applySampleProfile(): Promise<Result> {
     const { budget, preferences, ...shopping } = SAMPLE_PROFILE;
     await saveShopping(g.db, g.id, shopping);
     await saveBudget(g.db, g.id, budget);
-    await savePreferences(g.db, g.id, preferences);
+    await savePreferences(g.db, preferences);
   });
 }
