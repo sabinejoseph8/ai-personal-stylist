@@ -247,7 +247,7 @@ Reviewed all Phase 1 code (77 files, about 4,600 lines, apart from photos and do
 | .env.example missed the Phase 1 settings | Fixed |
 | A very large budget showed a developer message | Fixed: "Enter a budget up to $100,000.", with a test |
 
-The review also caught one mistake in its own fixes: the first version of the one-step preferences save used a query form PostgreSQL doesn't allow, and the new test found it before it shipped. After the fixes: 96 unit and database tests and 37 browser tests pass.
+The review also caught one mistake in its own fixes: the first version of the one-step preferences save used a query form PostgreSQL doesn't allow, and the new test found it before it shipped. Turning on the signed-in browser tests on GitHub also showed that Supabase allows only about 30 test sign-ins per 5 minutes from one computer, so the welcome tests now share one test guest per worker. After the fixes: 96 unit and database tests and 38 browser tests pass.
 
 ## 9. PRD backlog map
 
