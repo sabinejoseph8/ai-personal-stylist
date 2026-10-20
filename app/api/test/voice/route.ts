@@ -1,11 +1,11 @@
-import { passcodeOk } from "@/lib/test-session";
+import { passcodeOk, wrongPasscode } from "@/lib/test-session";
 import { startTestVoiceSession, TEST_VOICES } from "@/lib/test-voice";
 
 // Phase 0 test only: exchanges the browser's WebRTC offer for a GPT-Live answer.
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   if (!passcodeOk(body?.passcode)) {
-    return Response.json({ error: "Wrong passcode" }, { status: 401 });
+    return wrongPasscode();
   }
   if (typeof body?.sdp !== "string" || !body.sdp.trim() || body.sdp.length > 20000) {
     return Response.json({ error: "An SDP offer is required" }, { status: 400 });

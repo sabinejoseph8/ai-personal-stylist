@@ -194,6 +194,25 @@ Checked 18 Oct 2026 against each provider's own pages. These change, so check ag
 
 Sources: [Tavus privacy policy](https://www.tavus.io/privacy-policy) (12 Nov 2025), [Tavus terms](https://www.tavus.io/terms-of-service) (24 Apr 2025), [Tavus pricing](https://www.tavus.io/pricing), [Tavus Delete Conversation](https://docs.tavus.io/api-reference/conversations/delete-conversation), [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data), [Anthropic data retention](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data) (1 Jul 2026).
 
+### Phase 0 code review (0h, 19 Oct 2026)
+
+Reviewed all Phase 0 code (app, lib, tests, scripts, spikes, tavus) at high effort. 10 findings:
+
+| Finding | Outcome |
+|---|---|
+| A confirmed note corrected by voice could stay on screen next to its replacement | Fixed: a new note of the same kind replaces it |
+| A budget note could lose its id and appear twice | Fixed: a new budget note reuses the old one's id |
+| Tapping End call could run the ending twice and zero the demo summary | Fixed |
+| A cut-off or refused AI answer crashed that notes reading | Fixed: "Notes paused" instead, with tests |
+| A second demo kept the first demo's camera item | Fixed |
+| The 2-minute camera timer wasn't cleared | Fixed on both camera pages |
+| No limit on passcode guesses | Fixed for now: each wrong guess waits 1.5 seconds. Real rate limits come in 1b |
+| Note state is patched in the browser on top of whole-list rewrites | Left on purpose: Phase 2 (2c) builds server-side notes with changes by id |
+| Camera and fetch code copied between test pages | Left on purpose: the test pages are throwaway |
+| Money parsing copied into the 0d spike reader | Left on purpose: the spike stays as the record of what was measured |
+
+After the fixes: 14 automated tests pass, and the replay check gives 30 of 30 notes right, with R18 passing.
+
 ## 9. PRD backlog map
 
 Where every backlog item from PRD v1.8 lives in the plan.

@@ -2,13 +2,13 @@
 
 ## Summary
 
-- **Current focus:** Phase 0, task group 0h: the code review of everything Phase 0 changed.
-- **Current status:** Phase 0 is in progress. 0a to 0f are done. Video, live words, voice only and the camera all work on your iPhone and laptop. Three 10-minute demos cost about $0.05 of Claude each for notes and camera, far under the $1.10 estimate. Notes are accurate on the improved Haiku 5.5 reader, but demos jotted too many notes, which needs tuning in Phase 2.
-- **Recent changes (19 Oct 2026):** 0g done: you approved the Phase 0 gate (video, voice only and cost passed; Haiku 5.5 for live notes and the camera), recorded in tech spec 1.3. 0f done: a full demo page, 3 test demos, a fix so confirmed notes never disappear. your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
+- **Current focus:** Phase 1, task group 1a: project setup and database.
+- **Current status:** Phase 0 is done. Video, live words, voice only, jotted notes and the camera all work on your iPhone and laptop, and a demo costs about $0.35 of AI. The Phase 0 code review found 10 issues: 7 fixed, 3 left on purpose. No app screens are built yet.
+- **Recent changes (19 Oct 2026):** Phase 0 done: code review fixes (stale confirmed notes after a voice correction, duplicate budget notes, the demo summary, notes paused instead of crashing, slower wrong-passcode answers). 0g done: you approved the Phase 0 gate (video, voice only and cost passed; Haiku 5.5 for live notes and the camera), recorded in tech spec 1.3. 0f done: a full demo page, 3 test demos, a fix so confirmed notes never disappear. your scope change, product spec 1.4: no transcript or captions, no typing to the stylist in v1, a working microphone required, and a free-form notebook where the stylist jots down any relevant details. Design 0.7 and tech spec 1.2 match it, and the tasks in 2b to 2d, 5a and 6c are updated. 0e done: voice only passed, and quartz picked as the voice. The portfolio package (a recruiter README, an architecture diagram, an evaluation write-up, simple checks, a one-page case study and a private portfolio kit) was added to 7b, to be built once the app is (decision in docs/mvp.md). interview-notes.md is now private: kept on your Mac, no longer in the public repository.
 - **Earlier (18 Oct 2026):** Android phones dropped from v1 testing, and each Tavus conversation is hard-deleted when the session ends (both in docs/mvp.md). 0f: the provider data handling review and an About page draft (docs/mvp.md section 8). 0e: the voice-only and camera test pages, and the camera test results. 0d done: notes speed test with a replay script (spikes/notes-speed). 0c done: Tavus stylist from a config file, passcode-locked test page, and a test that the session endpoint never returns a key. 0b done: public GitHub repository, bare Next.js 16.4 site deployed to Vercel, Vercel keys added. 0a done. You chose Tavus Starter now instead of Free (120 minutes a month), and adding keys to Vercel moved to 0b. Earlier the same day, the plan files moved into docs/. Added docs/mvp.md, CLAUDE.md, interview-notes.md and the Memory site. Split this plan into task groups, with a code review at the end of every phase.
-- **What's left:** 0h code review to finish Phase 0, then phases 1 to 7.
+- **What's left:** phases 1 to 7.
 - **Known issues:** live notes are accurate but only 75 to 90% arrive within 2 seconds (target 95%), and demos jotted too many notes. Both get fixed in Phase 2. Open risks are tracked in docs/mvp.md.
-- **Next action:** I run the Phase 0 code review, fix what it finds, and explain it to you. Then Phase 1 starts with a plan for your approval.
+- **Next action:** a plan for task group 1a (project setup and database) for your approval.
 
 **How this file works**
 - Phases are in build order. The riskiest work comes first, as the tech spec's risk table asks.
@@ -22,7 +22,7 @@
 
 | Phase | Goal | Task groups | Status |
 |---|---|---|---|
-| 0 | Prove the video stylist, live notes, voice only and phone browsers, and measure real costs | 0a to 0h | In progress |
+| 0 | Prove the video stylist, live notes, voice only and phone browsers, and measure real costs | 0a to 0h | Done |
 | 1 | Foundations: live link, guest sign-in, design system, database, sample catalog, budget guard | 1a to 1g | Not started |
 | 2 | Live session and My Styling Notes | 2a to 2f | Not started |
 | 3 | Photos, camera and wardrobe | 3a to 3e | Not started |
@@ -37,7 +37,7 @@
 
 **Goal:** Before building the real app, prove that the video stylist, live notes, voice only and phone browsers work well enough, and measure what a demo really costs. The code in this phase is a throwaway test page.
 
-**Status:** In progress
+**Status:** Done (19 Oct 2026)
 
 ### 0a. Accounts and keys
 - [x] **You:** create a Tavus account. You chose the Starter plan ($22 a month: 120 minutes, calls up to 10 minutes) on 18 Oct 2026, instead of Free, so the Phase 0 tests can run full-length demos.
@@ -76,7 +76,7 @@
 - [x] Record your decisions in docs/mvp.md, and in the specs if any agreed decision changes. Done: docs/mvp.md and tech spec 1.3.
 
 ### 0h. Code review
-- [ ] Code review of everything this phase changed, with fixes made, the automated tests re-run, and the findings explained to you.
+- [x] Code review of everything this phase changed, with fixes made, the automated tests re-run, and the findings explained to you. Done 19 Oct 2026: 10 findings, 7 fixed, 3 left on purpose (see docs/mvp.md).
 
 **Automated tests**
 - A replay script sends the wedding sentence to the notes reader in small pieces, checks that the notes match R18, and prints the time for every update.
@@ -180,7 +180,7 @@
 
 ### 2c. Notes reader
 - [ ] Notes reader that jots short notes in the stylist's words plus the hidden details looks need, with plain code for money and dates, receiving new words about once a second (R15 to R17).
-- [ ] "Latest word wins" and version numbers on every note (R22).
+- [ ] "Latest word wins" and version numbers on every note (R22). From the Phase 0 code review: keep notes on the server (session_notes) and have the reader return changes by id (add, update, remove) that are merged in code, instead of rewriting the whole list each second.
 - [ ] Voice corrections (R21), and the next useful question with quick replies (R19).
 - [ ] Context updates, so the stylist always knows the confirmed notes.
 

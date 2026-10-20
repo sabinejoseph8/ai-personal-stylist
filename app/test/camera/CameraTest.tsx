@@ -23,6 +23,7 @@ export default function CameraTest() {
   const streamRef = useRef<MediaStream | null>(null);
   const loop = useRef<ReturnType<typeof setInterval> | null>(null);
   const busy = useRef(false);
+  const offTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const modelRef = useRef(model);
   const t0 = useRef(0);
 
@@ -81,7 +82,8 @@ export default function CameraTest() {
       setOn(true);
       setStatus("Camera on: hold an item up to the camera");
       loop.current = setInterval(sendFrame, 2000);
-      setTimeout(stop, 120_000); // the camera turns off after 2 minutes (R35)
+      if (offTimer.current) clearTimeout(offTimer.current);
+      offTimer.current = setTimeout(stop, 120_000); // the camera turns off after 2 minutes (R35)
     } catch (err) {
       setStatus(`Camera not available: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -89,6 +91,7 @@ export default function CameraTest() {
 
   function stop() {
     if (loop.current) clearInterval(loop.current);
+    if (offTimer.current) clearTimeout(offTimer.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setOn(false);

@@ -12,6 +12,12 @@ export function passcodeOk(given: unknown): boolean {
   return timingSafeEqual(a, b);
 }
 
+/** A wrong passcode waits 1.5 seconds before answering, so guessing it is slow. Real rate limits come in Phase 1 (1b). */
+export async function wrongPasscode() {
+  await new Promise((r) => setTimeout(r, 1500));
+  return Response.json({ error: "Wrong passcode" }, { status: 401 });
+}
+
 /** Removes the Tavus key from any text before it leaves the server. */
 function scrub(text: string): string {
   const key = process.env.TAVUS_API_KEY;

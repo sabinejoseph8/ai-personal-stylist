@@ -28,6 +28,7 @@ export default function DemoTest() {
   const [claudeUSD, setClaudeUSD] = useState(0);
   const [videoSeconds, setVideoSeconds] = useState(0);
   const [summary, setSummary] = useState<string | null>(null);
+  const [paused, setPaused] = useState(false);
   const [counts, setCounts] = useState({ notesCalls: 0, frames: 0 });
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -39,6 +40,8 @@ export default function DemoTest() {
   const camStream = useRef<MediaStream | null>(null);
   const camLoop = useRef<ReturnType<typeof setInterval> | null>(null);
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
+  const camOff = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishing = useRef(false);
 
   // Shopper's words: finished turns plus the turn in progress.
   const doneTurns = useRef<string[]>([]);
@@ -106,18 +109,25 @@ export default function DemoTest() {
           removed: removedTexts.current,
         }),
       });
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       addCost(data.costUSD ?? 0);
+      setPaused(!res.ok);
+      if (!res.ok) return;
       setCounts((c) => ({ ...c, notesCalls: c.notesCalls + 1 }));
       if (v < applied.current) return; // a newer reading already landed (latest word wins)
       applied.current = v;
       const known = new Set(notesRef.current.map((n) => n.key));
+      const returned = new Set((data.notes ?? []).map((n: { id: string }) => n.id));
+      const freshKinds = new Set<string>();
       const next: Note[] = (data.notes ?? [])
-        .map((n: Omit<Note, "key"> & { id: string }) => ({
-          ...n,
-          key: known.has(n.id) ? n.id : `n${nextId.current++}`,
-        }))
+        .map((n: Omit<Note, "key"> & { id: string }) => {
+          if (known.has(n.id)) return { ...n, key: n.id };
+          // Money is read by plain code, so a budget note may arrive without its old id: reuse it.
+          const oldBudget = n.kind === "budget" && notesRef.current.find((o) => o.kind === "budget" && !returned.has(o.key));
+          if (oldBudget) return { ...n, key: oldBudget.key };
+          freshKinds.add(n.kind);
+          return { ...n, key: `n${nextId.current++}` };
+        })
         .filter((n: Note) => n.text && !removedKeys.current.has(n.key) && !removedKeys.current.has(norm(n.text)))
         .map((n: Note) => {
           const confirmed = confirmedText.current.get(n.key);
@@ -127,9 +137,12 @@ export default function DemoTest() {
           return { ...n, status: "to_confirm" as const };
         });
       // Confirmed notes always stay on screen until the shopper removes or changes them.
+      // A brand-new note of the same kind in this reading counts as a voice correction that replaced it.
       const kept = new Set(next.map((n) => n.key));
       for (const old of notesRef.current) {
-        if (old.status === "confirmed" && !kept.has(old.key) && !removedKeys.current.has(old.key)) next.push(old);
+        const replaced = freshKinds.has(old.kind) && old.kind !== "other";
+        if (old.status === "confirmed" && !kept.has(old.key) && !removedKeys.current.has(old.key) && !replaced) next.push(old);
+        if (replaced) confirmedText.current.delete(old.key);
       }
       setNotes(next);
       sendContext(next, seenRef.current);
@@ -148,6 +161,11 @@ export default function DemoTest() {
     removedKeys.current.clear();
     removedTexts.current = [];
     nextId.current = 1;
+    seenRef.current = null;
+    lastFrame.current = null;
+    setSeen(null);
+    setPaused(false);
+    finishing.current = false;
     claudeRef.current = 0;
     setClaudeUSD(0);
     setVideoSeconds(0);
@@ -203,6 +221,11 @@ export default function DemoTest() {
   }
 
   async function finish(reason: string) {
+    // leave() fires "left-meeting", which calls finish again: only the first call counts.
+    if (finishing.current) return;
+    finishing.current = true;
+    const mins = videoStart.current === null ? 0 : (clock() - videoStart.current) / 60000;
+    videoStart.current = null;
     if (tick.current) clearInterval(tick.current);
     stopCamera();
     const conv = convRef.current;
@@ -219,8 +242,6 @@ export default function DemoTest() {
     }
     setActive(false);
     setStatus(reason);
-    const mins = videoStart.current === null ? 0 : (clock() - videoStart.current) / 60000;
-    videoStart.current = null;
     setSummary(
       [
         `Video: ${mins.toFixed(1)} minutes (about $${(mins * TAVUS_PER_MINUTE).toFixed(2)} of the Tavus plan)`,
@@ -275,7 +296,8 @@ export default function DemoTest() {
       setCameraOn(true);
       lastFrame.current = null;
       camLoop.current = setInterval(sendFrame, 2000);
-      setTimeout(stopCamera, 120_000); // off after 2 minutes (R35)
+      if (camOff.current) clearTimeout(camOff.current);
+      camOff.current = setTimeout(stopCamera, 120_000); // off after 2 minutes (R35)
     } catch {
       setStatus("Camera not available");
     }
@@ -283,6 +305,7 @@ export default function DemoTest() {
 
   function stopCamera() {
     if (camLoop.current) clearInterval(camLoop.current);
+    if (camOff.current) clearTimeout(camOff.current);
     camStream.current?.getTracks().forEach((t) => t.stop());
     camStream.current = null;
     setCameraOn(false);
@@ -354,6 +377,7 @@ export default function DemoTest() {
         <section style={notebook}>
           <h2 style={{ margin: "0 0 4px", fontFamily: "Georgia, serif", fontWeight: 500 }}>My Styling Notes</h2>
           <p style={{ margin: "0 0 8px", fontSize: 13, color: "#575e6a" }}>Tap a note to confirm or remove it. To change one, just say so.</p>
+          {paused && <p style={{ margin: "0 0 8px", fontWeight: 600 }}>Notes paused. Confirming and removing still work.</p>}
           {notes.length === 0 && <p style={{ color: "#575e6a", fontStyle: "italic" }}>Notes will appear as you talk.</p>}
           {notes.map((n) => (
             <div key={n.key} style={{ borderBottom: "1px solid #c8d7ea", padding: "6px 0" }}>

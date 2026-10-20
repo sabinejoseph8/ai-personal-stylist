@@ -20,4 +20,4 @@ export function readNotes(
   effort?: "low" | "medium" | "high",
   current?: { id: string; text: string; status: string }[],
   removed?: string[],
-): Promise<{ notes: JottedNote[]; usage: unknown; costUSD: number }>;
+): Promise<{ notes: JottedNote[] | null; usage: unknown; costUSD: number }>;
