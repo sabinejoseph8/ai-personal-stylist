@@ -1,0 +1,1673 @@
+{
+ "summary": {
+  "model": "claude-haiku-5-5",
+  "setup": {
+   "effort": "off",
+   "overlap": true,
+   "sendEveryMs": 500
+  },
+  "date": "2026-10-20T15:37:08.498Z",
+  "cases": 30,
+  "checks": 134,
+  "right": 129,
+  "rightPercent": 96,
+  "timedNotes": 68,
+  "within2sPercent": 99,
+  "p95Seconds": 1.9,
+  "pausedReadings": 0,
+  "readingSeconds": {
+   "median": 1.23,
+   "p95": 2.08
+  },
+  "readings": 417,
+  "costUSD": 0.0953
+ },
+ "results": [
+  {
+   "id": "R18 wedding",
+   "checks": [
+    {
+     "what": "outdoor+wedding",
+     "ok": true,
+     "seconds": 1.6495524159999995
+    },
+    {
+     "what": "november",
+     "ok": true,
+     "seconds": 1.9895417909999997
+    },
+    {
+     "what": "elegant",
+     "ok": true,
+     "seconds": 1.3322005
+    },
+    {
+     "what": "emerald",
+     "ok": true,
+     "seconds": 1.0781153329999997
+    },
+    {
+     "what": "up to+500",
+     "ok": true,
+     "seconds": 0.001658082999999351
+    },
+    {
+     "what": "no \"dress\"",
+     "ok": true
+    },
+    {
+     "what": "no \"pantsuit\"",
+     "ok": true
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    },
+    {
+     "what": "asks dress/pantsuit",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Outdoor wedding, November [pencil]",
+    "Elegant [pencil]",
+    "Emerald green, preferred [pencil]",
+    "Budget: up to $500 [pencil]"
+   ],
+   "question": {
+    "text": "Dress or pantsuit?",
+    "options": [
+     "Dress",
+     "Pantsuit",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.003677600000000001,
+   "paused": 0,
+   "readings": 16,
+   "durations": [
+    1297.5083329999998,
+    2024.2182910000001,
+    1155.7853750000002,
+    1658.2702910000005,
+    1548.995167,
+    1802.2347909999999,
+    1188.2675840000002,
+    1825.681708,
+    1260.318209,
+    1130.7739999999994,
+    1074.8853340000005,
+    1623.963541,
+    1041.6066660000006,
+    1070.0617920000004,
+    1254.7560840000006,
+    1363.1347080000005
+   ]
+  },
+  {
+   "id": "Budget correction",
+   "checks": [
+    {
+     "what": "350",
+     "ok": true,
+     "seconds": 0.0037842909999999392
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Budget: up to $350 [pencil]"
+   ],
+   "question": null,
+   "cost": 0.0019926,
+   "paused": 0,
+   "readings": 10,
+   "durations": [
+    1244.2578749999998,
+    983.7185829999997,
+    962.5856250000002,
+    1020.344,
+    1411.2624579999997,
+    928.0903750000002,
+    827.0273749999997,
+    1357.6062080000002,
+    969.9592500000008,
+    1303.6132079999998
+   ]
+  },
+  {
+   "id": "Colors to avoid",
+   "checks": [
+    {
+     "what": "interview",
+     "ok": true,
+     "seconds": 0.9926237500000002
+    },
+    {
+     "what": "navy",
+     "ok": true,
+     "seconds": 0.8178442089999999
+    },
+    {
+     "what": "grey",
+     "ok": true,
+     "seconds": 1.2183239169999998
+    },
+    {
+     "what": "black",
+     "ok": true,
+     "seconds": 1.472216834
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Job interview [pencil]",
+    "Next Tuesday [pencil]",
+    "Navy or grey, preferred [pencil]",
+    "Not black [pencil]"
+   ],
+   "question": {
+    "text": "Is there a dress code or setting for the interview?",
+    "options": [
+     "Corporate office",
+     "Creative or casual workplace",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0030842000000000005,
+   "paused": 0,
+   "readings": 13,
+   "durations": [
+    1243.347083,
+    1388.5901250000004,
+    985.7269580000004,
+    953.0778330000003,
+    1980.331792,
+    1042.2711669999999,
+    1779.4174169999997,
+    1320.261042,
+    1369.8518749999994,
+    1401.3522079999993,
+    1932.5661250000003,
+    1216.02675,
+    1216.1395000000002
+   ]
+  },
+  {
+   "id": "Budget range",
+   "checks": [
+    {
+     "what": "200+300",
+     "ok": true,
+     "seconds": 0.0012272499999999127
+    },
+    {
+     "what": "dinner",
+     "ok": true,
+     "seconds": 1.5537032499999988
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Budget: $200 to $300 [pencil]",
+    "Casual dinner [pencil]"
+   ],
+   "question": {
+    "text": "Any colors to wear or avoid?",
+    "options": [
+     "Not sure yet",
+     "Nothing to avoid",
+     "I'll tell you"
+    ]
+   },
+   "cost": 0.0024484,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    841.6393339999995,
+    809.3762079999997,
+    941.8640830000004,
+    2498.327125,
+    1359.639792,
+    1207.4512079999986,
+    1776.6245409999992,
+    929.0137500000001,
+    1172.377625000001,
+    864.1522499999992,
+    874.8804170000003,
+    1153.0495420000007
+   ]
+  },
+  {
+   "id": "Outfit type",
+   "checks": [
+    {
+     "what": "pantsuit",
+     "ok": true,
+     "seconds": 0.1104262920000001
+    },
+    {
+     "what": "gala",
+     "ok": false,
+     "seconds": null
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Pantsuit, preferred [pencil]"
+   ],
+   "question": {
+    "text": "What's the occasion?",
+    "options": [
+     "Wedding",
+     "Work event",
+     "Dinner out"
+    ]
+   },
+   "cost": 0.0022935,
+   "paused": 0,
+   "readings": 11,
+   "durations": [
+    1015.1576249999998,
+    1339.7112910000014,
+    847.2530420000003,
+    893.7724159999998,
+    1671.4884170000005,
+    1107.953125,
+    1096.8708750000005,
+    1212.167542000001,
+    776.9174170000006,
+    1047.0582499999982,
+    1414.1950829999987
+   ]
+  },
+  {
+   "id": "Existing wardrobe",
+   "checks": [
+    {
+     "what": "coat",
+     "ok": true,
+     "seconds": 1.0485326669999995
+    },
+    {
+     "what": "sneakers",
+     "ok": true,
+     "seconds": 1.3303565
+    },
+    {
+     "what": "brunch",
+     "ok": true,
+     "seconds": 1.3549683749999986
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Owns a camel coat [pencil]",
+    "Owns white sneakers [pencil]",
+    "Weekend brunch [pencil]"
+   ],
+   "question": {
+    "text": "Dressy or relaxed?",
+    "options": [
+     "Dressy",
+     "Relaxed",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0030694000000000003,
+   "paused": 0,
+   "readings": 14,
+   "durations": [
+    860.4577090000002,
+    1556.318041999999,
+    1058.2497500000009,
+    947.195208000001,
+    2034.7048749999994,
+    1416.9979589999984,
+    1256.3322079999998,
+    929.7375419999989,
+    1220.6056250000001,
+    1739.1159580000003,
+    1847.3077090000006,
+    1700.7449589999997,
+    1353.8975829999981,
+    1767.3232079999998
+   ]
+  },
+  {
+   "id": "Exact date",
+   "checks": [
+    {
+     "what": "graduation",
+     "ok": true,
+     "seconds": 1.538827959000002
+    },
+    {
+     "what": "june",
+     "ok": true,
+     "seconds": 0.655533542000001
+    },
+    {
+     "what": "polished",
+     "ok": true,
+     "seconds": 1.3011954590000023
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Sister's graduation, June 14th [pencil]",
+    "Polished [pencil]",
+    "Comfortable [pencil]"
+   ],
+   "question": {
+    "text": "Is the graduation indoors or outdoors?",
+    "options": [
+     "Indoors",
+     "Outdoors",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0028498,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    1498.6125829999983,
+    1292.7486659999995,
+    1237.654333999999,
+    954.640083000002,
+    1716.6395420000008,
+    1219.7567909999998,
+    1008.0170000000035,
+    1495.140625,
+    1510.3163339999992,
+    1410.0805,
+    1800.325499999999,
+    1552.4882920000018
+   ]
+  },
+  {
+   "id": "Unclear budget",
+   "checks": [
+    {
+     "what": "birthday",
+     "ok": true,
+     "seconds": 0.6632331250000024
+    },
+    {
+     "what": "no \"$\"",
+     "ok": true
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Birthday party [pencil]"
+   ],
+   "question": null,
+   "cost": 0.0028069,
+   "paused": 0,
+   "readings": 14,
+   "durations": [
+    786.0514159999984,
+    1627.3993330000012,
+    865.9013339999983,
+    719.9510829999999,
+    693.0457499999975,
+    1112.4880000000012,
+    754.5545420000017,
+    1030.2338339999988,
+    790.1516660000016,
+    2545.216583999998,
+    963.0720409999994,
+    968.6281250000029,
+    962.2083340000027,
+    1619.599000000002
+   ]
+  },
+  {
+   "id": "Long ramble",
+   "checks": [
+    {
+     "what": "holiday+party",
+     "ok": true,
+     "seconds": 1.2710543749999996
+    },
+    {
+     "what": "december",
+     "ok": true,
+     "seconds": 1.211132916999999
+    },
+    {
+     "what": "earth",
+     "ok": true,
+     "seconds": 1.6601444169999995
+    },
+    {
+     "what": "relaxed",
+     "ok": true,
+     "seconds": 0.06574508300000162
+    },
+    {
+     "what": "250",
+     "ok": true,
+     "seconds": 0.0008901669999977457
+    },
+    {
+     "what": "no repeated notes",
+     "ok": false
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Company winter holiday party, December [pencil]",
+    "Layers for cold [pencil]",
+    "Earth tones, usually wears [pencil]",
+    "Warm layers [pencil]",
+    "Budget: around $250 [pencil]",
+    "Relaxed but put together [pencil]",
+    "December [pencil]",
+    "Rooftop bar [pencil]"
+   ],
+   "question": {
+    "text": "Is the rooftop bar part of the party you still need outfits for?",
+    "options": [
+     "Yes, rooftop bar",
+     "No, different venue",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0089237,
+   "paused": 0,
+   "readings": 36,
+   "durations": [
+    1176.8762500000012,
+    2269.6076250000006,
+    1420.499915999997,
+    1414.0128750000003,
+    1296.3009590000001,
+    1094.3590000000004,
+    1370.344291999998,
+    1193.358709,
+    1109.1622499999976,
+    1086.6641670000026,
+    1074.3200419999994,
+    1021.1171250000007,
+    1977.424332999999,
+    1284.1582080000007,
+    1075.3502079999998,
+    1696.3497910000006,
+    1414.661874999998,
+    1246.1981250000026,
+    1253.8844589999972,
+    1866.2364589999997,
+    1288.546457999997,
+    1359.4003749999974,
+    1007.4875419999989,
+    2646.470500000003,
+    1375.483583000001,
+    918.1704580000005,
+    1607.7277080000022,
+    1265.5084590000006,
+    1682.0002920000006,
+    2399.2803340000028,
+    1990.844416,
+    1294.273792,
+    2191.180916999998,
+    1415.1203749999986,
+    1017.625374999996,
+    1559.8495840000032
+   ]
+  },
+  {
+   "id": "Summer vacation",
+   "checks": [
+    {
+     "what": "beach",
+     "ok": true,
+     "seconds": 1.4873009579999998
+    },
+    {
+     "what": "july",
+     "ok": true,
+     "seconds": 1.5755358750000015
+    },
+    {
+     "what": "150",
+     "ok": true,
+     "seconds": 0.0009754170000014711
+    },
+    {
+     "what": "no repeated notes",
+     "ok": false
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Beach trip, July [pencil]",
+    "July [pencil]",
+    "Bright colors, preferred [pencil]",
+    "Bright, colorful [pencil]",
+    "Budget: up to $150 [pencil]",
+    "Vacation outfits [pencil]"
+   ],
+   "question": {
+    "text": "What's the setting, beach resort or casual seaside?",
+    "options": [
+     "Beach resort",
+     "Casual seaside",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0029637000000000005,
+   "paused": 0,
+   "readings": 13,
+   "durations": [
+    1145.9901669999963,
+    1177.1212079999968,
+    1227.9780409999948,
+    985.7092080000002,
+    1883.707792000001,
+    1374.1469579999975,
+    1241.1050840000025,
+    1682.7315000000017,
+    1213.0584999999992,
+    1110.4290420000034,
+    1234.2018329999992,
+    873.9525419999991,
+    1318.0282080000034
+   ]
+  },
+  {
+   "id": "Menswear suit",
+   "checks": [
+    {
+     "what": "suit",
+     "ok": true,
+     "seconds": 1.6635284580000007
+    },
+    {
+     "what": "wedding",
+     "ok": true,
+     "seconds": 1.082790541000002
+    },
+    {
+     "what": "spring",
+     "ok": true,
+     "seconds": 1.902735333000004
+    },
+    {
+     "what": "charcoal",
+     "ok": true,
+     "seconds": 1.8044127500000031
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Suit [pencil]",
+    "Best friend's wedding, spring [pencil]",
+    "Classic [pencil]",
+    "Charcoal [pencil]"
+   ],
+   "question": {
+    "text": "Suit fit or formality?",
+    "options": [
+     "Slim",
+     "Classic cut",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0028412000000000003,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    806.9238750000004,
+    978.5459589999955,
+    991.7298339999979,
+    1262.633541999996,
+    1471.746500000001,
+    1268.0041249999995,
+    1181.436791,
+    1266.8933749999997,
+    1801.9459999999963,
+    1485.513042000006,
+    1739.3168329999971,
+    1802.7115420000046
+   ]
+  },
+  {
+   "id": "Held-out: cocktail",
+   "checks": [
+    {
+     "what": "200",
+     "ok": true,
+     "seconds": 0.10112154200000077
+    },
+    {
+     "what": "cocktail",
+     "ok": true,
+     "seconds": 1.6953339580000029
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Budget: up to $200 [pencil]",
+    "Cocktail party [pencil]"
+   ],
+   "question": null,
+   "cost": 0.002414,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    921.0079169999954,
+    774.7958330000038,
+    844.7112500000003,
+    1383.9327909999993,
+    1087.304833000002,
+    1274.2122089999975,
+    1091.279208,
+    837.9969580000034,
+    863.7210419999974,
+    843.0507919999945,
+    702.3048749999944,
+    1693.325208000002
+   ]
+  },
+  {
+   "id": "Held-out: black tie",
+   "checks": [
+    {
+     "what": "black tie",
+     "ok": true,
+     "seconds": 1.0327537500000035
+    },
+    {
+     "what": "january",
+     "ok": true,
+     "seconds": 1.641925833000001
+    },
+    {
+     "what": "around+600",
+     "ok": true,
+     "seconds": 0.0006000829999975395
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Black tie charity dinner [pencil]",
+    "Late January [pencil]",
+    "Budget: around $600 [pencil]"
+   ],
+   "question": {
+    "text": "Dress or suit?",
+    "options": [
+     "Dress",
+     "Suit",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0026693000000000003,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    796.931500000006,
+    982.1864589999968,
+    887.1759999999995,
+    1432.3046660000036,
+    1031.28125,
+    1419.4018750000032,
+    1108.6051250000019,
+    1240.7457499999946,
+    1092.550374999999,
+    1227.8707920000015,
+    924.9085409999971,
+    1554.2242079999996
+   ]
+  },
+  {
+   "id": "Held-out: office",
+   "checks": [
+    {
+     "what": "office",
+     "ok": true,
+     "seconds": 0.8906607499999954
+    },
+    {
+     "what": "neutral",
+     "ok": true,
+     "seconds": 0.8723086249999978
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Work clothes [pencil]",
+    "New office job [pencil]",
+    "Neutral colors [pencil]",
+    "Not flashy [pencil]"
+   ],
+   "question": {
+    "text": "What's the dress code at the office?",
+    "options": [
+     "Business formal",
+     "Business casual",
+     "Smart casual"
+    ]
+   },
+   "cost": 0.0027275,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    811.5022909999971,
+    1034.9571660000001,
+    1291.5780000000013,
+    1147.4412079999965,
+    954.955750000001,
+    1547.888500000001,
+    989.0373749999999,
+    1501.1940000000031,
+    1170.9186250000057,
+    1453.4020420000015,
+    1014.5292919999993,
+    2275.0192090000055
+   ]
+  },
+  {
+   "id": "Held-out: rehearsal",
+   "checks": [
+    {
+     "what": "rehearsal",
+     "ok": true,
+     "seconds": 1.2785131249999977
+    },
+    {
+     "what": "september",
+     "ok": true,
+     "seconds": 1.2984824169999993
+    },
+    {
+     "what": "jumpsuit",
+     "ok": true,
+     "seconds": 1.774743917
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Rehearsal dinner, September [pencil]",
+    "Jumpsuit, leaning toward [pencil]"
+   ],
+   "question": {
+    "text": "Is the jumpsuit dressy or casual?",
+    "options": [
+     "Dressy",
+     "Casual",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0022064,
+   "paused": 0,
+   "readings": 10,
+   "durations": [
+    856.4698340000032,
+    987.0448340000003,
+    877.4575419999965,
+    1609.234166000002,
+    1198.1084580000024,
+    1149.8766669999968,
+    1661.5530839999992,
+    1401.7390840000007,
+    2136.770457999999,
+    1773.902915999999
+   ]
+  },
+  {
+   "id": "Held-out: changed budget",
+   "checks": [
+    {
+     "what": "450",
+     "ok": true,
+     "seconds": 0.3010662500000035
+    },
+    {
+     "what": "engagement",
+     "ok": true,
+     "seconds": 1.6409035829999994
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Budget: up to $450 [pencil]",
+    "Fall engagement party [pencil]"
+   ],
+   "question": null,
+   "cost": 0.0024609,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    915.3284590000039,
+    1020.8094589999964,
+    1325.8224169999958,
+    1201.640416000002,
+    778.3084999999992,
+    1562.1914169999945,
+    905.7053340000057,
+    1534.4565000000002,
+    781.8947919999991,
+    1595.763957999996,
+    1739.6910839999982,
+    1669.4967920000054
+   ]
+  },
+  {
+   "id": "A question isn't a note",
+   "checks": [
+    {
+     "what": "no \"denim\"",
+     "ok": true
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Black tie event [pencil]"
+   ],
+   "question": {
+    "text": "Is that for a dinner, wedding, or gala?",
+    "options": [
+     "Dinner",
+     "Wedding",
+     "Gala"
+    ]
+   },
+   "cost": 0.0024811,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    672.7949169999993,
+    1330.8442080000023,
+    782.3402920000008,
+    940.0774579999998,
+    1299.0532910000038,
+    913.489333999998,
+    1681.7350829999996,
+    888.427334,
+    1488.585208000004,
+    1364.7962499999994,
+    867.043792000004,
+    1067.9520839999968
+   ]
+  },
+  {
+   "id": "Chit-chat",
+   "checks": [
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    },
+    {
+     "what": "at most 0 notes",
+     "ok": true
+    }
+   ],
+   "notes": [],
+   "question": null,
+   "cost": 0.0017852,
+   "paused": 0,
+   "readings": 9,
+   "durations": [
+    837.7827079999988,
+    933.3354169999948,
+    968.9833330000038,
+    1036.348334000002,
+    1153.2199579999942,
+    1412.7242079999996,
+    977.237291999998,
+    1105.0970420000012,
+    1217.393624999997
+   ]
+  },
+  {
+   "id": "Answer to her question",
+   "checks": [
+    {
+     "what": "wedding",
+     "ok": true,
+     "seconds": 1.5205640419999982
+    },
+    {
+     "what": "pantsuit",
+     "ok": true,
+     "seconds": 0.3585872919999965
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Friend's wedding, October [pencil]",
+    "Pantsuit [pencil]"
+   ],
+   "question": null,
+   "cost": 0.0021688000000000002,
+   "paused": 0,
+   "readings": 10,
+   "durations": [
+    822.7924589999966,
+    1055.0232079999987,
+    2095.777332999998,
+    1519.5175000000017,
+    1223.6448329999985,
+    1083.6673340000052,
+    1284.2573749999938,
+    958.1025420000005,
+    1210.047292000003,
+    1408.121291000003
+   ]
+  },
+  {
+   "id": "Confirmation by voice",
+   "checks": [
+    {
+     "what": "garden confirmed",
+     "ok": true,
+     "seconds": 0.0010167500000025028
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Garden party, May [ink]"
+   ],
+   "question": null,
+   "cost": 0.0019557999999999997,
+   "paused": 0,
+   "readings": 9,
+   "durations": [
+    714.2204999999958,
+    1287.911791999999,
+    1510.8787920000032,
+    1214.7512079999942,
+    1863.8042910000004,
+    2384.106832999998,
+    1625.7393329999977,
+    1267.0513749999955,
+    1625.6779999999999
+   ]
+  },
+  {
+   "id": "Taking it back",
+   "checks": [
+    {
+     "what": "dinner",
+     "ok": true,
+     "seconds": 0.9541973750000033
+    },
+    {
+     "what": "no \"red,\"",
+     "ok": true
+    },
+    {
+     "what": "no \"red \"",
+     "ok": true
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Dinner date [pencil]"
+   ],
+   "question": null,
+   "cost": 0.0023740999999999996,
+   "paused": 0,
+   "readings": 11,
+   "durations": [
+    1171.7736250000016,
+    1034.3747079999957,
+    1672.1751250000016,
+    1584.128082999996,
+    1294.6039999999994,
+    1153.211540999997,
+    1322.0099580000024,
+    1626.7032080000063,
+    1222.3902919999964,
+    813.5216250000085,
+    896.8219580000004
+   ]
+  },
+  {
+   "id": "Fit and comfort",
+   "checks": [
+    {
+     "what": "long",
+     "ok": true,
+     "seconds": 1.4394155410000093
+    },
+    {
+     "what": "flat",
+     "ok": true,
+     "seconds": 0.8316272909999971
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Petite [pencil]",
+    "Nothing too long [pencil]",
+    "Flats [pencil]",
+    "Needs flat shoes [pencil]",
+    "Standing all day [pencil]"
+   ],
+   "question": {
+    "text": "Any footwear needs beyond flat shoes?",
+    "options": [
+     "Comfort first",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0031934000000000003,
+   "paused": 0,
+   "readings": 15,
+   "durations": [
+    785.4379170000029,
+    921.1650420000078,
+    862.3078749999986,
+    934.0848750000005,
+    1826.9930000000022,
+    1237.7828750000044,
+    976.6638750000129,
+    1273.0553339999897,
+    1129.9110839999921,
+    938.9589160000032,
+    1190.6405420000083,
+    1305.3481669999892,
+    810.0232499999984,
+    1047.3273749999935,
+    1584.7171249999956
+   ]
+  },
+  {
+   "id": "Things to avoid",
+   "checks": [
+    {
+     "what": "floral",
+     "ok": true,
+     "seconds": 1.054028250000003
+    },
+    {
+     "what": "tight",
+     "ok": true,
+     "seconds": 0.1495705830000079
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "No florals [pencil]",
+    "Nothing tight at the waist [pencil]"
+   ],
+   "question": {
+    "text": "Any other colors or patterns to avoid?",
+    "options": [
+     "Yes",
+     "No",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0017416999999999999,
+   "paused": 0,
+   "readings": 8,
+   "durations": [
+    771.6482090000063,
+    1233.2232079999958,
+    976.0733749999927,
+    930.6770410000026,
+    1623.5540420000034,
+    1147.659707999992,
+    883.5601250000036,
+    1873.8492079999996
+   ]
+  },
+  {
+   "id": "Menswear casual",
+   "checks": [
+    {
+     "what": "weekend",
+     "ok": true,
+     "seconds": 0.010136500000007799
+    },
+    {
+     "what": "jeans",
+     "ok": true,
+     "seconds": 0.8287567500000005
+    },
+    {
+     "what": "smart casual",
+     "ok": true,
+     "seconds": 0.9298726250000036
+    },
+    {
+     "what": "olive",
+     "ok": true,
+     "seconds": 1.0132562500000057
+    },
+    {
+     "what": "no repeated notes",
+     "ok": false
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "City weekend [pencil]",
+    "Jeans [pencil]",
+    "Jeans fine [pencil]",
+    "Smart casual [pencil]",
+    "Olive or navy [pencil]"
+   ],
+   "question": {
+    "text": "Any other colors you'd like or want to avoid?",
+    "options": [
+     "Not black",
+     "Open to other colors",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0037507000000000005,
+   "paused": 0,
+   "readings": 16,
+   "durations": [
+    944.9636670000036,
+    696.6726670000062,
+    908.8200420000067,
+    912.2425840000069,
+    988.2092919999996,
+    1428.5472500000033,
+    976.8052079999907,
+    1618.7930410000117,
+    1304.9973330000066,
+    843.9187079999974,
+    928.9555420000106,
+    1961.6607090000034,
+    1246.7329580000078,
+    1612.2114160000056,
+    1356.510666999995,
+    2081.6505000000034
+   ]
+  },
+  {
+   "id": "Unclear speech",
+   "checks": [
+    {
+     "what": "presentation",
+     "ok": true,
+     "seconds": 1.2845635409999958
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Work event [pencil]",
+    "Work presentation [pencil]",
+    "Next Thursday [pencil]"
+   ],
+   "question": {
+    "text": "What should the outfit feel like?",
+    "options": [
+     "Polished and formal",
+     "Smart casual",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0026376,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    825.010334000006,
+    1103.031667000003,
+    1226.8582499999902,
+    955.1885829999956,
+    899.1829589999979,
+    1052.5461249999935,
+    1217.3359999999957,
+    1030.1676250000019,
+    1508.856208000012,
+    1083.2533330000006,
+    935.9158749999915,
+    1432.263500000001
+   ]
+  },
+  {
+   "id": "Color correction mid-sentence",
+   "checks": [
+    {
+     "what": "teal",
+     "ok": true,
+     "seconds": 0.8930967920000112
+    },
+    {
+     "what": "beach+wedding",
+     "ok": true,
+     "seconds": 1.8074180840000045
+    },
+    {
+     "what": "august",
+     "ok": true,
+     "seconds": 1.954406084000002
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Teal [pencil]",
+    "Beach wedding, August [pencil]"
+   ],
+   "question": {
+    "text": "Dress or suit?",
+    "options": [
+     "Dress",
+     "Suit",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0028685,
+   "paused": 0,
+   "readings": 13,
+   "durations": [
+    1342.8056250000081,
+    1019.5644999999931,
+    1513.2554999999993,
+    890.2533750000002,
+    1830.167042000001,
+    941.0252499999915,
+    891.0124159999978,
+    891.7152079999942,
+    1086.9669580000045,
+    1051.1560410000093,
+    1260.1543750000128,
+    1401.2470840000024,
+    1952.953999999998
+   ]
+  },
+  {
+   "id": "Plain budget",
+   "checks": [
+    {
+     "what": "600",
+     "ok": true,
+     "seconds": 0.10474170799998683
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Budget: up to $600 [pencil]"
+   ],
+   "question": null,
+   "cost": 0.0015890000000000001,
+   "paused": 0,
+   "readings": 8,
+   "durations": [
+    865.5672079999931,
+    821.6061250000057,
+    893.1133750000008,
+    697.5421249999927,
+    1569.883999999991,
+    826.5792079999956,
+    828.5393750000076,
+    1546.0144169999985
+   ]
+  },
+  {
+   "id": "Season and formality",
+   "checks": [
+    {
+     "what": "winter+gala",
+     "ok": true,
+     "seconds": 1.1846793749999924
+    },
+    {
+     "what": "formal",
+     "ok": true,
+     "seconds": 1.2773977909999958
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Winter gala [pencil]",
+    "Warm [pencil]",
+    "Formal [pencil]"
+   ],
+   "question": {
+    "text": "Dress or suit?",
+    "options": [
+     "Dress",
+     "Suit",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0019842,
+   "paused": 0,
+   "readings": 9,
+   "durations": [
+    1540.5239999999903,
+    1254.4797090000066,
+    1938.722458999997,
+    1182.2389169999951,
+    1331.182084,
+    1725.5679579999996,
+    1254.6349159999954,
+    1676.7796249999956,
+    1276.9538330000069
+   ]
+  },
+  {
+   "id": "Style around an item",
+   "checks": [
+    {
+     "what": "boots",
+     "ok": true,
+     "seconds": 1.277474834000008
+    },
+    {
+     "what": "concert",
+     "ok": true,
+     "seconds": 1.6734318340000027
+    },
+    {
+     "what": "no repeated notes",
+     "ok": true
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Black leather boots [pencil]",
+    "Concert [pencil]"
+   ],
+   "question": {
+    "text": "What's the concert's setting or dress vibe?",
+    "options": [
+     "Casual",
+     "Dressy",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0026513,
+   "paused": 0,
+   "readings": 12,
+   "durations": [
+    831.0356249999895,
+    944.9803329999995,
+    1094.7749999999942,
+    1732.749874999994,
+    1345.1962500000081,
+    1425.1221249999944,
+    1325.4363339999982,
+    1674.5460840000014,
+    1175.9592090000078,
+    1098.3562089999905,
+    1303.9890829999931,
+    1671.4321670000063
+   ]
+  },
+  {
+   "id": "Too many details",
+   "checks": [
+    {
+     "what": "wedding",
+     "ok": true,
+     "seconds": 0.6601692909999983
+    },
+    {
+     "what": "450",
+     "ok": true,
+     "seconds": 0.0009093330000032438
+    },
+    {
+     "what": "no repeated notes",
+     "ok": false
+    },
+    {
+     "what": "no ink without a question",
+     "ok": true
+    },
+    {
+     "what": "at most 12 notes",
+     "ok": true
+    }
+   ],
+   "notes": [
+    "Bridesmaid [pencil]",
+    "Sage and cream palette [pencil]",
+    "Dislikes strapless [pencil]",
+    "Wants sleeves [pencil]",
+    "Not above the knee [pencil]",
+    "Heels flat or block only [pencil]",
+    "June [pencil]",
+    "Destination wedding, Italy, June [pencil]",
+    "Owns a gold clutch [pencil]",
+    "Carrying gold clutch [pencil]",
+    "Outdoor hillside wedding, evening [pencil]",
+    "Budget: around $450 [pencil]"
+   ],
+   "question": {
+    "text": "Is a dress or pantsuit planned for the wedding?",
+    "options": [
+     "Dress",
+     "Pantsuit",
+     "Not sure yet"
+    ]
+   },
+   "cost": 0.0146904,
+   "paused": 0,
+   "readings": 52,
+   "durations": [
+    757.0300000000134,
+    1050.047040999998,
+    815.8992500000022,
+    986.0924999999988,
+    1359.9014999999927,
+    1613.931958999994,
+    1218.2696250000008,
+    1144.7000830000034,
+    1282.4419999999955,
+    1126.7145000000019,
+    2300.0785000000033,
+    2327.343166999999,
+    1845.404290999999,
+    2876.1370409999945,
+    2400.768750000003,
+    1540.3027909999946,
+    1419.9447500000097,
+    2751.7163340000116,
+    1500.221458,
+    1453.4502920000086,
+    983.0668339999975,
+    1103.664957999994,
+    1068.9374169999937,
+    1092.7311659999978,
+    1591.2750830000004,
+    1657.8050419999927,
+    1449.4615829999966,
+    1317.1375830000034,
+    1506.2754999999888,
+    1312.0634580000042,
+    1842.266666999989,
+    1257.6584580000053,
+    2451.9198329999927,
+    1363.7330000000075,
+    2214.813584000003,
+    1158.0401669999992,
+    2482.107541999998,
+    1019.3719999999885,
+    1360.7284160000127,
+    2606.1693340000056,
+    1789.807832999999,
+    1600.7251250000118,
+    1516.3980420000007,
+    1018.9909170000028,
+    1396.5185409999976,
+    1919.6997910000064,
+    1625.294292000006,
+    1681.1239999999962,
+    1190.445624999993,
+    1182.8245000000024,
+    1355.8990420000046,
+    3096.501833000002
+   ]
+  }
+ ]
+}

@@ -111,6 +111,54 @@ test.describe("the stylist stage", () => {
     await expect(state(page)).toHaveText("Thinking");
   });
 
+  test("the wedding phrase jots the R18 notes while she listens, and asks dress or pantsuit (R17 to R19)", async ({ page }) => {
+    await inCall(page);
+    await expect(page.getByText("Notes appear here as you talk.")).toBeVisible();
+    await page.getByRole("button", { name: `“${SAMPLE_PHRASES[0]}”` }).click();
+    const notebook = page.getByRole("region", { name: "My Styling Notes" });
+    for (const note of ["Outdoor wedding, November", "Elegant", "Emerald green, preferred", "Budget: up to $500"]) {
+      await expect(notebook.getByText(note, { exact: true })).toBeVisible();
+    }
+    await expect(notebook.getByText("To confirm")).toHaveCount(4);
+    const replies = page.getByRole("group", { name: "Quick replies: Dress or pantsuit?" });
+    await expect(replies.getByRole("button")).toHaveText(["Dress", "Pantsuit", "Not sure yet"]);
+    await expect
+      .poll(async () => (await commandsSent(page)).filter((c) => c.name === "updateContext").map((c) => String(c.value)).join("\n"))
+      .toContain("Budget: up to $500");
+    await noSeriousA11yProblems(page);
+
+    await replies.getByRole("button", { name: "Pantsuit" }).click();
+    await expect(notebook.getByText("Pantsuit", { exact: true })).toBeVisible();
+    await expect(replies).toBeHidden();
+    expect(await commandsSent(page)).toContainEqual({ name: "sendPhrase", value: "Pantsuit" });
+  });
+
+  test("a spoken correction replaces the budget (R21)", async ({ page }) => {
+    await inCall(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "My budget is $500", final: true, turnId: "1" });
+    const notebook = page.getByRole("region", { name: "My Styling Notes" });
+    await expect(notebook.getByText("Budget: up to $500", { exact: true })).toBeVisible();
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Actually, make my budget $350", final: true, turnId: "2" });
+    await expect(notebook.getByText("Budget: up to $350", { exact: true })).toBeVisible();
+    await expect(notebook.getByText("Budget: up to $500", { exact: true })).toBeHidden();
+  });
+
+  test("words turned away by the rate limit at the end of a turn are sent again, not lost", async ({ page }) => {
+    await inCall(page);
+    let refused = 0;
+    await page.route("**/words", (route) => (refused++ < 1 ? route.fulfill({ status: 429, json: { error: "Too many updates at once." } }) : route.fallback()));
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Actually, make my budget $350", final: true, turnId: "1" });
+    await expect(page.getByRole("region", { name: "My Styling Notes" }).getByText("Budget: up to $350", { exact: true })).toBeVisible();
+    expect(refused).toBeGreaterThan(1);
+  });
+
+  test("shows Notes paused when the notes can't be reached (R25)", async ({ page }) => {
+    await inCall(page);
+    await page.route("**/words", (route) => route.abort("internetdisconnected"));
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Something elegant", final: true, turnId: "1" });
+    await expect(page.getByText("Notes paused")).toBeVisible();
+  });
+
   test("End asks first: Keep talking carries on, End session ends it (R12)", async ({ page }) => {
     await inCall(page);
     await page.getByRole("button", { name: "End", exact: true }).click();

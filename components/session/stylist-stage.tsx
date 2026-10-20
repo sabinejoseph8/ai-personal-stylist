@@ -1,6 +1,8 @@
 "use client";
 
 import { type ButtonHTMLAttributes, type Ref, useLayoutEffect, useReducer, useRef, useState } from "react";
+import { NoteLine, NotebookPage } from "@/components/notebook/notebook-page";
+import { type ShownNote, useNotes } from "@/components/session/use-notes";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
@@ -78,7 +80,7 @@ function ControlButton({
   );
 }
 
-export function StylistStage({ openSessionId }: { openSessionId: string | null }) {
+export function StylistStage({ openSessionId, initialNotes = [] }: { openSessionId: string | null; initialNotes?: ShownNote[] }) {
   const [flow, setFlow] = useState<Flow>("idle");
   const [stage, dispatch] = useReducer(nextStage, READY);
   const [sessionId, setSessionId] = useState(openSessionId);
@@ -91,6 +93,9 @@ export function StylistStage({ openSessionId }: { openSessionId: string | null }
   const video = useRef<HTMLVideoElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const shown = useRef(false);
+  // My Styling Notes (2c): words go to the server, notes and the next question come back, and the
+  // stylist is told every change. 2d turns the plain list below into the notebook page.
+  const notes = useNotes(sessionId, flow === "live", initialNotes, (context) => engine.current?.updateContext(context));
 
   // Leaving the page (Next.js hides it rather than closing it) or closing the tab pauses the
   // session, so the call doesn't run on unseen and the shopper can resume within 30 minutes.
@@ -140,6 +145,7 @@ export function StylistStage({ openSessionId }: { openSessionId: string | null }
     if (e.type === "connection" && e.state === "ended") return pauseCall();
     if (e.type === "microphone") return pauseCall(e.problem);
     if (e.type === "error" && e.message === "audio_blocked") setSoundBlocked(true);
+    notes.onEvent(e);
     dispatch(e);
   }
 
@@ -206,9 +212,16 @@ export function StylistStage({ openSessionId }: { openSessionId: string | null }
     dispatch({ type: "muted", muted });
   }
 
+  /** A tapped phrase or quick reply: the stylist hears it as if spoken, and the notes reader reads it. */
   function sendPhrase(text: string) {
     engine.current?.sendPhrase(text);
+    notes.say(text);
     dispatch({ type: "phrase-sent" });
+  }
+
+  function answer(option: string) {
+    notes.clearQuestion();
+    sendPhrase(option);
   }
 
   async function end() {
@@ -221,6 +234,7 @@ export function StylistStage({ openSessionId }: { openSessionId: string | null }
     engine.current = null;
     if (id) await endOnServer(id, false);
     setSessionId(null);
+    notes.reset();
     setProblem(null);
     setSoundBlocked(false);
     setFlow("idle");
@@ -254,6 +268,22 @@ export function StylistStage({ openSessionId }: { openSessionId: string | null }
           {label}
         </p>
       </div>
+
+      {/* Quick replies (R19): the next question's options, answered as if spoken. */}
+      {flow === "live" && notes.question && notes.question.options.length > 0 && (
+        <div role="group" aria-label={`Quick replies: ${notes.question.text}`} className="flex flex-wrap gap-2">
+          {notes.question.options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => answer(option)}
+              className="focus-ring type-label min-h-touch rounded-pill border border-control-edge bg-page px-4 text-ink hover:bg-showroom"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* In a call, Mute and End sit right under the stage, so End is always within reach. */}
       {inCall && (
@@ -313,6 +343,18 @@ export function StylistStage({ openSessionId }: { openSessionId: string | null }
             ))}
           </ul>
         </div>
+      )}
+
+      {(inCall || notes.notes.length > 0) && (
+        <NotebookPage>
+          {notes.paused && <li className="type-small pl-[calc(var(--margin-x)+0.75rem)] pr-4 text-graphite">Notes paused</li>}
+          {notes.notes.length === 0 && !notes.paused && (
+            <li className="type-body pl-[calc(var(--margin-x)+0.75rem)] pr-4 italic text-graphite">Notes appear here as you talk.</li>
+          )}
+          {notes.notes.map((note) => (
+            <NoteLine key={note.id} note={note} inkIn />
+          ))}
+        </NotebookPage>
       )}
 
       {stage.microphone && !inCall && (
