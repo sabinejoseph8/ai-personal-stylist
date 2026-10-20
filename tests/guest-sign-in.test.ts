@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { canRunDatabaseTests, createTestGuest, serverDb, visitorDb, type TestGuest } from "./support/test-guests";
 
 // 1b: every new guest gets a profile, and rate limits stop a guest at the limit.
+// The tests in this file run in order and share one guest.
 describe.skipIf(!canRunDatabaseTests)("guest sign-in", () => {
   let guest: TestGuest;
 
@@ -29,6 +30,15 @@ describe.skipIf(!canRunDatabaseTests)("guest sign-in", () => {
       results.push(data === true);
     }
     expect(results).toEqual([true, true, true, true, true, false]);
+  });
+
+  it("asking for a different window size doesn't reset the count (Phase 1 code review)", async () => {
+    // Runs after the test above, so this hour's 6 session starts are already counted.
+    for (const window_seconds of [1, 60, 1800]) {
+      await guest.db.rpc("take_rate_limit", { bucket: "startSession", max_hits: 1000, window_seconds });
+    }
+    const { data } = await guest.db.rpc("take_rate_limit", { bucket: "startSession", max_hits: 5, window_seconds: 3600 });
+    expect(data).toBe(false);
   });
 
   it("a guest can't read or change the rate limit counters", async () => {

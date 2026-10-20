@@ -1,12 +1,13 @@
 // 1e step 1: the same 10 test products at two quality settings, for Sabine to compare.
 // Run: node catalog/scripts/compare-quality.mjs <out-dir>
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import OpenAI from "openai";
+import { requiredSetting } from "../../scripts/settings.mjs";
 import { IMAGE_MODEL, imagePrompt } from "../image-style.mjs";
 
 const out = process.argv[2];
 mkdirSync(out, { recursive: true });
-const key = readFileSync(".env.local", "utf8").split("\n").find((l) => l.startsWith("OPENAI_API_KEY=")).split("=")[1].trim();
+const key = requiredSetting("OPENAI_API_KEY");
 const client = new OpenAI({ apiKey: key });
 
 const TESTS = [

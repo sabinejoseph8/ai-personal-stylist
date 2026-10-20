@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.7 (20 Oct 2026)
+**Status:** Agreed, version 1.8 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -222,8 +222,10 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 
 ### Access
 - Database access rules on every table: a guest can only read and change their own rows.
+- A row that points at a session, look, saved preference or check result must point at one of the same guest's. Two-column foreign keys (the id plus the guest) enforce it in the database (Phase 1 code review).
+- From Phase 2, the records only the app should change (session state, looks, check results and the bag) are read-only for guests. The server writes them with the server key, after checking the session belongs to the guest, so nobody can mark a look as passed or fill the bag without the check by calling the database directly (your decision, Phase 1 code review, 20 Oct 2026). Guests keep write access to what they change themselves, such as their profile and saved preferences.
 - Photo storage is split into one private folder per guest, with the same rule.
-- The server key that bypasses those rules is used only by the budget guard's usage records (decided 20 Oct 2026, so visitors can't fake or inflate usage), scheduled jobs, account deletion, and automated tests that create test guests (decided 20 Oct 2026, because bot protection blocks normal sign-in in tests). It lives in **lib/supabase/admin.ts** and never reaches the browser. The guard's database functions can only be run with it.
+- The server key that bypasses those rules is used only by the budget guard's usage records (decided 20 Oct 2026, so visitors can't fake or inflate usage), the app's own records from Phase 2 (above), scheduled jobs, account deletion, and automated tests that create test guests (decided 20 Oct 2026, because bot protection blocks normal sign-in in tests). It lives in **lib/supabase/admin.ts** and never reaches the browser. The guard's database functions can only be run with it.
 
 ### Secrets
 - The Tavus, OpenAI, Anthropic and Supabase server keys live only in Vercel's environment settings. They are never committed and never sent to the browser.
@@ -246,6 +248,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Per month, for the whole demo: 110 minutes of video (Tavus Starter has 120; 10 are kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit ($15 and $5), so the app stops politely before a provider refuses.
 - Days and months are counted in UTC (8 pm in New York). Each limit is a Vercel setting: **BUDGET_DAILY_CONVERSATION_MINUTES**, **BUDGET_DAILY_AI_USD**, **BUDGET_MONTHLY_VIDEO_MINUTES**, **BUDGET_MONTHLY_CLAUDE_USD** and **BUDGET_MONTHLY_OPENAI_USD**, with the values above as defaults (your decision, 20 Oct 2026).
 - OpenAI and Anthropic: spending limits set in their consoles as the final backstop.
+- The AI money check and the cost record are separate steps, so AI calls at the same moment can run a few cents over a limit. Accepted (your decision, Phase 1 code review): the monthly ceilings sit $3 (Claude) and $1 (OpenAI) below the console limits, so a provider never cuts in.
 - When the monthly allowance runs out, the conversation ends for now (R13). If AI is used up too, the welcome screen says the demo is resting until the 1st of next month (TQ4).
 
 ### Privacy
@@ -361,6 +364,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.8 (20 Oct 2026):** Phase 1 code review: rows can only point at the same guest's session, look, preference or check result; from Phase 2 the app's own records are read-only for guests and written by the server (your decision A); the few-cents AI overshoot is accepted (your decision B).
 - **1.7 (20 Oct 2026):** 1f: your limits (10 minutes and $1 of AI per guest per day; 110 video minutes, $12 of Claude and $4 of OpenAI a month, counted in UTC), the server key also used for the budget guard's records, last-active time updated on every visit, how the guard reserves and records, and what the daily job does.
 - **1.6 (20 Oct 2026):** 1e: the image generator you picked (OpenAI gpt-image-2 at medium quality, through the half-price Batch API), photos served from the site itself, the catalog connector's filters and required details, and the catalog's load and check scripts.
 - **1.5 (20 Oct 2026):** 1b: the server key may also create test guests in automated tests (your decision), guest profiles are created by a trigger, rate limits live in the database, and the security policy details.

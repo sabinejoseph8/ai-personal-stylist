@@ -55,6 +55,15 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     expect(error).not.toBeNull();
   });
 
+  it("guest B can't attach their own rows to guest A's session (Phase 1 code review)", async () => {
+    const note = await b.db.from("session_notes").insert({ user_id: b.id, session_id: sessionId, note_text: "Planted" });
+    expect(note.error).not.toBeNull();
+    const look = await b.db.from("looks").insert({ user_id: b.id, session_id: sessionId });
+    expect(look.error).not.toBeNull();
+    const log = await b.db.from("event_log").insert({ user_id: b.id, session_id: sessionId, entry_type: "note", summary: "Planted" });
+    expect(log.error).not.toBeNull();
+  });
+
   it("guest B can't open, list, overwrite or delete guest A's photo", async () => {
     const download = await b.db.storage.from("guest-photos").download(photo());
     expect(download.data).toBeNull();

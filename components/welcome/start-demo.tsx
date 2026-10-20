@@ -27,15 +27,24 @@ export function StartDemo({ nonce }: { nonce?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
 
-  async function onToken(token: string) {
-    const res = await fetch("/api/guest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ turnstileToken: token }),
-    });
+  function fail() {
     if (widget.current) window.turnstile?.reset(widget.current);
-    if (res.ok) router.push("/setup");
-    else setState("failed");
+    setState("failed");
+  }
+
+  async function onToken(token: string) {
+    try {
+      const res = await fetch("/api/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ turnstileToken: token }),
+      });
+      if (widget.current) window.turnstile?.reset(widget.current);
+      if (res.ok) router.push("/setup");
+      else setState("failed");
+    } catch {
+      fail(); // no connection: show Try again instead of a button stuck on "Starting your demo…"
+    }
   }
 
   function start() {
@@ -49,7 +58,9 @@ export function StartDemo({ nonce }: { nonce?: string }) {
         sitekey: TURNSTILE_SITE_KEY,
         execution: "execute",
         callback: onToken,
-        "error-callback": () => setState("failed"),
+        "error-callback": fail,
+        "timeout-callback": fail,
+        "expired-callback": fail,
       });
     }
     window.turnstile.execute(widget.current);

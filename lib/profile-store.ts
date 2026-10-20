@@ -55,11 +55,9 @@ export async function saveBudget(db: SupabaseClient, userId: string, budget: Bud
   });
 }
 
-/** Replaces the guest's saved preferences with this list. */
-export async function savePreferences(db: SupabaseClient, userId: string, preferences: Preferences) {
-  const removed = await db.from("saved_preferences").delete().eq("user_id", userId);
-  if (removed.error) throw new Error(`saving preferences failed: ${removed.error.message}`);
-  if (!preferences.length) return;
-  const added = await db.from("saved_preferences").insert(preferences.map((p) => ({ user_id: userId, kind: p.kind, words: p.words })));
-  if (added.error) throw new Error(`saving preferences failed: ${added.error.message}`);
+/** Replaces the signed-in guest's saved preferences with this list, all or nothing, in one database step. */
+export async function savePreferences(db: SupabaseClient, preferences: Preferences) {
+  const items = preferences.map((p) => ({ kind: p.kind, words: p.words }));
+  const { error } = await db.rpc("replace_saved_preferences", { items });
+  if (error) throw new Error(`saving preferences failed: ${error.message}`);
 }

@@ -18,6 +18,17 @@ import {
 } from "@/lib/profile";
 import { applySampleProfile, saveBudgetAndPreferencesStep, saveShoppingStep } from "./actions";
 
+type Result = Awaited<ReturnType<typeof saveShoppingStep>>;
+
+/** Runs a save. If the server can't be reached at all, it answers like a failed save instead of throwing. */
+async function reach(save: () => Promise<Result>): Promise<Result> {
+  try {
+    return await save();
+  } catch {
+    return { ok: false, error: "That didn't save. Check your connection and try again." };
+  }
+}
+
 // Setup in three steps (R4, design 5.2). Every step has Back, Skip and Continue. Nothing is asked for here:
 // the microphone is requested at Start conversation, and the camera only when the shopper taps Camera.
 
@@ -150,14 +161,14 @@ export function SetupFlow({ initial }: { initial: Profile }) {
 
   const sample = () =>
     start(async () => {
-      const r = await applySampleProfile();
+      const r = await reach(() => applySampleProfile());
       if (r.ok) go("session");
       else setError(r.error);
     });
 
   const saveStep2 = () =>
     start(async () => {
-      const r = await saveShoppingStep({ departments: profile.departments, styleWords: profile.styleWords, sizes: profile.sizes });
+      const r = await reach(() => saveShoppingStep({ departments: profile.departments, styleWords: profile.styleWords, sizes: profile.sizes }));
       if (r.ok) go(3);
       else setError(r.error);
     });
@@ -169,7 +180,7 @@ export function SetupFlow({ initial }: { initial: Profile }) {
       return;
     }
     start(async () => {
-      const r = await saveBudgetAndPreferencesStep({ budget: b, preferences: profile.preferences });
+      const r = await reach(() => saveBudgetAndPreferencesStep({ budget: b, preferences: profile.preferences }));
       if (r.ok) go("session");
       else setError(r.error);
     });

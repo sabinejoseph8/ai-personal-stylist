@@ -33,7 +33,11 @@ export const ShoppingSchema = z.object({
 });
 export type Shopping = z.infer<typeof ShoppingSchema>;
 
-const dollars = z.number().int().min(1).max(100000);
+const dollars = z
+  .number("Enter the budget as a whole dollar amount, such as 400.")
+  .int("Enter the budget as a whole dollar amount, such as 400.")
+  .min(1, "Enter a budget of at least $1.")
+  .max(100000, "Enter a budget up to $100,000.");
 export const BudgetSchema = z
   .discriminatedUnion("meaning", [
     z.object({ meaning: z.literal("up_to"), amount: dollars }),

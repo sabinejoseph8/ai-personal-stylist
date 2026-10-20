@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { canRunDatabaseTests, serverDb, type TestGuest } from "../tests/support/test-guests";
-import { signInTestGuest } from "./support/guest";
+import { type BrowserGuest, createBrowserGuest, resetGuest } from "./support/guest";
 
 // Phase 1 end-to-end tests: welcome, Try the demo, the sample profile and the setup steps (1d).
 
@@ -24,6 +24,26 @@ test.describe("a first-time visitor", () => {
     await noSeriousA11yProblems(page);
   });
 
+  test("sees Try again, not a stuck button, when the connection drops (Phase 1 code review)", async ({ page }) => {
+    // The real bot check can't run in tests: a stand-in passes at once, then the request fails.
+    await page.route("https://challenges.cloudflare.com/**", (route) => route.abort());
+    await page.addInitScript(() => {
+      (window as unknown as { turnstile: unknown }).turnstile = {
+        render: (_el: HTMLElement, opts: { callback: (token: string) => void }) => {
+          (window as unknown as { pass: () => void }).pass = () => opts.callback("test-token");
+          return "widget";
+        },
+        execute: () => (window as unknown as { pass: () => void }).pass(),
+        reset: () => {},
+      };
+    });
+    await page.route("**/api/guest", (route) => route.abort("internetdisconnected"));
+    await page.goto("/");
+    await page.getByRole("button", { name: "Try the demo" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "We couldn't start your demo" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Try again" })).toBeEnabled();
+  });
+
   test("can't open setup without being a guest", async ({ page }) => {
     await page.goto("/setup");
     await expect(page).toHaveURL("/");
@@ -42,11 +62,18 @@ test.describe("with reduced motion", () => {
 
 test.describe("a guest", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
+  // One test guest per worker, reset before each test (see e2e/support/guest.ts).
+  let shared: BrowserGuest;
   let guest: TestGuest;
-  test.beforeEach(async ({ context }) => {
-    guest = await signInTestGuest(context);
+  test.beforeAll(async () => {
+    shared = await createBrowserGuest();
+    guest = shared.guest;
   });
-  test.afterEach(async () => guest?.remove());
+  test.afterAll(async () => guest?.remove());
+  test.beforeEach(async ({ context }) => {
+    await resetGuest(guest.id);
+    await context.addCookies(shared.cookies);
+  });
 
   test("can use the sample profile, which includes Never: high heels (R5)", async ({ page }) => {
     await page.goto("/");
@@ -90,6 +117,25 @@ test.describe("a guest", () => {
 
     const { data } = await serverDb().from("profiles").select("departments, style_words, sizes, budget_meaning").eq("user_id", guest.id).single();
     expect(data).toEqual({ departments: ["menswear"], style_words: ["Bold"], sizes: { top: "L" }, budget_meaning: "between" });
+  });
+
+  test("a save that can't reach the server shows a message, not an error screen (Phase 1 code review)", async ({ page }) => {
+    await page.goto("/setup");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Bold", exact: true }).click();
+    await page.route("**/setup", (route) => (route.request().method() === "POST" ? route.abort("internetdisconnected") : route.continue()));
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByText("That didn't save. Check your connection and try again.")).toBeVisible();
+    await expect(page.getByText("Step 2 of 3")).toBeVisible();
+  });
+
+  test("a very large budget is explained in plain words (Phase 1 code review)", async ({ page }) => {
+    await page.goto("/setup");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Skip" }).click();
+    await page.getByLabel("Amount ($)").fill("250000");
+    await page.getByRole("button", { name: "Finish setup" }).click();
+    await expect(page.getByText("Enter a budget up to $100,000.")).toBeVisible();
   });
 
   test("a budget with the amounts the wrong way round shows a clear message", async ({ page }) => {
