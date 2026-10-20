@@ -168,7 +168,7 @@ Filled in during task group 0f.
 | GPT-Live live words | Available | Pass. The shopper's words arrive while they speak (session.input_transcript.delta). Sending notes mid-call (session.thinking.append), talking over the stylist and the scripted switch line (session.instructions.append) all worked | 19 Oct 2026 | Sabine on her iPhone. The session must use delegation type "client", because OpenAI rejects null |
 | Camera naming time | A few seconds | Pass. Haiku 5.5: about 1 second (0.7 to 1.3 s). Opus 5.5: about 1.5 to 2 seconds (up to 3.2 s). Accuracy needs work on both: Sabine showed an avocado earbud case, a camo Herschel pouch and a black quilted tote bag, and both models sometimes called the quilted tote a "quilted jacket" that wasn't there. Haiku also once called the tote brown and once replied in a full sentence. Opus wobbled between charcoal and dark gray | 18 Oct 2026 | One frame every 2 seconds, 640 px, low effort, iPhone back camera. Rough cost for 2 minutes of camera: under 1 cent on Haiku, about 18 cents on Opus. Phase 3 needs the R28 confirm step, plus a rule to only name an item after the same answer on two frames in a row |
 | A second Tavus call during the first | Behavior understood | Refused within 2 seconds: HTTP 400, "User has reached maximum concurrent conversations" | 18 Oct 2026 | Phase 6 can catch this exact error and switch to voice only |
-| iPhone Safari and laptop (Android dropped for v1) | All work | | | |
+| iPhone Safari and laptop (Android dropped for v1) | All work | Pass: the microphone prompt, sound after a tap, video and the iPhone's back camera all worked | 19 Oct 2026 | On the /test/demo page |
 | AI cost per demo | About $1.10 or less | | | |
 
 ### Provider data handling (0f, risk 10)

@@ -66,7 +66,7 @@
 - [x] Camera test: send one frame every 2 seconds to a first camera reader, and record how long it takes to name an item. Done 18 Oct 2026: about 1 second on Haiku 5.5 and 1.5 to 2 seconds on Opus 5.5. Both sometimes mistook the quilted tote for a jacket. Details are in docs/mvp.md.
 
 ### 0f. Phones, privacy and costs
-- [ ] Try it on an iPhone with Safari and a laptop (Android was dropped for v1 on 18 Oct 2026): the microphone prompt, audio starting after a tap, video, and the back camera (risk 12).
+- [x] Try it on an iPhone with Safari and a laptop (Android was dropped for v1 on 18 Oct 2026): the microphone prompt, audio starting after a tap, video, and the back camera (risk 12). Done 19 Oct 2026: all worked.
 - [x] Review how Tavus, OpenAI and Anthropic store data, and write a short plain summary for the About page (risk 10). Done 18 Oct 2026: findings and a draft summary are in docs/mvp.md section 8.
 - [ ] Run 3 test demos (10 minutes each on the Tavus Starter plan), and record Tavus minutes, OpenAI minutes and Claude spend. Compare them with the estimate of about $1.10 of AI use per 10-minute demo.
 - [ ] Record the results in the spike results table in docs/mvp.md.
