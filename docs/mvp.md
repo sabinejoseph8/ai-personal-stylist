@@ -2,7 +2,7 @@
 
 **Status:** Living document, version 1.1
 **Last updated:** 19 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 0.7, tech spec 1.3 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.0, tech spec 1.3 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -128,6 +128,7 @@ Newest first. The agreed files hold the detail.
 | 19 Oct 2026 | Defaults accepted with the scope change: notes are confirmed or removed by touch, with Undo, and changed by voice. Uncertain notes are jotted in pencil as To confirm. The details looks need are read in the background. Feedback is jotted under its look. Text only mode is removed, so the conversation pauses or ends with notes and looks kept. Tap-to-try phrases work only once the conversation is running | Sabine | product spec 1.4 (R13, R14, R16, R20, R47, R70) |
 | 19 Oct 2026 | Accepted trade-off: with no captions and no typing, people who are deaf, hard of hearing or can't speak can't use the conversation in v1. Captions and typing are listed as future features | Sabine | product spec 1.4 (R67, section 9), risk 17 |
 | 19 Oct 2026 | The portfolio package (a recruiter README, an architecture diagram, an evaluation defined before measuring, simple standard-library checks, a one-page case study PDF and a private portfolio kit) is built in Phase 7 (7b), once the app exists, not now on Phase 0 test pages. interview-notes.md becomes private: kept on Sabine's Mac and no longer tracked in the public repository (its earlier versions stay in the history) | Sabine | progress.md (7b), CLAUDE.md, .gitignore |
+| 20 Oct 2026 | design.md agreed as version 1.0, so the design system (1c) is built from it | Sabine | design.md 1.0 |
 | 20 Oct 2026 | 1b: automated tests use the Supabase server key to create test guests, because bot protection blocks normal sign-in. The Phase 0 test pages stay, behind the passcode, until Phase 2's session screen replaces them | Sabine | tech spec 1.5 |
 | 20 Oct 2026 | One Supabase project, ai-personal-stylist, in Sabine's Pro organization ($10 a month), shared by development and the live site until launch. Sabine's organization was already on Pro, so new projects cost about $10 each. She first chose a new free organization, then two Pro projects, then one; the spare project was deleted. The running budget is now about $50 a month | Sabine | tech spec 1.4 |
 | 19 Oct 2026 | Phase 0 gate (0g), all recommendations approved: keep video for the whole conversation; keep GPT-Live with the quartz voice; keep the budget at about $40 and the Anthropic limit at $15 until Phase 4 measures looks; live notes are accurate but below the 2-second target, so Phase 2 closes the gap with the target unchanged; TQ3: Haiku 5.5 for live notes and the camera, Opus 5.5 for the photo reader, looks and checks | Sabine | tech spec 1.3 |

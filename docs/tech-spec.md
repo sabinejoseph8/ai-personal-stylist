@@ -2,7 +2,7 @@
 
 **Status:** Agreed, version 1.5 (20 Oct 2026)
 **Last updated:** 19 Oct 2026
-**Builds on:** product-spec.md version 1.4 (agreed) and design.md version 0.7
+**Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
 
 **How to read this spec**

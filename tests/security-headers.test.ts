@@ -9,6 +9,8 @@ describe("browser protections", () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).not.toContain("unsafe-eval");
     expect(contentSecurityPolicy("abc", true)).toContain("unsafe-eval");
+    expect(contentSecurityPolicy("abc", false)).toContain("upgrade-insecure-requests");
+    expect(contentSecurityPolicy("abc", false, true)).not.toContain("upgrade-insecure-requests");
   });
 
   it.each(["/", "/setup", "/wardrobe", "/about"])("blocks camera and microphone on %s", (path) => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
+import { Button } from "@/components/ui/button";
 import { TURNSTILE_SITE_KEY } from "@/lib/public-config";
 
 // Temporary "Try the demo" button for 1b, until the welcome screen arrives in 1d.
@@ -75,16 +76,16 @@ export default function TryTheDemo({ nonce }: { nonce?: string }) {
     <section aria-live="polite">
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" nonce={nonce} />
       {status === "guest" ? (
-        <p>
+        <p className="type-body m-0">
           You&apos;re a guest in this browser{since ? ` (since ${new Date(since).toLocaleString()})` : ""}. No email or
           password needed.
         </p>
       ) : (
-        <button onClick={start} disabled={status === "checking" || status === "starting"} style={{ padding: "12px 20px", fontSize: 16, borderRadius: 10, border: 0, background: "#0b6b4f", color: "#fff" }}>
+        <Button onClick={start} disabled={status === "checking" || status === "starting"}>
           {status === "starting" ? "Starting…" : "Try the demo"}
-        </button>
+        </Button>
       )}
-      {status === "error" && <p>We couldn&apos;t start the demo. Please try again.</p>}
+      {status === "error" && <p className="type-body m-0 text-red-pen">We couldn&apos;t start the demo. Please try again.</p>}
       <div ref={box} />
     </section>
   );
