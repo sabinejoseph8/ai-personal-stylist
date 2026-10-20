@@ -10,5 +10,5 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing conversation" }, { status: 400 });
   }
   const result = await endTestConversation(body.conversationId);
-  return Response.json({ ended: result.ok }, { status: result.ok ? 200 : 502 });
+  return Response.json({ ended: result.ok, deleted: result.deleted }, { status: result.ok ? 200 : 502 });
 }

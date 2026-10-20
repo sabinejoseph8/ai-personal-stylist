@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { costOf } from "@/lib/notes-reader.mjs";
 
 export const CAMERA_MODELS = ["claude-haiku-5-5", "claude-opus-5-5"] as const;
 export type CameraModel = (typeof CAMERA_MODELS)[number];
@@ -27,5 +28,6 @@ export async function nameItem(jpegBase64: string, model: CameraModel) {
     ],
   });
   const text = res.content.find((b) => b.type === "text");
-  return text && text.type === "text" ? text.text.trim() : "No item";
+  const name = text && text.type === "text" ? text.text.trim() : "No item";
+  return { name, costUSD: costOf(model, res.usage) };
 }

@@ -13,6 +13,6 @@ export async function POST(request: Request) {
   }
   const model: CameraModel = CAMERA_MODELS.includes(body?.model) ? body.model : "claude-haiku-5-5";
   const started = Date.now();
-  const name = await nameItem(image, model);
-  return Response.json({ name, model, serverMs: Date.now() - started });
+  const { name, costUSD } = await nameItem(image, model);
+  return Response.json({ name, model, costUSD, serverMs: Date.now() - started });
 }

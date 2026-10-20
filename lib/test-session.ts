@@ -51,7 +51,10 @@ export async function startTestConversation() {
   };
 }
 
+/** Ends a Tavus call, then hard-deletes it, so Tavus keeps no copy (decided 18 Oct 2026). */
 export async function endTestConversation(conversationId: string) {
-  const res = await tavus("POST", `/conversations/${encodeURIComponent(conversationId)}/end`);
-  return { ok: res.ok, status: res.status };
+  const id = encodeURIComponent(conversationId);
+  const ended = await tavus("POST", `/conversations/${id}/end`);
+  const deleted = await tavus("DELETE", `/conversations/${id}?hard=true`);
+  return { ok: ended.ok, status: ended.status, deleted: deleted.ok };
 }
