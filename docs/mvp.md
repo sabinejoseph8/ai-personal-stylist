@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.26
+**Status:** Living document, version 1.27
 **Last updated:** 21 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -87,7 +87,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
 | 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 (2c) | Met in the 2c eval with your option 3: 97 to 99% of notes within 2 seconds, 96 to 99% right, target unchanged. The eval leaves out the phone's connection and the database; on Sabine's iPhone the notes felt quick (2c check, 20 Oct 2026). Closed |
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6. On 21 Oct 2026 the Starter minutes ran out before the app's own 110-minute stop (Tavus answers 402 "out of conversational credits"; it also counts test calls the app doesn't), and the app showed "try again in a moment". Sabine upgraded the plan. Open: the app's stop and message for this case |
-| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for. In 4d, a second looks build started while one was running (which doubled the cost) is prevented: one build at a time per session. In 4e, a build that found no look is never repeated on unchanged requirements |
+| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for. In 4d, a second looks build started while one was running (which doubled the cost) is prevented: one build at a time per session. In 4e, a build that found no look is never repeated on unchanged requirements. On 21 Oct 2026 the $10 prepaid Claude credit ran out before the app's own $12 monthly stop: real-Claude measurement runs (about $6 that day) share the live app's account. Sabine added credit; real-Claude runs now start with a check that Claude answers and a cost estimate |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. Handled for the item to style around in 3a: every photo has a version, and the database refuses a late result for a replaced one (tested). Feedback and looks follow the same pattern as they're built |
 | 6 | The preference check lets a breaking look through | Phase 4 (4a, 4b, 4c) | Closed with Phase 4 (21 Oct 2026). Handled in 4a to 4c. Phase 4's end-to-end swap test passes in 4c: no high heels across 10 swaps, on phone and desktop sizes. Swaps and looks checked again after a change go through the same checker and gate. Firm preferences are rules checked in plain code on the catalog's details, and a missing detail fails. Every look is checked by those rules again, then judged one at a time, and is published only by a database step that needs a passing check of that exact look on current requirements. The checker eval caught all 16 rule breaks and judged all 21 looks right, including the color cases from Sabine's review |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 21 Oct 2026 | 5b iPhone check: A, C and D passed. B.1 failed while the Claude credit was out; Sabine added credit and chose not to redo it | Sabine | progress.md |
 | 21 Oct 2026 | 5b plan Q3: the app's monthly video stop is 165 minutes, 10 below the upgraded Tavus plan's 175 a month (it was 110, for Starter's 120) | Sabine | tech spec 1.29 |
 | 21 Oct 2026 | 5b plan, the recommended answers. Q1: a look is revised automatically once clear feedback asks for a change (when the shopper finishes speaking, or 2 seconds after the last Keep or Change tap); the other option revised only when asked. Q2: changing a piece works like Swap, guided by what was said, and a whole-look change asks the builder; the other option used the builder for every revision (slower and costlier) | Sabine | tech spec 1.29, design 1.16 |
 | 21 Oct 2026 | Looks speed plan, the recommended answer. Q1: the occasion's formality is guidance to the builder, with the judgment step still the gate (the other option was a firm formality rule in code, with a table of occasions). With it: the builder hears which looks are shown, repeats aren't judged, and rounds stop when no new look can be made. A stricter builder guidance (no white at a wedding, nothing edgy or preppy for "elegant") was measured and left out, because it usually gave 2 looks instead of 3 | Sabine | tech spec 1.28 |
@@ -401,6 +402,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.27 (21 Oct 2026):** 5b done, and the Claude credit gap under risk 4.
 - **1.26 (21 Oct 2026):** 5b decisions (Q1 to Q3), with the video stop raised to 165 minutes.
 - **1.25 (21 Oct 2026):** The looks speed plan (Q1), and what it measured.
 - **1.24 (21 Oct 2026):** 5a done. The Tavus minutes running out, Sabine's plan upgrade, and risk 3 updated.
