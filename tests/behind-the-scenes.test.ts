@@ -60,6 +60,13 @@ describe("each preference check", () => {
     expect(checkEntry(check({ verdict: "conflict", look: { shown: false, slot: null }, reasons: [{ about: "Outfit", ok: false, why: REPEATS_SHOWN }] }))).toBeNull();
   });
 
+  it("says what a revision changed, and leaves out the spares it didn't need (5b)", () => {
+    const summary = "Changed: Black stiletto pumps to Nude slingback flats. Kept: Emerald satin midi dress. New total: $288, $62 under your $350 limit.";
+    expect(checkEntry(check({ look: { revision: summary } }))).toEqual({ at, kind: "revision", text: `Revised Look 1 from your feedback, and checked: ${summary}` });
+    expect(checkEntry(check({ look: { revision: summary, shown: false } }))).toBeNull();
+    expect(checkEntry(check({ verdict: "conflict", look: { revision: summary, shown: false }, reasons: [{ about: "Outdoor wedding, November", ok: false, why: "Too casual for a wedding." }] }))?.kind).toBe("blocked");
+  });
+
   it("says what a swap brought in, or why a replacement was blocked", () => {
     expect(checkEntry(check({ look: { swap: { from: "Nude slingback flats", to: "Tan leather loafers" } } }))?.text).toBe("Swap in Look 1: Tan leather loafers replaced Nude slingback flats, and passed the check.");
     expect(checkEntry(check({ verdict: "conflict", look: { shown: false, swap: { from: "Nude slingback flats", to: "White sneakers" } }, reasons: [{ about: "Outdoor wedding, November", ok: false, why: "Sneakers are too casual for a wedding." }] }))?.text).toBe(

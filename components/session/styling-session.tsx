@@ -54,6 +54,9 @@ const NO_CAMERA = "My camera won't turn on.";
  *  lists them and says what changed, and she presents them in her own words (Sabine's answer to Q4). */
 const LOOKS_NEW = "Can you walk me through the looks you've put together?";
 const LOOKS_UPDATED = "What changed in my looks?";
+/** After a Keep or Change tap, the looks wait this long, so several taps make one revision (Q1 in 5b). */
+const TAP_WAIT_MS = 2000;
+const tapWaitEnds = () => Date.now() + TAP_WAIT_MS;
 
 /** The gap between two lines she's asked to speak up about, when nobody has spoken in between. */
 const SPEAK_UP_GAP_MS = 5000;
@@ -185,14 +188,21 @@ export function StylingSession({
     [notes.notes, photos.active, wardrobe],
   );
   const [looksChange, setLooksChange] = useState<string | null>(null);
-  const looks = useLooks(call.sessionId, inputs, (e: LooksEvent) => {
+  // When the looks may ask again after a Keep or Change tap (TAP_WAIT_MS).
+  const tapHold = useRef(0);
+  const looks = useLooks(
+    call.sessionId,
+    inputs,
+    (e: LooksEvent) => {
     if (e.kind === "swapped") {
       setLooksChange(`Just swapped in Look ${e.number}: ${e.look.items[e.index].name}, checked against their preferences.`);
       return;
     }
     setLooksChange(e.kind === "updated" ? looksChanged(e.before, e.looks) : null);
     if (call.flow === "live") queue({ kind: "looks", text: e.kind === "new" ? LOOKS_NEW : LOOKS_UPDATED });
-  });
+    },
+    () => tapHold.current,
+  );
   // The look most on screen, for a spoken swap that doesn't say which (Sabine's answer to Q2 in 4c).
   const [lookInView, setLookInView] = useState<number | null>(null);
   useLayoutEffect(() => {
@@ -214,12 +224,19 @@ export function StylingSession({
     const said = notes.notes.filter((n) => n.feedback?.look === look.slot && n.feedback.items.includes(item.id) && (n.feedback.act === "keep" || n.feedback.act === "change"));
     return (said.at(-1)?.feedback?.act as "keep" | "change" | undefined) ?? null;
   };
+  // Taps are saved in the order they're made, so the last one wins: a quick Keep then Change could
+  // otherwise arrive the other way round (found in 5b's browser tests).
+  const taps = useRef<Promise<unknown>>(Promise.resolve());
+  const lastTap = useRef<Record<string, number>>({});
   async function giveFeedback(look: ShownLook, index: number, act: "keep" | "change", on: boolean) {
     const id = call.sessionId;
     const key = `${look.id} ${look.items[index].id}`;
     if (!id) return;
+    tapHold.current = tapWaitEnds();
+    const mine = (lastTap.current[key] ?? 0) + 1;
+    lastTap.current[key] = mine;
     setPressing((p) => ({ ...p, [key]: on ? act : null }));
-    try {
+    const save = taps.current.then(async () => {
       const res = await fetch(`/api/sessions/${id}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -227,14 +244,20 @@ export function StylingSession({
       });
       if (!res.ok) throw new Error(String(res.status));
       notes.receive(await res.json());
+    });
+    taps.current = save.catch(() => undefined);
+    try {
+      await save;
     } catch {
       toast("That didn't save. Try again.");
     } finally {
-      setPressing((p) => {
-        const next = { ...p };
-        delete next[key];
-        return next;
-      });
+      // The tile shows what was tapped until the newest tap on it is saved.
+      if (lastTap.current[key] === mine)
+        setPressing((p) => {
+          const next = { ...p };
+          delete next[key];
+          return next;
+        });
     }
   }
   /** The look's number on screen for a place, for feedback headings in the notebook (5a). */
@@ -359,12 +382,13 @@ export function StylingSession({
       noMatch: looks.noMatch,
       inView: lookInView,
       changed: looksChange,
+      revising: looks.revising.flatMap((slot) => lookNumber(slot) ?? []),
       feedback: feedback.map((n) => ({ look: lookNumber(n.feedback!.look), text: n.text, confirmed: n.status === "confirmed" })),
     });
     if (flow === "live") call.updateContext(withCamera());
     // withCamera and call only read refs; this runs when the looks change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [looks.looks, looksBusy, looks.needs, looks.noMatch, lookInView, looksChange, flow, notes.notes]);
+  }, [looks.looks, looksBusy, looks.needs, looks.noMatch, lookInView, looksChange, looks.revising, flow, notes.notes]);
 
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {
@@ -665,6 +689,7 @@ export function StylingSession({
         swapping={looks.swapping}
         fresh={looks.fresh}
         swapNote={looks.swapNote}
+        revising={looks.revising}
         canTalk={flow === "live"}
         imageFor={imageFor}
         onSwap={(lookId, index) => void looks.swap(lookId, index)}

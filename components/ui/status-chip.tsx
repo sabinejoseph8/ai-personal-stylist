@@ -10,6 +10,7 @@ export const STATUSES = {
   thisSessionOnly: { icon: "thisSessionOnly", word: "This session only", tone: "bg-page text-ink border border-hairline" },
   checked: { icon: "checked", word: "Checked against your preferences", tone: "bg-emerald-wash text-emerald" },
   needsNewCheck: { icon: "needsNewCheck", word: "Needs a new check", tone: "bg-highlighter text-ink" },
+  revising: { icon: "revising", word: "Revising", tone: "bg-highlighter text-ink" },
   error: { icon: "error", word: "Error", tone: "bg-red-wash text-red-pen" },
 } satisfies Record<string, { icon: IconName; word: string; tone: string }>;
 

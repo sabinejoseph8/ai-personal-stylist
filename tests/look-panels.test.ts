@@ -80,4 +80,19 @@ describe("what the stylist is told about the looks", () => {
     expect(looksChanged([a, b, c], [a, b, c])).toBe("After the shopper's change, every look still meets everything they've asked for.");
     expect(looksChanged([a, b, c], [a, b])).toBe("After the shopper's change: Looks 1 and 2 still meet everything; there are now 2 instead of 3.");
   });
+
+  it("says what a revision changed, or why it couldn't be made, and which look is being revised (5b, R49, R50)", () => {
+    const a = shown("a", "Garden ceremony");
+    const change = "Changed: Black stiletto pumps to Nude slingback flats (you asked for lower heel). Kept: Emerald satin midi dress. New total: $288, $62 under your $350 limit.";
+    const revised: ShownLook = { ...shown("a2", "Garden ceremony"), change, changed: [1] };
+    expect(looksChanged([a], [revised])).toBe(`Look 1 is revised from the shopper's feedback. ${change} Say what changed in a few words.`);
+    const stayed: ShownLook = { ...a, note: "No other shoes fit everything you've asked for (closed toe), so these stay." };
+    expect(looksChanged([a], [stayed])).toBe(
+      "Look 1 couldn't be revised as they asked: No other shoes fit everything you've asked for (closed toe), so these stay. Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.",
+    );
+    const told = looksForStylist({ looks: [revised], building: false, needs: null, noMatch: null, inView: 1, revising: [1], feedback: [{ look: 1, text: "Lower heels", confirmed: true }] });
+    expect(told).toContain(`  Revised from their feedback. ${change}`);
+    expect(told).toContain("Look 1 is being revised from their feedback right now.");
+    expect(told).toContain("revises that look by itself");
+  });
 });

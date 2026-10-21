@@ -13,7 +13,7 @@ export type BuildInput = {
   products: Product[];
   /** The shopper's own pieces: the item to style around (when it's theirs) and wardrobe items chosen to style with. */
   owned: OwnedPiece[];
-  /** In every look: the item to style around, when it's the shopper's. */
+  /** In every look: the item to style around, when it's the shopper's, and pieces kept in a revision (5b). */
   mustUse: LookItem[];
   /** An inspiration photo's item, to be matched by similar sample products. */
   inspiration: string | null;
@@ -79,7 +79,9 @@ export function builderPrompt(input: BuildInput): { user: string; ids: Map<strin
   const ids = new Map<string, LookItem>();
   const lines = input.products.map((p, n) => {
     ids.set(`p${n + 1}`, { kind: "product", productId: p.id });
-    return productLine(`p${n + 1}`, p);
+    // A piece the shopper asked to keep, when a look is revised (5b).
+    const must = input.mustUse.some((m) => m.kind === "product" && m.productId === p.id);
+    return `${productLine(`p${n + 1}`, p)}${must ? " (must use)" : ""}`;
   });
   const owned = input.owned.map((o, n) => {
     ids.set(`o${n + 1}`, o.ref);

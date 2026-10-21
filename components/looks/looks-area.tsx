@@ -17,6 +17,7 @@ const STAGE_WORDS: Partial<Record<LooksPhase, string>> = {
   building: "Putting looks together",
   checking: "Checking your preferences",
   updating: "Updating your looks",
+  revising: "Revising your look",
 };
 
 function Placeholder({ words }: { words: string }) {
@@ -44,6 +45,7 @@ export function LooksArea({
   swapping,
   fresh,
   swapNote,
+  revising,
   canTalk,
   imageFor,
   onSwap,
@@ -65,6 +67,8 @@ export function LooksArea({
   swapping: { lookId: string; index: number } | null;
   fresh: Record<string, number>;
   swapNote: { lookId: string; index: number; text: string } | null;
+  /** The places of the looks being revised from feedback (5b). */
+  revising: number[];
   /** The call is live, so a no-match choice can be said to the stylist. */
   canTalk: boolean;
   imageFor: (item: ShownItem) => string | null;
@@ -76,7 +80,7 @@ export function LooksArea({
   onChoice: (choice: string) => void;
   onInView: (look: number | null) => void;
 }) {
-  const busy = phase === "building" || phase === "checking" || phase === "updating";
+  const busy = phase === "building" || phase === "checking" || phase === "updating" || phase === "revising";
   const words = STAGE_WORDS[phase];
 
   // The look most on screen: a spoken "show me different shoes" means that one (Q2 in 4c).
@@ -142,6 +146,7 @@ export function LooksArea({
           number={i + 1}
           count={looks.length}
           updating={phase === "updating"}
+          revising={revising.includes(look.slot)}
           swappingIndex={swapping?.lookId === look.id ? swapping.index : null}
           newIndex={fresh[look.id] ?? null}
           note={swapNote?.lookId === look.id ? swapNote : null}

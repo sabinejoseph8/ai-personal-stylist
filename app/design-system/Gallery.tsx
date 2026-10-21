@@ -46,6 +46,7 @@ const MEANINGS: Record<IconName, string> = {
   confirmed: "Confirmed",
   toConfirm: "To confirm",
   undo: "Undo a removed note",
+  revising: "Revising a look from feedback",
   youOwnThis: "You own this",
   sampleProduct: "Sample product",
   savedPreference: "Saved preference",

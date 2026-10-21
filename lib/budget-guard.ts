@@ -18,7 +18,7 @@ export type BudgetLimits = {
 const DEFAULTS = {
   BUDGET_DAILY_CONVERSATION_MINUTES: 10, // R13
   BUDGET_DAILY_AI_USD: 1, // a full demo uses about $0.35
-  BUDGET_MONTHLY_VIDEO_MINUTES: 110, // Tavus Starter has 120; 10 are kept for testing
+  BUDGET_MONTHLY_VIDEO_MINUTES: 165, // Sabine's Tavus plan has 175 a month since 21 Oct 2026; 10 are kept for testing
   BUDGET_MONTHLY_CLAUDE_USD: 12, // the Anthropic console limit is $15
   BUDGET_MONTHLY_OPENAI_USD: 4, // the OpenAI console limit is $5
 };

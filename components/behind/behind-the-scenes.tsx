@@ -23,6 +23,7 @@ const ICON: Partial<Record<EntryKind, { name: IconName; tone: string }>> = {
   passed: { name: "checked", tone: "text-emerald" },
   blocked: { name: "error", tone: "text-red-pen" },
   recheck: { name: "needsNewCheck", tone: "text-graphite" },
+  revision: { name: "revising", tone: "text-emerald" },
 };
 
 const time = (entry: Entry) => (entry.kind === "products" ? "Now" : new Date(entry.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
