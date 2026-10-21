@@ -1,0 +1,400 @@
+{
+ "summary": {
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "date": "2026-10-21T05:46:28.510Z",
+  "looks": 31,
+  "ruleBreaksCaught": "16 of 16",
+  "judgedRight": "15 of 15",
+  "judgedRightPercent": 100,
+  "wrong": [],
+  "judgeSeconds": {
+   "median": 5.4,
+   "p95": 12
+  },
+  "costUSD": 0.1278
+ },
+ "results": [
+  {
+   "id": "stilettos",
+   "expect": "caught",
+   "why": "Never: high heels (10 cm)",
+   "got": "caught",
+   "reasons": [
+    "Black stiletto pumps: Breaks Never: high heels (No shoes with heels over 5 cm)"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "block heels 6 cm",
+   "expect": "caught",
+   "why": "Never: high heels (6 cm)",
+   "got": "caught",
+   "reasons": [
+    "Nude block-heel pumps: Breaks Never: high heels (No shoes with heels over 5 cm)"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "platforms",
+   "expect": "caught",
+   "why": "Never: high heels (12 cm)",
+   "got": "caught",
+   "reasons": [
+    "Black platform heels: Breaks Never: high heels (No shoes with heels over 5 cm)"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "wedge sandals",
+   "expect": "caught",
+   "why": "Never: high heels (7 cm)",
+   "got": "caught",
+   "reasons": [
+    "Blush wedge sandals: Breaks Never: high heels (No shoes with heels over 5 cm)"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "unknown heel",
+   "expect": "caught",
+   "why": "a missing heel height is never a pass",
+   "got": "caught",
+   "reasons": [
+    "Tan leather loafers: Missing a detail that Never: high heels needs"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "sleeveless dress",
+   "expect": "caught",
+   "why": "Must have: sleeves",
+   "got": "caught",
+   "reasons": [
+    "Cobalt one-shoulder dress: Breaks Must have: sleeves (Only tops, dresses and jackets with sleeves (not sleeveless))"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "slip dress",
+   "expect": "caught",
+   "why": "Must have: sleeves",
+   "got": "caught",
+   "reasons": [
+    "Sage slip dress: Breaks Must have: sleeves (Only tops, dresses and jackets with sleeves (not sleeveless))"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "camisole",
+   "expect": "caught",
+   "why": "Must have: sleeves",
+   "got": "caught",
+   "reasons": [
+    "Emerald satin camisole: Breaks Must have: sleeves (Only tops, dresses and jackets with sleeves (not sleeveless))"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "over budget",
+   "expect": "caught",
+   "why": "$587 over a $500 budget",
+   "got": "caught",
+   "reasons": [
+    "$87 over your $500 limit"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "not black",
+   "expect": "caught",
+   "why": "Not black",
+   "got": "caught",
+   "reasons": [
+    "Black ballet flats: Breaks Not black (Nothing in black)"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "menswear",
+   "expect": "caught",
+   "why": "womenswear only",
+   "got": "caught",
+   "reasons": [
+    "Brown leather brogues: Not womenswear"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "no shoes",
+   "expect": "caught",
+   "why": "not a complete outfit",
+   "got": "caught",
+   "reasons": [
+    "No shoes"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "two dresses",
+   "expect": "caught",
+   "why": "two dresses",
+   "got": "caught",
+   "reasons": [
+    "Two dresss in one look"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "no bottom",
+   "expect": "caught",
+   "why": "not a complete outfit",
+   "got": "caught",
+   "reasons": [
+    "Not a complete outfit: it needs a dress, a suit, or a top with something on the bottom"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "not in size",
+   "expect": "caught",
+   "why": "not in size 8",
+   "got": "caught",
+   "reasons": [
+    "Navy wrap dress: Not in your size (8)"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "owned item left out",
+   "expect": "caught",
+   "why": "leaves out the shopper's blazer",
+   "got": "caught",
+   "reasons": [
+    "Leaves out your Navy wool blazer"
+   ],
+   "seconds": 0,
+   "costUsd": 0
+  },
+  {
+   "id": "wedding, emerald dress and coat",
+   "expect": "pass",
+   "why": "elegant, emerald, warm",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Outdoor wedding, November: Formal satin midi dress with a warm wool coat suits a cool outdoor wedding; flats work on outdoor ground.",
+    "ok: Elegant: Every item is styled elegant or classic.",
+    "ok: Emerald green, preferred: The dress is emerald green."
+   ],
+   "seconds": 5.299716666999999,
+   "costUsd": 0.009136
+  },
+  {
+   "id": "wedding, velvet dress",
+   "expect": "pass",
+   "why": "elegant November wedding look",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Outdoor wedding, November: Long-sleeve velvet midi suits a cool-season wedding; burgundy avoids white.",
+    "ok: Elegant: All items are elegant, formality 4.",
+    "ok: Emerald green, preferred: The mules are emerald green."
+   ],
+   "seconds": 6.686320792,
+   "costUsd": 0.011076
+  },
+  {
+   "id": "wedding, shorts",
+   "expect": "not pass",
+   "why": "shorts at a November wedding",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "NO: Outdoor wedding, November: Shorts and espadrilles are too casual and light for a November wedding",
+    "NO: Elegant: Relaxed linen shorts and raffia shoes are not elegant",
+    "NO: Emerald green, preferred: No item is emerald green"
+   ],
+   "seconds": 5.174019374999999,
+   "costUsd": 0.008832
+  },
+  {
+   "id": "wedding, knit and sneakers",
+   "expect": "not pass",
+   "why": "too casual for an elegant wedding",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "NO: Outdoor wedding, November: Casual sneakers, straw bag and striped knit too informal for a wedding; straw is summery",
+    "NO: Elegant: Relaxed, sporty, bohemian pieces at formality 1-2 aren't elegant",
+    "NO: Emerald green, preferred: No emerald green; navy, white and natural only"
+   ],
+   "seconds": 4.4904635840000005,
+   "costUsd": 0.00692
+  },
+  {
+   "id": "interview, blazer and trousers",
+   "expect": "pass",
+   "why": "smart and comfortable",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Job interview: Blazer, blouse and tailored trousers suit an interview.",
+    "ok: Smart but comfortable: Polished pieces with low-heel loafers."
+   ],
+   "seconds": 12.0299975,
+   "costUsd": 0.00732
+  },
+  {
+   "id": "interview, pantsuit",
+   "expect": "pass",
+   "why": "smart",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Job interview occasion: Pantsuit with silk blouse is polished interview wear",
+    "ok: Smart but comfortable: Tailored but flat shoes and soft fabrics"
+   ],
+   "seconds": 6.387377042,
+   "costUsd": 0.0056
+  },
+  {
+   "id": "interview, leopard and leather mini",
+   "expect": "not pass",
+   "why": "not smart enough for an interview",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "NO: Job interview, next week: Leopard satin blouse and leather mini skirt are too bold for an interview",
+    "NO: Smart but comfortable: Faux leather mini skirt reads edgy and casual, not smart"
+   ],
+   "seconds": 5.354030874999999,
+   "costUsd": 0.007352
+  },
+  {
+   "id": "interview, cargo and tee",
+   "expect": "not pass",
+   "why": "too casual for an interview",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "NO: Job interview, next week: Cargo trousers, tee and sneakers are too casual for an interview",
+    "NO: Smart but comfortable: Comfortable, but all items are formality 1, not smart"
+   ],
+   "seconds": 3.644530958,
+   "costUsd": 0.00706
+  },
+  {
+   "id": "flashy, sequins",
+   "expect": "not pass",
+   "why": "Never: anything too flashy",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "NO: Never anything too flashy: Sequin top is bold and flashy",
+    "ok: Friend's birthday dinner, Saturday: Dinner-appropriate pieces",
+    "NO: Relaxed: Sequin top is too dressy for relaxed"
+   ],
+   "seconds": 5.418719707999999,
+   "costUsd": 0.00978
+  },
+  {
+   "id": "flashy, quiet look",
+   "expect": "pass",
+   "why": "relaxed and quiet",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Never: anything too flashy: Classic stripes, denim and tan loafers are understated",
+    "ok: Friend's birthday dinner, Saturday: Smart-casual look suits a dinner out",
+    "ok: Relaxed: Breton top, jeans and loafers feel easy and relaxed"
+   ],
+   "seconds": 5.945720792,
+   "costUsd": 0.008396
+  },
+  {
+   "id": "jacket, none",
+   "expect": "not pass",
+   "why": "Must have: a jacket in every look",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "NO: Must have: a jacket in every look: The look has no jacket, only a dress and flats.",
+    "ok: Office party, December: A long-sleeve knee-length navy dress with elegant flats suits an indoor office party."
+   ],
+   "seconds": 5.195973042,
+   "costUsd": 0.007744
+  },
+  {
+   "id": "jacket, blazer",
+   "expect": "pass",
+   "why": "has a jacket",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Must have: a jacket in every look: Ivory tailored blazer serves as the jacket.",
+    "ok: Office party, December: Long-sleeve dress, blazer and closed-toe flats suit a winter office party."
+   ],
+   "seconds": 5.578903499999999,
+   "costUsd": 0.008788
+  },
+  {
+   "id": "inspiration, similar",
+   "expect": "pass",
+   "why": "a similar emerald satin dress",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Outdoor wedding, November: Formal satin midi, warm wool coat, closed-toe flats suit a cool outdoor wedding",
+    "ok: Elegant: All three items are elegant in style",
+    "ok: Emerald green, preferred: The dress is emerald green",
+    "ok: Inspiration: emerald satin midi dress: Look includes a matching emerald satin midi dress"
+   ],
+   "seconds": 5.739964417,
+   "costUsd": 0.009416
+  },
+  {
+   "id": "inspiration, different",
+   "expect": "not pass",
+   "why": "nothing like the emerald dress",
+   "got": "not pass",
+   "verdict": "conflict",
+   "reasons": [
+    "ok: Outdoor wedding, November: Dress with wool coat and closed flats suits a cool-weather wedding",
+    "ok: Elegant: Coat and flats are elegant; the dress is classic",
+    "NO: Emerald green, preferred: No emerald item; navy, camel and nude only",
+    "NO: Inspiration: emerald satin midi dress: Navy jersey knee dress differs in color, fabric and length"
+   ],
+   "seconds": 6.2710968750000005,
+   "costUsd": 0.012692
+  },
+  {
+   "id": "owned blazer",
+   "expect": "pass",
+   "why": "styles the shopper's blazer",
+   "got": "pass",
+   "verdict": "pass",
+   "reasons": [
+    "ok: Job interview, next week: Blazer, silk blouse and tailored trousers suit an interview",
+    "ok: Smart but comfortable: Polished pieces; low-heel loafers are comfortable"
+   ],
+   "seconds": 5.446037582999999,
+   "costUsd": 0.00764
+  }
+ ]
+}

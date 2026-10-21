@@ -168,7 +168,10 @@ function describeValues(detail: WordDetail | FreeDetail, values: string[]): stri
   if (detail === "sleeve") {
     const others = all!.filter((v) => !values.includes(v));
     if (values.length > all!.length / 2) return `with sleeves${others.length ? ` (not ${list(shown(others))})` : ""}`;
-    return pick.includes("sleeveless") && pick.length === 1 ? "that are sleeveless" : `with ${list(pick)} sleeves`;
+    if (!pick.includes("sleeveless")) return `with ${list(pick)} sleeves`;
+    const sleeved = pick.filter((v) => v !== "sleeveless");
+    // "Never: arms exposed" (Sabine's iPhone check in 4a): not "sleeveless, cap or short sleeves".
+    return sleeved.length ? `that are sleeveless or have ${list(sleeved)} sleeves` : "that are sleeveless";
   }
   if (detail === "neckline") return `with ${article(pick[0])} ${list(pick)} neckline`;
   if (detail === "coverage") return `that are ${list(pick)} length`;
