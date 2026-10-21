@@ -1,6 +1,7 @@
 "use client";
 
 import { type ButtonHTMLAttributes, type ReactNode, type Ref, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { BehindTheScenesSource } from "@/components/behind/behind-the-scenes";
 import { LooksArea } from "@/components/looks/looks-area";
 import { type LooksEvent, useLooks } from "@/components/looks/use-looks";
 import { FromYourWardrobe } from "@/components/notebook/from-wardrobe";
@@ -568,7 +569,10 @@ export function StylingSession({
           }
           thumbnail={photos.active && <PhotoThumbnail photo={photos.active} />}
         />
-        {children}
+        {/* Behind the scenes, beside Wardrobe, hears of each change to the notes and looks (4d). */}
+        <BehindTheScenesSource sessionId={call.sessionId} changes={`${inputs}|${looks.phase}|${looks.looks.map((l) => l.id).join(",")}`}>
+          {children}
+        </BehindTheScenesSource>
       </div>
 
       <LooksArea

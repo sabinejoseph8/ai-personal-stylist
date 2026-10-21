@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.24 (21 Oct 2026)
+**Status:** Agreed, version 1.25 (21 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -119,7 +119,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **profiles** | One row per guest | departments, style words, sizes, default budget (amount, currency, meaning), last active time | Until deleted, or 7 days without use |
 | **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule for Must have and Never (for example heel height over 5 cm, made by the rule maker and read back in setup, 4a), version | Same as profile |
 | **consents** | Separate permissions (R64) | wardrobe photos, remember preferences, camera explained, with times | Same as profile |
-| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, the words sequence (one number per send of words, for latest word wins), and the next question with the turn and sequence it came from (Phase 2 review). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle (a database timer closes idle ones every 10 minutes), then the row is closed |
+| **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, the words sequence (one number per send of words, for latest word wins), and the next question with the turn and sequence it came from (Phase 2 review), and until when a looks build has the session (4d). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle (a database timer closes idle ones every 10 minutes), then the row is closed |
 | **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, colors, style, budget, outfit, owned item, fit, other), hidden details for looks and checks, status, source (voice or touch), the words sequence that last changed it, created and update times, version, removed. At most 12 per session, saved preferences not counted (your answer to Q2 in 2c). Read-only for guests: the server saves them through **save_notes**, which only saves if nothing else saved in between (decision A, done in 2c) | Deleted when the session ends (R63) |
 | **session_feedback** | Likes, Dislikes, Requested changes, Items to keep | look, item or attribute, scope, status, source, version | Deleted when the session ends |
 | **session_exceptions** | "This session only" permissions | saved preference, confirmed time | Deleted when the session ends |
@@ -131,7 +131,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | **saved_looks** | Looks the shopper saved | a copy of the look, saved time | Until removed, or 7 days without use |
 | **bag_items** | Demo bag | product, size, the check that allowed it | Same as profile |
 | **usage** | Time and spending | per guest per UTC day: video seconds, voice seconds, Claude cost and OpenAI cost (in millionths of a dollar). Monthly totals are added up from these rows. When a guest is deleted, their rows stay without the guest, so the month's totals stay right | 90 days, with no personal content |
-| **event_log** | Behind the scenes entries | session, entry type, plain-language summary, time | Deleted with the session |
+| **event_log** | Planned for Behind the scenes entries; not used, since Behind the scenes is made from the records above (your answer to Q1 in 4d) | session, entry type, plain-language summary, time | Deleted with the session |
 
 What is never stored anywhere we control: raw audio, full transcripts and camera video. The live words that feed the notes are never shown on screen, and are thrown away once read (product spec R10).
 
@@ -153,6 +153,7 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **PATCH, DELETE /api/sessions/:id/assets/:assetId** | Make a photo the active one, confirm a detail, pick one of several items, or say whether it's the shopper's (3b), or Remove it (R31), 4 photo changes a second at most. Removing the active photo makes the newest one left active. Each answer carries the stylist's context. |
 | **POST /api/sessions/:id/camera-frame** | One small camera frame for live recognition (R34): a JPEG of at most 640 px (400 KB at most), for the guest's open session, one every 2 seconds at most. It's read through the budget guard and thrown away; the answer says whether one item, several or none is shown, and what the item is (3c). |
 | **POST /api/sessions/:id/looks** | Bring the looks up to date (4b, 4c): answers at once, at no cost, when nothing changed. Otherwise streams "updating" while the looks on screen are checked again, then "building" and "checking" for new ones, then up to 3 looks in their places with totals and reasons, a no-match explanation when fewer pass, "needs" when the occasion or a stated requirement isn't confirmed yet, or "stale" when the requirements changed meanwhile. { force: true } is Try again. 120 requests and 20 builds an hour; registered with **after()**. **GET** gives the looks on screen, each marked whether it's still current. |
+| **GET /api/sessions/:id/behind-the-scenes** | Behind the scenes (4d, R72): the guest's own open session as plain-language entries, newest first, after a line on which products fit now. Read only, no AI, 240 an hour. |
 | **POST /api/sessions/:id/looks/:lookId/swap** | Swap a piece (4c, R43): { index } of the item. Answers with the look and its new piece in the same place once it passed the whole check, { none } when nothing else fits, or { stale } when the looks need bringing up to date first. 40 an hour; registered with **after()**. Refine, restore and compare join in Phase 5. |
 | **POST /api/sessions/:id/exceptions** | Allow a saved preference to be broken for this session (R57). |
 | **POST /api/preferences/rule** | The preference rule maker (4a): a Must have or Never in words, and back comes its rule for setup to read back. Through the budget guard; when the day's AI is used up, the preference is judged instead. |
@@ -280,6 +281,15 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **The stylist (your answer to Q4 in 4c):** the page adds the looks to her context: each look's name, pieces, total and reason, which look is on screen, what's needed, any no-match explanation and what just changed. When new looks appear she's asked, as the shopper's words kept out of the notes, "Can you walk me through the looks you've put together?", and after a change "What changed in my looks?", once nobody is talking. Her context tells her to keep it short: each look's name and one line, then to look on screen. After a swap she's told the new piece but not asked to speak.
 - **Cost and speed:** a swap is about 3 cents and 5 to 8 seconds with Opus 5.5 (3 checks at once). A re-check after a change is about 1 cent a look and a few seconds; filling a place costs a build.
 
+**One build at a time (found in 4d).** A note changed while looks were being built made the page ask again, and that request, finding no looks yet, started a second full build: twice the cost, and two looks published in one place. Now a build claims the session (**claim_looks_build**, at most 5 minutes, released when it ends); a request that finds it claimed shows "building" and waits, then starts again from what the first build made, which is usually nothing left to do.
+
+**Behind the scenes as built (4d).** The files are **core/looks/behind.ts** (the wording), **lib/behind-the-scenes.ts** and **components/behind/behind-the-scenes.tsx**.
+- **Where:** a Behind the scenes button beside Wardrobe on the session page, until the app menu (Phase 7). A sheet on phones and a side panel on desktops. It's on for everyone and closed until opened (your answer to Q2 in 4d). While open, it asks again shortly after each change to the notes or looks.
+- **From the records the app already keeps (your answer to Q1):** the notes (with whether they're confirmed, and by a tap or out loud), each photo's reading (sure and to-confirm details, whose it is), and every check with its reasons. A look checked more than once was on screen, so its later checks are checks again after a change. No separate log is written, so a note's earlier wording isn't shown.
+- **Entries:** "Captured: …", "Removed by you: …", "Read from your photo: …", "Check passed: Look 1, … It meets …", "Check blocked a candidate: …" (one line of reasons, never the look itself, R72), "Swap in Look 1: … replaced …", and "Checked again after your change: …". A spare that passed but wasn't needed isn't listed.
+- **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
+- Never audio, words, video or photos, and only the guest's own open session.
+
 **The camera reader as built (3c).** The files are **core/camera/** (the reader, its fake for browser tests, and the rules for what's shown) and **lib/camera-service.ts**; the page side is **components/session/use-camera.ts**.
 - While the camera is on, the page sends one 640 px frame about every 2 seconds, one at a time and only while the page is in view. Each frame costs about 0.015 cents.
 - Two frames in a row must agree (the same type, and colors with a word in common) before an item is named, with a question mark unless both frames were sure. Two frames with nothing clear the name. This runs in the page, because frames aren't kept anywhere.
@@ -347,7 +357,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - New words: 2 requests per second per session.
 - Note touches (Confirm, Remove, Undo): 4 per second per guest (Phase 2 review).
 - Photos: 10 per guest per hour. Photo changes (checking an arrived photo, switching the active one, Remove): 4 a second (3a). Camera frames: 1 every 2 seconds, while the camera is on.
-- Building looks: 20 per guest per hour, counted only when AI work is needed; asking for the looks, 120 an hour (4c). Swaps: 40 per guest per hour (4c).
+- Building looks: 20 per guest per hour, counted only when AI work is needed; asking for the looks, 120 an hour (4c). Swaps: 40 per guest per hour (4c). Behind the scenes: 240 an hour (4d).
 - Making preference rules: 20 per guest per hour (4a).
 
 ### Cost limits
@@ -378,7 +388,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - **Scheduled jobs:** a database timer (Supabase Cron, **close-idle-sessions**) runs every 10 minutes: it ends sessions idle for 30 minutes and deletes their notes (your answer to Q1 in 2e). It can't delete photo files, so those sessions' photos are deleted on the guest's next Start conversation or by the daily job, whichever comes first: at most a day, still private (your answer to Q4 in 3a). A Vercel cron job runs daily at 08:00 UTC (4 am in New York). It does the same, ends at Tavus any call those sessions left behind and gives back its unused minutes, deletes their photos, deletes guests unused for 7 days with their photos (R3), deletes test guests older than a day that a test run left behind, and deletes usage records older than 90 days and old rate-limit counts. Only anonymous guests and test guests are ever deleted. A guest's last-active time is updated on every page visit, at most once an hour (your decision, 20 Oct 2026). Keeping the database awake isn't needed on Pro.
 - **Tavus setup:** the stylist's Tavus configuration (PAL, face, conversation model, timeouts) is kept as a file in the repository and applied by a script, so it is versioned like code.
 - **Address:** the free vercel.app address for v1 (default). A custom domain can be added later.
-- **Switches** (environment settings): video on or off (Q9), camera on or off, Behind the scenes on or off, and the daily and monthly limits (section 6, Cost limits). **CONVERSATION_ENGINE=fake** is for automated tests only.
+- **Switches** (environment settings): video on or off (Q9), camera on or off, and the daily and monthly limits (section 6, Cost limits). **CONVERSATION_ENGINE=fake** is for automated tests only.
 - **Monitoring:** Vercel logs and alerts for errors, a usage table for minutes and spend, and a weekly check of provider dashboards.
 
 ## 8. Testing approach
@@ -460,6 +470,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
 | 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A). Now about $50, with the Supabase project ($10) from 20 Oct 2026 | Your decision |
+| 21 Oct 2026 | 4d: Behind the scenes is made from the records the app already keeps, rather than a separate log (Q1). It's on for everyone, closed until opened, rather than behind a setting (Q2). It starts with which products fit now (Q3) | Your decision |
 | 21 Oct 2026 | 4c: Swap picks 3 replacements in code and checks them at once, the first that passes goes in (Q1). A spoken swap means the look on screen, or the one named; if unclear, she asks (Q2). After a change, the looks on screen are checked again and only those that fail are replaced (Q3). She presents new looks in her own words, kept short (Q4) | Your decision |
 | 21 Oct 2026 | 4b, your review of the sample looks: a preferred or liked color must be in the main piece, not only the shoes or bag (burgundy is an earth tone, navy isn't); shoes and bag go with the outfit's colors (black goes with many outfits, but not black flats with navy, burgundy and camel, where tan or a neutral suits better); a coat or wrap that wasn't asked for is never a reason to fail a look; each look shown has a different dress, or a different top and bottom | Your decision |
 | 21 Oct 2026 | 4b: a sample looks report for review before looks are on screen (Q1). If fewer than 3 looks pass after 3 tries, those that passed are shown with an explanation (Q2). The judgment step checks one look at a time (Q3) | Your decision |
@@ -489,6 +500,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.25 (21 Oct 2026):** 4d: Behind the scenes as built, its endpoint and limit, with your answers to Q1 to Q3, and one build at a time per session (claim_looks_build).
 - **1.24 (21 Oct 2026):** 4c: look panels as built: places on screen, asking after changes, the re-check after a change, Swap, spoken swaps, what the stylist is told, the swap endpoint, rate limits and the notes eval's swap cases, with your answers to Q1 to Q4.
 - **1.23 (21 Oct 2026):** 4b: the looks builder, the preference checker (rules in code, then the judgment step), the publishing gate in the database (**record_check**, **publish_look**), rounds, newest wins, the no-match explanation, the checker eval and the sample looks report, with your answers to Q1 to Q3, and the rules from your review of the sample looks (colors in the main piece, shoes and bag that match, no missing coat, different main pieces).
 - **1.22 (21 Oct 2026):** 4a: preference rules as built (the rule format, the rule maker and its eval, the read-back in setup), the candidate filter, which budget counts, and totals, with your answers to Q1 to Q3.

@@ -3,6 +3,7 @@ import { createSampleCatalog } from "@/connectors/catalog/sample";
 import { createFakeLooksBuilder, type LooksBuilder } from "@/core/looks/builder";
 import type { LookItem } from "@/core/looks/look";
 import { createFakeJudge } from "@/core/looks/judge";
+import { behindTheScenesFor } from "@/lib/behind-the-scenes";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { buildLooks, currentLooks, type LooksDeps, type ShownLook, swapPiece } from "@/lib/looks-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
@@ -192,6 +193,26 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(counter.calls).toBe(1);
   });
 
+  it("builds once when two requests arrive together: the second waits, then answers from the first (found in 4d)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const fake = createFakeLooksBuilder();
+    let calls = 0;
+    const slow: LooksBuilder = {
+      async build(input) {
+        calls++;
+        await new Promise((r) => setTimeout(r, 1500));
+        return fake.build(input);
+      },
+    };
+    const stages: string[] = [];
+    const [a, b] = await Promise.all([buildLooks(deps(slow), guest.id, session), buildLooks(deps(slow), guest.id, session, (s) => stages.push(s))]);
+    expect(calls).toBe(1);
+    expect(looksOf(a).map((l) => l.id)).toEqual(looksOf(b).map((l) => l.id));
+    const { data: published } = await db.from("looks").select("id").eq("session_id", session).eq("status", "published").throwOnError();
+    expect(published).toHaveLength(3);
+    expect((await db.from("sessions").select("looks_busy_until").eq("id", session).single()).data!.looks_busy_until).toBeNull();
+  }, 60_000);
+
   it("after a change, keeps the looks that still pass in their places and replaces the rest (Q3 in 4c, R44, R58)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     const first = looksOf(await buildLooks(deps(), guest.id, session));
@@ -220,7 +241,7 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     const { data: checks } = await db.from("check_results").select("look_id, verdict, versions_checked").in("look_id", after.map((l) => l.id)).throwOnError();
     const key = (await db.from("looks").select("requirements_key").eq("id", after[0].id).single()).data!.requirements_key;
     for (const look of after) expect(checks!.some((c) => c.look_id === look.id && c.verdict === "pass" && (c.versions_checked as { requirements: string }).requirements === key)).toBe(true);
-  });
+  }, 60_000);
 
   it("swaps a piece in its place, checked first, never bringing high heels or the same shoes back (R43, S13)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
@@ -256,6 +277,43 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     await setBudget(340);
     expect(await swapPiece(deps(), guest.id, session, look.id, 0)).toEqual({ stale: true });
   });
+
+  it("Behind the scenes tells the session's story in plain words, for its own guest only (4d, R72)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const catalog = createSampleCatalog(db);
+    const heels = (await catalog.search({ department: "womenswear", limit: 1000 })).find((p) => p.category === "shoes" && (p.details.heelCm ?? 0) > 5)!;
+    const fake = createFakeLooksBuilder();
+    // The last candidate gets high heels, so the checker blocks it.
+    const withHeels: LooksBuilder = {
+      async build(input) {
+        const { looks } = await fake.build(input);
+        looks[looks.length - 1].items[1] = { kind: "product", productId: heels.id };
+        return { looks, costUsd: 0 };
+      },
+    };
+    const [first] = looksOf(await buildLooks(deps(withHeels), guest.id, session));
+    const swapped = await swapPiece(deps(), guest.id, session, first.id, first.items.findIndex((i) => i.group === "shoes"));
+    if (!swapped || !("look" in swapped)) throw new Error(JSON.stringify(swapped));
+    await setBudget(400);
+    await buildLooks(deps(), guest.id, session);
+
+    const entries = (await behindTheScenesFor({ db, catalog }, guest.id, session))!;
+    const texts = entries.map((e) => e.text);
+    expect(entries[0].kind).toBe("products");
+    expect(texts[0]).toMatch(/^Right now \d+ of \d+ womenswear sample products fit everything you've asked for\. Left out: .*for Never: high heels/);
+    expect(texts).toContain("Captured: Outdoor wedding, November. From what you said. Confirmed by you.");
+    expect(texts.some((t) => /^Check passed: Look 1, Test look \d\. It meets Never: high heels; Must have: sleeves; your budget/.test(t))).toBe(true);
+    expect(texts.some((t) => t.startsWith(`Check blocked a candidate: ${heels.name}: `) && t.includes("Never: high heels"))).toBe(true);
+    expect(texts.some((t) => t.startsWith("Swap in Look 1: ") && t.endsWith(", and passed the check."))).toBe(true);
+    expect(texts.filter((t) => t.startsWith("Swap in Look 1: "))).toHaveLength(1);
+    expect(texts.filter((t) => t.startsWith("Checked again after your change: Look")).length).toBeGreaterThanOrEqual(3);
+    // Newest first, after the products line.
+    const times = entries.slice(1).map((e) => Date.parse(e.at));
+    expect(times).toEqual([...times].sort((a, b) => b - a));
+    // Never a photo, a link or another guest's session.
+    expect(JSON.stringify(entries)).not.toMatch(/https?:|\.jpg|guest-photos/);
+    expect(await behindTheScenesFor({ db, catalog }, "00000000-0000-0000-0000-000000000000", session)).toBeNull();
+  }, 60_000);
 
   it("looks and their checks are deleted when the session ends (R63)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();

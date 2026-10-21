@@ -5,12 +5,13 @@ import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
 // A bottom sheet on phones, with 20 px top corners (design.md section 3.4). It slides up,
-// or fades in with reduced motion.
+// or fades in with reduced motion. With `side`, it's a panel on the right on desktops (design 4.4).
 export function Sheet({
   trigger,
   open,
   onOpenChange,
   title,
+  side = false,
   children,
 }: {
   /** The button that opens the sheet. Focus goes back to it when the sheet closes. */
@@ -18,6 +19,8 @@ export function Sheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** A side panel on desktops, rather than a sheet from the bottom. */
+  side?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -27,7 +30,9 @@ export function Sheet({
         <RadixDialog.Overlay className="overlay-fade fixed inset-0 z-40 bg-ink/40" />
         <RadixDialog.Content
           aria-describedby={undefined}
-          className="sheet-slide fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] w-full max-w-xl flex-col gap-4 overflow-y-auto rounded-t-sheet bg-page p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-overlay"
+          className={`sheet-slide fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[85vh] w-full max-w-xl flex-col gap-4 overflow-y-auto rounded-t-sheet bg-page p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-overlay ${
+            side ? "desktop:inset-y-0 desktop:left-auto desktop:right-0 desktop:mx-0 desktop:max-h-none desktop:w-[26rem] desktop:rounded-none desktop:rounded-l-sheet" : ""
+          }`}
         >
           <div className="flex items-center justify-between gap-4">
             <RadixDialog.Title className="type-subheading m-0 text-ink">{title}</RadixDialog.Title>

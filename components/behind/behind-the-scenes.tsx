@@ -1,0 +1,92 @@
+"use client";
+
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Icon, type IconName } from "@/components/ui/icons";
+import { Sheet } from "@/components/ui/sheet";
+import type { Entry, EntryKind } from "@/core/looks/behind";
+
+// Behind the scenes (4d, R72, design 4.4): a portfolio extra that shows, in plain words, what the
+// stylist captured and how each look was checked. Closed until opened (Sabine's answer to Q2 in 4d), from
+// a button beside Wardrobe until the app menu arrives in Phase 7. A sheet on phones, a side panel on
+// desktops. While open, it asks again as the notes and looks change. The session page passes it the
+// session and a sign of what changed, through BehindTheScenesSource.
+
+const Source = createContext<{ sessionId: string | null; changes: string }>({ sessionId: null, changes: "" });
+
+export function BehindTheScenesSource({ sessionId, changes, children }: { sessionId: string | null; changes: string; children: ReactNode }) {
+  return <Source value={{ sessionId, changes }}>{children}</Source>;
+}
+
+/** Icons for the entries that are a check's result; words carry the meaning (design 3.7). */
+const ICON: Partial<Record<EntryKind, { name: IconName; tone: string }>> = {
+  passed: { name: "checked", tone: "text-emerald" },
+  blocked: { name: "error", tone: "text-red-pen" },
+  recheck: { name: "needsNewCheck", tone: "text-graphite" },
+};
+
+const time = (entry: Entry) => (entry.kind === "products" ? "Now" : new Date(entry.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+
+export function BehindTheScenes() {
+  const { sessionId, changes } = useContext(Source);
+  const [open, setOpen] = useState(false);
+  const [entries, setEntries] = useState<{ session: string; list: Entry[] } | null>(null);
+  const [problem, setProblem] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  // Asked when opened, and again shortly after each change while open.
+  const shownFor = entries?.session;
+  useEffect(() => {
+    if (!open || !sessionId) return;
+    let current = true;
+    const timer = setTimeout(
+      () =>
+        void fetch(`/api/sessions/${sessionId}/behind-the-scenes`, { cache: "no-store" })
+          .then((res) => (res.ok ? (res.json() as Promise<{ entries: Entry[] }>) : Promise.reject(new Error(String(res.status)))))
+          .then((body) => {
+            if (!current) return;
+            setEntries({ session: sessionId, list: body.entries });
+            setProblem(false);
+          })
+          .catch(() => current && setProblem(true)),
+      shownFor === sessionId ? 800 : 0,
+    );
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [open, sessionId, changes, attempt, shownFor]);
+
+  const list = entries && entries.session === sessionId ? entries.list : null;
+  return (
+    <Sheet open={open} onOpenChange={setOpen} title="Behind the scenes" side trigger={<Button variant="secondary">Behind the scenes</Button>}>
+      <p className="type-small m-0 text-graphite">What the stylist captured and how each look was checked, from this session&apos;s records. No audio, words, video or photos are kept.</p>
+      {!sessionId && <p className="type-body m-0 text-ink">Start a conversation, and what the stylist captures and checks appears here.</p>}
+      {sessionId && problem && !list && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="type-body m-0 text-ink">Behind the scenes couldn&apos;t be loaded.</p>
+          <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
+            Try again
+          </Button>
+        </div>
+      )}
+      {sessionId && !list && !problem && <p className="type-body m-0 text-graphite">Loading…</p>}
+      {list && (
+        <ol aria-label="Entries, newest first" className="m-0 flex list-none flex-col p-0">
+          {list.map((entry, i) => {
+            const icon = ICON[entry.kind];
+            return (
+              <li key={`${entry.at}-${i}`} className="flex gap-2 border-b border-hairline py-3 last:border-b-0">
+                {icon && <Icon name={icon.name} className={`mt-0.5 shrink-0 ${icon.tone}`} />}
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="type-small text-graphite">{time(entry)}</span>
+                  <p className="type-body m-0 text-ink">{entry.text}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </Sheet>
+  );
+}
