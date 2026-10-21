@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { Icon } from "@/components/ui/icons";
 import { StatusChip } from "@/components/ui/status-chip";
 import { dollars } from "@/core/looks/budget";
@@ -10,8 +11,8 @@ import type { ShownItem, ShownLook } from "@/core/looks/shown";
 // A look panel and its item tiles (design 4.3; R40 to R43, R55, R58): "Look 1 of 3" and its name, the
 // items with their photos, "You own this" or "Sample product" and a price, Swap, the total to buy and
 // how it compares with the budget, the one-line reason, and "Checked against your preferences", or
-// "Needs a new check" while it's checked again after a change. Keep and Change join in 5a; Save look,
-// Give feedback, Compare and Add to bag in Phases 5 and 6.
+// "Needs a new check" while it's checked again after a change. Keep and Change (5a) jot feedback under
+// the look, as if said; Save look, Give feedback, Compare and Add to bag join in Phases 5 and 6.
 
 const KINDS: Record<string, string> = {
   outer: "Jacket",
@@ -50,6 +51,8 @@ function ItemTile({
   checking,
   canSwap,
   onSwap,
+  feedback,
+  onFeedback,
 }: {
   item: ShownItem;
   image: string | null;
@@ -58,6 +61,9 @@ function ItemTile({
   checking: boolean;
   canSwap: boolean;
   onSwap: () => void;
+  /** What the shopper said or tapped about this item: keep it, change it, or nothing yet (5a). */
+  feedback: "keep" | "change" | null;
+  onFeedback: (act: "keep" | "change", on: boolean) => void;
 }) {
   return (
     <li className="flex min-w-0 flex-col gap-1.5">
@@ -89,6 +95,18 @@ function ItemTile({
           <p className="type-label price m-0 text-ink">{dollars(item.priceCents ?? 0)}</p>
           {/* At the bottom of the tile, so the Swap buttons in a row line up. */}
           <div className="mt-auto flex flex-col gap-1.5 pt-1">
+            {/* Keep and Change (R46): "Keeping" and "Changing" when pressed (design 4.3). */}
+            <div className="flex flex-wrap gap-1.5">
+              {(["keep", "change"] as const).map((act) => {
+                const on = feedback === act;
+                const word = act === "keep" ? (on ? "Keeping" : "Keep") : on ? "Changing" : "Change";
+                return (
+                  <Chip key={act} selected={on} aria-label={`${word} ${item.name}`} onClick={() => onFeedback(act, !on)}>
+                    {word}
+                  </Chip>
+                );
+              })}
+            </div>
             {note && (
               <p role="status" className="type-small m-0 rounded-print bg-showroom px-2 py-1.5 text-ink">
                 {note}
@@ -115,6 +133,8 @@ export function LookPanel({
   canSwap,
   imageFor,
   onSwap,
+  feedbackFor,
+  onFeedback,
   panelRef,
 }: {
   look: ShownLook;
@@ -131,6 +151,9 @@ export function LookPanel({
   canSwap: boolean;
   imageFor: (item: ShownItem) => string | null;
   onSwap: (index: number) => void;
+  /** Keep or Change on an item, from the notes (5a). */
+  feedbackFor: (item: ShownItem) => "keep" | "change" | null;
+  onFeedback: (index: number, act: "keep" | "change", on: boolean) => void;
   panelRef?: (el: HTMLElement | null) => void;
 }) {
   const titleId = `look-${look.id}`;
@@ -152,6 +175,8 @@ export function LookPanel({
             image={item.owned ? imageFor(item) : item.imageUrl}
             isNew={newIndex === i}
             note={note?.index === i ? note.text : null}
+            feedback={feedbackFor(item)}
+            onFeedback={(act, on) => onFeedback(i, act, on)}
             checking={swappingIndex === i}
             canSwap={canSwap && look.current && !updating}
             onSwap={() => onSwap(i)}

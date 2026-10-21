@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.22
+**Status:** Living document, version 1.23
 **Last updated:** 21 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 21 Oct 2026 | 5a plan, the recommended answers. Q1: feedback is kept as notes in the notebook (the other option was the separate feedback table). Q2: spoken feedback is read when the shopper finishes speaking (the other option read it while they talk, slower and costlier). Q3: Keep and Change by touch are jotted as Confirmed (the other option jotted them To confirm) | Sabine | tech spec 1.27, design 1.15 |
 | 21 Oct 2026 | Phase 4 code review (4e). Q1: delete the unused event_log table (the other option kept it for a possible history log). A: until 5c, the no-match box offers only choices that work; "Allow it for this session" returns with session exceptions (the other option left them as they were) | Sabine | tech spec 1.26, design 1.14 |
 | 21 Oct 2026 | 4d plan, the recommended answers. Q1: Behind the scenes is made from the records the app already keeps (the other option also wrote a separate log, keeping changes like "$500 to $350"). Q2: it's on for everyone, closed until opened (the other option hid it behind a setting). Q3: it starts with which products fit now (the other option left that out) | Sabine | tech spec 1.25, design 1.13 |
 | 21 Oct 2026 | 4c plan, the recommended answers. Q1: Swap picks 3 replacements in code and checks them at once, and the first that passes goes in (the other option had Claude pick, about 15 to 20 seconds a swap). Q2: a spoken swap means the look on screen, or the one named, and she asks if it's unclear (the other option always asked). Q3: after a change, the looks on screen are checked again and only those that fail are replaced (the other option built all new looks each time). Q4: she presents new looks in her own words, kept short (the other option was a fixed line) | Sabine | tech spec 1.24, design 1.12 |
@@ -396,6 +397,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.23 (21 Oct 2026):** 5a decisions (Q1 to Q3).
 - **1.22 (21 Oct 2026):** Phase 4 code review decisions (Q1, A), and the cost risk's new guard: no rebuild on unchanged requirements.
 - **1.21 (21 Oct 2026):** 4d decisions (Q1 to Q3).
 - **1.20 (21 Oct 2026):** 4c decisions (Q1 to Q4), and the preference check risk's end-to-end swap test passing.

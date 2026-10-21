@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.14 (21 Oct 2026)
+**Status:** Agreed, version 1.15 (21 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -270,6 +270,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Each line says what to keep or change, and its scope, for example "Keep the dress and bag" or "Lower heels, this look only".
 - States: To confirm, Confirmed, removed (with **Undo** for 5 seconds).
 - Before any feedback, nothing shows under the look's heading.
+- **As built (5a):** after the notes, a heading in Graphite for each look with feedback ("Look 1", or "An earlier look" when it's gone), then its lines, which work like notes. A tap on Keep or Change jots its line in ink.
 
 **Saved preferences and session exceptions**
 - Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a Saved preference chip and its bookmark icon. Tapping one opens it in Profile and privacy, from Phase 6. Until then they aren't tappable (your answer to Q1 in 2d).
@@ -306,7 +307,8 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **After a change:** the looks stay, with Needs a new check, and a line with a spinner, "Updating your looks", above them, until they're checked again. Swap is paused meanwhile.
 - **Fewer than three:** a box after the looks says what limits them, with its choices as buttons, only ones that work now (your decision A in 4e: "Allow it for this session" arrives in 5c). Tapping one says it to the stylist (only during a call); Try again builds again. With none at all, the same in a banner.
 - **Error:** a red banner, "The looks couldn't be put together.", with Try again; anything already shown stays.
-- Keep and Change (5a), Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
+- **Keep and Change (5a):** two toggles (chips) on each sample product's tile, above Swap, reading Keeping and Changing (with the check) when pressed; the shopper's own pieces have none.
+- Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
 
 **Preference check status**
 - Inside the look panel: Checking (a spinner and "Checking your preferences"), Checked (a shield and "Checked against your preferences"), Needs a new check (circular arrows), Held ("This look couldn't be checked." with **Try again**).
@@ -579,6 +581,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.15 (21 Oct 2026):** 5a: Keep and Change on the tiles (4.3), and feedback under each look in the notebook (4.2).
 - **1.14 (21 Oct 2026):** Phase 4 code review: the no-match choices (your decision A, 4.3).
 - **1.13 (21 Oct 2026):** 4d: Behind the scenes as built (4.4).
 - **1.12 (21 Oct 2026):** 4c: the looks as built: where they sit on each screen size, before looks, building, the item tiles with Swap and New, after a change, fewer than three, and errors (4.3).

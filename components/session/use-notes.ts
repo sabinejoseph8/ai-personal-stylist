@@ -69,6 +69,8 @@ export function useNotes(
   onContext: (context: string) => void,
   onPhoto?: (id: string, item: StyleItem) => void,
   onSwap?: (swap: SwapRequest) => void,
+  /** The looks on screen (5a): whether there are any, and the number of the one most in view, sent with the words. */
+  lookInView?: () => { any: boolean; inView: number | null },
 ) {
   const [notes, setNotes] = useState<ShownNote[]>(initial);
   const [question, setQuestion] = useState<NextQuestion>(null);
@@ -80,11 +82,13 @@ export function useNotes(
   const context = useRef(onContext);
   const photo = useRef(onPhoto);
   const swapHook = useRef(onSwap);
+  const inView = useRef(lookInView);
   const session = useRef(sessionId);
   useLayoutEffect(() => {
     context.current = onContext;
     photo.current = onPhoto;
     swapHook.current = onSwap;
+    inView.current = lookInView;
     session.current = sessionId;
   });
   // The turns whose swap was already passed on: a turn's words can be read more than once.
@@ -127,7 +131,7 @@ export function useNotes(
       const res = await fetch(`/api/sessions/${id}/words`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key }),
+        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key, look: inView.current?.().inView ?? null, looks: inView.current?.().any ?? false }),
       });
       if (res.status === 429) {
         // The end of a turn has no later send to carry its words, so it tries again shortly.
@@ -241,6 +245,13 @@ export function useNotes(
     say: (text: string) => void post(crypto.randomUUID(), text, true),
     touch,
     clearQuestion: () => setQuestion(null),
+    /** Notes changed elsewhere, such as Keep or Change on a look's item (5a). */
+    receive: (u: Update) => {
+      if (u.version === undefined || u.version < version.current) return;
+      version.current = u.version;
+      if (u.notes) setNotes(u.notes);
+      if (u.context) context.current(u.context);
+    },
     reset: () => {
       version.current = 0;
       setTouches(new Map());

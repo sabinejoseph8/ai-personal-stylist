@@ -4,6 +4,8 @@ import type { CatalogConnector } from "@/connectors/catalog/types";
 import { behindTheScenes, type CheckRecord, type Entry } from "@/core/looks/behind";
 import { filterCandidates } from "@/core/looks/candidates";
 import type { CheckReason } from "@/core/looks/checker";
+import { feedbackOf } from "@/core/notes/feedback";
+import type { Detail, NoteKind } from "@/core/notes/types";
 import { savedReading } from "@/core/photos/item";
 import { lookRequirements } from "@/lib/looks-inputs";
 import { SessionEndedError } from "@/lib/notes-store";
@@ -43,7 +45,10 @@ export async function behindTheScenesFor(deps: { db: SupabaseClient; catalog: Ca
   }
   const department = requirements.departments.length === 1 ? requirements.departments[0] : undefined;
   const [notes, photos, looks, checks, catalog] = await Promise.all([
-    mine<{ note_text: string; status: "to_confirm" | "confirmed"; source: string; removed: boolean; updated_at: string }>("session_notes", "note_text, status, source, removed, updated_at"),
+    mine<{ note_text: string; kind: string; hidden_details: Detail[]; status: "to_confirm" | "confirmed"; source: string; removed: boolean; updated_at: string }>(
+      "session_notes",
+      "note_text, kind, hidden_details, status, source, removed, updated_at",
+    ),
     mine<{ source: string; status: string; recognized_details: unknown; ownership: "owned" | "inspiration" | null; created_at: string }>(
       "session_assets",
       "source, status, recognized_details, ownership, created_at",
@@ -85,7 +90,14 @@ export async function behindTheScenesFor(deps: { db: SupabaseClient; catalog: Ca
   const filtered = filterCandidates(catalog, requirements);
   return behindTheScenes({
     now: new Date().toISOString(),
-    notes: notes.map((n) => ({ text: n.note_text, status: n.status, source: n.source, removed: n.removed, at: n.updated_at })),
+    notes: notes.map((n) => ({
+      text: n.note_text,
+      status: n.status,
+      source: n.source,
+      removed: n.removed,
+      at: n.updated_at,
+      look: feedbackOf({ kind: n.kind as NoteKind, details: n.hidden_details ?? [] })?.look ?? null,
+    })),
     photos: photos.filter((p) => p.status === "ready").map((p) => ({ source: p.source, item: { reading: savedReading(p.recognized_details), ownership: p.ownership }, at: p.created_at })),
     checks: records,
     products: { kept: filtered.kept.length, total: catalog.length, leftOut: filtered.leftOut, department },

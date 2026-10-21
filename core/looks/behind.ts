@@ -12,7 +12,8 @@ import { list } from "./rules";
 export type EntryKind = "products" | "captured" | "removed" | "photo" | "passed" | "blocked" | "swap" | "recheck";
 export type Entry = { at: string; kind: EntryKind; text: string };
 
-export type NoteRecord = { text: string; status: NoteStatus; source: string; removed: boolean; at: string };
+/** `look` is the place of the look a feedback line is about (5a). */
+export type NoteRecord = { text: string; status: NoteStatus; source: string; removed: boolean; at: string; look?: number | null };
 export type PhotoRecord = { source: string; item: StyleItem; at: string };
 /** A check of a look, with what the look was: built, a swap (the pieces' names), or checked again after a change. */
 export type CheckRecord = {
@@ -36,6 +37,10 @@ const SOURCES: Record<string, string> = {
  */
 export function noteEntry(n: NoteRecord): Entry {
   if (n.removed) return { at: n.at, kind: "removed", text: `Removed by you: ${n.text}.` };
+  if (n.look) {
+    const sure = n.status !== "confirmed" ? "Not confirmed yet." : n.source === "touch" ? "Confirmed with a tap." : "Confirmed.";
+    return { at: n.at, kind: "captured", text: `Feedback on Look ${n.look}: ${n.text}. ${sure}` };
+  }
   const sure = n.status !== "confirmed" ? "Not confirmed yet." : n.source === "touch" ? "Confirmed by you with a tap." : "Confirmed by you.";
   return { at: n.at, kind: "captured", text: `Captured: ${n.text}. ${SOURCES[n.source] ?? "From what you said"}. ${sure}` };
 }

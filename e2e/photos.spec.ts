@@ -169,7 +169,8 @@ test.describe("the photo to style around", () => {
     await expect(page.getByText("The photo didn’t upload.")).toBeVisible();
     await expect(pasted(page)).toBeVisible();
     await page.getByRole("button", { name: "Try again" }).click();
-    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*\.jpg/);
+    // The photo store retries busy requests (3e, decision C), which can take a few seconds on GitHub.
+    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*\.jpg/, { timeout: 15_000 });
     await expect(page.getByText("The photo didn’t upload.")).toHaveCount(0);
     expect(await photoRows()).toMatchObject([{ status: "ready", active: true }]);
   });

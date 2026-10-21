@@ -63,7 +63,8 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
     activePhoto(db, sessionId),
     db.from("wardrobe_items").select("id, name, category, details").eq("user_id", guestId).eq("styling", true).eq("draft", false).order("created_at").throwOnError(),
   ]);
-  const confirmed = active(notes).filter((n) => n.status === "confirmed" && n.kind !== "budget");
+  // Feedback on a look (5a) is for revising it (5b), not a requirement every look must meet.
+  const confirmed = active(notes).filter((n) => n.status === "confirmed" && n.kind !== "budget" && n.kind !== "feedback");
   const owned: OwnedPiece[] = [];
   let anchor: Anchor | null = null;
   let inspiration: string | null = null;

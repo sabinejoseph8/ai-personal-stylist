@@ -18,6 +18,8 @@ export type LooksNow = {
   inView: number | null;
   /** What just changed, in words, after a change or a swap. */
   changed?: string | null;
+  /** Feedback jotted on the looks (5a), by look number (null for a look no longer on screen). */
+  feedback?: { look: number | null; text: string; confirmed: boolean }[];
 };
 
 const itemWords = (look: ShownLook) => look.items.map((i) => (i.owned ? `${i.name} (the shopper's own)` : i.name)).join(", ");
@@ -36,6 +38,12 @@ export function looksForStylist(now: LooksNow): string {
   if (now.noMatch) lines.push(`Only ${now.looks.length} ${now.looks.length === 1 ? "look meets" : "looks meet"} everything. ${now.noMatch.message} Explain this briefly and offer the choices: ${now.noMatch.choices.join(", ")}.`);
   if (now.needs) lines.push(`They need a new check first: the shopper's screen says "${now.needs}".`);
   if (now.changed) lines.push(now.changed);
+  if (now.feedback?.length) {
+    lines.push("Feedback the shopper has given, jotted under its look:");
+    for (const f of now.feedback) lines.push(`- ${f.look ? `Look ${f.look}` : "An earlier look"}: ${f.text}${f.confirmed ? "" : " (not confirmed yet: check what they meant)"}`);
+    // Revising looks from feedback arrives in 5b.
+    lines.push("Say in a few words that you've noted their feedback, and that the look will be revised next. If they want a piece changed right away, offer Swap.");
+  }
   lines.push(now.inView ? `The shopper is looking at Look ${now.inView}.` : "No look is on the shopper's screen right now.");
   lines.push(
     "When you present new or updated looks, keep it short: each look's name and one line about it, then ask them to have a look on screen. Don't read out every item or price unless they ask.",
