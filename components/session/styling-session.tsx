@@ -159,12 +159,13 @@ export function StylingSession({
   );
 
   // The looks (4c): asked for again whenever what they must meet may have changed: the notes and whether
-  // they're confirmed (R39), the item to style around and the wardrobe items chosen to style with.
+  // they're confirmed (R39), the item to style around once it's known whose it is, and the wardrobe
+  // items chosen to style with. Not while a photo uploads or is read: that changes nothing yet.
   const inputs = useMemo(
     () =>
       JSON.stringify([
         notes.notes.map((n) => [n.id, n.text, n.status]),
-        photos.active ? [photos.active.id, photos.active.version, photos.active.item] : null,
+        photos.active?.id && photos.active.item?.ownership ? [photos.active.id, photos.active.version, photos.active.item] : null,
         wardrobe.map((w) => w.id),
       ]),
     [notes.notes, photos.active, wardrobe],

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
 import { looksDeps } from "@/lib/looks-deps";
 import { swapPiece } from "@/lib/looks-service";
+import { SessionEndedError } from "@/lib/notes-store";
 import { withinLimit } from "@/lib/rate-limits";
 
 // Swap a piece (tech spec 4.1, R43, Sabine's answer to Q1 in 4c): { index } names the item in the look.
@@ -32,6 +33,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
     if ("limited" in result) return Response.json({ error: "Too many swaps this hour. Please wait a little, then try again." }, { status: 429 });
     return Response.json(result);
   } catch (e) {
+    if (e instanceof SessionEndedError) return Response.json({ error: "No such look." }, { status: 404 });
     console.error(`looks: swapping a piece failed: ${e instanceof Error ? e.message : e}`);
     return Response.json({ error: "The swap couldn't be checked. Try again." }, { status: 500 });
   }

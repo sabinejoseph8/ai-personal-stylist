@@ -3,6 +3,7 @@ import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
 import { looksDeps } from "@/lib/looks-deps";
 import { buildLooks, currentLooks } from "@/lib/looks-service";
+import { SessionEndedError } from "@/lib/notes-store";
 import { withinLimit } from "@/lib/rate-limits";
 
 // Looks (tech spec 4.1; R39, R40, R44, R54, R55, R58, R59). POST brings them up to date: the answer
@@ -49,6 +50,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
           });
           send(!result ? { error: "No such session." } : "limited" in result ? { error: TOO_MANY } : result);
         } catch (e) {
+          // The shopper ended the session meanwhile: nothing to show.
+          if (e instanceof SessionEndedError) return send({ error: "No such session." });
           console.error(`looks: building looks failed: ${e instanceof Error ? e.message : e}`);
           send({ error: "The looks couldn't be put together. Try again." });
         }
