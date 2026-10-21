@@ -33,6 +33,8 @@ export type PagePhoto = {
   file?: File;
   /** What the photo reader made of it (3b), once the photo is kept. */
   item: StyleItem | null;
+  /** Saved to the wardrobe (3d). */
+  inWardrobe: boolean;
 };
 
 const fromServer = (p: ShownPhoto): PagePhoto => ({ ...p, key: p.id, state: "ready", progress: 1 });
@@ -111,7 +113,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     const ticket = ++nextTicket.current;
     tickets.current.set(key, ticket);
     const preview = URL.createObjectURL(file);
-    const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source, item: null };
+    const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source, item: null, inWardrobe: false };
     setPhotos((list) => {
       if (photo) return list.map((p) => (p.key === key ? { ...p, ...shown } : p));
       const added: PagePhoto = { key, id: null, version: 0, active: true, ...(shown as Omit<PagePhoto, "key" | "id" | "version" | "active">) };
@@ -211,7 +213,16 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
    * Confirm a detail, pick one of several items, or say whether it's the shopper's (R28 to R30). It
    * shows at once; the server's answer then takes over, or it goes back if it couldn't be saved.
    */
-  async function change(photo: PagePhoto, what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" }) {
+  // A change still on its way to the server: Save to wardrobe waits for it, so tapping Save straight
+  // after It's mine doesn't reach the server first (found by the 3d browser tests).
+  const changing = useRef<Promise<unknown>>(Promise.resolve());
+  function change(photo: PagePhoto, what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" }) {
+    const done = changing.current.then(() => sendChange(photo, what));
+    changing.current = done.catch(() => null);
+    return done;
+  }
+
+  async function sendChange(photo: PagePhoto, what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" }) {
     setProblem(null);
     const id = session.current;
     if (!id || !photo.id || !photo.item) return;
@@ -232,6 +243,29 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     }
     setItem(photo.id, answer.item);
     if (answer.context) said.current.onContext(answer.context);
+  }
+
+  /**
+   * Save to wardrobe (3d, R36). "permission" means the shopper hasn't allowed wardrobe photos yet: the
+   * page asks, then saves again with `allow`.
+   */
+  async function saveToWardrobe(photo: PagePhoto, allow = false): Promise<"saved" | "permission" | "failed"> {
+    setProblem(null);
+    if (!photo.id) return "failed";
+    await changing.current;
+    const res = await fetch("/api/wardrobe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fromPhoto: photo.id, allowPhotos: allow }),
+    }).catch(() => null);
+    const answer = (await res?.json().catch(() => ({}))) as { reason?: string; error?: string } | undefined;
+    if (res?.ok) {
+      setPhotos((list) => list.map((p) => (p.key === photo.key ? { ...p, inWardrobe: true } : p)));
+      return "saved";
+    }
+    if (answer?.reason === "permission") return "permission";
+    setProblem(answer?.error ?? "That didn't save. Check your connection and try again.");
+    return "failed";
   }
 
   /** A photo's item as the server now has it, from a change by touch or by voice (3b). */
@@ -304,6 +338,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     setOwnership: (photo: PagePhoto, ownership: "owned" | "inspiration") => void change(photo, { ownership }),
     /** A change heard in the shopper's words (3b). */
     setItem,
+    saveToWardrobe,
     refresh: () => void refresh(),
     /** End clears the photos with the notes. */
     reset: () => {

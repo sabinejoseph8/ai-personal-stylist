@@ -1,6 +1,7 @@
 "use client";
 
 import { type ButtonHTMLAttributes, type ReactNode, type Ref, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FromYourWardrobe } from "@/components/notebook/from-wardrobe";
 import { MyStylingNotes } from "@/components/notebook/my-styling-notes";
 import { PhotoThumbnail, StyleAroundThisItem } from "@/components/notebook/pasted-photo";
 import { CameraAnnouncer, CameraView } from "@/components/session/camera-view";
@@ -15,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
 import { useToast } from "@/components/ui/toast";
+import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
@@ -81,12 +83,15 @@ export function StylingSession({
   openSessionId,
   initialNotes = [],
   initialPhotos = [],
+  wardrobe = [],
   preferences,
   children,
 }: {
   openSessionId: string | null;
   initialNotes?: ShownNote[];
   initialPhotos?: ShownPhoto[];
+  /** Wardrobe items chosen with Style with these (3d). */
+  wardrobe?: ShownWardrobeItem[];
   /** Saved preferences in words, shown at the top of the notebook (R24). */
   preferences: string[];
   /** Shown under the notebook: what the profile says (Sabine's answer to Q2 in 2d). */
@@ -211,6 +216,26 @@ export function StylingSession({
   }
 
   const { flow, stage, label } = call;
+
+  // As a call starts she's told everything so far: notes, preferences, the photo and the wardrobe items
+  // chosen to style with (3d), rather than waiting for the first change.
+  const sessionId = call.sessionId;
+  const live = flow === "live";
+  useEffect(() => {
+    if (!live || !sessionId) return;
+    let current = true;
+    void fetch(`/api/sessions/${sessionId}/context`)
+      .then((res) => (res.ok ? (res.json() as Promise<{ context?: string }>) : null))
+      .then((answer) => {
+        if (current && answer?.context) tell(answer.context);
+      })
+      .catch(() => null);
+    return () => {
+      current = false;
+    };
+    // tell only reads refs; this runs as each call starts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, sessionId]);
 
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {
@@ -451,6 +476,7 @@ export function StylingSession({
           holdAnnouncements={someoneSpeaking(stage)}
           titleRef={notebookTitle}
           styleAround={
+            <>
             <StyleAroundThisItem
               photos={photos.photos}
               active={photos.active}
@@ -464,10 +490,13 @@ export function StylingSession({
               onRetry={photos.retry}
               onLinkExpired={photos.refresh}
               pickRef={pickPhoto}
+              onSave={photos.saveToWardrobe}
               onConfirm={photos.confirm}
               onChooseItem={photos.chooseItem}
               onOwnership={photos.setOwnership}
             />
+            <FromYourWardrobe items={wardrobe} />
+            </>
           }
           thumbnail={photos.active && <PhotoThumbnail photo={photos.active} />}
         />

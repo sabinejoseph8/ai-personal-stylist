@@ -39,28 +39,45 @@ const itemOf = (r: Row): StyleItem => ({ reading: savedReading(r.recognized_deta
 const incomingPath = (owner: string, id: string, version: number) => `${owner}/incoming/${id}-v${version}`;
 const allPaths = (r: Row) => [r.photo_path, r.thumbnail_path, incomingPath(r.user_id, r.id, r.version)];
 
-async function removeFiles(db: SupabaseClient, paths: string[]) {
+export async function removeFiles(db: SupabaseClient, paths: string[]) {
   for (let i = 0; i < paths.length; i += 100) {
     const { error } = await db.storage.from(PHOTO_BUCKET).remove(paths.slice(i, i + 100));
     if (error) throw new Error(`deleting photos failed: ${error.message}`);
   }
 }
 
-const logFailure = (what: string) => (e: unknown) => console.error(`${what} failed: ${e instanceof Error ? e.message : e}`);
+export const logFailure = (what: string) => (e: unknown) => console.error(`${what} failed: ${e instanceof Error ? e.message : e}`);
+
+/** 30-minute links for files in the photo store, by path. Works with the guest's own sign-in or the server key. */
+export async function signedLinks(db: SupabaseClient, paths: string[]) {
+  if (!paths.length) return new Map<string, string>();
+  const { data, error } = await db.storage.from(PHOTO_BUCKET).createSignedUrls(paths, LINK_SECONDS);
+  if (error) throw new Error(`making photo links failed: ${error.message}`);
+  return new Map(data.flatMap((d) => (d.path && d.signedUrl ? [[d.path, d.signedUrl] as const] : [])));
+}
 
 /** Links for photo rows, in the same order. Works with the guest's own sign-in or the server key. */
 export async function shownPhotos(db: SupabaseClient, rows: Row[]): Promise<ShownPhoto[]> {
   if (!rows.length) return [];
-  const { data, error } = await db.storage.from(PHOTO_BUCKET).createSignedUrls(
+  const links = await signedLinks(
+    db,
     rows.flatMap((r) => [r.photo_path, r.thumbnail_path]),
-    LINK_SECONDS,
   );
-  if (error) throw new Error(`making photo links failed: ${error.message}`);
-  const links = new Map(data.map((d) => [d.path, d.signedUrl]));
+  // Which of these photos are already in the wardrobe (3d), so Save to wardrobe shows as saved.
+  const { data: saved } = await db
+    .from("wardrobe_items")
+    .select("saved_from, saved_from_version")
+    .in(
+      "saved_from",
+      rows.map((r) => r.id),
+    );
+  const inWardrobe = new Set((saved ?? []).map((w) => `${w.saved_from}:${w.saved_from_version}`));
   return rows.flatMap((r) => {
     const photoUrl = links.get(r.photo_path);
     const thumbnailUrl = links.get(r.thumbnail_path);
-    return photoUrl && thumbnailUrl ? [{ id: r.id, version: r.version, source: r.source, active: r.active, photoUrl, thumbnailUrl, item: itemOf(r) }] : [];
+    return photoUrl && thumbnailUrl
+      ? [{ id: r.id, version: r.version, source: r.source, active: r.active, photoUrl, thumbnailUrl, item: itemOf(r), inWardrobe: inWardrobe.has(`${r.id}:${r.version}`) }]
+      : [];
   });
 }
 
@@ -156,6 +173,16 @@ export type PhotoReadingDeps = { db: SupabaseClient; guard: BudgetGuard; reader:
 /** The photo reader sees a smaller copy: plenty for clothing details, and fewer tokens (3b). */
 const READ_SIDE = 1024;
 
+/** The items the photo reader finds in a cleaned photo, through the budget guard. Empty when it found nothing, failed, or AI is used up. */
+export async function readItems(deps: Omit<PhotoReadingDeps, "db">, guestId: string, jpeg: Buffer) {
+  const money = await deps.guard.checkAi(guestId, "claude");
+  if (!money.ok) return [];
+  const { data, info } = await sharp(jpeg).resize(READ_SIDE, READ_SIDE, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer({ resolveWithObject: true });
+  const read = await deps.reader.read({ jpegBase64: data.toString("base64"), width: info.width, height: info.height }).catch(() => null);
+  if (read && read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
+  return read?.items ?? [];
+}
+
 /**
  * The photo reader (R28, R29): reads a kept photo through the budget guard and saves what it found
  * with the photo's version. A failed reading, or the day's AI used up, leaves the photo with "Describe
@@ -163,13 +190,8 @@ const READ_SIDE = 1024;
  */
 export async function readPhoto(deps: PhotoReadingDeps, guestId: string, photoId: string, version: number, jpeg: Buffer): Promise<StyleItem | null> {
   let reading: StyleItem["reading"] = { state: "failed", items: [], chosen: null };
-  const money = await deps.guard.checkAi(guestId, "claude");
-  if (money.ok) {
-    const { data, info } = await sharp(jpeg).resize(READ_SIDE, READ_SIDE, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer({ resolveWithObject: true });
-    const read = await deps.reader.read({ jpegBase64: data.toString("base64"), width: info.width, height: info.height }).catch(() => null);
-    if (read && read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
-    if (read?.items.length) reading = { state: "read", items: read.items, chosen: read.items.length === 1 ? 0 : null };
-  }
+  const items = await readItems(deps, guestId, jpeg);
+  if (items.length) reading = { state: "read", items, chosen: items.length === 1 ? 0 : null };
   const { data: saved } = await deps.db.rpc("save_asset_details", { asset: photoId, expected_version: version, details: reading }).throwOnError();
   return saved ? { reading, ownership: null } : null;
 }

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.8 (20 Oct 2026)
+**Status:** Agreed, version 1.9 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -257,7 +257,10 @@ Grouped by where they appear. Each lists its states and how it behaves.
 **Item details review**
 - Shown after analysis, under the photo on the ruled lines: type, colors, pattern and style, each with a status chip. Details the photo reader is sure of are in ink (Confirmed), the rest in pencil with To confirm. Tap a pencil detail for **Confirm**, or say a correction, which puts the new value in ink and renames the item ("Black wool blazer").
 - Asks "Is this yours or an inspiration?" with **It's mine** and **Inspiration**, which then show in the label as "You own this" or "Inspiration".
-- **Save to wardrobe** appears only for owned items. The first use asks for photo storage permission.
+- **Save to wardrobe** appears only for owned items. The first use asks for photo storage permission. Once saved it reads "Saved to your wardrobe." with a **Wardrobe** link; Not now shows "Your photos will be used in this session only."
+
+**From your wardrobe** (3d)
+- In My Styling Notes, after Style around this item: the items chosen with Style with these, as 56 px photos with their names, and **Change**, which opens the Wardrobe page.
 - Several items found: a numbered list ("1. Denim jacket", "2. White T-shirt") under "Which item should we style around?", so the shopper can tap one or say "the first one". The chosen one is filled in Emerald with a check, under "Styling around", and its details follow. The matching area on the photo is outlined when it is known; in v1 it never is, because the photo reader's positions aren't reliable enough to draw (3b).
 - Recognition failed: "Couldn't recognize this item. Describe it instead." under the photo. What the shopper then says fills in the item.
 - Screen readers hear "Recognized: Navy wool blazer.", "Found 2 items. Which one should we style around?", "Styling around: White T-shirt." and "Marked as yours.", held while anyone is talking.
@@ -309,8 +312,9 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - States: empty ("Your demo bag is empty. Add pieces from a look."), with items, checking (new items are checked first), error.
 
 **Wardrobe**
-- A grid of photos with category filters: All, Tops, Bottoms, Dresses, Outerwear, Shoes, Bags, Accessories.
+- A grid of photos with category filters: All, Tops, Bottoms, Dresses, Outerwear, Shoes, Bags, Accessories. Each card shows the photo on a Showroom square, the name and the category, with "Styling with" for chosen items. Items in no category show under All.
 - **Add item**, edit details, **Delete** (after confirming), and a select mode with **Style with these**.
+- As built (3d): Add item asks for wardrobe photos first, then opens the photo picker; "Adding your item…" and "Analyzing" show while it's checked and read, then a sheet, "Check the details", offers the suggested name, category, type, colors, pattern and style, with **Add to wardrobe**. Tapping an item opens "Edit item" with **Save** and **Delete** ("Delete this item? Its photo is deleted too.", **Delete item** or **Keep it**). Select turns the cards into checkboxes with an Emerald check; **Style with these** goes back to the session.
 - States: empty, loading, list, selecting, deleting, error.
 
 **Saved looks**
@@ -563,6 +567,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.9 (20 Oct 2026):** 3d: Save to wardrobe as built, From your wardrobe in the notebook, and the Wardrobe page as built (4.2).
 - **1.8 (20 Oct 2026):** 3c: the camera view as built: the tile's size, the swap on phones, Done showing, the camera's buttons, the camera off after Capture, and what screen readers hear (4.1).
 - **1.7 (20 Oct 2026):** 3b: Analyzing in the label, the item details review as built, the several-items list, the failed-recognition line and what screen readers hear (4.2).
 - **1.6 (20 Oct 2026):** 3a: where Add a photo sits, the pasted photo's states as built, and its label until 3b (4.2).

@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
+import { PermissionCard } from "@/components/ui/permission-card";
 import { StatusChip } from "@/components/ui/status-chip";
 import { chosenItem, DETAIL_NAMES, type DetailName, type StyleItem } from "@/core/photos/item";
 import { PHOTO_MESSAGES } from "@/lib/photos";
@@ -10,7 +12,8 @@ import { PHOTO_MESSAGES } from "@/lib/photos";
 // The item details review (3b; R28 to R30, R32; design 4.2): what the photo reader found, under the
 // pasted photo. With several items, a numbered list to pick from (R29). For the chosen item, its type,
 // colors, pattern and style on the ruled lines, in ink (Confirmed) or pencil (To confirm): tap one in
-// pencil to confirm it, or say a correction. Then whose it is: It's mine or Inspiration (R30).
+// pencil to confirm it, or say a correction. Then whose it is: It's mine or Inspiration (R30). An item
+// that's yours can be saved to the wardrobe (3d, R36), once wardrobe photos are allowed.
 
 const ROW = "pl-[calc(var(--margin-x)+0.75rem)] pr-4";
 const LABELS: Record<DetailName, string> = { type: "Type", colors: "Colors", pattern: "Pattern", style: "Style" };
@@ -70,16 +73,31 @@ function DetailRow({ name, value, pencil, onConfirm }: { name: DetailName; value
 
 export function ItemDetails({
   item,
+  inWardrobe,
   onConfirm,
   onChoose,
   onOwnership,
+  onSave,
 }: {
   item: StyleItem;
+  inWardrobe: boolean;
   onConfirm: (name: DetailName) => void;
   onChoose: (index: number) => void;
   onOwnership: (ownership: "owned" | "inspiration") => void;
+  /** Save to wardrobe; `allow` once the shopper has allowed wardrobe photos. */
+  onSave: (allow?: boolean) => Promise<"saved" | "permission" | "failed">;
 }) {
   const { reading, ownership } = item;
+  const [asking, setAsking] = useState(false);
+  const [notNow, setNotNow] = useState(false);
+  const [saving, setSaving] = useState(false);
+  async function save(allow?: boolean) {
+    setSaving(true);
+    setNotNow(false);
+    const result = await onSave(allow);
+    setSaving(false);
+    setAsking(result === "permission");
+  }
   if (reading.state === "analyzing") return null;
   if (reading.state === "failed" || !reading.items.length)
     return <p className={`${ROW} type-small m-0 leading-7 text-graphite`}>{PHOTO_MESSAGES.unread}</p>;
@@ -123,6 +141,34 @@ export function ItemDetails({
               <Button variant="secondary" onClick={() => onOwnership("inspiration")}>
                 Inspiration
               </Button>
+            </div>
+          )}
+          {ownership === "owned" && (
+            <div className={`${ROW} flex flex-col items-start gap-2 py-2`}>
+              {inWardrobe ? (
+                <p className="type-label m-0 inline-flex items-center gap-2 leading-7 text-ink">
+                  <Icon name="confirmed" />
+                  Saved to your wardrobe.
+                  <Link href="/wardrobe" className="focus-ring rounded-control text-emerald underline underline-offset-2">
+                    Wardrobe
+                  </Link>
+                </p>
+              ) : asking ? (
+                <PermissionCard
+                  permission="wardrobePhotos"
+                  state="ask"
+                  onAllow={() => void save(true)}
+                  onNotNow={() => {
+                    setAsking(false);
+                    setNotNow(true);
+                  }}
+                />
+              ) : (
+                <Button variant="secondary" disabled={saving} onClick={() => void save()}>
+                  Save to wardrobe
+                </Button>
+              )}
+              {notNow && <p className="type-small m-0 leading-7 text-graphite">Your photos will be used in this session only.</p>}
             </div>
           )}
         </>

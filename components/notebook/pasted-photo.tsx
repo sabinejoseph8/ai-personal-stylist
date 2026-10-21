@@ -101,6 +101,7 @@ export function StyleAroundThisItem({
   onConfirm,
   onChooseItem,
   onOwnership,
+  onSave,
   pickRef,
 }: {
   photos: PagePhoto[];
@@ -119,6 +120,8 @@ export function StyleAroundThisItem({
   onConfirm: (photo: PagePhoto, detail: DetailName) => void;
   onChooseItem: (photo: PagePhoto, index: number) => void;
   onOwnership: (photo: PagePhoto, ownership: "owned" | "inspiration") => void;
+  /** Save to wardrobe (3d). */
+  onSave: (photo: PagePhoto, allow?: boolean) => Promise<"saved" | "permission" | "failed">;
   /** Lets Upload photo elsewhere on the screen open the same picker (3c: the camera's fallback). */
   pickRef?: RefObject<(() => void) | null>;
 }) {
@@ -258,6 +261,8 @@ export function StyleAroundThisItem({
               onConfirm={(detail) => onConfirm(active, detail)}
               onChoose={(index) => onChooseItem(active, index)}
               onOwnership={(ownership) => onOwnership(active, ownership)}
+              inWardrobe={active.inWardrobe}
+              onSave={(allow) => onSave(active, allow)}
             />
           )}
 

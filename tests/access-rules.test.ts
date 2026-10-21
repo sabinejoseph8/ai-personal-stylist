@@ -25,7 +25,8 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
       .single()
       .throwOnError();
     noteId = n.data!.id;
-    await a.db.from("wardrobe_items").insert({ name: "Navy blazer" }).throwOnError();
+    // Wardrobe items are the app's own record too (3d): only the server writes them.
+    await serverDb().from("wardrobe_items").insert({ user_id: a.id, name: "Navy blazer" }).throwOnError();
     // Photos are the app's own record too (3a): only the server adds them.
     const upload = await serverDb()
       .storage.from("guest-photos")
@@ -93,6 +94,14 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     expect(read.error).toBeNull();
     const write = await b.db.from("catalog_products").insert({ department: "womenswear", category: "dress", name: "Fake", price_cents: 100 });
     expect(write.error).not.toBeNull();
+  });
+
+  it("guests can't add, change or delete wardrobe items themselves (3d: only the app writes them)", async () => {
+    expect((await a.db.from("wardrobe_items").insert({ user_id: a.id, name: "Planted" })).error).not.toBeNull();
+    await a.db.from("wardrobe_items").update({ name: "Changed" }).eq("user_id", a.id);
+    await a.db.from("wardrobe_items").delete().eq("user_id", a.id);
+    const { data } = await a.db.from("wardrobe_items").select("name").eq("user_id", a.id);
+    expect(data).toEqual([{ name: "Navy blazer" }]);
   });
 
   it("guests can't touch the usage table", async () => {

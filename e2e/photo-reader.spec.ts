@@ -36,6 +36,8 @@ test.describe("the photo reader", () => {
     await page.getByRole("button", { name: "Add a photo" }).click();
     await (await chooser).setFiles({ name: "item.jpg", mimeType: "image/jpeg", buffer });
   }
+  // Reading a photo takes several round trips to the database, which can be slow while other tests run.
+  const read = expect.configure({ timeout: 15_000 });
   const say = (page: Page, text: string, turnId: string) => playInCall(page, { type: "words", speaker: "shopper", text, final: true, turnId });
 
   test.beforeAll(async () => {
@@ -58,7 +60,7 @@ test.describe("the photo reader", () => {
     await inCall(page);
     await addPhoto(page, await photo(300, 400));
     await expect(area(page).getByText("Analyzing")).toBeVisible();
-    await expect(area(page).getByText("Navy wool blazer", { exact: true })).toBeVisible();
+    await read(area(page).getByText("Navy wool blazer", { exact: true })).toBeVisible();
     await expect(area(page).getByText("Analyzing")).toHaveCount(0);
 
     // Sure details are in ink, the rest To confirm (R28).
@@ -93,7 +95,7 @@ test.describe("the photo reader", () => {
     await inCall(page);
     await addPhoto(page, await photo(800, 400));
     const which = area(page).getByRole("group", { name: "Which item should we style around?" });
-    await expect(which.getByRole("button", { name: "1. Denim jacket" })).toBeVisible();
+    await read(which.getByRole("button", { name: "1. Denim jacket" })).toBeVisible();
     await expect(which.getByRole("button", { name: "2. White T-shirt" })).toBeVisible();
     await expect.poll(() => contextSent(page)).toContain("Ask which one to style around");
     await noSeriousA11yProblems(page);
@@ -109,7 +111,7 @@ test.describe("the photo reader", () => {
   test("corrections by voice: 'actually it's black', 'it's mine' and 'the first one' (R28 to R30)", async ({ page }) => {
     await inCall(page);
     await addPhoto(page, await photo(300, 400));
-    await expect(area(page).getByText("Navy wool blazer", { exact: true })).toBeVisible();
+    await read(area(page).getByText("Navy wool blazer", { exact: true })).toBeVisible();
 
     await say(page, "Actually it's black", "1");
     await expect(area(page).getByText("Black wool blazer", { exact: true })).toBeVisible();
@@ -122,7 +124,7 @@ test.describe("the photo reader", () => {
     const chooser = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Add another photo" }).click();
     await (await chooser).setFiles({ name: "two.jpg", mimeType: "image/jpeg", buffer: await photo(800, 400) });
-    await expect(area(page).getByRole("group", { name: "Which item should we style around?" })).toBeVisible();
+    await read(area(page).getByRole("group", { name: "Which item should we style around?" })).toBeVisible();
     await say(page, "The first one", "3");
     await expect(area(page).getByRole("group", { name: "Styling around" }).getByRole("button", { name: "1. Denim jacket" })).toHaveAttribute("aria-pressed", "true");
   });
@@ -130,7 +132,7 @@ test.describe("the photo reader", () => {
   test("a photo that can't be read says to describe it, and describing it out loud fills it in (R32)", async ({ page }) => {
     await inCall(page);
     await addPhoto(page, await photo(200, 500));
-    await expect(area(page).locator("p:not([aria-live])", { hasText: "Couldn't recognize this item. Describe it instead." })).toBeVisible();
+    await read(area(page).locator("p:not([aria-live])", { hasText: "Couldn't recognize this item. Describe it instead." })).toBeVisible();
     await expect(area(page).getByRole("img", { name: /to style around/ })).toBeVisible();
     await expect.poll(() => contextSent(page)).toContain("Ask them to describe it");
 

@@ -21,7 +21,11 @@ function SmallPrint() {
 }
 
 async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<typeof currentGuest>>> }) {
-  const profile = await loadProfile(guest.db, guest.id);
+  const [profile, wardrobe] = await Promise.all([
+    loadProfile(guest.db, guest.id),
+    guest.db.from("wardrobe_items").select("id", { count: "exact", head: true }).eq("draft", false),
+  ]);
+  const items = wardrobe.count ?? 0;
   const empty = isEmpty(profile);
   const lines = [
     profile.departments.length ? `Shopping ${profile.departments.join(" and ")}` : null,
@@ -47,7 +51,15 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
       )}
       <dl className="type-small m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-graphite">
         <dt>Wardrobe</dt>
-        <dd className="m-0">Empty</dd>
+        <dd className="m-0">
+          {items ? (
+            <Link href="/wardrobe" className="text-emerald underline underline-offset-2">
+              {items} {items === 1 ? "item" : "items"}
+            </Link>
+          ) : (
+            "Empty"
+          )}
+        </dd>
         <dt>Saved looks</dt>
         <dd className="m-0">None yet</dd>
         <dt>Demo bag</dt>
