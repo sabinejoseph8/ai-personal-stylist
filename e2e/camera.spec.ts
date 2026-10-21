@@ -68,7 +68,7 @@ test.describe("the camera", () => {
     expect(await photoRows()).toEqual([]);
 
     await page.getByRole("button", { name: "Capture" }).click();
-    await expect(page.getByText("Photo added to your notes")).toBeVisible();
+    await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible();
     // The camera turns off after Capture (Q2 in 3c), and the still is read like any photo.
     await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "false");
     const area = page.getByRole("region", { name: "Style around this item" });
@@ -82,7 +82,19 @@ test.describe("the camera", () => {
     await cameraOn(page);
     await expect(stage(page).getByText("Navy wool blazer?")).toBeVisible({ timeout: 15_000 });
     await playInCall(page, { type: "words", speaker: "shopper", text: "Use this one", final: true, turnId: "1" });
-    await expect(page.getByText("Photo added to your notes")).toBeVisible();
+    await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible();
+    await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
+  });
+
+  test("'use this one' said before the name appears is acted on once it's named, even without a turn label (found on Sabine's iPhone)", async ({ page }) => {
+    await inCall(page);
+    await cameraOn(page);
+    // Straight away, before two frames have agreed; the real call can send words with a blank turn label.
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Use this one", final: false, turnId: "" });
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Use this one", final: true, turnId: "" });
+    await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "false");
+    // One still, not one per piece of the words.
     await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
   });
 

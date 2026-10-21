@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.18 (20 Oct 2026)
+**Status:** Agreed, version 1.19 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -210,7 +210,7 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - While the camera is on, the page sends one 640 px frame about every 2 seconds, one at a time and only while the page is in view. Each frame costs about 0.015 cents.
 - Two frames in a row must agree (the same type, and colors with a word in common) before an item is named, with a question mark unless both frames were sure. Two frames with nothing clear the name. This runs in the page, because frames aren't kept anywhere.
 - The stylist is told what's on camera by the page, added to the server's context, and asked to name it once per new item ("I'm holding something up to my camera."), once nobody is talking. Several items in view: she asks which. Camera blocked or missing: she suggests uploading a photo.
-- **Capture**, or "use this one" (plain code in the page listens for a few phrases while an item is named; your answer to Q1 in 3c), takes a full-size still. It's added as a photo from the camera and read like any photo, and the camera turns off (your answer to Q2 in 3c).
+- **Capture**, or "use this one" (plain code in the page listens for a few phrases, such as "use this", "capture" and "take a picture", while the camera is on; your answer to Q1 in 3c), takes a full-size still. "Use this one" counts for 8 seconds after an item was last on screen, and if it comes before any name, it waits up to 8 seconds for one: on your iPhone it first did nothing, because holding an item up while talking can clear the name just as you speak. It's added as a photo from the camera and read like any photo, and the camera turns off (your answer to Q2 in 3c).
 - The camera turns off after 2 minutes, when the conversation stops or the session ends, and when the page goes away. The call starts with video off, so Tavus never gets the camera.
 
 **The notes reader as built (2c).** The files are **core/notes/** (the reader, merge rules and plain code) and **connectors/ai/claude.ts**.
@@ -405,6 +405,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.19 (20 Oct 2026):** 3c fix after your iPhone check: "use this one" counts for 8 seconds after an item was on screen, waits for a name said just before it, and takes one still however many pieces the words arrive in.
 - **1.18 (20 Oct 2026):** 3c: the camera reader and frame endpoint as built, two frames in a row before an item is named, the stylist told by the page, "use this one" in plain code (your Q1), the camera off after Capture (your Q2), the privacy points, and the camera reader check.
 - **1.17 (20 Oct 2026):** 3b: the photo reader as built (Opus 5.5 at low effort, streamed on the ready request, ink for sure details), item changes by touch and voice with the details' revision, the stylist told and speaking up (your Q1), the photo eval (your Q2) and photo cases in the notes eval (your Q3).
 - **1.16 (20 Oct 2026):** 3a: photo upload as built. The browser sends a photo to a one-time upload link and the server checks and cleans it (your Q1), photos are the app's own record with versions and one active photo, up to 5 per session (your Q3), 30-minute links, and photos deleted at End, on the next start or by the daily job (your Q4).

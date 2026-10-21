@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Ask } from "@/core/ask";
 import { createCameraReader, type Sighting, sightingFrom } from "@/core/camera/reader";
-import { agreed, asksToCapture, cameraForStylist, nextSeen, type Seen, seenLabel } from "@/core/camera/sightings";
+import { agreed, asksToCapture, CAPTURE_GRACE_MS, cameraForStylist, nextSeen, type Seen, seenLabel, whenToCapture } from "@/core/camera/sightings";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { readFrame } from "@/lib/camera-service";
 import { withinLimit } from "@/lib/rate-limits";
@@ -78,8 +78,18 @@ describe("naming what's on camera", () => {
 
 describe("'use this one'", () => {
   it("is heard in the ways people say it", () => {
-    for (const words of ["Use this one", "OK, use that one please", "capture it", "Can you take a picture", "this one"]) expect(asksToCapture(words)).toBe(true);
+    for (const words of ["Use this one", "OK, use that one please", "capture it", "Can you take a picture", "this one", "Use this.", "use this 1", "Capture"]) expect(asksToCapture(words)).toBe(true);
   });
+  it("counts for a few seconds after the name clears, and waits for a name said just before it appears (found on Sabine's iPhone in 3c)", () => {
+    const now = 100_000;
+    expect(whenToCapture(now, { on: true, itemShown: true, lastItemAt: 0 })).toBe("now");
+    // Holding an item up while talking, two unclear frames can clear the name just as the shopper speaks.
+    expect(whenToCapture(now, { on: true, itemShown: false, lastItemAt: now - 3000 })).toBe("now");
+    expect(whenToCapture(now, { on: true, itemShown: false, lastItemAt: now - CAPTURE_GRACE_MS - 1 })).toBe("wait");
+    expect(whenToCapture(now, { on: true, itemShown: false, lastItemAt: 0 })).toBe("wait");
+    expect(whenToCapture(now, { on: false, itemShown: false, lastItemAt: now })).toBe("no");
+  });
+
   it("isn't heard in other words", () => {
     for (const words of ["I love this jacket", "One more thing", "Is it useful?", "something like this"]) expect(asksToCapture(words)).toBe(false);
   });
