@@ -138,7 +138,7 @@ Reviewed all Phase 3 code (78 files, about 5,900 lines, apart from docs) at extr
 | Two copies of the photo checking steps | Fixed: one, shared by session photos and Add item |
 | Test clean-up listed the photo store all at once | Fixed: one folder at a time |
 | "Use this one" caught everyday phrases ("I'd use that for work") | Decision A: only clear requests, with tests. Your final iPhone check then found "use this one" did nothing: speech recognition doesn't always write the exact words. Decision D: punctuation and capitals don't matter, and a short phrase with "this one" or "that one" counts, with tests |
-| No way to stop styling with wardrobe items | Decision B: Clear wardrobe items, with a browser test |
+| No way to stop styling with wardrobe items | Decision B: Clear wardrobe items, with a browser test. Your re-check then found it didn't appear after Style with these and Change: the Wardrobe page kept its old state while hidden (rule 11 of the tech spec). Fixed: it's keyed on the saved items, with a browser test of that path |
 
 Also from the plan:
 - "Too many connections" (seen in 3c and 3d) turned out to be Supabase's connection limit filling during bursts of test traffic. The tests share the project with the live site, so a shopper could hit it during a test run. Decision C: the photo store tries a busy request again, from the server and from the browser's uploads, and the tests run at most 2 files at once. GitHub's first run of the 3e pull request showed why the browser needs it too: the test's own upload was turned away while two test runs overlapped.

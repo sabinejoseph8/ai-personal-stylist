@@ -212,10 +212,11 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
       body: JSON.stringify({ ids: [...selected] }),
     }).catch(() => null);
     if (!res?.ok) return setProblem(WARDROBE_MESSAGES.saveFailed);
+    // Leaving the page: next time it opens out of Select (Next.js keeps this page's state while it's hidden).
+    setSelecting(false);
     if (selected.size) return router.push("/session");
     // Clear wardrobe items: nothing from the wardrobe in My Styling Notes, and the stylist isn't told about any.
     setItems((list) => list.map((i) => ({ ...i, styling: false })));
-    setSelecting(false);
     setNotice(WARDROBE_MESSAGES.cleared);
   }
   const styling = items.some((i) => i.styling);

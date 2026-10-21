@@ -31,7 +31,15 @@ export default async function WardrobePage() {
           Back to your session
         </Link>
       </div>
-      <Wardrobe initialItems={items} photosAllowed={!!consents.data?.wardrobe_photos_at} />
+      {/* Next.js keeps a page's state when the shopper navigates away and back (Activity). Keying on the
+          saved items makes the page start again from what's saved whenever that changes (tech spec 5, rule
+          11): after Style with these and Change, it showed the old choice (Sabine's iPhone check in 3e).
+          Photo links are left out of the key, since they're new on every visit. */}
+      <Wardrobe
+        key={JSON.stringify(items.map((i) => [i.id, i.name, i.category, i.details, i.styling]))}
+        initialItems={items}
+        photosAllowed={!!consents.data?.wardrobe_photos_at}
+      />
     </main>
   );
 }
