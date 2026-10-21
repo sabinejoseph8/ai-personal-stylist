@@ -64,8 +64,11 @@ const PIECE_WORDS: Record<Group, string> = {
   other: "pieces",
 };
 
-/** "No other shoes fit everything you've asked for." */
-export const noOtherPiece = (item: ResolvedItem) => `No other ${PIECE_WORDS[groupOf(item)]} fit everything you've asked for.`;
+/** "No other shoes fit everything you've asked for, so these stay." */
+export const noOtherPiece = (item: ResolvedItem) => {
+  const group = groupOf(item);
+  return `No other ${PIECE_WORDS[group]} fit everything you've asked for, so ${group === "shoes" ? "these stay" : "this one stays"}.`;
+};
 
 /** The pieces a shopper can ask to swap by voice (the notes reader's answer, 4c). */
 export const SWAPPABLE: Group[] = ["dress", "suit", "top", "outer", "bottom", "shoes", "bag", "accessory"];

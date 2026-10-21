@@ -178,7 +178,16 @@ const failedWhy = (c: Checked) =>
     .map((r) => r.why)
     .join("; ");
 
-type Versions = { build?: string; round?: number; position?: number; slot?: number; tried?: string[]; swap?: { from: string; to: string } };
+type Versions = {
+  build?: string;
+  round?: number;
+  position?: number;
+  slot?: number;
+  tried?: string[];
+  swap?: { from: string; to: string };
+  /** Replacements for the piece at `index` that failed the check on these requirements: not checked again (found on Sabine's iPhone in 4d). */
+  failed?: { key: string; index: number; ids: string[] };
+};
 type LookRow = { id: string; name: string | null; reason: string | null; items: LookItem[]; requirements_key: string | null; input_versions: Versions; status: string; created_at: string };
 type OnScreen = LookRow & { slot: number };
 
@@ -473,12 +482,22 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
     return its ? [{ slot: r.slot, main: mainPieces(its) }] : [];
   });
 
+  // Replacements that already failed here, on these requirements, aren't checked again: a second Swap
+  // would only pay for the same answer. A change to the requirements starts afresh.
+  const before = row.input_versions.failed;
+  const failed = new Set(before && before.key === g.key && before.index === index ? before.ids : []);
+  const remember = (look: string, versions: Versions) =>
+    db
+      .from("looks")
+      .update({ input_versions: { ...versions, failed: { key: g.key, index, ids: [...failed] } } })
+      .eq("id", look)
+      .throwOnError();
   let tried = new Set([...(row.input_versions.tried ?? []), ref.productId]);
-  let pool = swapCandidates(filtered.kept, items, index, tried, g.requirements.budget);
-  // Every one has been shown here already: start again, leaving out only the piece in the look now.
-  if (!pool.length) {
+  let pool = swapCandidates(filtered.kept, items, index, new Set([...tried, ...failed]), g.requirements.budget);
+  // Every one that passes has been shown here already: start again, leaving out the piece in the look now.
+  if (!pool.length && tried.size > 1) {
     tried = new Set([ref.productId]);
-    pool = swapCandidates(filtered.kept, items, index, tried, g.requirements.budget);
+    pool = swapCandidates(filtered.kept, items, index, new Set([...tried, ...failed]), g.requirements.budget);
   }
   if (!pool.length) return { none: noOtherPiece(items[index]) };
   if (options.allowAi && !(await options.allowAi())) return { limited: true };
@@ -512,9 +531,10 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
           .single()
           .throwOnError();
         await db.rpc("record_check", { look: inserted!.id, verdict: result.verdict, reasons: result.reasons, requirements_key: g.key }).throwOnError();
-        return { id: inserted!.id as string, swapped, ...result };
+        return { id: inserted!.id as string, product: product.id, swapped, ...result };
       }),
     );
+    for (const c of checked) if (c.verdict !== "pass") failed.add(c.product);
     const winner = checked.find((c) => c.verdict === "pass");
     const losers = checked.filter((c) => c !== winner).map((c) => c.id);
     if (losers.length) await db.from("looks").update({ status: "held" }).in("id", losers).throwOnError();
@@ -524,6 +544,8 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
       return { stale: true };
     }
     if (winner) {
+      // The other pieces are the same, so what failed here still fails with the new piece in.
+      await remember(winner.id, { ...row.input_versions, swap: { from: ref.productId, to: winner.product }, tried: [...tried] });
       const { data: ok } = await db.rpc("publish_look", { look: winner.id, current_requirements: g.key, replaces: row.id }).throwOnError();
       if (!ok) {
         await db.from("looks").update({ status: "held" }).eq("id", winner.id).throwOnError();
@@ -533,5 +555,6 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
       return { look, index };
     }
   }
+  await remember(row.id, row.input_versions);
   return { none: noOtherPiece(items[index]) };
 }

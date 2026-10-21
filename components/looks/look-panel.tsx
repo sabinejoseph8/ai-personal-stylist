@@ -46,6 +46,7 @@ function ItemTile({
   item,
   image,
   isNew,
+  note,
   checking,
   canSwap,
   onSwap,
@@ -53,6 +54,7 @@ function ItemTile({
   item: ShownItem;
   image: string | null;
   isNew: boolean;
+  note: string | null;
   checking: boolean;
   canSwap: boolean;
   onSwap: () => void;
@@ -85,8 +87,13 @@ function ItemTile({
           </p>
           <p className="type-label price m-0 text-ink">{dollars(item.priceCents ?? 0)}</p>
           {/* At the bottom of the tile, so the Swap buttons in a row line up. */}
-          <div className="mt-auto pt-1">
-            <Button variant="secondary" disabled={!canSwap} aria-label={`Swap ${item.name}`} onClick={onSwap}>
+          <div className="mt-auto flex flex-col gap-1.5 pt-1">
+            {note && (
+              <p role="status" className="type-small m-0 rounded-print bg-showroom px-2 py-1.5 text-ink">
+                {note}
+              </p>
+            )}
+            <Button variant="secondary" className="self-start" disabled={!canSwap} aria-label={`Swap ${item.name}`} onClick={onSwap}>
               Swap
             </Button>
           </div>
@@ -118,8 +125,8 @@ export function LookPanel({
   swappingIndex: number | null;
   /** The piece a swap just brought in. */
   newIndex: number | null;
-  /** What a swap couldn't do, such as "No other shoes fit everything you've asked for." */
-  note: string | null;
+  /** What a swap couldn't do, on that piece's tile, such as "No other shoes fit everything you've asked for, so these stay." */
+  note: { index: number; text: string } | null;
   canSwap: boolean;
   imageFor: (item: ShownItem) => string | null;
   onSwap: (index: number) => void;
@@ -143,17 +150,13 @@ export function LookPanel({
             item={item}
             image={item.owned ? imageFor(item) : item.imageUrl}
             isNew={newIndex === i}
+            note={note?.index === i ? note.text : null}
             checking={swappingIndex === i}
             canSwap={canSwap && look.current && !updating}
             onSwap={() => onSwap(i)}
           />
         ))}
       </ul>
-      {note && (
-        <p role="status" className="type-body m-0 text-ink">
-          {note}
-        </p>
-      )}
       <div className="flex flex-col gap-0.5">
         <p className="type-subheading price m-0 text-ink">{look.total.toBuy}</p>
         {look.total.comparison && <p className="type-body price m-0 text-graphite">{look.total.comparison}</p>}
