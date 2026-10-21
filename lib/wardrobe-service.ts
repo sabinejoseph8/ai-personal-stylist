@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { WardrobePick } from "@/core/notes/context";
 import { chosenItem, savedReading } from "@/core/photos/item";
+import { stored } from "@/lib/photo-store";
 import { keepUpload, logFailure, PHOTO_BUCKET, type PhotoReadingDeps, readItems, removeFiles, signedLinks } from "@/lib/photos-service";
 import { type Category, categoryOf, type ShownWardrobeItem, type WardrobeDetails, type WardrobeEdit } from "@/lib/wardrobe";
 
@@ -100,7 +101,7 @@ async function photosAllowed(db: SupabaseClient, guestId: string, allow: boolean
 
 /** Copies a file within the photo store. */
 async function copyFile(db: SupabaseClient, from: string, to: string) {
-  const { error } = await db.storage.from(PHOTO_BUCKET).copy(from, to);
+  const { error } = await stored(() => db.storage.from(PHOTO_BUCKET).copy(from, to));
   if (error) throw new Error(`copying a photo failed: ${error.message}`);
 }
 
@@ -174,7 +175,7 @@ export async function saveFromPhoto(db: SupabaseClient, guestId: string, photoId
 export async function startUpload(db: SupabaseClient, guestId: string, allow: boolean) {
   if (!(await photosAllowed(db, guestId, allow))) return { ok: false as const, reason: "permission" as const };
   const id = crypto.randomUUID();
-  const link = await db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, id));
+  const link = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, id)));
   if (link.error) throw new Error(`making an upload link failed: ${link.error.message}`);
   return { ok: true as const, id, uploadUrl: link.data.signedUrl };
 }

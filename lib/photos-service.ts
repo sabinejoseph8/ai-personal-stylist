@@ -5,6 +5,7 @@ import { ANALYZING, changeItem, type ItemChange, type Ownership, savedReading, t
 import type { PhotoReader } from "@/core/photos/reader";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { cleanPhoto, type PhotoRefusal } from "@/lib/photo-cleaner";
+import { stored } from "@/lib/photo-store";
 import { MAX_PHOTO_BYTES, type PhotoSource, type ShownPhoto } from "@/lib/photos";
 
 // The item to style around (3a; R26, R27, R31, FR-27). Photos are the app's own record (decision A),
@@ -42,7 +43,7 @@ const allPaths = (r: Row) => [r.photo_path, r.thumbnail_path, incomingPath(r.use
 
 export async function removeFiles(db: SupabaseClient, paths: string[]) {
   for (let i = 0; i < paths.length; i += 100) {
-    const { error } = await db.storage.from(PHOTO_BUCKET).remove(paths.slice(i, i + 100));
+    const { error } = await stored(() => db.storage.from(PHOTO_BUCKET).remove(paths.slice(i, i + 100)));
     if (error) throw new Error(`deleting photos failed: ${error.message}`);
   }
 }
@@ -52,7 +53,7 @@ export const logFailure = (what: string) => (e: unknown) => console.error(`${wha
 /** 30-minute links for files in the photo store, by path. Works with the guest's own sign-in or the server key. */
 export async function signedLinks(db: SupabaseClient, paths: string[]) {
   if (!paths.length) return new Map<string, string>();
-  const { data, error } = await db.storage.from(PHOTO_BUCKET).createSignedUrls(paths, LINK_SECONDS);
+  const { data, error } = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUrls(paths, LINK_SECONDS));
   if (error) throw new Error(`making photo links failed: ${error.message}`);
   return new Map(data.flatMap((d) => (d.path && d.signedUrl ? [[d.path, d.signedUrl] as const] : [])));
 }
@@ -112,7 +113,7 @@ export async function addPhoto(db: SupabaseClient, guestId: string, sessionId: s
   if ("refused" in added) return { ok: false as const, reason: added.refused };
   // The replaced version's files go straight away.
   if (replaces) await removeFiles(db, [...added.replaced_paths, incomingPath(guestId, added.id, added.version - 1)]).catch(logFailure("deleting a replaced photo"));
-  const link = await db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, added.id, added.version));
+  const link = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, added.id, added.version)));
   if (link.error) throw new Error(`making an upload link failed: ${link.error.message}`);
   return { ok: true as const, id: added.id, version: added.version, uploadUrl: link.data.signedUrl };
 }
@@ -125,7 +126,7 @@ export type FinishRefusal = PhotoRefusal | "missing";
  * Add item on the Wardrobe page (3d). Returns the clean JPEG for the photo reader, or why not.
  */
 export async function keepUpload(db: SupabaseClient, original: string, paths: { photo: string; thumbnail: string }) {
-  const sent = await db.storage.from(PHOTO_BUCKET).download(original);
+  const sent = await stored(() => db.storage.from(PHOTO_BUCKET).download(original));
   if (sent.error || !sent.data) {
     // Usually nothing arrived; anything else is the photo store's own trouble, worth seeing in the logs.
     if (sent.error && !/not found/i.test(sent.error.message)) console.error(`photos: reading an upload failed: ${sent.error.message}`);
@@ -140,7 +141,7 @@ export async function keepUpload(db: SupabaseClient, original: string, paths: { 
     [paths.photo, cleaned.photo],
     [paths.thumbnail, cleaned.thumbnail],
   ] as const) {
-    const { error } = await store.upload(path, file, { contentType: "image/jpeg", upsert: true });
+    const { error } = await stored(() => store.upload(path, file, { contentType: "image/jpeg", upsert: true }));
     if (error) throw new Error(`keeping a photo failed: ${error.message}`);
   }
   return { ok: true as const, jpeg: cleaned.photo };

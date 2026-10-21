@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { stored } from "@/lib/photo-store";
 
 const BUCKET = "guest-photos";
 const PAGE = 1000;
@@ -8,7 +9,7 @@ const PAGE = 1000;
 async function photoPaths(db: SupabaseClient, folder: string): Promise<string[]> {
   const paths: string[] = [];
   for (let offset = 0; ; offset += PAGE) {
-    const { data, error } = await db.storage.from(BUCKET).list(folder, { limit: PAGE, offset });
+    const { data, error } = await stored(() => db.storage.from(BUCKET).list(folder, { limit: PAGE, offset }));
     if (error) throw new Error(`listing photos failed: ${error.message}`);
     for (const item of data) {
       const path = `${folder}/${item.name}`;
@@ -27,7 +28,7 @@ async function photoPaths(db: SupabaseClient, folder: string): Promise<string[]>
 export async function deleteGuest(db: SupabaseClient, guestId: string) {
   const paths = await photoPaths(db, guestId);
   for (let i = 0; i < paths.length; i += 100) {
-    const { error } = await db.storage.from(BUCKET).remove(paths.slice(i, i + 100));
+    const { error } = await stored(() => db.storage.from(BUCKET).remove(paths.slice(i, i + 100)));
     if (error) throw new Error(`deleting photos failed: ${error.message}`);
   }
   const { error } = await db.auth.admin.deleteUser(guestId);
