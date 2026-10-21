@@ -300,7 +300,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Looks as built (4c)**
 - **Where:** under the notebook on phones; the right-hand column on tablets (stylist and notebook on the left); the third column on computers.
-- **Before looks:** a dashed box says what's needed: "Looks appear here once you tell the stylist the occasion." before a session, then the server's words, such as "Confirm your budget to see looks".
+- **Before looks:** a dashed box says what's needed: "Looks appear here once you tell the stylist the occasion." before a session, then the server's words, such as "Confirm your budget to see looks". It goes as soon as building starts (found on your iPhone in 4c).
 - **Building:** three placeholder panels (Showroom blocks) with "Putting looks together", then "Checking your preferences".
 - **Item tiles:** the photo in a square with a Hairline outline, the name, the kind of piece, then a line with the hanger and "You own this", or the tag and "Sample product" with the price under it. **Swap** sits at the bottom of each sample product's tile, so a row's buttons line up; the shopper's own pieces have none. A swapped-in piece fades in with a **New** chip (Emerald, white text) on its photo. While a piece is being swapped, its photo shows a spinner and "Checking your preferences". If nothing else fits, a line under the tiles says so, for example "No other shoes fit everything you've asked for."
 - **After a change:** the looks stay, with Needs a new check, and a line with a spinner, "Updating your looks", above them, until they're checked again. Swap is paused meanwhile.
