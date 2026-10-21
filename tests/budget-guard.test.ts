@@ -5,11 +5,11 @@ import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
 
 describe("budget limits", () => {
-  it("uses Sabine's defaults: 10 minutes a day, $1 of AI a day, 110 video minutes, $12 Claude and $4 OpenAI a month", () => {
+  it("uses Sabine's defaults: 10 minutes a day, $1 of AI a day, 165 video minutes, $12 Claude and $4 OpenAI a month", () => {
     expect(readBudgetLimits({})).toEqual({
       dailyConversationSeconds: 600,
       dailyAiUsd: 1,
-      monthlyVideoSeconds: 6600,
+      monthlyVideoSeconds: 9900,
       monthlyClaudeUsd: 12,
       monthlyOpenaiUsd: 4,
     });

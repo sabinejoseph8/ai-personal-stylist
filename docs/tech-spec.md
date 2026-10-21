@@ -381,7 +381,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 ### Cost limits
 - Per guest per day: 10 minutes of conversation, all with video when it is available (R13), and $1 of AI (a full demo uses about $0.45).
 - Tavus: each call is created with **max_call_duration** set to the guest's remaining conversation time, and **participant_left_timeout** of 30 seconds, so an abandoned call stops at once. The Tavus plan's own minute cap is the final backstop.
-- Per month, for the whole demo: 110 minutes of video (Tavus Starter has 120; 10 are kept for testing), $12 of Claude and $4 of OpenAI, each below its console limit ($15 and $5), so the app stops politely before a provider refuses.
+- Per month, for the whole demo: 165 minutes of video (your Tavus plan has 175 a month since you upgraded it on 21 Oct 2026, after Starter's 120 ran out; 10 are kept for testing; 110 before), $12 of Claude and $4 of OpenAI, each below its console limit ($15 and $5), so the app stops politely before a provider refuses.
 - Days and months are counted in UTC (8 pm in New York). Each limit is a Vercel setting: **BUDGET_DAILY_CONVERSATION_MINUTES**, **BUDGET_DAILY_AI_USD**, **BUDGET_MONTHLY_VIDEO_MINUTES**, **BUDGET_MONTHLY_CLAUDE_USD** and **BUDGET_MONTHLY_OPENAI_USD**, with the values above as defaults (your decision, 20 Oct 2026).
 - OpenAI and Anthropic: spending limits set in their consoles as the final backstop.
 - The AI money check and the cost record are separate steps, so AI calls at the same moment can run a few cents over a limit. Accepted (your decision, Phase 1 code review): the monthly ceilings sit $3 (Claude) and $1 (OpenAI) below the console limits, so a provider never cuts in.
@@ -520,7 +520,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
-- **1.29 (21 Oct 2026):** 5b: revisions as built, with your answers to Q1 and Q2: when a look is revised, how, the change summary, every-look feedback as a requirement, newest wins and no surprises.
+- **1.29 (21 Oct 2026):** 5b: revisions as built, with your answers to Q1 and Q2: when a look is revised, how, the change summary, every-look feedback as a requirement, newest wins and no surprises. Your answer to Q3: the monthly video stop is 165 minutes, for your 175-minute Tavus plan.
 - **1.28 (21 Oct 2026):** The looks speed plan, with your answer to Q1: the builder's occasion and formality guidance, the looks already shown passed between rounds, repeats not judged, and the early stop when no new look can be made.
 - **1.27 (21 Oct 2026):** 5a: feedback as built, the feedback endpoint, what the words request sends, the notes reader's looks, and the notes eval's feedback cases, with your answers to Q1 to Q3.
 - **1.26 (21 Oct 2026):** Phase 4 code review (4e): no rebuild on unchanged requirements (looks_built_for), swaps take the build's turn, swap memory per piece, swaps heard only at a turn's end, saved rules checked in shape, the no-match choices (your decision A), and event_log deleted (your Q1).
