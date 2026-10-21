@@ -224,13 +224,19 @@ export function StylingSession({
     const said = notes.notes.filter((n) => n.feedback?.look === look.slot && n.feedback.items.includes(item.id) && (n.feedback.act === "keep" || n.feedback.act === "change"));
     return (said.at(-1)?.feedback?.act as "keep" | "change" | undefined) ?? null;
   };
+  // Taps are saved in the order they're made, so the last one wins: a quick Keep then Change could
+  // otherwise arrive the other way round (found in 5b's browser tests).
+  const taps = useRef<Promise<unknown>>(Promise.resolve());
+  const lastTap = useRef<Record<string, number>>({});
   async function giveFeedback(look: ShownLook, index: number, act: "keep" | "change", on: boolean) {
     const id = call.sessionId;
     const key = `${look.id} ${look.items[index].id}`;
     if (!id) return;
     tapHold.current = tapWaitEnds();
+    const mine = (lastTap.current[key] ?? 0) + 1;
+    lastTap.current[key] = mine;
     setPressing((p) => ({ ...p, [key]: on ? act : null }));
-    try {
+    const save = taps.current.then(async () => {
       const res = await fetch(`/api/sessions/${id}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -238,14 +244,20 @@ export function StylingSession({
       });
       if (!res.ok) throw new Error(String(res.status));
       notes.receive(await res.json());
+    });
+    taps.current = save.catch(() => undefined);
+    try {
+      await save;
     } catch {
       toast("That didn't save. Try again.");
     } finally {
-      setPressing((p) => {
-        const next = { ...p };
-        delete next[key];
-        return next;
-      });
+      // The tile shows what was tapped until the newest tap on it is saved.
+      if (lastTap.current[key] === mine)
+        setPressing((p) => {
+          const next = { ...p };
+          delete next[key];
+          return next;
+        });
     }
   }
   /** The look's number on screen for a place, for feedback headings in the notebook (5a). */

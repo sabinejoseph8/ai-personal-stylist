@@ -150,32 +150,44 @@ test.describe("the looks", () => {
     await noSeriousA11yProblems(page);
   });
 
-  test("Keep and Change, and spoken feedback, are jotted under the look, and the looks don't change (5a, R46, R47)", async ({ page }) => {
+  test("Keep and Change, and spoken feedback, are jotted under the look, and changes revise it (5a, 5b, R46 to R48)", async ({ page }) => {
+    // Looks, then two revisions: more than the usual 30 seconds.
+    test.slow();
     await weddingLooks(page);
     const first = panels(page).first();
-    const dress = (await first.getByRole("listitem").first().getByRole("paragraph").first().textContent())!;
+    const tiles = first.getByRole("listitem");
+    const read = () => tiles.evaluateAll((els) => els.map((el) => [...el.querySelectorAll("p")].slice(0, 2).map((p) => p.textContent ?? "")));
+    const before = await read();
+    const [dress, bag] = [before.find(([, kind]) => kind === "Dress")![0], before.find(([, kind]) => kind === "Bag")![0]];
     const feedback = notebookOf(page).getByRole("list", { name: "Feedback on Look 1" });
 
-    await first.getByRole("button", { name: `Keep ${dress}` }).click();
-    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toHaveAttribute("aria-pressed", "true");
-    await expect(feedback.getByRole("button", { name: new RegExp(`^Keep the ${dress.toLowerCase()} Confirmed$`, "i") })).toBeVisible();
-    // Change on the same item takes back Keep; pressing it again takes back Change.
-    await first.getByRole("button", { name: `Change ${dress}` }).click();
-    await expect(first.getByRole("button", { name: `Changing ${dress}` })).toHaveAttribute("aria-pressed", "true");
-    await expect(feedback.getByRole("button")).toHaveCount(1);
-    await expect(feedback).toContainText(/Change the/i);
-    await first.getByRole("button", { name: `Changing ${dress}` }).click();
+    // Keep, and pressing it again takes it back. Keep on its own changes nothing.
+    await first.getByRole("button", { name: `Keep ${bag}` }).click();
+    await expect(first.getByRole("button", { name: `Keeping ${bag}` })).toHaveAttribute("aria-pressed", "true");
+    await expect(feedback.getByRole("button", { name: new RegExp(`^Keep the ${bag.toLowerCase()} Confirmed$`, "i") })).toBeVisible();
+    await first.getByRole("button", { name: `Keeping ${bag}` }).click();
     await expect(notebookOf(page).getByRole("list", { name: "Feedback on Look 1" })).toHaveCount(0);
 
-    // Spoken, about the look on screen.
+    // Change on a kept piece takes back Keep, then revises the look (5b).
+    await first.getByRole("button", { name: `Keep ${dress}` }).click();
+    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toHaveAttribute("aria-pressed", "true");
+    // Straight away: taps are saved in the order they're made, so Change wins.
+    await first.getByRole("button", { name: `Change ${dress}` }).click();
+    await expect(feedback.getByRole("button")).toHaveCount(1);
+    await expect(feedback).toContainText(/Change the/i);
+    await expect(first).toContainText(`Changed: ${dress} to `, { timeout: 20_000 });
+    const newDress = (await read()).find(([, kind]) => kind === "Dress")![0];
+    expect(newDress).not.toBe(dress);
+
+    // Spoken, about the look on screen: keep the new dress and the bag, and lower heels revises the shoes.
     await first.scrollIntoViewIfNeeded();
     await playInCall(page, { type: "words", speaker: "shopper", text: "Keep the dress and bag, and lower heels please", final: true, turnId: "f1" });
     await expect(feedback).toContainText("Keep the dress and bag", { timeout: 10_000 });
     await expect(feedback).toContainText("Lower heels, this look only");
-    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toBeVisible();
-    // "Lower heels" revises the look on screen (5b), keeping the dress; feedback never makes the looks need a new check.
     await expect(first).toContainText("(you asked for lower heel)", { timeout: 20_000 });
-    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toBeVisible();
+    await expect(first.getByRole("button", { name: `Keeping ${newDress}` })).toBeVisible();
+    await expect(first.getByRole("button", { name: `Keeping ${bag}` })).toBeVisible();
+    // Feedback never makes the looks need a new check.
     await expect(panels(page).first()).toContainText("Checked against your preferences");
     await expect(page.getByText("Needs a new check")).toHaveCount(0);
     expect((await sent(page, "updateContext")).at(-1)).toContain("Feedback the shopper has given");
@@ -183,6 +195,7 @@ test.describe("the looks", () => {
   });
 
   test("Change on a piece revises its look: the new piece marked New, the rest kept, and a change summary (5b, R48, R50)", async ({ page }) => {
+    test.slow();
     await weddingLooks(page);
     const first = panels(page).first();
     const tiles = first.getByRole("listitem");
