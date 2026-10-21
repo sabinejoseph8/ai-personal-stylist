@@ -24,7 +24,10 @@ export type Requirements = {
   rules: FirmRule[];
 };
 
-export type LeftOut = { productId: string; name: string; reason: string };
+/** What kind of requirement left a product out, so a no-match explanation can name it (4b). */
+export type LeftOutKind = "department" | "outfit" | "category" | "size" | "budget" | "rule";
+/** A product the filter left out, and why; `rule` names the firm rule when one did it. */
+export type LeftOut = { productId: string; name: string; category: string; kind: LeftOutKind; reason: string; rule?: string };
 
 const ONE_SIZE = "one size";
 
@@ -79,20 +82,29 @@ export function noteRules(notes: Note[]): FirmRule[] {
     );
 }
 
-const label = (r: FirmRule) => (r.from === "profile" ? `${r.kind === "never" ? "Never" : "Must have"}: ${r.words}` : r.words);
+/** A firm rule as the shopper knows it: "Never: high heels", or a note's own words ("Not black"). */
+export const ruleLabel = (r: FirmRule) => (r.from === "profile" ? `${r.kind === "never" ? "Never" : "Must have"}: ${r.words}` : r.words);
 
-/** Why a product can't be in a look, or null when it can. */
-function whyLeftOut(p: Product, req: Requirements): string | null {
-  if (req.departments.length && !req.departments.includes(p.department)) return `Not ${req.departments.join(" or ")}`;
-  if (req.categories && !req.categories.includes(p.category as Category)) return "Not part of this outfit";
-  if (!(CATEGORIES as readonly string[]).includes(p.category)) return `Unknown category: ${p.category}`;
+/**
+ * Why a product can't be in a look, or null when it can. The candidate filter uses it, and so does
+ * the preference checker on every look (4b), which trusts nothing that came before it.
+ */
+export function whyNot(p: Product, req: Requirements): { kind: LeftOutKind; reason: string; rule?: FirmRule } | null {
+  if (req.departments.length && !req.departments.includes(p.department)) return { kind: "department", reason: `Not ${req.departments.join(" or ")}` };
+  if (req.categories && !req.categories.includes(p.category as Category)) return { kind: "outfit", reason: "Not part of this outfit" };
+  if (!(CATEGORIES as readonly string[]).includes(p.category)) return { kind: "category", reason: `Unknown category: ${p.category}` };
   const field = sizeFieldOf(p.department, p.category);
   const size = field ? req.sizes[field]?.trim().toLowerCase() : undefined;
-  if (size && !p.variants.some((v) => v.size.toLowerCase() === size || v.size.toLowerCase() === ONE_SIZE)) return `Not in your size (${req.sizes[field!]})`;
-  if (req.budget && p.price.amountCents > limitCents(req.budget)) return `Costs ${dollars(p.price.amountCents)}, more than your whole budget`;
+  if (size && !p.variants.some((v) => v.size.toLowerCase() === size || v.size.toLowerCase() === ONE_SIZE)) return { kind: "size", reason: `Not in your size (${req.sizes[field!]})` };
+  if (req.budget && p.price.amountCents > limitCents(req.budget)) return { kind: "budget", reason: `Costs ${dollars(p.price.amountCents)}, more than your whole budget` };
   for (const r of req.rules) {
     const verdict = checkRule(r.kind, r.rule, p);
-    if (!verdict.ok) return verdict.why === "unknown" ? `Missing a detail that ${label(r)} needs` : `Breaks ${label(r)} (${describeRule(r.kind, r.rule)})`;
+    if (!verdict.ok)
+      return {
+        kind: "rule",
+        rule: r,
+        reason: verdict.why === "unknown" ? `Missing a detail that ${ruleLabel(r)} needs` : `Breaks ${ruleLabel(r)} (${describeRule(r.kind, r.rule)})`,
+      };
   }
   return null;
 }
@@ -102,8 +114,8 @@ export function filterCandidates(products: Product[], req: Requirements): { kept
   const kept: Product[] = [];
   const leftOut: LeftOut[] = [];
   for (const p of products) {
-    const reason = whyLeftOut(p, req);
-    if (reason) leftOut.push({ productId: p.id, name: p.name, reason });
+    const why = whyNot(p, req);
+    if (why) leftOut.push({ productId: p.id, name: p.name, category: p.category, kind: why.kind, reason: why.reason, ...(why.rule ? { rule: ruleLabel(why.rule) } : {}) });
     else kept.push(p);
   }
   return { kept, leftOut };

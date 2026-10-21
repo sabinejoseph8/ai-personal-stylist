@@ -62,6 +62,10 @@ describe("the read-back (Sabine's Q1)", () => {
       "No tops, dresses or jackets that are sleeveless",
     );
     expect(describeRule("never", { type: "detail", categories: [], test: { detail: "category", op: "one_of", values: ["skirt"] } })).toBe("No skirts");
+    // "Never: arms exposed" on Sabine's iPhone in 4a, tidied in 4b.
+    expect(describeRule("never", { type: "detail", categories: [], test: { detail: "sleeve", op: "one_of", values: ["sleeveless", "cap", "short"] } })).toBe(
+      "No tops, dresses or jackets that are sleeveless or have cap or short sleeves",
+    );
     expect(describeRule("never", { type: "detail", categories: [], test: { detail: "pattern", op: "one_of", values: ["animal print"] } })).toBe("Nothing with an animal print pattern");
     expect(describeRule("never", { type: "detail", categories: ["dress", "skirt", "shorts"], test: { detail: "coverage", op: "one_of", values: ["mini", "mid_thigh", "above_knee"] } })).toBe(
       "No dresses, skirts or shorts that are mini, mid-thigh or above-the-knee length",

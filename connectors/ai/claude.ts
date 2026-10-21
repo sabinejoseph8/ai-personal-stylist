@@ -10,6 +10,8 @@ export const LIVE_MODEL = "claude-haiku-5-5";
 export const PHOTO_MODEL = "claude-opus-5-5";
 /** So does the preference rule maker (4a): the rules are the core promise. */
 export const RULE_MODEL = "claude-opus-5-5";
+/** And the looks builder and the preference checker's judgment step (4b), at medium effort. */
+export const LOOKS_MODEL = "claude-opus-5-5";
 
 /** Dollars per million tokens (input, output). */
 const PRICES: Record<string, [number, number]> = { "claude-opus-5-5": [4, 20], "claude-haiku-5-5": [0.1, 0.5] };
