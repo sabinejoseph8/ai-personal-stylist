@@ -1,5 +1,6 @@
 import type { ItemChange } from "../photos/item";
-import type { NotesReader } from "./reader";
+import type { Group } from "../looks/look";
+import type { NotesReader, SwapRequest } from "./reader";
 import { active, type NewNote, type NextQuestion } from "./types";
 
 // A fake notes reader for browser tests: simple word rules instead of Claude, so tests are free and
@@ -22,11 +23,19 @@ function photoChange(text: string): ItemChange | undefined {
   return Object.keys(change).length ? change : undefined;
 }
 
+/** A request to swap a piece (4c): "show me different shoes", "another bag for look 2". */
+const PIECES: Record<string, Group> = { shoes: "shoes", bag: "bag", dress: "dress", top: "top", jacket: "outer", trousers: "bottom", skirt: "bottom", earrings: "accessory" };
+function swapRequest(text: string): SwapRequest | undefined {
+  const piece = text.match(/\b(?:different|another|other) (shoes|bag|dress|top|jacket|trousers|skirt|earrings)\b/);
+  if (!piece) return undefined;
+  return { look: Number(text.match(/\blook (\d)\b/)?.[1] ?? 0), piece: PIECES[piece[1]] };
+}
+
 const MONTH = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i;
 
 export function createFakeNotesReader(): NotesReader {
   return {
-    async read({ words, notes, item }) {
+    async read({ words, notes, item, looks = 0 }) {
       const text = words.toLowerCase();
       const found: NewNote[] = [];
       const add = (kind: NewNote["kind"], note: string) => found.push({ kind, text: note, status: "to_confirm", details: [] });
@@ -53,6 +62,7 @@ export function createFakeNotesReader(): NotesReader {
         question,
         costUsd: 0,
         ...(item ? { photo: photoChange(text) } : {}),
+        ...(looks ? { swap: swapRequest(text) } : {}),
       };
     },
   };

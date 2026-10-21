@@ -1,4 +1,6 @@
 import type { Ask } from "../ask";
+import type { Group } from "../looks/look";
+import { SWAPPABLE } from "../looks/swap";
 import { chosenItem, DETAIL_NAMES, type DetailName, type ItemChange, itemForReader, type StyleItem } from "../photos/item";
 import { shareWord } from "./merge";
 import { active, KINDS, type Note, NOTE_CAP, type NextQuestion, type NoteChanges, type NoteKind } from "./types";
@@ -102,7 +104,41 @@ export const PHOTO_SCHEMA_PART = {
   },
   required: ["c", "o", "d", "k"],
 };
-const SCHEMA_WITH_PHOTO = { ...SCHEMA, properties: { ...SCHEMA.properties, p: PHOTO_SCHEMA_PART }, required: [...SCHEMA.required, "p"] };
+
+// Looks on screen (4c): the same reading also hears a request to swap a piece ("show me different
+// shoes"), so it's as forgiving of how speech is written as the notes are. Without looks, the prompt
+// and answer are unchanged.
+export const LOOKS_RULES = `
+
+The shopper can see looks numbered 1 to {n} on screen. When they ask to see a different piece in a look ("show me different shoes", "can I see another bag for look 2", "swap the jacket"), give w:
+- l: the look's number if they said which (1 to {n}), otherwise 0.
+- p: the piece: dress, suit, top, outer (a jacket, blazer, cardigan or coat), bottom (trousers, jeans, a skirt or shorts), shoes, bag or accessory (jewelry, a belt or a scarf).
+Only a request for a different or another piece is a swap. Liking, disliking or asking about a piece ("I love the shoes in look one", "is that bag leather?") isn't: give p as "". A request to swap is never a note.`;
+
+export const LOOKS_SCHEMA_PART = {
+  type: "object",
+  additionalProperties: false,
+  properties: { l: { type: "integer" }, p: { type: "string", enum: ["", ...SWAPPABLE] } },
+  required: ["l", "p"],
+};
+
+/** The instructions and answer shape for this reading: the photo and looks parts only when there are some. */
+function readingShape(item: boolean, looks: number) {
+  const properties: Record<string, unknown> = { ...SCHEMA.properties };
+  const required = [...SCHEMA.required];
+  let system = SYSTEM;
+  if (item) {
+    system += PHOTO_RULES;
+    properties.p = PHOTO_SCHEMA_PART;
+    required.push("p");
+  }
+  if (looks) {
+    system += LOOKS_RULES.replaceAll("{n}", String(looks));
+    properties.w = LOOKS_SCHEMA_PART;
+    required.push("w");
+  }
+  return { system, schema: { ...SCHEMA, properties, required }, maxTokens: 1200 + (item ? 100 : 0) + (looks ? 50 : 0) };
+}
 
 export type ReaderInput = {
   /** What the stylist last said, so short answers like "the pantsuit" make sense. */
@@ -112,9 +148,14 @@ export type ReaderInput = {
   notes: Note[];
   /** The photo to style around, when there is one (3b). */
   item?: StyleItem;
+  /** How many looks are on screen (4c), so a request to swap a piece is heard. */
+  looks?: number;
 };
 
-export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange };
+/** A spoken request to swap a piece (4c): `look` is 1 to 3, or 0 when the shopper didn't say which. */
+export type SwapRequest = { look: number; piece: Group };
+
+export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest };
 
 export interface NotesReader {
   read(input: ReaderInput): Promise<Reading | null>;
@@ -126,7 +167,14 @@ type Raw = {
   remove: string[];
   q: { t: string; o: string[] };
   p?: { c: number; o: "" | "m" | "i"; d: string[]; k: string[] };
+  w?: { l: number; p: "" | Group };
 };
+
+/** The swap the shopper asked for, if any, with a look number that's on screen. */
+export function swapRequest(w: Raw["w"], looks: number): SwapRequest | undefined {
+  if (!w || !w.p || !SWAPPABLE.includes(w.p)) return undefined;
+  return { look: Number.isInteger(w.l) && w.l >= 1 && w.l <= looks ? w.l : 0, piece: w.p };
+}
 
 const isDetail = (name: string): name is DetailName => (DETAIL_NAMES as readonly string[]).includes(name);
 
@@ -161,7 +209,7 @@ export function cleanQuestion(q: { text: string; options: string[] } | undefined
 
 export function createNotesReader(ask: Ask): NotesReader {
   return {
-    async read({ stylistSaid, words, notes, item }) {
+    async read({ stylistSaid, words, notes, item, looks = 0 }) {
       const live = active(notes);
       // Short ids keep the prompt small and stop Claude inventing ids.
       const shortIds = new Map(live.map((n, i) => [`n${i + 1}`, n.id]));
@@ -177,9 +225,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         .filter(Boolean)
         .join("\n\n");
 
-      const { data, costUsd } = await ask(
-        item ? { system: SYSTEM + PHOTO_RULES, user, schema: SCHEMA_WITH_PHOTO, maxTokens: 1300 } : { system: SYSTEM, user, schema: SCHEMA, maxTokens: 1200 },
-      );
+      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), looks) });
       if (!data) return null;
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
@@ -208,6 +254,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         question: cleanQuestion({ text: raw.q.t, options: raw.q.o }),
         costUsd,
         ...(item ? { photo: photoChange(raw.p) } : {}),
+        ...(looks ? { swap: swapRequest(raw.w, looks) } : {}),
       };
     },
   };

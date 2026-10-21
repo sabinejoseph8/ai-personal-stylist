@@ -199,6 +199,10 @@
     animation: fade-in var(--duration-standard) var(--ease-arrive);
   }
 }
+/* Swap (design 3.6): the new piece cross-fades in. */
+@utility swap-fade {
+  animation: fade-in var(--duration-standard) var(--ease-arrive);
+}
 @utility toast-rise {
   &[data-state="open"] {
     animation: fade-in var(--duration-standard) var(--ease-arrive);

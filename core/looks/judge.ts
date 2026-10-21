@@ -7,10 +7,24 @@ import { type ResolvedItem } from "./look";
 // passed every code rule. Claude Opus 5.5 at medium effort judges what code can't: firm preferences
 // that aren't about one product detail ("Never: anything too flashy"), whether the look suits the
 // occasion and the confirmed notes, and whether similar samples resemble an inspiration photo. One look
-// at a time (Sabine's answer to Q3 in 4b). Anything uncertain doesn't pass.
+// at a time (Sabine's answer to Q3 in 4b). Anything uncertain doesn't pass. For a swapped look (4c) it
+// also writes the look's new one-line reason, since the old one may name the piece that was swapped out.
 
 export type Verdict = "pass" | "conflict" | "needs_clarification";
-export type JudgeInput = { items: ResolvedItem[]; notes: string[]; judged: string[]; likes: string[]; inspiration: string | null };
+export type JudgeInput = {
+  items: ResolvedItem[];
+  notes: string[];
+  judged: string[];
+  likes: string[];
+  inspiration: string | null;
+  /** Also write the look's one-line reason (a swapped look, 4c). */
+  withReason?: boolean;
+};
+
+/** Added to the instructions when the judge also writes a swapped look's reason. */
+export const REASON_RULE = `
+
+Also give s: one sentence on why this outfit works for the shopper, in a stylist's voice, naming the pieces that make it work, such as "Tan loafers pick up the camel skirt and keep the look easy for dinner." Write it even when the outfit fails.`;
 
 export const JUDGE_SYSTEM = `You check one outfit for a personal stylist, before the shopper sees it. Code has already checked the budget, sizes, colors to avoid and every measurable preference. You check what code can't.
 
@@ -45,6 +59,7 @@ export const JUDGE_SCHEMA = {
   },
   required: ["v", "r"],
 };
+const SCHEMA_WITH_REASON = { ...JUDGE_SCHEMA, properties: { ...JUDGE_SCHEMA.properties, s: { type: "string" } }, required: [...JUDGE_SCHEMA.required, "s"] };
 
 /** One item as the judge reads it, with every detail the catalog has. */
 function itemLine(item: ResolvedItem) {
@@ -80,7 +95,7 @@ export function judgePrompt(input: JudgeInput) {
     .join("\n\n");
 }
 
-type Raw = { v: "pass" | "conflict" | "clarify"; r: { a: string; ok: boolean; w: string }[] };
+type Raw = { v: "pass" | "conflict" | "clarify"; r: { a: string; ok: boolean; w: string }[]; s?: string };
 
 /** The verdict, made consistent with its own reasons: a failed point can't pass. */
 export function verdictFrom(raw: Raw): { verdict: Verdict; reasons: CheckReason[] } {
@@ -92,15 +107,20 @@ export function verdictFrom(raw: Raw): { verdict: Verdict; reasons: CheckReason[
 
 export interface Judge {
   /** A look's verdict. A failed reading never passes: it's held as needing clarification, with its cost. */
-  judge(input: JudgeInput): Promise<{ verdict: Verdict; reasons: CheckReason[]; costUsd: number }>;
+  judge(input: JudgeInput): Promise<{ verdict: Verdict; reasons: CheckReason[]; costUsd: number; reason?: string }>;
 }
 
 export function createJudge(ask: Ask): Judge {
   return {
     async judge(input) {
-      const { data, costUsd } = await ask({ system: JUDGE_SYSTEM, user: judgePrompt(input), schema: JUDGE_SCHEMA, maxTokens: 6000 });
+      const { data, costUsd } = await ask(
+        input.withReason
+          ? { system: JUDGE_SYSTEM + REASON_RULE, user: judgePrompt(input), schema: SCHEMA_WITH_REASON, maxTokens: 6000 }
+          : { system: JUDGE_SYSTEM, user: judgePrompt(input), schema: JUDGE_SCHEMA, maxTokens: 6000 },
+      );
       if (!data) return { verdict: "needs_clarification", reasons: [{ about: "Judgment", ok: false, why: "The check couldn't be completed" }], costUsd };
-      return { ...verdictFrom(data as Raw), costUsd };
+      const reason = (data as Raw).s?.trim().slice(0, 300);
+      return { ...verdictFrom(data as Raw), costUsd, ...(input.withReason && reason ? { reason } : {}) };
     },
   };
 }
@@ -111,11 +131,11 @@ export function createJudge(ask: Ask): Judge {
  */
 export function createFakeJudge(): Judge {
   return {
-    async judge({ items, judged }) {
+    async judge({ items, judged, withReason }) {
       const flashy = judged.some((j) => /flashy/i.test(j)) && items.some((i) => "product" in i && /sequin|metallic/i.test(`${i.product.details.material} ${i.product.details.pattern}`));
       return flashy
         ? { verdict: "conflict", reasons: [{ about: judged.find((j) => /flashy/i.test(j))!, ok: false, why: "Sequins are flashy" }], costUsd: 0 }
-        : { verdict: "pass", reasons: [{ about: "The occasion", ok: true, why: "Suits it" }], costUsd: 0 };
+        : { verdict: "pass", reasons: [{ about: "The occasion", ok: true, why: "Suits it" }], costUsd: 0, ...(withReason ? { reason: "A fake reason for a swapped look." } : {}) };
     },
   };
 }

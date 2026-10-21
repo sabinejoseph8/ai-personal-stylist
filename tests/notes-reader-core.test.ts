@@ -79,6 +79,25 @@ describe("notes reader", () => {
     expect((await reader.read({ stylistSaid: "So jeans are fine, right?", words: "yes", notes: jeans }))?.changes.update[0].status).toBe("confirmed");
   });
 
+  it("hears a request to swap a piece only while looks are on screen, never as a note (4c, R43)", async () => {
+    const asked: { system: string; schema: unknown }[] = [];
+    const answer = (l: number) => ({ add: [], update: [], remove: [], q: { t: "", o: [] }, w: { l, p: "shoes" } });
+    const looks = [2, 5, 0];
+    const ask: Ask = async ({ system, schema }) => (asked.push({ system, schema }), { data: answer(looks[asked.length - 1]), costUsd: 0 });
+    const reader = createNotesReader(ask);
+    const withLooks = await reader.read({ stylistSaid: "", words: "Show me different shoes for look 2", notes: [], looks: 3 });
+    expect(withLooks?.swap).toEqual({ look: 2, piece: "shoes" });
+    expect(asked[0].system).toContain("looks numbered 1 to 3");
+    expect(JSON.stringify(asked[0].schema)).toContain('"w"');
+    // A look number that isn't on screen means "the one you're looking at".
+    expect((await reader.read({ stylistSaid: "", words: "Different shoes for look 5", notes: [], looks: 3 }))?.swap).toEqual({ look: 0, piece: "shoes" });
+    // Without looks, the instructions and answer are as before.
+    const without = await reader.read({ stylistSaid: "", words: "Show me different shoes", notes: [] });
+    expect(without).not.toHaveProperty("swap");
+    expect(asked[2].system).not.toContain("looks numbered");
+    expect(JSON.stringify(asked[2].schema)).not.toContain('"w"');
+  });
+
   it("asks one short question, with at most three short options", () => {
     expect(cleanQuestion({ text: "Dress or pantsuit?", options: ["Dress", "Pantsuit", "Not sure yet", "Skirt"] })).toEqual({
       text: "Dress or pantsuit?",

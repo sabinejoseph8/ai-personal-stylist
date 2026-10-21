@@ -6,10 +6,12 @@ import { type BuiltLook, type LooksBuilder } from "@/core/looks/builder";
 import { filterCandidates, type Requirements, ruleLabel } from "@/core/looks/candidates";
 import { type Anchor, type CheckReason, codeCheck } from "@/core/looks/checker";
 import type { Judge, Verdict } from "@/core/looks/judge";
-import { type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, type ResolvedItem } from "@/core/looks/look";
+import { groupOf, type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, type ResolvedItem } from "@/core/looks/look";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
+import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
 import { looksReadiness } from "@/core/looks/readiness";
-import { type LookTotal, lookTotal } from "@/core/looks/totals";
+import type { ShownItem, ShownLook } from "@/core/looks/shown";
+import { lookTotal } from "@/core/looks/totals";
 import { active, type Note } from "@/core/notes/types";
 import { chosenItem } from "@/core/photos/item";
 import type { BudgetGuard } from "@/lib/budget-guard";
@@ -27,22 +29,15 @@ import { categoryOf } from "@/lib/wardrobe";
 
 export type LooksDeps = { db: SupabaseClient; catalog: CatalogConnector; guard: BudgetGuard; builder: LooksBuilder; judge: Judge };
 
-/** A look as the browser gets it (4c draws the panels). */
-export type ShownLook = {
-  id: string;
-  name: string;
-  reason: string;
-  items: { kind: LookItem["kind"]; name: string; category: string; owned: boolean; priceCents: number | null; imageUrl: string | null; imageAlt: string }[];
-  total: LookTotal;
-  /** Still built on the current requirements; false means it needs a new check (R58, 4c). */
-  current: boolean;
-};
+export type { ShownItem, ShownLook };
 
 export type BuildResult =
   | { needs: string }
   | { looks: ShownLook[]; noMatch: NoMatch | null }
   /** The requirements changed while the looks were being built (newest wins, R52): build again. */
-  | { stale: true };
+  | { stale: true }
+  /** Too many builds this hour. */
+  | { limited: true };
 
 const LOOKS_WANTED = 3;
 const ROUNDS = 3;
@@ -135,41 +130,112 @@ const totalOf = (items: ResolvedItem[], r: Requirements) =>
     r.budget,
   );
 
-function shown(id: string, look: { name: string; reason: string }, items: ResolvedItem[], r: Requirements, current: boolean): ShownLook {
+const refId = (ref: LookItem) => (ref.kind === "product" ? ref.productId : ref.kind === "photo" ? ref.photoId : ref.itemId);
+
+function shown(id: string, slot: number, look: { name: string; reason: string }, items: ResolvedItem[], r: Requirements, current: boolean): ShownLook {
   return {
     id,
+    slot,
     name: look.name,
     reason: look.reason,
-    // The owned pieces' own photos join in 4c.
+    // The shopper's own pieces get their photos in the browser, which has their links (4c).
     items: items.map((i) =>
       "product" in i
-        ? { kind: "product", name: i.product.name, category: i.product.category, owned: false, priceCents: i.product.price.amountCents, imageUrl: i.product.image.url, imageAlt: i.product.image.alt }
-        : { kind: i.ref.kind, name: i.owned.name, category: i.owned.group, owned: true, priceCents: null, imageUrl: null, imageAlt: i.owned.name },
+        ? {
+            kind: "product",
+            id: i.product.id,
+            group: groupOf(i),
+            name: i.product.name,
+            category: i.product.category,
+            owned: false,
+            priceCents: i.product.price.amountCents,
+            imageUrl: i.product.image.url,
+            imageAlt: i.product.image.alt,
+          }
+        : { kind: i.ref.kind, id: refId(i.ref), group: i.owned.group, name: i.owned.name, category: i.owned.group, owned: true, priceCents: null, imageUrl: null, imageAlt: i.owned.name },
     ),
     total: totalOf(items, r),
     current,
   };
 }
 
+type Checked = { verdict: Verdict; reasons: CheckReason[]; failedProducts: string[]; reason?: string };
+
 /** Checks one candidate look: rules in code, then, only if they all hold, the judgment step. */
-async function check(deps: LooksDeps, guestId: string, g: Gathered, items: ResolvedItem[]): Promise<{ verdict: Verdict; reasons: CheckReason[]; failedProducts: string[] }> {
+async function check(deps: LooksDeps, guestId: string, g: Gathered, items: ResolvedItem[], withReason = false): Promise<Checked> {
   const code = codeCheck({ items, requirements: g.requirements, anchor: g.anchor, wardrobePicks: g.owned.filter((o) => o.ref.kind === "wardrobe").map((o) => (o.ref as { itemId: string }).itemId) });
   if (!code.ok) return { verdict: "conflict", reasons: code.reasons, failedProducts: code.failedProducts };
   const money = await deps.guard.checkAi(guestId, "claude");
   if (!money.ok) return { verdict: "needs_clarification", reasons: [...code.reasons, { about: "Judgment", ok: false, why: "Today's AI allowance is used up" }], failedProducts: [] };
-  const judged = await deps.judge.judge({ items, notes: g.noteWords, judged: g.judged, likes: g.likes, inspiration: g.inspiration });
+  const judged = await deps.judge.judge({ items, notes: g.noteWords, judged: g.judged, likes: g.likes, inspiration: g.inspiration, withReason });
   if (judged.costUsd > 0) await deps.guard.recordAi(guestId, "claude", judged.costUsd);
-  return { verdict: judged.verdict, reasons: [...code.reasons, ...judged.reasons], failedProducts: [] };
+  return { verdict: judged.verdict, reasons: [...code.reasons, ...judged.reasons], failedProducts: [], reason: judged.reason };
 }
 
+const failedWhy = (c: Checked) =>
+  c.reasons
+    .filter((r) => !r.ok)
+    .map((r) => r.why)
+    .join("; ");
+
+type Versions = { build?: string; round?: number; position?: number; slot?: number; tried?: string[]; swap?: { from: string; to: string } };
+type LookRow = { id: string; name: string | null; reason: string | null; items: LookItem[]; requirements_key: string | null; input_versions: Versions; status: string; created_at: string };
+type OnScreen = LookRow & { slot: number };
+
+/** The looks on screen, one per place (published, or being checked again), in place order. */
+async function onScreen(db: SupabaseClient, guestId: string, sessionId: string): Promise<OnScreen[]> {
+  const { data } = await db
+    .from("looks")
+    .select("id, name, reason, items, requirements_key, input_versions, status, created_at")
+    .eq("session_id", sessionId)
+    .eq("user_id", guestId)
+    .in("status", ["published", "needs_check"])
+    .order("created_at", { ascending: false })
+    .throwOnError();
+  const bySlot = new Map<number, OnScreen>();
+  for (const row of (data ?? []) as LookRow[]) {
+    const slot = row.input_versions.slot ?? 0;
+    if (slot >= 1 && slot <= LOOKS_WANTED && !bySlot.has(slot)) bySlot.set(slot, { ...row, slot });
+  }
+  return [...bySlot.values()].sort((a, b) => a.slot - b.slot);
+}
+
+async function productsOf(catalog: CatalogConnector, refs: LookItem[]) {
+  const ids = [...new Set(refs.flatMap((i) => (i.kind === "product" ? [i.productId] : [])))];
+  return new Map((await Promise.all(ids.map((id) => catalog.getProduct(id)))).flatMap((p) => (p ? [[p.id, p] as const] : [])));
+}
+
+/** A row as its panel shows it: current only when it passed a check on these exact requirements. */
+const shownRow = (row: OnScreen, items: ResolvedItem[], g: Gathered) =>
+  shown(row.id, row.slot, { name: row.name ?? "Look", reason: row.reason ?? "" }, items, g.requirements, row.status === "published" && row.requirements_key === g.key);
+
+async function sessionOpen(db: SupabaseClient, guestId: string, sessionId: string) {
+  const { data } = await db.from("sessions").select("id").eq("id", sessionId).eq("user_id", guestId).in("status", ["active", "paused"]).maybeSingle().throwOnError();
+  return Boolean(data);
+}
+
+export type BuildStage = "building" | "checking" | "updating";
+export type BuildOptions = {
+  /** Asked once before any AI work (the 20 builds an hour limit). False turns the build away. */
+  allowAi?: () => Promise<boolean>;
+  /** Try again: fill empty places even though nothing changed. */
+  force?: boolean;
+};
+
 /**
- * Build looks for a session (POST /api/sessions/:id/looks). `emit` hears the stages, for 4c's
- * "Putting looks together" and "Checking your preferences". Null when the session isn't the guest's open one.
+ * Brings a session's looks up to date (POST /api/sessions/:id/looks; R39, R40, R44, R54, R55, R58, R59).
+ * - Not ready yet: says what's needed.
+ * - Looks on screen that are still current stay as they are, at no cost.
+ * - Looks built on old requirements are checked again (Sabine's answer to Q3 in 4c): those that still
+ *   meet everything stay in their place, and those that don't are held.
+ * - Empty places are filled by the looks builder, up to 3 rounds; if fewer than 3 pass, the ones that
+ *   did are shown with an explanation (Q2 in 4b).
+ * `emit` hears the stages, for "Putting looks together", "Checking your preferences" and "Updating".
+ * Null when the session isn't the guest's open one.
  */
-export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: string, emit: (state: "building" | "checking") => void = () => {}): Promise<BuildResult | null> {
+export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: string, emit: (state: BuildStage) => void = () => {}, options: BuildOptions = {}): Promise<BuildResult | null> {
   const { db } = deps;
-  const { data: session } = await db.from("sessions").select("id").eq("id", sessionId).eq("user_id", guestId).in("status", ["active", "paused"]).maybeSingle().throwOnError();
-  if (!session) return null;
+  if (!(await sessionOpen(db, guestId, sessionId))) return null;
   const g = await gather(db, guestId, sessionId);
   const ready = looksReadiness(g.notes);
   if (!ready.ready) return { needs: ready.needs };
@@ -177,17 +243,87 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
   const department = g.requirements.departments.length === 1 ? g.requirements.departments[0] : undefined;
   const catalog = await deps.catalog.search({ department, limit: 1000 });
   const products = new Map(catalog.map((p) => [p.id, p]));
-  const build = randomUUID();
-  const published: ShownLook[] = [];
-  // The main pieces of each published look: no two looks share them (Sabine's review of the sample looks).
-  const shownMains = new Set<string>();
+  const rows = await onScreen(db, guestId, sessionId);
+  const isCurrent = (r: OnScreen) => r.status === "published" && r.requirements_key === g.key;
+  const stale = rows.filter((r) => !isCurrent(r));
+  let filtered = filterCandidates(catalog, g.requirements);
+  const explain = (count: number) => (count < LOOKS_WANTED ? explainNoMatch(g.requirements, filtered.kept, filtered.leftOut, count) : null);
+  const looksNow = async () => {
+    const now = await onScreen(db, guestId, sessionId);
+    return now.flatMap((r) => {
+      const items = resolve(r.items, products, g.owned);
+      return items ? [shownRow(r, items, g)] : [];
+    });
+  };
+
+  // Nothing has changed since the looks on screen were checked: no AI needed.
+  if (rows.length && !stale.length && (!options.force || rows.length >= LOOKS_WANTED)) {
+    const looks = await looksNow();
+    return { looks, noMatch: explain(looks.length) };
+  }
+  if (options.allowAi && !(await options.allowAi())) return { limited: true };
+
+  const kept: { slot: number; items: ResolvedItem[] }[] = rows.flatMap((r) => {
+    const items = isCurrent(r) ? resolve(r.items, products, g.owned) : null;
+    return items ? [{ slot: r.slot, items }] : [];
+  });
   const excluded = new Set<string>();
   const avoid: string[] = [];
-  let filtered = filterCandidates(catalog, g.requirements);
 
-  for (let round = 1; round <= ROUNDS && published.length < LOOKS_WANTED; round++) {
+  // 1. Check the looks on screen again. Meanwhile they're marked Needs a new check, and stay on screen.
+  if (stale.length) {
+    emit("updating");
+    const ids = stale.map((r) => r.id);
+    await db.from("looks").update({ status: "needs_check" }).in("id", ids).in("status", ["published", "needs_check"]).throwOnError();
+    const rechecked = await Promise.all(
+      stale.map(async (row) => {
+        const items = resolve(row.items, products, g.owned);
+        const result: Checked = items
+          ? await check(deps, guestId, g, items)
+          : { verdict: "conflict", reasons: [{ about: "Items", ok: false, why: "One of its items is no longer in the look's inputs" }], failedProducts: [] };
+        // The record of this check, on these requirements: the gate needs both to match.
+        await db
+          .from("looks")
+          .update({ requirements_key: g.key, total_cents: items ? totalOf(items, g.requirements).totalCents : null })
+          .eq("id", row.id)
+          .eq("status", "needs_check")
+          .throwOnError();
+        await db.rpc("record_check", { look: row.id, verdict: result.verdict, reasons: result.reasons, requirements_key: g.key }).throwOnError();
+        return { row, items, ...result };
+      }),
+    );
+    // Newest wins (R52): changed again meanwhile, so the next request checks them on the newest.
+    if ((await gather(db, guestId, sessionId)).key !== g.key) return { stale: true };
+    for (const c of rechecked) {
+      if (c.verdict === "pass" && c.items) {
+        const { data: ok } = await db.rpc("publish_look", { look: c.row.id, current_requirements: g.key }).throwOnError();
+        if (ok) {
+          kept.push({ slot: c.row.slot, items: c.items });
+          continue;
+        }
+      }
+      // A look that fails is never shown (R55): its place is filled by a new one.
+      await db.from("looks").update({ status: "held" }).eq("id", c.row.id).eq("status", "needs_check").eq("requirements_key", g.key).throwOnError();
+      for (const id of c.failedProducts) excluded.add(id);
+      if (c.items) avoid.push(`${c.items.map(nameOf).join(" + ")}: ${failedWhy(c)}`);
+    }
+  }
+
+  // 2. Fill the empty places.
+  const taken = new Set(kept.map((k) => k.slot));
+  const empty = Array.from({ length: LOOKS_WANTED }, (_, i) => i + 1).filter((slot) => !taken.has(slot));
+  // No two looks share their main pieces (Sabine's review of the sample looks in 4b).
+  const shownMains = new Set(kept.map((k) => mainPieces(k.items)));
+  for (const k of kept) avoid.push(`${k.items.map(nameOf).join(" + ")}: already shown, so make different looks`);
+  const build = randomUUID();
+  let placed = 0;
+
+  for (let round = 1; round <= ROUNDS && placed < empty.length; round++) {
     emit("building");
-    filtered = filterCandidates(catalog.filter((p) => !excluded.has(p.id)), g.requirements);
+    filtered = filterCandidates(
+      catalog.filter((p) => !excluded.has(p.id)),
+      g.requirements,
+    );
     if (!filtered.kept.length) break;
     const money = await deps.guard.checkAi(guestId, "claude");
     if (!money.ok) break;
@@ -209,9 +345,9 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
     const checked = await Promise.all(
       built.looks.map(async (look: BuiltLook, position) => {
         const items = resolve(look.items, products, g.owned);
-        const result = items
+        const result: Checked = items
           ? await check(deps, guestId, g, items)
-          : { verdict: "conflict" as const, reasons: [{ about: "Items", ok: false, why: "Uses an item that isn't on the list" }], failedProducts: [] };
+          : { verdict: "conflict", reasons: [{ about: "Items", ok: false, why: "Uses an item that isn't on the list" }], failedProducts: [] };
         const { data: row } = await db
           .from("looks")
           .insert({
@@ -229,23 +365,24 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
           .single()
           .throwOnError();
         await db.rpc("record_check", { look: row!.id, verdict: result.verdict, reasons: result.reasons, requirements_key: g.key }).throwOnError();
-        return { id: row!.id as string, look, items, ...result };
+        return { id: row!.id as string, look, position, items, ...result };
       }),
     );
 
     // Newest wins (R52): if anything the looks must meet changed meanwhile, none of these is published.
-    const now = await gather(db, guestId, sessionId);
-    if (now.key !== g.key) {
-      await db.from("looks").update({ status: "held" }).eq("session_id", sessionId).filter("input_versions->>build", "eq", build).neq("status", "published").throwOnError();
+    if ((await gather(db, guestId, sessionId)).key !== g.key) {
+      await db.from("looks").update({ status: "held" }).eq("session_id", sessionId).filter("input_versions->>build", "eq", build).eq("status", "checking").throwOnError();
       return { stale: true };
     }
     for (const c of checked) {
       const main = c.items ? mainPieces(c.items) : "";
-      if (c.verdict === "pass" && c.items && published.length < LOOKS_WANTED && !shownMains.has(main)) {
+      if (c.verdict === "pass" && c.items && placed < empty.length && !shownMains.has(main)) {
         // The one publishing gate: the database checks the pass was for these exact items and requirements.
+        const slot = empty[placed];
+        await db.from("looks").update({ input_versions: { requirements: g.key, build, round, position: c.position, slot } }).eq("id", c.id).throwOnError();
         const { data: ok } = await db.rpc("publish_look", { look: c.id, current_requirements: g.key }).throwOnError();
         if (ok) {
-          published.push(shown(c.id, c.look, c.items, g.requirements, true));
+          placed++;
           shownMains.add(main);
           continue;
         }
@@ -253,35 +390,127 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
       if (c.verdict === "pass" && c.items && shownMains.has(main)) avoid.push(`${c.items.map(nameOf).join(" + ")}: the same main pieces as a look already chosen`);
       await db.from("looks").update({ status: "held" }).eq("id", c.id).throwOnError();
       for (const id of c.failedProducts) excluded.add(id);
-      if (c.verdict !== "pass" && c.items) avoid.push(`${c.items.map(nameOf).join(" + ")}: ${c.reasons.filter((r) => !r.ok).map((r) => r.why).join("; ")}`);
+      if (c.verdict !== "pass" && c.items) avoid.push(`${c.items.map(nameOf).join(" + ")}: ${failedWhy(c)}`);
     }
   }
-  const noMatch = published.length < LOOKS_WANTED ? explainNoMatch(g.requirements, filtered.kept, filtered.leftOut, published.length) : null;
-  return { looks: published, noMatch };
+  const looks = await looksNow();
+  return { looks, noMatch: explain(looks.length) };
 }
 
-/** The session's published looks from its latest build, each marked whether it's still current (4c). */
+/** The looks on screen for a session (GET /api/sessions/:id/looks), each marked whether it's still current. */
 export async function currentLooks(deps: Pick<LooksDeps, "db" | "catalog">, guestId: string, sessionId: string): Promise<ShownLook[]> {
-  const { data } = await deps.db
-    .from("looks")
-    .select("id, name, reason, items, requirements_key, input_versions, created_at")
-    .eq("session_id", sessionId)
-    .eq("user_id", guestId)
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .throwOnError();
-  const rows = data ?? [];
+  const rows = await onScreen(deps.db, guestId, sessionId);
   if (!rows.length) return [];
-  type Versions = { build?: string; round?: number; position?: number };
-  const latest = (rows[0].input_versions as Versions).build;
-  const g = await gather(deps.db, guestId, sessionId);
-  // In the order they were published: by round, then the builder's order.
-  const order = (r: (typeof rows)[number]) => ((r.input_versions as Versions).round ?? 0) * 10 + ((r.input_versions as Versions).position ?? 0);
-  const mine = rows.filter((r) => (r.input_versions as Versions).build === latest).sort((a, b) => order(a) - order(b));
-  const ids = [...new Set(mine.flatMap((r) => (r.items as LookItem[]).flatMap((i) => (i.kind === "product" ? [i.productId] : []))))];
-  const products = new Map((await Promise.all(ids.map((id) => deps.catalog.getProduct(id)))).flatMap((p) => (p ? [[p.id, p] as const] : [])));
-  return mine.flatMap((r) => {
-    const items = resolve(r.items as LookItem[], products, g.owned);
-    return items ? [shown(r.id, { name: r.name ?? "Look", reason: r.reason ?? "" }, items, g.requirements, r.requirements_key === g.key)] : [];
+  const [g, products] = await Promise.all([gather(deps.db, guestId, sessionId), productsOf(deps.catalog, rows.flatMap((r) => r.items))]);
+  return rows.flatMap((r) => {
+    const items = resolve(r.items, products, g.owned);
+    return items ? [shownRow(r, items, g)] : [];
   });
+}
+
+export type SwapResult =
+  /** The look with its new piece at `index`, in the same place. */
+  | { look: ShownLook; index: number }
+  /** Nothing else passed: the look stays as it was. */
+  | { none: string }
+  /** The look isn't current any more (a change, or it was replaced): bring the looks up to date first. */
+  | { stale: true }
+  | { limited: true };
+
+const SWAP_BATCH = 3;
+
+/**
+ * Swap a piece (POST /api/sessions/:id/looks/:lookId/swap; R43, Sabine's answer to Q1 in 4c). Code picks
+ * up to 3 replacements (core/looks/swap.ts), all checked at once by the whole preference checker; the
+ * best-ranked one that passes goes in, through the publishing gate, which retires the old look in the
+ * same step. Up to 3 batches. Its reason is written afresh by the judgment step, since the old one may
+ * name the piece swapped out. Null when the session or look isn't the guest's, or the piece can't be swapped.
+ */
+export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: string, lookId: string, index: number, options: Pick<BuildOptions, "allowAi"> = {}): Promise<SwapResult | null> {
+  const { db } = deps;
+  if (!(await sessionOpen(db, guestId, sessionId))) return null;
+  const g = await gather(db, guestId, sessionId);
+  const rows = await onScreen(db, guestId, sessionId);
+  const row = rows.find((r) => r.id === lookId);
+  if (!row) {
+    const { data: known } = await db.from("looks").select("id").eq("id", lookId).eq("session_id", sessionId).eq("user_id", guestId).maybeSingle().throwOnError();
+    return known ? { stale: true } : null;
+  }
+  if (row.status !== "published" || row.requirements_key !== g.key) return { stale: true };
+  const ref = row.items[index];
+  if (!ref || ref.kind !== "product") return null;
+
+  const department = g.requirements.departments.length === 1 ? g.requirements.departments[0] : undefined;
+  const catalog = await deps.catalog.search({ department, limit: 1000 });
+  const products = new Map(catalog.map((p) => [p.id, p]));
+  const items = resolve(row.items, products, g.owned);
+  if (!items) return { stale: true };
+  const filtered = filterCandidates(catalog, g.requirements);
+  // The other looks' main pieces: a swap mustn't make two looks the same.
+  const others = rows.filter((r) => r.id !== row.id).flatMap((r) => {
+    const its = resolve(r.items, products, g.owned);
+    return its ? [{ slot: r.slot, main: mainPieces(its) }] : [];
+  });
+
+  let tried = new Set([...(row.input_versions.tried ?? []), ref.productId]);
+  let pool = swapCandidates(filtered.kept, items, index, tried, g.requirements.budget);
+  // Every one has been shown here already: start again, leaving out only the piece in the look now.
+  if (!pool.length) {
+    tried = new Set([ref.productId]);
+    pool = swapCandidates(filtered.kept, items, index, tried, g.requirements.budget);
+  }
+  if (!pool.length) return { none: noOtherPiece(items[index]) };
+  if (options.allowAi && !(await options.allowAi())) return { limited: true };
+
+  for (let batch = 0; batch < 3 && pool.length; batch++) {
+    const picks = pool.splice(0, SWAP_BATCH);
+    for (const p of picks) tried.add(p.id);
+    const checked = await Promise.all(
+      picks.map(async (product) => {
+        const refs = row.items.map((r, i): LookItem => (i === index ? { kind: "product", productId: product.id } : r));
+        const swapped = items.map((it, i): ResolvedItem => (i === index ? { ref: refs[i], product } : it));
+        const same = others.find((o) => o.main === mainPieces(swapped));
+        const result: Checked = same
+          ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.slot}` }], failedProducts: [] }
+          : await check(deps, guestId, g, swapped, true);
+        const { data: inserted } = await db
+          .from("looks")
+          .insert({
+            user_id: guestId,
+            session_id: sessionId,
+            items: refs,
+            total_cents: totalOf(swapped, g.requirements).totalCents,
+            reason: result.reason ?? row.reason,
+            name: row.name,
+            revision_of: row.id,
+            requirements_key: g.key,
+            input_versions: { ...row.input_versions, swap: { from: ref.productId, to: product.id }, tried: [...tried] },
+            status: "checking",
+          })
+          .select("id")
+          .single()
+          .throwOnError();
+        await db.rpc("record_check", { look: inserted!.id, verdict: result.verdict, reasons: result.reasons, requirements_key: g.key }).throwOnError();
+        return { id: inserted!.id as string, swapped, ...result };
+      }),
+    );
+    const winner = checked.find((c) => c.verdict === "pass");
+    const losers = checked.filter((c) => c !== winner).map((c) => c.id);
+    if (losers.length) await db.from("looks").update({ status: "held" }).in("id", losers).throwOnError();
+    // Newest wins (R52): a change meanwhile means this swap was checked on old requirements.
+    if ((await gather(db, guestId, sessionId)).key !== g.key) {
+      if (winner) await db.from("looks").update({ status: "held" }).eq("id", winner.id).throwOnError();
+      return { stale: true };
+    }
+    if (winner) {
+      const { data: ok } = await db.rpc("publish_look", { look: winner.id, current_requirements: g.key, replaces: row.id }).throwOnError();
+      if (!ok) {
+        await db.from("looks").update({ status: "held" }).eq("id", winner.id).throwOnError();
+        return { stale: true };
+      }
+      const look = shown(winner.id, row.slot, { name: row.name ?? "Look", reason: winner.reason ?? row.reason ?? "" }, winner.swapped, g.requirements, true);
+      return { look, index };
+    }
+  }
+  return { none: noOtherPiece(items[index]) };
 }

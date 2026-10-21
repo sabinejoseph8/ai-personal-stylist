@@ -12,9 +12,10 @@ import { stylingItems } from "@/lib/wardrobe-service";
 import { isIdle } from "@/lib/sessions";
 
 // The styling session: the stylist stage (2a, 2b) and My Styling Notes (2c, 2d), with saved preferences
-// such as "Never: high heels" at the top of the notebook (R5, R24). On desktops the stage sits in a
-// 320 px stylist column and the notebook in the second (design 4.1, 5.6); looks come in Phase 4. What
-// the profile says stays under the notebook until Profile and privacy arrives in Phase 6 (2d, Q2).
+// such as "Never: high heels" at the top of the notebook (R5, R24), and the looks (4c). On desktops the
+// stage sits in a 320 px stylist column, the notebook in the second and the looks in the third; on
+// tablets the looks take the right-hand column (design 4.1, 5.5, 5.6). What the profile says stays
+// under the notebook until Profile and privacy arrives in Phase 6 (2d, Q2).
 export const metadata: Metadata = {
   title: "Your session · AI Personal Stylist",
 };
@@ -46,8 +47,8 @@ export default async function SessionPage() {
     : [[], []];
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:px-6 desktop:grid desktop:max-w-5xl desktop:grid-cols-[320px_minmax(0,440px)] desktop:items-start desktop:gap-x-12 desktop:px-8">
-      <h1 className="type-title m-0 desktop:col-span-2">Your styling session</h1>
+    <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:grid tablet:max-w-5xl tablet:grid-cols-2 tablet:items-start tablet:gap-x-8 tablet:px-6 desktop:max-w-7xl desktop:grid-cols-[320px_minmax(0,400px)_minmax(0,1fr)] desktop:gap-x-10 desktop:px-8">
+      <h1 className="type-title m-0 tablet:col-span-2 desktop:col-span-3">Your styling session</h1>
       <ToastProvider>
       <StylingSession openSessionId={resumable} initialNotes={notes} initialPhotos={photos} wardrobe={wardrobe} preferences={profile.preferences.map(describePreference)}>
         <section aria-labelledby="profile-title" className="flex flex-col gap-3">

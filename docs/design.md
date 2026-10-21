@@ -1,7 +1,7 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.11 (21 Oct 2026)
-**Last updated:** 20 Oct 2026
+**Status:** Agreed, version 1.12 (21 Oct 2026)
+**Last updated:** 21 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
 
@@ -298,6 +298,16 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **Use this look** checks the earlier look against current preferences first, then restores it or explains why it no longer fits.
 - **Undo feedback** appears after each revision and returns to the previous look and feedback.
 
+**Looks as built (4c)**
+- **Where:** under the notebook on phones; the right-hand column on tablets (stylist and notebook on the left); the third column on computers.
+- **Before looks:** a dashed box says what's needed: "Looks appear here once you tell the stylist the occasion." before a session, then the server's words, such as "Confirm your budget to see looks".
+- **Building:** three placeholder panels (Showroom blocks) with "Putting looks together", then "Checking your preferences".
+- **Item tiles:** the photo in a square with a Hairline outline, the name, the kind of piece, then a line with the hanger and "You own this", or the tag and "Sample product" with the price under it. **Swap** sits at the bottom of each sample product's tile, so a row's buttons line up; the shopper's own pieces have none. A swapped-in piece fades in with a **New** chip (Emerald, white text) on its photo. While a piece is being swapped, its photo shows a spinner and "Checking your preferences". If nothing else fits, a line under the tiles says so, for example "No other shoes fit everything you've asked for."
+- **After a change:** the looks stay, with Needs a new check, and a line with a spinner, "Updating your looks", above them, until they're checked again. Swap is paused meanwhile.
+- **Fewer than three:** a box after the looks says what limits them, with its choices as buttons. Tapping one says it to the stylist (only during a call); Try again builds again. With none at all, the same in a banner.
+- **Error:** a red banner, "The looks couldn't be put together.", with Try again; anything already shown stays.
+- Keep and Change (5a), Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
+
 **Preference check status**
 - Inside the look panel: Checking (a spinner and "Checking your preferences"), Checked (a shield and "Checked against your preferences"), Needs a new check (circular arrows), Held ("This look couldn't be checked." with **Try again**).
 - Conflict card: "Your profile says Never: high heels. Allow high heels for this session?" with **Allow for this session** and **Keep my preference**. The stylist asks the same question out loud.
@@ -568,6 +578,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.12 (21 Oct 2026):** 4c: the looks as built: where they sit on each screen size, before looks, building, the item tiles with Swap and New, after a change, fewer than three, and errors (4.3).
 - **1.11 (21 Oct 2026):** 4a: setup's read-back for each Must have and Never (5.2).
 - **1.10 (20 Oct 2026):** Phase 3 code review: Clear wardrobe items when nothing is ticked (your decision B), and the Wardrobe page's detail lengths (4.2).
 - **1.9 (20 Oct 2026):** 3d: Save to wardrobe as built, From your wardrobe in the notebook, and the Wardrobe page as built (4.2).

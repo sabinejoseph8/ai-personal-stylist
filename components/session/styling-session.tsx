@@ -1,6 +1,8 @@
 "use client";
 
-import { type ButtonHTMLAttributes, type ReactNode, type Ref, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ButtonHTMLAttributes, type ReactNode, type Ref, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { LooksArea } from "@/components/looks/looks-area";
+import { type LooksEvent, useLooks } from "@/components/looks/use-looks";
 import { FromYourWardrobe } from "@/components/notebook/from-wardrobe";
 import { MyStylingNotes } from "@/components/notebook/my-styling-notes";
 import { PhotoThumbnail, StyleAroundThisItem } from "@/components/notebook/pasted-photo";
@@ -18,6 +20,9 @@ import { PermissionCard } from "@/components/ui/permission-card";
 import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
+import { looksChanged, looksForStylist } from "@/core/looks/context";
+import type { ShownItem } from "@/core/looks/shown";
+import type { SwapRequest } from "@/core/notes/reader";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
 import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/lib/stage";
@@ -27,8 +32,9 @@ import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/li
 // captions, transcript or message box (R10, R11). Camera (Phase 3) and Voice only (6c) join the
 // controls when they exist. Then My Styling Notes (2d), with the photo to style around (3a), which
 // takes the second column on desktops, and the pinned bar on phones once the stylist scrolls out of
-// view. The call itself runs in use-conversation.ts, the notes in use-notes.ts and the photos in
-// use-photos.ts.
+// view. Then the looks (4c): the third column on desktops, the second on tablets, last on phones. The
+// call itself runs in use-conversation.ts, the notes in use-notes.ts, the photos in use-photos.ts and
+// the looks in use-looks.ts.
 
 const MICROPHONE_HELP: Record<MicrophoneProblem, string> = {
   // Browsers apply a changed microphone setting only after the page reloads (found on Sabine's iPhone in 2f).
@@ -43,6 +49,10 @@ const PHOTO_ADDED = "I've added a photo of something I'd like to style around.";
 /** What she hears when the camera names something (3c), or can't be used: her context says the rest. */
 const ON_CAMERA = "I'm holding something up to my camera.";
 const NO_CAMERA = "My camera won't turn on.";
+/** What she hears when new looks appear, or after a change brings them up to date (4c, R44): her context
+ *  lists them and says what changed, and she presents them in her own words (Sabine's answer to Q4). */
+const LOOKS_NEW = "Can you walk me through the looks you've put together?";
+const LOOKS_UPDATED = "What changed in my looks?";
 
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
@@ -101,6 +111,9 @@ export function StylingSession({
   // read as if spoken, and End clears the notes.
   const video = useRef<HTMLVideoElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
+  // Set once the looks exist, further down.
+  const resetLooks = useRef<(() => void) | null>(null);
+  const swapBySpeech = useRef<((swap: SwapRequest) => void) | null>(null);
   const call = useConversation(openSessionId, { video, audio }, {
     onEvent: (e) => {
       notes.onEvent(e);
@@ -111,13 +124,15 @@ export function StylingSession({
     onEnd: () => {
       notes.reset();
       photos.reset();
+      resetLooks.current?.();
     },
   });
-  // What the stylist is told: the server's latest context, plus what's on camera (3c), which only the
-  // page knows because frames are thrown away.
+  // What the stylist is told: the server's latest context, plus the looks on screen (4c) and what's on
+  // camera (3c), which only the page knows: which look is in view, and frames are thrown away.
   const told = useRef("");
+  const looksTold = useRef("");
   const cameraNote = useRef<CameraNote>(null);
-  const withCamera = () => [told.current, cameraForStylist(cameraNote.current)].filter(Boolean).join("\n");
+  const withCamera = () => [told.current, looksTold.current, cameraForStylist(cameraNote.current)].filter(Boolean).join("\n");
   const tell = (context: string) => {
     told.current = context;
     call.updateContext(withCamera());
@@ -134,7 +149,50 @@ export function StylingSession({
   // My Styling Notes (2c, 2d): words go to the server, notes and the next question come back, and the
   // stylist is told every change, including Confirm and Remove by touch. What the shopper says about
   // the photo comes back too (3b).
-  const notes = useNotes(call.sessionId, call.flow === "live", initialNotes, tell, (id, item) => photos.setItem(id, item));
+  const notes = useNotes(
+    call.sessionId,
+    call.flow === "live",
+    initialNotes,
+    tell,
+    (id, item) => photos.setItem(id, item),
+    (swap) => swapBySpeech.current?.(swap),
+  );
+
+  // The looks (4c): asked for again whenever what they must meet may have changed: the notes and whether
+  // they're confirmed (R39), the item to style around and the wardrobe items chosen to style with.
+  const inputs = useMemo(
+    () =>
+      JSON.stringify([
+        notes.notes.map((n) => [n.id, n.text, n.status]),
+        photos.active ? [photos.active.id, photos.active.version, photos.active.item] : null,
+        wardrobe.map((w) => w.id),
+      ]),
+    [notes.notes, photos.active, wardrobe],
+  );
+  const [looksChange, setLooksChange] = useState<string | null>(null);
+  const looks = useLooks(call.sessionId, inputs, (e: LooksEvent) => {
+    if (e.kind === "swapped") {
+      setLooksChange(`Just swapped in Look ${e.number}: ${e.look.items[e.index].name}, checked against their preferences.`);
+      return;
+    }
+    setLooksChange(e.kind === "updated" ? looksChanged(e.before, e.looks) : null);
+    if (call.flow === "live") speakUp.current = { text: e.kind === "new" ? LOOKS_NEW : LOOKS_UPDATED };
+  });
+  // The look most on screen, for a spoken swap that doesn't say which (Sabine's answer to Q2 in 4c).
+  const [lookInView, setLookInView] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    resetLooks.current = looks.reset;
+    swapBySpeech.current = (swap) => {
+      const look = looks.looks[(swap.look || lookInView || 0) - 1];
+      // No look named or on screen: she asks which one (her context says so).
+      if (!look) return;
+      const index = look.items.findIndex((i) => i.group === swap.piece && !i.owned);
+      if (index >= 0) void looks.swap(look.id, index);
+    };
+  });
+  /** The shopper's own pieces show their own photos. */
+  const imageFor = (item: ShownItem) =>
+    (item.kind === "photo" ? photos.photos.find((p) => p.id === item.id)?.thumbnailUrl : wardrobe.find((w) => w.id === item.id)?.thumbnailUrl) ?? null;
 
   const [notebookOpen, setNotebookOpen] = useState(true);
   const notebookTitle = useRef<HTMLHeadingElement>(null);
@@ -237,6 +295,15 @@ export function StylingSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, sessionId]);
 
+  // She's told about the looks whenever they change, before she's asked to present them.
+  const looksBusy = looks.phase === "building" || looks.phase === "checking";
+  useEffect(() => {
+    looksTold.current = looksForStylist({ looks: looks.looks, building: looksBusy, needs: looks.needs, noMatch: looks.noMatch, inView: lookInView, changed: looksChange });
+    if (flow === "live") call.updateContext(withCamera());
+    // withCamera and call only read refs; this runs when the looks change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [looks.looks, looksBusy, looks.needs, looks.noMatch, lookInView, looksChange, flow]);
+
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {
     cameraNote.current =
@@ -259,7 +326,7 @@ export function StylingSession({
 
   return (
     <>
-      <section aria-labelledby="stage-title" className="flex flex-col gap-4">
+      <section aria-labelledby="stage-title" className="flex flex-col gap-4 tablet:col-start-1">
         <h2 id="stage-title" className="sr-only">
           Your stylist
         </h2>
@@ -465,7 +532,7 @@ export function StylingSession({
         )}
       </section>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 tablet:col-start-1 desktop:col-start-2">
         <MyStylingNotes
           notes={notes.notes}
           preferences={preferences}
@@ -502,6 +569,25 @@ export function StylingSession({
         />
         {children}
       </div>
+
+      <LooksArea
+        className="tablet:col-start-2 tablet:row-span-2 tablet:row-start-2 desktop:col-start-3 desktop:row-span-1"
+        started={Boolean(call.sessionId)}
+        looks={looks.looks}
+        phase={looks.phase}
+        needs={looks.needs}
+        noMatch={looks.noMatch}
+        problem={looks.problem}
+        swapping={looks.swapping}
+        fresh={looks.fresh}
+        swapNote={looks.swapNote}
+        canTalk={flow === "live"}
+        imageFor={imageFor}
+        onSwap={(lookId, index) => void looks.swap(lookId, index)}
+        onTryAgain={looks.tryAgain}
+        onChoice={call.sendPhrase}
+        onInView={setLookInView}
+      />
 
       {inCall && !stageInView && (
         <PinnedBar
