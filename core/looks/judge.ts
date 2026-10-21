@@ -18,8 +18,8 @@ Check each of these, one point each:
 - every firm preference listed: it must clearly hold for every item
 - the occasion, season and setting in the shopper's notes: every item in the outfit must be suitable
 - any other note that applies, such as a style
-- colors, when the notes name a preferred color or their Likes name colors: the main piece (the dress or suit), or at least one of the top and bottom, must be in one of those colors. The color only in the shoes, bag or jewelry doesn't count, and neither does a navy, black or white main piece
-- the colors in the outfit go well together, shoes and bag included: they should pick up a color in the clothes, or a neutral that suits them. Black shoes or a black bag with clothes in warm colors, earth tones or navy, and nothing black or grey, don't go together
+- colors, when the notes name a preferred color or their Likes name colors: the main piece (the dress or suit), or at least one of the top and bottom, must be in one of those colors. The color only in the shoes, bag or jewelry doesn't count, and neither does a navy, black or white main piece. Earth tones include burgundy; navy isn't one
+- the colors in the outfit go well together, shoes and bag included, as a stylist would see them. Black goes with many outfits, but not every one: black flats with a navy blazer, a burgundy top and a camel skirt don't go together, and tan or a neutral would suit those colors better
 - an inspiration item, if there is one: the look must include a sample item clearly similar to it
 
 Judge what's in the outfit. A piece the shopper didn't ask for, such as a coat, wrap or bag, is never missing: fail a look for something missing only when they explicitly asked for it, such as "a jacket in every look".

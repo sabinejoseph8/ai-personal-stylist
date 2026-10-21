@@ -101,6 +101,8 @@ const CASES: Case[] = [
   { id: "inspiration, different", scene: INSPIRED, items: [item("w-navy-wrap-dress"), item("w-camel-wool-coat"), item("w-nude-slingback-flats")], expect: "not pass", why: "nothing like the emerald dress" },
   { id: "birthday, black flats with warm colors", scene: BIRTHDAY, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-burgundy-turtleneck"), item("w-camel-pleated-midi-skirt"), item("w-black-ballet-flats")], expect: "not pass", why: "black shoes don't go with navy, burgundy and camel (Sabine's review)" },
   { id: "birthday, tan loafers with warm colors", scene: BIRTHDAY, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-burgundy-turtleneck"), item("w-camel-pleated-midi-skirt"), item("w-tan-leather-loafers")], expect: "pass", why: "tan shoes pick up the camel skirt" },
+  { id: "relaxed, black flats with stripes and denim", scene: FLASHY, items: [item("w-breton-striped-top"), item("w-mid-blue-straight-jeans"), item("w-black-ballet-flats")], expect: "pass", why: "black goes with many outfits, not only black or grey ones (Sabine)" },
+  { id: "interview, burgundy turtleneck", scene: INTERVIEW, items: [item("w-burgundy-turtleneck"), item("w-black-tailored-trousers"), item("w-black-ballet-flats")], expect: "pass", why: "burgundy counts as an earth tone (Sabine)" },
   { id: "owned blazer", scene: OWNED, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-white-silk-blouse"), item("w-camel-pleated-midi-skirt"), item("w-tan-leather-loafers")], expect: "pass", why: "styles the shopper's blazer" },
 ];
 
