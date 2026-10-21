@@ -39,7 +39,8 @@ describe("Swap's replacements", () => {
   it("are none for the shopper's own piece, which can't be swapped", () => {
     const owned: ResolvedItem = { ref: { kind: "photo", photoId: "p", version: 1 }, owned: { ref: { kind: "photo", photoId: "p", version: 1 }, name: "Navy wool blazer", group: "outer", words: "blazer, navy" } };
     expect(swapCandidates(women, [owned, ...look], 0, new Set(), budget)).toEqual([]);
-    expect(noOtherPiece(look[1])).toBe("No other shoes fit everything you've asked for.");
+    expect(noOtherPiece(look[1])).toBe("No other shoes fit everything you've asked for, so these stay.");
+    expect(noOtherPiece(look[0])).toBe("No other dresses fit everything you've asked for, so this one stays.");
   });
 });
 

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createSampleCatalog } from "@/connectors/catalog/sample";
 import { createFakeLooksBuilder, type LooksBuilder } from "@/core/looks/builder";
 import type { LookItem } from "@/core/looks/look";
-import { createFakeJudge } from "@/core/looks/judge";
+import { createFakeJudge, type Judge } from "@/core/looks/judge";
 import { behindTheScenesFor } from "@/lib/behind-the-scenes";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { buildLooks, currentLooks, type LooksDeps, type ShownLook, swapPiece } from "@/lib/looks-service";
@@ -268,6 +268,36 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     const now = await currentLooks(deps(), guest.id, session);
     expect(now.map((l) => l.id)).toEqual([look.id, looks[1].id, looks[2].id]);
   }, 90_000);
+
+  it("when no replacement passes, the piece stays, and Swap again doesn't pay to check the same ones (found on Sabine's iPhone in 4d)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const index = look.items.findIndex((i) => i.group === "shoes");
+    // A judge that blocks every swapped look.
+    let judged = 0;
+    const strict: Judge = {
+      async judge(input) {
+        if (!input.withReason) return createFakeJudge().judge(input);
+        judged++;
+        return { verdict: "conflict", reasons: [{ about: "Outdoor wedding, November", ok: false, why: "Too casual" }], costUsd: 0 };
+      },
+    };
+    const withStrict = { ...deps(), judge: strict };
+    const first = await swapPiece(withStrict, guest.id, session, look.id, index);
+    expect(first).toEqual({ none: "No other shoes fit everything you've asked for, so these stay." });
+    expect(judged).toBeGreaterThan(0);
+    const checked = judged;
+    expect(await swapPiece(withStrict, guest.id, session, look.id, index)).toEqual(first);
+    expect(judged).toBe(checked);
+    expect((await currentLooks(deps(), guest.id, session))[0].id).toBe(look.id);
+
+    // A change to the requirements starts afresh: after the looks are brought up to date, they're checked again.
+    await setBudget(450);
+    await buildLooks(deps(), guest.id, session);
+    const now = (await currentLooks(deps(), guest.id, session))[0];
+    await swapPiece(withStrict, guest.id, session, now.id, now.items.findIndex((i) => i.group === "shoes"));
+    expect(judged).toBeGreaterThan(checked);
+  }, 60_000);
 
   it("turns a swap away while the look needs a new check, or for the shopper's own piece", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();

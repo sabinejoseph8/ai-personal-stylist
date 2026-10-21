@@ -62,7 +62,7 @@ export function LooksArea({
   problem: string | null;
   swapping: { lookId: string; index: number } | null;
   fresh: Record<string, number>;
-  swapNote: { lookId: string; text: string } | null;
+  swapNote: { lookId: string; index: number; text: string } | null;
   /** The call is live, so a no-match choice can be said to the stylist. */
   canTalk: boolean;
   imageFor: (item: ShownItem) => string | null;
@@ -137,7 +137,7 @@ export function LooksArea({
           updating={phase === "updating"}
           swappingIndex={swapping?.lookId === look.id ? swapping.index : null}
           newIndex={fresh[look.id] ?? null}
-          note={swapNote?.lookId === look.id ? swapNote.text : null}
+          note={swapNote?.lookId === look.id ? swapNote : null}
           canSwap={!swapping && !busy}
           imageFor={imageFor}
           onSwap={(index) => onSwap(look.id, index)}

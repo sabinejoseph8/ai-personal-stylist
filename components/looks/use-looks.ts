@@ -32,7 +32,8 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
   const [swapping, setSwapping] = useState<{ lookId: string; index: number } | null>(null);
   // The piece each swapped look got, for its New chip.
   const [fresh, setFresh] = useState<Record<string, number>>({});
-  const [swapNote, setSwapNote] = useState<{ lookId: string; text: string } | null>(null);
+  // What a swap couldn't do, shown on the piece's own tile (found on Sabine's iPhone in 4d).
+  const [swapNote, setSwapNote] = useState<{ lookId: string; index: number; text: string } | null>(null);
 
   const latest = useRef(0);
   // Counts finished swaps: an answer read before a swap finished would bring back the old piece.
@@ -129,11 +130,11 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
         show(shown.current.map((l) => (l.id === lookId ? look : l)));
         setFresh((f) => ({ ...f, [look.id]: index }));
         hook.current({ kind: "swapped", look, index, number });
-      } else if (body?.none) setSwapNote({ lookId, text: body.none });
+      } else if (body?.none) setSwapNote({ lookId, index, text: body.none });
       else if (body?.stale) void refresh();
-      else setSwapNote({ lookId, text: body?.error ?? "The swap couldn't be checked. Try again." });
+      else setSwapNote({ lookId, index, text: body?.error ?? "The swap couldn't be checked. Try again." });
     } catch {
-      setSwapNote({ lookId, text: "The swap couldn't be checked. Try again." });
+      setSwapNote({ lookId, index, text: "The swap couldn't be checked. Try again." });
     } finally {
       setSwapping(null);
     }
