@@ -147,6 +147,8 @@ Also from the plan:
 
 After the fixes: 254 unit and database tests and 131 browser tests pass, and the photo eval had 93% of details right (pass mark 85%), with every item found in the two-item photos.
 
+Your final iPhone check then found two more problems, both fixed: "use this one" did nothing (decision D), and after Style with these and Change, the Wardrobe page came back with its old state, hiding Clear wardrobe items (it now starts again from what's saved, rule 11 of the tech spec). Your re-checks passed, and Phase 3 was done on 20 Oct 2026.
+
 ## 7. Decisions log
 
 Newest first. The agreed files hold the detail.
