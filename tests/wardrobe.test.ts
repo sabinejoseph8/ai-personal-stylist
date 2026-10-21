@@ -4,6 +4,7 @@ import { stylistContext } from "@/core/notes/context";
 import type { PhotoItem } from "@/core/photos/item";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { whileStoreBusy } from "@/lib/photos";
+import { busyAnswer } from "./support/test-guests";
 import { addPhoto, deleteSessionPhotos, finishPhoto, PHOTO_BUCKET } from "@/lib/photos-service";
 import { categoryOf, WardrobeEdit } from "@/lib/wardrobe";
 import {
@@ -59,7 +60,7 @@ describe.skipIf(!canRunDatabaseTests)("the wardrobe", () => {
   const jpeg = () => sharp({ create: { width: 64, height: 48, channels: 3, background: "#1f2a44" } }).jpeg().toBuffer();
   // Like the browser, tried again while the photo store is busy for a moment (decision C).
   const put = (url: string, body: Buffer) =>
-    whileStoreBusy(() => fetch(url, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: new Uint8Array(body) }), (res) => res.status >= 500);
+    whileStoreBusy(() => fetch(url, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: new Uint8Array(body) }), busyAnswer);
   const blazer: PhotoItem = {
     name: "Navy wool blazer",
     details: {

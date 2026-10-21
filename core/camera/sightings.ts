@@ -47,17 +47,28 @@ export function nextSeen(shown: Seen | null, before: Sighting | null, now: Sight
 export const seenLabel = (seen: Seen) => (seen.kind === "several" ? "Several items" : `${seen.name}${seen.sure ? "" : "?"}`);
 
 // "Use this one" takes the still (R34), heard by plain code while the camera is on (Sabine's answer to
-// Q1 in 3c). Only clear requests count (her decision A in 3e): everyday words such as "I'd use that for
-// work" or "I'm not sure about this one" used to take a still and turn the camera off.
-const CAPTURE = /\b(use (this|that) (one|1)|use this|capture|take (a|the) (picture|photo))\b/i;
-/** "This one" on its own, as the whole of what the shopper said. */
-const JUST_THIS_ONE = /^\W*this (one|1)\W*$/i;
+// Q1 in 3c). Only clear requests count (her decision A in 3e), so everyday sentences such as "I'd use
+// that for work" or "I'm not sure about this one" don't take a still. But speech recognition writes a
+// short phrase in many ways ("Use, this one", "Juice this one", "Yes, this one"): on Sabine's iPhone the
+// exact words of decision A did nothing, so punctuation and capitals don't matter, and a short phrase
+// with "this one" or "that one" counts too (her decision D in 3e).
+const CAPTURE = /\b(use (this|that) (one|1)|use this|capture|take (a|the) (picture|photo))\b/;
+const THIS_ONE = /\b(this|that) (one|1)\b/;
+/** "Yes, this one" or "OK, that one please", but not "I'm not sure about this one". */
+const SHORT_PHRASE_WORDS = 4;
+
+/** The words as plain lowercase words, without punctuation. */
+const plainWords = (words: string) => words.toLowerCase().replace(/[^a-z0-9']+/g, " ").trim();
 
 /**
- * Whether the shopper's words ask to capture what's on camera. "This one" alone counts only once the
- * words are final, since it may be the start of a longer sentence ("this one is too long").
+ * Whether the shopper's words ask to capture what's on camera. A short phrase counts only once the words
+ * are final, since it may be the start of a longer sentence ("this one is too long").
  */
-export const asksToCapture = (words: string, final = true) => CAPTURE.test(words) || (final && JUST_THIS_ONE.test(words));
+export function asksToCapture(words: string, final = true) {
+  const said = plainWords(words);
+  if (CAPTURE.test(said)) return true;
+  return final && THIS_ONE.test(said) && said.split(" ").length <= SHORT_PHRASE_WORDS;
+}
 
 /**
  * How long "use this one" still counts after an item was last on screen, and how long it waits for a

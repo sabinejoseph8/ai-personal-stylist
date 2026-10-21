@@ -4,6 +4,7 @@ import type { PhotoItem } from "@/core/photos/item";
 import type { PhotoReader } from "@/core/photos/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { whileStoreBusy } from "@/lib/photos";
+import { busyAnswer } from "./support/test-guests";
 import {
   addPhoto,
   changePhoto,
@@ -33,7 +34,7 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
   const put = (url: string, body: Buffer, type = "image/jpeg") =>
     whileStoreBusy(
       () => fetch(url, { method: "PUT", headers: { "content-type": type }, body: new Uint8Array(body) }),
-      (res) => res.status >= 500,
+      busyAnswer,
     );
 
   /** Add a photo the way the page does: ask, send, then finish. */

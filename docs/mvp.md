@@ -137,7 +137,7 @@ Reviewed all Phase 3 code (78 files, about 5,900 lines, apart from docs) at extr
 | An extra photo lookup on every send of words | No change: it runs alongside the other lookups, and keeps the stylist right when the shopper switches photos mid-reading |
 | Two copies of the photo checking steps | Fixed: one, shared by session photos and Add item |
 | Test clean-up listed the photo store all at once | Fixed: one folder at a time |
-| "Use this one" caught everyday phrases ("I'd use that for work") | Decision A: only clear requests, with tests |
+| "Use this one" caught everyday phrases ("I'd use that for work") | Decision A: only clear requests, with tests. Your final iPhone check then found "use this one" did nothing: speech recognition doesn't always write the exact words. Decision D: punctuation and capitals don't matter, and a short phrase with "this one" or "that one" counts, with tests |
 | No way to stop styling with wardrobe items | Decision B: Clear wardrobe items, with a browser test |
 
 Also from the plan:
@@ -153,7 +153,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
-| 20 Oct 2026 | Phase 3 code review. A: "use this one" hears only clear requests ("use this one", "use that one", "use this", "capture", "take a photo or picture", or "this one" on its own), rather than leaving the broader phrases from the 3c fix. B: with nothing ticked, Style with these becomes Clear wardrobe items (the other option was a Remove link in the notebook). C: the photo store tries a busy request again, rather than a separate Supabase project for tests (about $10 a month more) or leaving it | Sabine | tech spec 1.21, design 1.10 |
+| 20 Oct 2026 | Phase 3 code review. A: "use this one" hears only clear requests ("use this one", "use that one", "use this", "capture", "take a photo or picture", or "this one" on its own), rather than leaving the broader phrases from the 3c fix. B: with nothing ticked, Style with these becomes Clear wardrobe items (the other option was a Remove link in the notebook). C: the photo store tries a busy request again, rather than a separate Supabase project for tests (about $10 a month more) or leaving it. D, after the final iPhone check: "use this one" ignores punctuation and capitals and accepts a short phrase with "this one" or "that one" (the other option was the broader 3c rule) | Sabine | tech spec 1.21, design 1.10 |
 | 20 Oct 2026 | 3d plan, the recommended answers. Q1: Add item uploads a photo on the Wardrobe page, and the photo reader suggests its details (the other option sent the shopper to a session). Q2: Style with these shows the chosen items in My Styling Notes under From your wardrobe and tells the stylist; they stay chosen until changed (the other option only remembered them for Phase 4). Q3: the Wardrobe page is linked from the session page and the welcome-back screen until the app menu, which is added to Phase 7 (7a) because no task built it (the other option was building the menu in 3d) | Sabine | tech spec 1.20, design 1.9, progress.md (7a) |
 | 20 Oct 2026 | 3d: wardrobe items join the app's own records (decision A), written only by the server, so a photo path can't point at anything unchecked. The stylist is now told the session's context as each call starts, not only after the first change | Claude, in the 3d build | tech spec 1.20 |
 | 20 Oct 2026 | 3c plan, the recommended answers. Q1: "use this one" is heard by plain code in the page (instant and free) rather than the notes reader (more ways of saying it, but slower while the shopper holds the item still). Q2: the camera turns off after Capture, so the stylist talks about the captured photo rather than naming the camera item and the photo one after the other | Sabine | tech spec 1.18, design 1.8 |
@@ -388,7 +388,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
-- **1.17 (20 Oct 2026):** The Phase 3 code review (3e): 15 findings and decisions A to C, and what "Too many connections" turned out to be.
+- **1.17 (20 Oct 2026):** The Phase 3 code review (3e): 15 findings and decisions A to D, and what "Too many connections" turned out to be.
 - **1.16 (20 Oct 2026):** 3d decisions (Q1 to Q3), wardrobe items written only by the server, and the stylist told everything as a call starts.
 - **1.15 (20 Oct 2026):** 3c decisions (Q1, Q2), the camera reader check in risk 9, and D08 and D09 built.
 - **1.14 (20 Oct 2026):** 3b decisions (Q1 to Q3), no outline on the photo in v1, risk 9 handled with the photo eval result, and D10 built.
