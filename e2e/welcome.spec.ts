@@ -95,6 +95,8 @@ test.describe("a guest", () => {
     await expect(page.getByRole("button", { name: "Womenswear", exact: true })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Amount ($)")).toHaveValue("400");
+    // The sample profile's rules are ready-made, so they're read back at once (4a).
+    await expect(page.getByText("Read as: no shoes with heels over 5 cm")).toBeVisible();
     await page.getByRole("button", { name: "Finish setup" }).click();
     await expect(page).toHaveURL("/session");
     await expect(page.getByText("Never: high heels", { exact: true })).toBeVisible();
@@ -131,6 +133,47 @@ test.describe("a guest", () => {
 
     const { data } = await serverDb().from("profiles").select("departments, style_words, sizes, budget_meaning").eq("user_id", guest.id).single();
     expect(data).toEqual({ departments: ["menswear"], style_words: ["Bold"], sizes: { top: "L" }, budget_meaning: "between" });
+  });
+
+  test("each Must have and Never shows how it's read, and is saved with its rule (4a, Sabine's Q1 and Q3)", async ({ page }) => {
+    await page.goto("/setup");
+    await page.getByRole("button", { name: "Skip" }).click();
+    await page.getByRole("button", { name: "Skip" }).click();
+    await expect(page.getByText("Step 3 of 3")).toBeVisible();
+    const add = async (kind: string, words: string) => {
+      await page.getByLabel(`Add a ${kind} preference`).fill(words);
+      await page.getByLabel(`Add a ${kind} preference`).press("Enter");
+    };
+    await add("Never", "high heels");
+    await expect(page.getByText("Read as: no shoes with heels over 5 cm")).toBeVisible();
+    await add("Must have", "sleeves");
+    await expect(page.getByText("Read as: only tops, dresses and jackets with sleeves (not sleeveless)")).toBeVisible();
+    // Not about a product detail: the stylist's judgment checks it (Sabine's Q3).
+    await add("Never", "anything too flashy");
+    await expect(page.getByText("Read as: checked by your stylist's judgment")).toBeVisible();
+    // Likes only guide choices, so they aren't read as rules.
+    await add("Likes", "earth tones");
+    await expect(page.getByText(/Read as/)).toHaveCount(3);
+    await noSeriousA11yProblems(page);
+    await page.getByRole("button", { name: "Finish setup" }).click();
+    await expect(page).toHaveURL("/session");
+
+    const { data } = await serverDb().from("saved_preferences").select("words, rule").eq("user_id", guest.id).order("created_at");
+    expect(data).toEqual([
+      { words: "high heels", rule: { type: "detail", categories: ["shoes"], test: { detail: "heelCm", op: "over", value: 5 } } },
+      { words: "sleeves", rule: { type: "detail", categories: [], test: { detail: "sleeve", op: "one_of", values: ["cap", "short", "elbow", "three_quarter", "long"] } } },
+      { words: "anything too flashy", rule: { type: "judged" } },
+      { words: "earth tones", rule: null },
+    ]);
+  });
+
+  test("a preference saved before rules existed gets its rule when setup opens (4a)", async ({ page }) => {
+    await serverDb().from("saved_preferences").insert({ user_id: guest.id, kind: "never", words: "high heels" }).throwOnError();
+    await page.goto("/setup");
+    await page.getByRole("button", { name: "Skip" }).click();
+    await page.getByRole("button", { name: "Skip" }).click();
+    await expect(page.getByText("Read as: no shoes with heels over 5 cm")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Finish setup" })).toBeEnabled();
   });
 
   test("a save that can't reach the server shows a message, not an error screen (Phase 1 code review)", async ({ page }) => {

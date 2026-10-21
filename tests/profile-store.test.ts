@@ -28,6 +28,24 @@ describe.skipIf(!canRunDatabaseTests)("saved preferences", () => {
     ]);
   });
 
+  it("keeps each Must have and Never's rule with it (4a)", async () => {
+    const rule = { type: "detail" as const, categories: ["shoes" as const], test: { detail: "heelCm" as const, op: "over" as const, value: 5 } };
+    await savePreferences(guest.db, [
+      { kind: "never", words: "high heels", rule },
+      { kind: "never", words: "anything too flashy", rule: { type: "judged" } },
+      { kind: "likes", words: "emerald" },
+    ]);
+    expect((await loadProfile(guest.db, guest.id)).preferences).toEqual([
+      { kind: "never", words: "high heels", rule },
+      { kind: "never", words: "anything too flashy", rule: { type: "judged" } },
+      { kind: "likes", words: "emerald" },
+    ]);
+    await savePreferences(guest.db, [
+      { kind: "never", words: "high heels" },
+      { kind: "likes", words: "emerald" },
+    ]);
+  });
+
   it("a save that fails keeps the guest's existing preferences", async () => {
     const tooLong = "x".repeat(201); // the database allows up to 200 characters
     await expect(

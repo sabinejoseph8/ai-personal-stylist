@@ -83,9 +83,10 @@ test.describe("the wardrobe", () => {
     await page.getByRole("button", { name: "Add item" }).click();
     await expect(page.getByRole("heading", { name: "Save photos to your wardrobe" })).toBeVisible();
     await pick(page, "Allow");
-    // The photo reader suggests the details, to check before adding.
+    // The photo reader suggests the details, to check before adding. Reading a photo can take a few
+    // seconds while other tests run, as in the other photo tests.
     const sheet = page.getByRole("dialog", { name: "Check the details" });
-    await expect(sheet.getByLabel("Name")).toHaveValue("Navy wool blazer");
+    await expect(sheet.getByLabel("Name")).toHaveValue("Navy wool blazer", { timeout: 15_000 });
     await expect(sheet.getByLabel("Category")).toHaveValue("outerwear");
     await noSeriousA11yProblems(page);
     await sheet.getByLabel("Name").fill("Work blazer");
