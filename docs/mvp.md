@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.15
+**Status:** Living document, version 1.16
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.8, tech spec 1.18 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.9, tech spec 1.20 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -124,6 +124,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | 3d plan, the recommended answers. Q1: Add item uploads a photo on the Wardrobe page, and the photo reader suggests its details (the other option sent the shopper to a session). Q2: Style with these shows the chosen items in My Styling Notes under From your wardrobe and tells the stylist; they stay chosen until changed (the other option only remembered them for Phase 4). Q3: the Wardrobe page is linked from the session page and the welcome-back screen until the app menu, which is added to Phase 7 (7a) because no task built it (the other option was building the menu in 3d) | Sabine | tech spec 1.20, design 1.9, progress.md (7a) |
+| 20 Oct 2026 | 3d: wardrobe items join the app's own records (decision A), written only by the server, so a photo path can't point at anything unchecked. The stylist is now told the session's context as each call starts, not only after the first change | Claude, in the 3d build | tech spec 1.20 |
 | 20 Oct 2026 | 3c plan, the recommended answers. Q1: "use this one" is heard by plain code in the page (instant and free) rather than the notes reader (more ways of saying it, but slower while the shopper holds the item still). Q2: the camera turns off after Capture, so the stylist talks about the captured photo rather than naming the camera item and the photo one after the other | Sabine | tech spec 1.18, design 1.8 |
 | 20 Oct 2026 | 3b plan, all recommended answers. Q1: once a photo is read, the stylist speaks up, naming the item and asking which one or whose it is (R29 says she asks). Q2: the photo eval uses 20 sample catalog photos plus 4 two-item photos made from them: free, rights-safe, with the right answers from the catalog, though cleaner than real phone photos (the other options were about $0.65 of generated "phone photos", waiting for November's OpenAI allowance, or Sabine's own photos kept private). Q3: what the shopper says about the photo reaches it through the notes reader in the same reading, checked with the notes eval (the other option was a second small reading, about 2 cents more a demo) | Sabine | tech spec 1.17, design 1.7 |
 | 20 Oct 2026 | 3b: the photo's matching area isn't outlined in v1, because the photo reader's positions aren't reliable enough to draw. The design asks for an outline only when the position is known | Claude, in the 3b plan Sabine approved | design 1.7 |
@@ -356,6 +358,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.16 (20 Oct 2026):** 3d decisions (Q1 to Q3), wardrobe items written only by the server, and the stylist told everything as a call starts.
 - **1.15 (20 Oct 2026):** 3c decisions (Q1, Q2), the camera reader check in risk 9, and D08 and D09 built.
 - **1.14 (20 Oct 2026):** 3b decisions (Q1 to Q3), no outline on the photo in v1, risk 9 handled with the photo eval result, and D10 built.
 - **1.13 (20 Oct 2026):** 3a decisions (Q1 to Q4), risk 5 handled for the item to style around, and D08, D35 and D36 built.

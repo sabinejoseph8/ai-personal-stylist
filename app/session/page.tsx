@@ -8,6 +8,7 @@ import { currentGuest } from "@/lib/guest";
 import { describeBudget, describePreference } from "@/lib/profile";
 import { loadProfile } from "@/lib/profile-store";
 import { listPhotos } from "@/lib/photos-service";
+import { stylingItems } from "@/lib/wardrobe-service";
 import { isIdle } from "@/lib/sessions";
 
 // The styling session: the stylist stage (2a, 2b) and My Styling Notes (2c, 2d), with saved preferences
@@ -21,9 +22,11 @@ export const metadata: Metadata = {
 export default async function SessionPage() {
   const guest = await currentGuest();
   if (!guest) redirect("/");
-  const [profile, open] = await Promise.all([
+  const [profile, open, wardrobe] = await Promise.all([
     loadProfile(guest.db, guest.id),
     guest.db.from("sessions").select("id, last_activity_at").in("status", ["active", "paused"]).maybeSingle(),
+    // Chosen with Style with these on the Wardrobe page (3d).
+    stylingItems(guest.db, guest.id).catch(() => []),
   ]);
   const budget = describeBudget(profile.budget);
   // Within 30 minutes, the shopper can carry on the same session (R12).
@@ -46,7 +49,7 @@ export default async function SessionPage() {
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:px-6 desktop:grid desktop:max-w-5xl desktop:grid-cols-[320px_minmax(0,440px)] desktop:items-start desktop:gap-x-12 desktop:px-8">
       <h1 className="type-title m-0 desktop:col-span-2">Your styling session</h1>
       <ToastProvider>
-      <StylingSession openSessionId={resumable} initialNotes={notes} initialPhotos={photos} preferences={profile.preferences.map(describePreference)}>
+      <StylingSession openSessionId={resumable} initialNotes={notes} initialPhotos={photos} wardrobe={wardrobe} preferences={profile.preferences.map(describePreference)}>
         <section aria-labelledby="profile-title" className="flex flex-col gap-3">
           <h2 id="profile-title" className="type-subheading m-0">
             From your profile
@@ -62,6 +65,10 @@ export default async function SessionPage() {
           <div className="flex flex-wrap gap-2">
             <Link href="/setup" className={buttonClasses("secondary")}>
               Edit your profile
+            </Link>
+            {/* Until the app menu arrives (Phase 7), the wardrobe is reached from here (Q3 in 3d). */}
+            <Link href="/wardrobe" className={buttonClasses("secondary")}>
+              Wardrobe
             </Link>
             <Link href="/" className={buttonClasses("quiet")}>
               Back to the start

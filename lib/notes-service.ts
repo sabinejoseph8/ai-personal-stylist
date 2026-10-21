@@ -9,6 +9,7 @@ import { active, type NextQuestion, type Note, type ShownNote } from "@/core/not
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
 import { activePhoto, changePhoto } from "@/lib/photos-service";
+import { stylingPicks } from "@/lib/wardrobe-service";
 
 // My Styling Notes on the server (2c): words in, notes out, with latest word wins (R22).
 
@@ -128,7 +129,11 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
   });
   // A change for a photo replaced meanwhile is dropped (its version no longer matches).
   const changed = photo && reading.photo ? await changePhoto(deps.db, guestId, sessionId, photo.id, reading.photo, photo.version) : null;
-  const [preferences, latest] = await Promise.all([preferencesOf(deps.db, guestId), photo ? activePhoto(deps.db, sessionId) : null]);
+  const [preferences, latest, wardrobe] = await Promise.all([
+    preferencesOf(deps.db, guestId),
+    photo ? activePhoto(deps.db, sessionId) : null,
+    stylingPicks(deps.db, guestId),
+  ]);
   let question = reading.question;
   if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);
   else if (heard.turn) {
@@ -140,7 +145,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     notes: shown(done.notes),
     question,
     seq,
-    context: stylistContext(done.notes, preferences, question, latest?.item ?? null),
+    context: stylistContext(done.notes, preferences, question, latest?.item ?? null, wardrobe),
     ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
   });
 }
@@ -157,6 +162,10 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
   }
-  const [preferences, photo] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId)]);
-  return { version: done.version, notes: shown(done.notes), context: stylistContext(done.notes, preferences, null, photo?.item ?? null) } satisfies NotesUpdate;
+  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  return {
+    version: done.version,
+    notes: shown(done.notes),
+    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+  } satisfies NotesUpdate;
 }

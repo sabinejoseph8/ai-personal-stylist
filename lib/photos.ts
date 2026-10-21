@@ -9,7 +9,17 @@ export const MAX_PHOTOS = 5;
 
 export type PhotoSource = "upload" | "camera";
 /** What the browser gets: short-lived links, never where the files are kept, and what the photo reader made of it (3b). */
-export type ShownPhoto = { id: string; version: number; source: PhotoSource; active: boolean; photoUrl: string; thumbnailUrl: string; item: StyleItem };
+export type ShownPhoto = {
+  id: string;
+  version: number;
+  source: PhotoSource;
+  active: boolean;
+  photoUrl: string;
+  thumbnailUrl: string;
+  item: StyleItem;
+  /** Already saved to the wardrobe (3d). */
+  inWardrobe: boolean;
+};
 
 export const PHOTO_MESSAGES = {
   type: "Use a JPEG, PNG, WebP or HEIC photo up to 10 MB.",
