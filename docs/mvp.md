@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.24
+**Status:** Living document, version 1.25
 **Last updated:** 21 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 21 Oct 2026 | Looks speed plan, the recommended answer. Q1: the occasion's formality is guidance to the builder, with the judgment step still the gate (the other option was a firm formality rule in code, with a table of occasions). With it: the builder hears which looks are shown, repeats aren't judged, and rounds stop when no new look can be made. A stricter builder guidance (no white at a wedding, nothing edgy or preppy for "elegant") was measured and left out, because it usually gave 2 looks instead of 3 | Sabine | tech spec 1.28 |
 | 21 Oct 2026 | Tavus Starter's 120 minutes ran out, and Tavus has no way to add minutes to a plan. Sabine upgraded the Tavus plan, with 175 minutes available (the other options were waiting for the renewal, or building the voice-only stylist from 6c first) | Sabine | progress.md, risk 3 |
 | 21 Oct 2026 | 5a plan, the recommended answers. Q1: feedback is kept as notes in the notebook (the other option was the separate feedback table). Q2: spoken feedback is read when the shopper finishes speaking (the other option read it while they talk, slower and costlier). Q3: Keep and Change by touch are jotted as Confirmed (the other option jotted them To confirm) | Sabine | tech spec 1.27, design 1.15 |
 | 21 Oct 2026 | Phase 4 code review (4e). Q1: delete the unused event_log table (the other option kept it for a possible history log). A: until 5c, the no-match box offers only choices that work; "Allow it for this session" returns with session exceptions (the other option left them as they were) | Sabine | tech spec 1.26, design 1.14 |
@@ -398,6 +399,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.25 (21 Oct 2026):** The looks speed plan (Q1), and what it measured.
 - **1.24 (21 Oct 2026):** 5a done. The Tavus minutes running out, Sabine's plan upgrade, and risk 3 updated.
 - **1.23 (21 Oct 2026):** 5a decisions (Q1 to Q3).
 - **1.22 (21 Oct 2026):** Phase 4 code review decisions (Q1, A), and the cost risk's new guard: no rebuild on unchanged requirements.

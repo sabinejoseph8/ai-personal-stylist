@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Product } from "@/connectors/catalog/types";
-import { builderPrompt, createFakeLooksBuilder, looksFrom } from "@/core/looks/builder";
+import { BUILDER_SYSTEM, builderPrompt, createFakeLooksBuilder, looksFrom } from "@/core/looks/builder";
 import { type FirmRule, filterCandidates, type Requirements } from "@/core/looks/candidates";
 import { codeCheck } from "@/core/looks/checker";
 import { createFakeJudge, verdictFrom } from "@/core/looks/judge";
-import { mainPieces, type OwnedPiece, type ResolvedItem } from "@/core/looks/look";
+import { canMakeAnother, mainPieces, type OwnedPiece, type ResolvedItem } from "@/core/looks/look";
 import { explainNoMatch } from "@/core/looks/no-match";
 import { looksReadiness } from "@/core/looks/readiness";
 import { describeRule } from "@/core/looks/rules";
@@ -79,6 +79,31 @@ describe("what makes a look itself", () => {
     expect(mainPieces([product(sleevedDress), product(flats), product(bag)])).toBe(mainPieces([product(bag), product(other), product(sleevedDress)]));
     expect(mainPieces([product(sleevedDress), product(flats)])).not.toBe(mainPieces([product(find((p) => p.category === "dress" && p.id !== sleevedDress.id)), product(flats)]));
   });
+
+  it("can tell when no look with new main pieces is left to make (looks speed plan)", () => {
+    const otherDress = find((p) => p.category === "dress" && p.id !== sleevedDress.id);
+    const top = find((p) => p.category === "top");
+    const [skirt, trousers] = [find((p) => p.category === "skirt"), find((p) => p.category === "trousers")];
+    const shown = (...looks: Product[][]) => new Set(looks.map((l) => mainPieces(l.map(product))));
+    // Two dresses, both shown: nothing new. A third dress, or no shoes at all, settles it either way.
+    expect(canMakeAnother([sleevedDress, otherDress, flats, bag], [], [], shown([sleevedDress], [otherDress]), null)).toBe(false);
+    expect(canMakeAnother([sleevedDress, otherDress, flats], [], [], shown([sleevedDress]), null)).toBe(true);
+    expect(canMakeAnother([sleevedDress, otherDress], [], [], new Set(), null)).toBe(false);
+    // A top with a different bottom is a new look; a bottom alone needs a jacket or cardigan.
+    expect(canMakeAnother([top, skirt, trousers, flats], [], [], shown([top, skirt]), null)).toBe(true);
+    expect(canMakeAnother([top, skirt, flats], [], [], shown([top, skirt]), null)).toBe(false);
+    expect(canMakeAnother([skirt, flats], [blazer], [], new Set(), null)).toBe(true);
+    // Shoes count toward the budget: a dress that fits on its own, but not with the cheapest shoes, can't make a look.
+    const limit = (dollars: number) => ({ meaning: "up_to" as const, amount: dollars, from: "notes" as const });
+    const justDress = sleevedDress.price.amountCents / 100;
+    expect(canMakeAnother([sleevedDress, flats], [], [], new Set(), limit(justDress))).toBe(false);
+    expect(canMakeAnother([sleevedDress, flats], [], [], new Set(), limit(justDress + flats.price.amountCents / 100))).toBe(true);
+    // Styling around their own dress: every look has it, so once it's shown nothing new is left.
+    const ownDress: OwnedPiece = { ref: { kind: "photo", photoId: "photo-2", version: 1 }, name: "Green silk dress", group: "dress", words: "dress, green" };
+    const withOwn = new Set([mainPieces([{ ref: ownDress.ref, owned: ownDress }])]);
+    expect(canMakeAnother([sleevedDress, otherDress, flats], [ownDress], [ownDress.ref], withOwn, null)).toBe(false);
+    expect(canMakeAnother([sleevedDress, otherDress, flats], [ownDress], [], withOwn, null)).toBe(true);
+  });
 });
 
 describe("when looks are built (R39)", () => {
@@ -109,6 +134,8 @@ describe("the looks builder's numbers", () => {
     expect(user).toContain(`p1: ${sleevedDress.name}`);
     expect(user).toContain("o1: Navy wool blazer (blazer, navy) (must use)");
     expect(user).not.toContain(sleevedDress.id);
+    // Pieces too casual for the occasion are left out before the judge sees them (looks speed plan).
+    expect(BUILDER_SYSTEM).toContain("leave out casual pieces (formality 1 or 2)");
     const looks = looksFrom({ l: [{ n: "Garden ceremony", r: "Elegant for a wedding.", i: ["p1", "p2", "o1"] }, { n: "Made up", r: "x", i: ["p1", "p9"] }] }, ids);
     expect(looks).toEqual([{ name: "Garden ceremony", reason: "Elegant for a wedding.", items: [{ kind: "product", productId: sleevedDress.id }, { kind: "product", productId: flats.id }, blazer.ref] }]);
   });

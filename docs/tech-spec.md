@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.27 (21 Oct 2026)
+**Status:** Agreed, version 1.28 (21 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -251,9 +251,10 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
   - the candidate filter's products, listed by number, so it can't invent one
   - the shopper's own pieces: the photo item marked "You own this" (in every look) and the wardrobe items chosen to style with
   - an inspiration photo's description, to match with a similar sample
-  - the confirmed notes, the budget, Likes, judged preferences, and earlier looks that didn't pass
+  - the confirmed notes, the budget, Likes, judged preferences, and the looks already shown or that didn't pass, with why
   It returns up to 5 looks, each with a short name and a one-line reason. A look using a number it wasn't given is dropped.
   After your review of the sample looks, it's also told: each look has a different dress or suit, or a different top and bottom; a preferred or liked color goes in the main piece (the dress or suit, or the top or bottom), not only in the shoes or bag (burgundy counts as an earth tone, navy doesn't); and the shoes and bag go with the outfit's colors, as a stylist would choose them: black goes with many outfits, but black flats with a navy blazer, a burgundy top and a camel skirt don't, and tan or a neutral suits those colors better.
+  From the looks speed plan (21 Oct 2026, your answer to Q1): every piece must suit the occasion on its own, using each product's formality (1 casual to 5 black tie): for a wedding, an interview or another dressy occasion, no formality 1 or 2 pieces, and nothing summery for a cold month outdoors. This is guidance only; the judgment step stays the gate. A stricter version (no white, ivory or cream at a wedding, nothing edgy or preppy for "elegant") was tried and left out: it was faster, but usually offered 2 looks instead of 3.
 - **The checker's rules in code** run on every look, trusting nothing before them:
   - every product against the filter's rules again
   - the total against the budget
@@ -267,7 +268,7 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
   - colors, from your review of the sample looks: a preferred or liked color must be in the main piece, and a navy, black or white main piece with the color only in the shoes, bag or jewelry doesn't count; the colors must go together, shoes and bag included (black shoes with navy, burgundy and camel don't)
   - an inspiration match
   A piece the shopper didn't ask for, such as a coat or wrap, is never counted as missing. Its verdict is pass, conflict or "clarify". A failed point can't pass, and a failed reading is held as needing clarification.
-- **Rounds:** up to 3. After each, looks that passed are published (3 at most), one per set of main pieces: the same dress, or the same top and bottom, with other shoes is the same look, so only the first is shown (your review of the sample looks). Products that broke a rule are left out of the next round, and judged failures are named to the builder so it doesn't repeat them.
+- **Rounds:** up to 3. After each, looks that passed are published (3 at most), one per set of main pieces: the same dress, or the same top and bottom, with other shoes is the same look, so only the first is shown (your review of the sample looks). Products that broke a rule are left out of the next round, and the looks shown and judged failures are named to the builder so it doesn't repeat them. From the looks speed plan: a candidate with the same main pieces as a look already shown isn't judged (it's recorded as a repeat, and Behind the scenes leaves it out), and before each round plain code checks that a look with new main pieces can still be made from what fits, with the cheapest shoes inside the budget (core/looks/look.ts, canMakeAnother). If none can, the builder stops and the explanation is shown, and Try again answers without asking Claude.
 - **Newest wins (R52):** if the requirements changed while the looks were being built, nothing from that build is published, and the answer says to build again. The requirements fingerprint covers the profile's departments, sizes, budget and rules, the confirmed notes, the item to style around and the chosen wardrobe items.
 - **No match (R45, R59):** if fewer than 3 pass, those that did are shown (your answer to Q2 in 4b). Code explains which requirement is the limit, from what the filter left out, with choices. For example: "Only 2 dresses fit under your $90 limit." with Raise the budget or Try another outfit. Until 5c, a Must have, Never or size limit offers Try another outfit and Try again (your decision A in 4e).
 - **Cost and speed:** about 3 to 5 cents for the builder and about 1 cent per look judged, through the budget guard. In the sample looks report after your review, the 3 builds took 24 to 50 seconds and 11 to 19 cents. The job interview and the birthday dinner gave 3 looks each. The wedding gave 2: the catalog has only two dresses that are emerald or an earth tone, elegant, sleeved and suited to November (emerald satin and burgundy velvet), so those are shown with the explanation (Q2).
@@ -509,6 +510,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.28 (21 Oct 2026):** The looks speed plan, with your answer to Q1: the builder's occasion and formality guidance, the looks already shown passed between rounds, repeats not judged, and the early stop when no new look can be made.
 - **1.27 (21 Oct 2026):** 5a: feedback as built, the feedback endpoint, what the words request sends, the notes reader's looks, and the notes eval's feedback cases, with your answers to Q1 to Q3.
 - **1.26 (21 Oct 2026):** Phase 4 code review (4e): no rebuild on unchanged requirements (looks_built_for), swaps take the build's turn, swap memory per piece, swaps heard only at a turn's end, saved rules checked in shape, the no-match choices (your decision A), and event_log deleted (your Q1).
 - **1.25 (21 Oct 2026):** 4d: Behind the scenes as built, its endpoint and limit, with your answers to Q1 to Q3, and one build at a time per session (claim_looks_build).

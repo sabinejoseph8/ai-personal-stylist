@@ -6,7 +6,7 @@ import { type BuiltLook, type LooksBuilder } from "@/core/looks/builder";
 import { filterCandidates, type Requirements, ruleLabel } from "@/core/looks/candidates";
 import { type Anchor, type CheckReason, codeCheck } from "@/core/looks/checker";
 import type { Judge, Verdict } from "@/core/looks/judge";
-import { groupOf, type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, type ResolvedItem } from "@/core/looks/look";
+import { canMakeAnother, groupOf, type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, REPEATS_SHOWN, type ResolvedItem } from "@/core/looks/look";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
 import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
 import { looksReadiness } from "@/core/looks/readiness";
@@ -371,19 +371,23 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   const build = randomUUID();
   let placed = 0;
 
+  const mustUse = g.owned.filter((o) => o.ref.kind === "photo").map((o) => o.ref);
+
   for (let round = 1; round <= ROUNDS && placed < empty.length; round++) {
-    emit("building");
     filtered = filterCandidates(
       catalog.filter((p) => !excluded.has(p.id)),
       g.requirements,
     );
-    if (!filtered.kept.length) break;
+    // Nothing new can be made from what still fits (only two dresses fit, and both are shown): stop
+    // here, with the explanation, rather than build looks that can't be shown (looks speed plan).
+    if (!filtered.kept.length || !canMakeAnother(filtered.kept, g.owned, mustUse, shownMains, g.requirements.budget)) break;
+    emit("building");
     const money = await deps.guard.checkAi(guestId, "claude");
     if (!money.ok) break;
     const built = await deps.builder.build({
       products: filtered.kept,
       owned: g.owned,
-      mustUse: g.owned.filter((o) => o.ref.kind === "photo").map((o) => o.ref),
+      mustUse,
       inspiration: g.inspiration,
       notes: g.noteWords,
       budget: budgetText(g.requirements),
@@ -398,9 +402,12 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     const checked = await Promise.all(
       built.looks.map(async (look: BuiltLook, position) => {
         const items = resolve(look.items, products, g.owned);
-        const result: Checked = items
-          ? await check(deps, guestId, g, items)
-          : { verdict: "conflict", reasons: [{ about: "Items", ok: false, why: "Uses an item that isn't on the list" }], failedProducts: [] };
+        // A look already shown with other shoes can't be shown again, so it isn't worth judging (looks speed plan).
+        const result: Checked = !items
+          ? { verdict: "conflict", reasons: [{ about: "Items", ok: false, why: "Uses an item that isn't on the list" }], failedProducts: [] }
+          : shownMains.has(mainPieces(items))
+            ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: REPEATS_SHOWN }], failedProducts: [] }
+            : await check(deps, guestId, g, items);
         const { data: row } = await db
           .from("looks")
           .insert({
@@ -437,6 +444,8 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
         if (ok) {
           placed++;
           shownMains.add(main);
+          // The next round is told, so it doesn't offer this look again (looks speed plan).
+          avoid.push(`${c.items.map(nameOf).join(" + ")}: already shown, so make different looks`);
           continue;
         }
       }
