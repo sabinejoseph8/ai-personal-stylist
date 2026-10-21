@@ -1,7 +1,7 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.21 (20 Oct 2026)
-**Last updated:** 20 Oct 2026
+**Status:** Agreed, version 1.22 (21 Oct 2026)
+**Last updated:** 21 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
 
@@ -117,7 +117,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 | Table | What it holds | Key fields | Kept for |
 |---|---|---|---|
 | **profiles** | One row per guest | departments, style words, sizes, default budget (amount, currency, meaning), last active time | Until deleted, or 7 days without use |
-| **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule (for example heel height over 5 cm), version | Same as profile |
+| **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule for Must have and Never (for example heel height over 5 cm, made by the rule maker and read back in setup, 4a), version | Same as profile |
 | **consents** | Separate permissions (R64) | wardrobe photos, remember preferences, camera explained, with times | Same as profile |
 | **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, the words sequence (one number per send of words, for latest word wins), and the next question with the turn and sequence it came from (Phase 2 review). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle (a database timer closes idle ones every 10 minutes), then the row is closed |
 | **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, colors, style, budget, outfit, owned item, fit, other), hidden details for looks and checks, status, source (voice or touch), the words sequence that last changed it, created and update times, version, removed. At most 12 per session, saved preferences not counted (your answer to Q2 in 2c). Read-only for guests: the server saves them through **save_notes**, which only saves if nothing else saved in between (decision A, done in 2c) | Deleted when the session ends (R63) |
@@ -154,6 +154,7 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **POST /api/sessions/:id/camera-frame** | One small camera frame for live recognition (R34): a JPEG of at most 640 px (400 KB at most), for the guest's open session, one every 2 seconds at most. It's read through the budget guard and thrown away; the answer says whether one item, several or none is shown, and what the item is (3c). |
 | **POST /api/sessions/:id/looks** | Build looks. Also swap, refine, restore and compare actions on a look. |
 | **POST /api/sessions/:id/exceptions** | Allow a saved preference to be broken for this session (R57). |
+| **POST /api/preferences/rule** | The preference rule maker (4a): a Must have or Never in words, and back comes its rule for setup to read back. Through the budget guard; when the day's AI is used up, the preference is judged instead. |
 | **/api/wardrobe** | GET lists the guest's items with 30-minute links. POST is Save to wardrobe for a session photo marked "You own this" (R36): it answers "permission" until wardrobe photos are allowed, then copies the photo and its details. **POST /api/wardrobe/uploads** and **.../uploads/:id/ready** are Add item on the Wardrobe page: a one-time upload link, then the photo is checked, cleaned, kept and read, and comes back as a draft with suggested details (your answer to Q1 in 3d). **PATCH** and **DELETE /api/wardrobe/:id** edit and delete (R37). **PUT /api/wardrobe/styling** is Style with these (your Q2). |
 | **GET /api/sessions/:id/context** | What the stylist should know as a call starts: the notes, saved preferences, the photo to style around and the wardrobe items chosen to style with (3d). |
 | **/api/saved-looks**, **/api/bag** | Add, edit, list and delete. Adding to the bag runs the preference check first. |
@@ -215,6 +216,32 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - Add item on the Wardrobe page uploads a photo like a session photo, through the same checking steps (**keepUpload** in lib/photos-service.ts), and the photo reader suggests its name, category and details to check before it's added. An upload is added only once. Categories come from the reader's type by plain word rules.
 - Style with these marks the chosen items. They show in My Styling Notes under From your wardrobe, and the stylist is told about them as the call starts and with every update (your answer to Q2 in 3d). Looks use them in Phase 4. With nothing ticked, the button is Clear wardrobe items, which stops the session using them (your decision B in the Phase 3 review).
 - Until the app menu (Phase 7), the Wardrobe page is linked from the session page and the welcome-back screen (your answer to Q3 in 3d).
+
+**The preference rules as built (4a).** The files are **core/looks/** (the rules, the rule maker, the candidate filter, the budget and totals), **lib/looks-inputs.ts** and **lib/rule-deps.ts**; setup shows the read-back.
+- **A rule** is a test on the catalog's product details, for some categories:
+  - Numbers: heel height in cm, and formality from 1 to 5, with over, under, at least or at most.
+  - Fixed values: sleeve, neckline, coverage, toe and category, using the catalog's own values (a test checks every catalog value is listed).
+  - Words: color, material, pattern and style, matched inside a value ("green" in "emerald green").
+  - With no categories listed, a rule covers the categories its detail applies to: sleeves to tops, dresses and jackets, heels to shoes. So shoes don't fail a sleeves rule.
+- **What a rule means.**
+  - Never: a product the test describes is out.
+  - Must have: a product the rule covers must pass the test.
+  - A missing detail is never a pass (R56).
+  - A preference that isn't about one product detail ("Never: anything too flashy", "Must have: a jacket in every look") is judged: the preference checker's judgment step decides (4b), where uncertainty is a fail (your answer to Q3 in 4a).
+- **The rule maker** is Opus 5.5 at low effort, given the catalog's details and values.
+  - Its answer is shape-checked; anything code can't use becomes judged.
+  - Setup shows each Must have and Never with "Read as: …", written by code from the rule itself, so what you confirm is exactly what's checked. Finishing setup confirms them (your answer to Q1 in 4a).
+  - It costs about 0.7 cents a preference, through the budget guard, 20 an hour. The sample profile's rules are ready-made. Preferences saved before 4a get their rules when setup opens; until then they're judged.
+  - The rule maker eval (**npm run eval:rules**, 16 preferences): 100% right after one fix to the prompt (lengths such as "above the knee" are about dresses, skirts and shorts, not tops). The first run had 94%.
+- **The candidate filter** narrows the catalog in plain code before any look is composed (section 1.3, step 2):
+  - department, from the profile
+  - the categories a confirmed outfit note needs ("Dress": dresses, outerwear, shoes, bags and accessories); otherwise all
+  - sizes: each category's own profile size (dresses, tops, bottoms, suit jackets, shoes); one-size items always fit, and a skipped size doesn't filter
+  - the budget: no single item over the whole budget
+  - every firm rule: Must have and Never preferences, and confirmed notes such as "Not black"
+  - Notes still To confirm aren't filters (R40). Every product left out is recorded with its reason, for Behind the scenes (4d).
+- **The budget** is a confirmed budget note in the session, or else the profile's default. "Around" allows up to 10% over (your answer to Q2 in 4a).
+- **Totals** add up the sample products only: the photo item marked "You own this" and wardrobe items are never counted. In the design's words: "$312 to buy, owned items not included" and "$38 under your $350 limit".
 
 **The camera reader as built (3c).** The files are **core/camera/** (the reader, its fake for browser tests, and the rules for what's shown) and **lib/camera-service.ts**; the page side is **components/session/use-camera.ts**.
 - While the camera is on, the page sends one 640 px frame about every 2 seconds, one at a time and only while the page is in view. Each frame costs about 0.015 cents.
@@ -284,6 +311,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Note touches (Confirm, Remove, Undo): 4 per second per guest (Phase 2 review).
 - Photos: 10 per guest per hour. Photo changes (checking an arrived photo, switching the active one, Remove): 4 a second (3a). Camera frames: 1 every 2 seconds, while the camera is on.
 - Building looks: 20 per guest per hour.
+- Making preference rules: 20 per guest per hour (4a).
 
 ### Cost limits
 - Per guest per day: 10 minutes of conversation, all with video when it is available (R13), and $1 of AI (a full demo uses about $0.45).
@@ -393,6 +421,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 17 Oct 2026 | The stylist core decides everything, and the stylist engines only listen and speak | Agreed 18 Oct 2026 |
 | 17 Oct 2026 | Camera recognition runs on our server in every mode, so Tavus never receives the camera | Agreed 18 Oct 2026 |
 | 18 Oct 2026 | Running budget of about $40 a month: Tavus Starter ($22) plus about $18 of AI use, with spending limits on every provider (TQ2, option A). Now about $50, with the Supabase project ($10) from 20 Oct 2026 | Your decision |
+| 21 Oct 2026 | 4a: setup reads back each Must have and Never ("Read as: …"), and finishing setup confirms them (Q1). "Around" budgets allow up to 10% over (Q2). A preference that isn't about a product detail is judged by the preference checker, rather than turned away (Q3) | Your decision |
 | 20 Oct 2026 | Phase 3 code review: A, "use this one" hears only clear requests ("use this one", "use that one", "use this", "capture", "take a photo or picture", or "this one" on its own). B, with nothing ticked, Style with these becomes Clear wardrobe items. C, the photo store tries a busy request again, rather than a separate Supabase project for tests (about $10 a month more) or leaving it. D, after "use this one" did nothing on your iPhone: punctuation and capitals don't matter, and a short phrase with "this one" or "that one" counts, rather than going back to the 3c rule | Your decision |
 | 20 Oct 2026 | 3d: Add item uploads a photo on the Wardrobe page, read by the photo reader to suggest its details (Q1). Style with these shows the chosen items in My Styling Notes and tells the stylist; they stay chosen until changed (Q2). The Wardrobe page is linked from the session page and the welcome-back screen until the app menu, which joins Phase 7 (Q3) | Your decision |
 | 20 Oct 2026 | 3c: "use this one" is heard by plain code in the page while an item is named on camera, rather than by the notes reader (Q1). The camera turns off after Capture (Q2) | Your decision |
@@ -418,7 +447,8 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
-- **1.21 (20 Oct 2026):** Phase 3 code review (3e): HEIC size checked before decoding, failed readings counted by the budget guard, readings kept alive with after(), a photo or upload checked only once, choosing and removing photos take the session lock (migration photo_locks), the camera's 2 minutes kept through Switch camera, and your decisions A ("use this one" hears only clear requests), B (Clear wardrobe items) C (the photo store tries a busy request again) and D ("use this one" forgiving of how speech recognition writes it).
+- **1.22 (21 Oct 2026):** 4a: preference rules as built (the rule format, the rule maker and its eval, the read-back in setup), the candidate filter, which budget counts, and totals, with your answers to Q1 to Q3.
+- **1.21 (20 Oct 2026):** Phase 3 code review (3e): HEIC size checked before decoding, failed readings counted by the budget guard, readings kept alive with after(), a photo or upload checked only once, choosing and removing photos take the session lock (migration photo_locks), the camera's 2 minutes kept through Switch camera, and your decisions A ("use this one" hears only clear requests), B (Clear wardrobe items), C (the photo store tries a busy request again) and D ("use this one" forgiving of how speech recognition writes it).
 - **1.20 (20 Oct 2026):** 3d: the wardrobe as built: server-written items with copied photos, the permission recorded, Add item with the photo reader (your Q1), Style with these and From your wardrobe (your Q2), the links until the app menu (your Q3), and the stylist told everything as a call starts.
 - **1.19 (20 Oct 2026):** 3c fix after your iPhone check: "use this one" counts for 8 seconds after an item was on screen, waits for a name said just before it, and takes one still however many pieces the words arrive in.
 - **1.18 (20 Oct 2026):** 3c: the camera reader and frame endpoint as built, two frames in a row before an item is named, the stylist told by the page, "use this one" in plain code (your Q1), the camera off after Capture (your Q2), the privacy points, and the camera reader check.

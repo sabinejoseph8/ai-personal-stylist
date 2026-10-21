@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.10 (20 Oct 2026)
+**Status:** Agreed, version 1.11 (21 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -387,6 +387,7 @@ Phone
   1. How it works and what is kept private.
   2. What you shop for (departments), style words and sizes.
   3. Budget and saved preferences (Must have, Never, Likes).
+- On step 3, each Must have and Never shows under its chip how the app reads it, in Small Graphite: "Read as: no shoes with heels over 5 cm", or "Read as: checked by your stylist's judgment" for one that isn't about a product detail. "Reading it…" shows while it's being read, and **Finish setup** waits ("Reading your preferences…"). Likes only guide looks, so they have no read-back. If the reading is wrong, **×** removes the preference (your answers to Q1 and Q3 in 4a).
 - **Use a sample profile** on step 1 goes straight to the session.
 - Every step has **Back**, **Skip** and **Continue**.
 - Nothing is requested here. The microphone is requested at Start conversation, and the camera only when the shopper taps Camera.
@@ -567,6 +568,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.11 (21 Oct 2026):** 4a: setup's read-back for each Must have and Never (5.2).
 - **1.10 (20 Oct 2026):** Phase 3 code review: Clear wardrobe items when nothing is ticked (your decision B), and the Wardrobe page's detail lengths (4.2).
 - **1.9 (20 Oct 2026):** 3d: Save to wardrobe as built, From your wardrobe in the notebook, and the Wardrobe page as built (4.2).
 - **1.8 (20 Oct 2026):** 3c: the camera view as built: the tile's size, the swap on phones, Done showing, the camera's buttons, the camera off after Capture, and what screen readers hear (4.1).
