@@ -68,6 +68,9 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
         if (mine !== latest.current) return;
         if (line.state) {
           setPhase(line.state);
+          // The server only builds once nothing is needed any more: "Confirm your budget to see looks"
+          // goes as building starts, not when the looks arrive (found on Sabine's iPhone in 4c).
+          setNeeds(null);
           if (line.state === "updating") rechecked = true;
         } else answer = line;
       });

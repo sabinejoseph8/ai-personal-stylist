@@ -40,6 +40,8 @@ test.describe("the looks", () => {
     await expect(looksOf(page)).toContainText("Confirm your budget to see looks");
     await confirm(page, "Budget: up to $500");
     await expect(panels(page)).toHaveCount(3, { timeout: 20_000 });
+    // Nothing is needed any more (found on Sabine's iPhone in 4c).
+    await expect(looksOf(page)).not.toContainText("to see looks");
   }
 
   /** The heel height of each pair of shoes on screen, from the catalog. */
