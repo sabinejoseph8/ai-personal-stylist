@@ -171,4 +171,31 @@ test.describe("the wardrobe", () => {
     await expect(page.getByRole("region", { name: "My Styling Notes" })).toBeVisible();
     await expect(page.getByRole("region", { name: "From your wardrobe" })).toHaveCount(0);
   });
+
+  test("Style with these, then Change, opens the Wardrobe page as it's saved now (found on Sabine's iPhone in 3e)", async ({ page }) => {
+    await serverDb()
+      .from("wardrobe_items")
+      .insert({ user_id: guest.id, name: "Sage green athletic shorts", category: "bottoms", details: { type: "shorts", colors: "sage green", pattern: "solid", style: "sporty" } })
+      .throwOnError();
+    // Sabine's path, all by tapping: Next.js keeps a page's state while it's hidden, so a page load wouldn't show it.
+    await page.goto("/wardrobe");
+    await page.getByRole("button", { name: "Select" }).click();
+    await wardrobe(page).getByRole("button", { name: /Sage green athletic shorts/ }).click();
+    await page.getByRole("button", { name: "Style with these" }).click();
+    await expect(page).toHaveURL(/\/session$/);
+    const notes = page.getByRole("region", { name: "From your wardrobe" });
+    await notes.getByRole("link", { name: "Change" }).click();
+    await expect(page).toHaveURL(/\/wardrobe$/);
+    // Out of Select, with the item chosen for styling.
+    await expect(wardrobe(page).getByText("Bottoms · Styling with")).toBeVisible();
+    await page.getByRole("button", { name: "Select" }).click();
+    await expect(wardrobe(page).getByRole("button", { name: /Sage green athletic shorts/ })).toHaveAttribute("aria-pressed", "true");
+    await wardrobe(page).getByRole("button", { name: /Sage green athletic shorts/ }).click();
+    await page.getByRole("button", { name: "Clear wardrobe items" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Your session won't use wardrobe items now." })).toBeVisible();
+    await page.getByRole("link", { name: "Back to your session" }).click();
+    await expect(page).toHaveURL(/\/session$/);
+    await expect(page.getByRole("region", { name: "My Styling Notes" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "From your wardrobe" })).toHaveCount(0);
+  });
 });
