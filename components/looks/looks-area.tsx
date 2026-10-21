@@ -47,6 +47,8 @@ export function LooksArea({
   canTalk,
   imageFor,
   onSwap,
+  feedbackFor,
+  onFeedback,
   onTryAgain,
   onChoice,
   onInView,
@@ -67,6 +69,9 @@ export function LooksArea({
   canTalk: boolean;
   imageFor: (item: ShownItem) => string | null;
   onSwap: (lookId: string, index: number) => void;
+  /** Keep or Change on an item (5a). */
+  feedbackFor: (look: ShownLook, item: ShownItem) => "keep" | "change" | null;
+  onFeedback: (look: ShownLook, index: number, act: "keep" | "change", on: boolean) => void;
   onTryAgain: () => void;
   onChoice: (choice: string) => void;
   onInView: (look: number | null) => void;
@@ -143,6 +148,8 @@ export function LooksArea({
           canSwap={!swapping && !busy}
           imageFor={imageFor}
           onSwap={(index) => onSwap(look.id, index)}
+          feedbackFor={(item) => feedbackFor(look, item)}
+          onFeedback={(index, act, on) => onFeedback(look, index, act, on)}
           panelRef={(el) => {
             if (el) panels.current.set(i + 1, el);
             else panels.current.delete(i + 1);

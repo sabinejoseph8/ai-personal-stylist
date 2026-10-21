@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanQuestion, createNotesReader, type Ask } from "@/core/notes/reader";
+import { cleanQuestion, createNotesReader, type Ask, type LookForReader } from "@/core/notes/reader";
 import type { Note } from "@/core/notes/types";
 
 // 2c: the notes reader's own rules, with Claude replaced by a stand-in.
@@ -23,6 +23,18 @@ function standIn(answer: unknown) {
   };
   return { ask, prompts };
 }
+
+// Three looks on screen, in places 1, 2 and 3 (5a), with their items.
+const LOOKS: LookForReader[] = [1, 2, 3].map((n) => ({
+  number: n,
+  slot: n,
+  name: `Look name ${n}`,
+  items: [
+    { id: `dress-${n}`, name: `Dress ${n}`, group: "dress", owned: false },
+    { id: `shoes-${n}`, name: `Shoes ${n}`, group: "shoes", owned: false },
+    { id: `bag-${n}`, name: `Bag ${n}`, group: "bag", owned: false },
+  ],
+}));
 
 describe("notes reader", () => {
   it("shows Claude the notebook with short ids and the removed notes, and maps its changes back to the real notes", async () => {
@@ -85,16 +97,16 @@ describe("notes reader", () => {
     const looks = [2, 5, 0];
     const ask: Ask = async ({ system, schema }) => (asked.push({ system, schema }), { data: answer(looks[asked.length - 1]), costUsd: 0 });
     const reader = createNotesReader(ask);
-    const withLooks = await reader.read({ stylistSaid: "", words: "Show me different shoes for look 2", notes: [], looks: 3 });
+    const withLooks = await reader.read({ stylistSaid: "", words: "Show me different shoes for look 2", notes: [], looks: LOOKS });
     expect(withLooks?.swap).toEqual({ look: 2, piece: "shoes" });
-    expect(asked[0].system).toContain("looks numbered 1 to 3");
+    expect(asked[0].system).toContain("The looks on the shopper's screen");
     expect(JSON.stringify(asked[0].schema)).toContain('"w"');
     // A look number that isn't on screen means "the one you're looking at".
-    expect((await reader.read({ stylistSaid: "", words: "Different shoes for look 5", notes: [], looks: 3 }))?.swap).toEqual({ look: 0, piece: "shoes" });
+    expect((await reader.read({ stylistSaid: "", words: "Different shoes for look 5", notes: [], looks: LOOKS }))?.swap).toEqual({ look: 0, piece: "shoes" });
     // Without looks, the instructions and answer are as before.
     const without = await reader.read({ stylistSaid: "", words: "Show me different shoes", notes: [] });
     expect(without).not.toHaveProperty("swap");
-    expect(asked[2].system).not.toContain("looks numbered");
+    expect(asked[2].system).not.toContain("The looks on the shopper's screen");
     expect(JSON.stringify(asked[2].schema)).not.toContain('"w"');
   });
 

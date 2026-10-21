@@ -8,6 +8,10 @@ import { fakeMicrophone, scriptDone } from "./support/microphone";
 // 3a: the photo to style around, in the browser (R26, R27, R31, R32, R63). Phase 3 automated test:
 // an upload shows the photo before analysis finishes. The photo's check on the server is held back
 // here, so the test sees the photo while it's still on its way.
+// The photo store retries busy requests for up to about 4 seconds (3e, decision C), so on GitHub's shared
+// machines a kept photo can take longer than the default 5 seconds to show (flakes in 4c, 4d and 5a).
+const READY = { timeout: 15_000 };
+
 test.describe("the photo to style around", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -72,7 +76,7 @@ test.describe("the photo to style around", () => {
     await expect(page.getByText("Uploaded", { exact: true })).toBeVisible();
 
     release();
-    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*-v1\.jpg/);
+    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*-v1\.jpg/, READY);
     await expect(page.getByText("Uploading", { exact: true })).toHaveCount(0);
     expect(await photoRows()).toMatchObject([{ status: "ready", active: true, version: 1 }]);
     // Screen readers hear it too (R68).
@@ -101,7 +105,7 @@ test.describe("the photo to style around", () => {
 
     // A resumed session keeps its photo.
     await page.reload();
-    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*-v1\.jpg/);
+    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*-v1\.jpg/, READY);
   });
 
   test("a file over 10 MB is turned away at once, and a renamed text file after the server's check (R26, FR-27)", async ({ page }) => {
@@ -123,10 +127,10 @@ test.describe("the photo to style around", () => {
   test("Replace swaps the photo, several photos show thumbnails with Active, Remove takes one out, and End deletes them (R31, R63)", async ({ page }) => {
     await inCall(page);
     await pick(page, "Add a photo", { name: "navy.jpg", mimeType: "image/jpeg", buffer: await jpeg("#1f2a44") });
-    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/);
+    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/, READY);
 
     await pick(page, "Replace", { name: "red.jpg", mimeType: "image/jpeg", buffer: await jpeg("#b42318") });
-    await expect(pasted(page)).toHaveAttribute("src", /-v2\.jpg/);
+    await expect(pasted(page)).toHaveAttribute("src", /-v2\.jpg/, READY);
     expect(await photoRows()).toMatchObject([{ version: 2, status: "ready" }]);
 
     await pick(page, "Add another photo", { name: "green.jpg", mimeType: "image/jpeg", buffer: await jpeg("#0b6b4f") });
@@ -134,20 +138,20 @@ test.describe("the photo to style around", () => {
     await expect(thumbnails.getByRole("button")).toHaveCount(2);
     await expect(thumbnails.getByRole("button", { name: "Photo 2 of 2" })).toHaveAttribute("aria-pressed", "true");
     await expect(thumbnails.getByText("Active")).toBeVisible();
-    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/);
+    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/, READY);
     await noSeriousA11yProblems(page);
 
     // Switching the active photo.
     await thumbnails.getByRole("button", { name: "Photo 1 of 2" }).click();
     await expect(thumbnails.getByRole("button", { name: "Photo 1 of 2" })).toHaveAttribute("aria-pressed", "true");
-    await expect(pasted(page)).toHaveAttribute("src", /-v2\.jpg/);
-    await expect.poll(async () => (await photoRows()).map((r) => r.active)).toEqual([true, false]);
+    await expect(pasted(page)).toHaveAttribute("src", /-v2\.jpg/, READY);
+    await expect.poll(async () => (await photoRows()).map((r) => r.active), READY).toEqual([true, false]);
 
     // Removing the active one leaves the other.
     await page.getByRole("button", { name: "Remove", exact: true }).click();
     await expect(thumbnails).toHaveCount(0);
-    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/);
-    await expect.poll(async () => (await photoRows()).length).toBe(1);
+    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/, READY);
+    await expect.poll(async () => (await photoRows()).length, READY).toBe(1);
 
     // End deletes the photos with the notes (R63).
     await page.getByRole("button", { name: "End", exact: true }).click();
@@ -169,7 +173,8 @@ test.describe("the photo to style around", () => {
     await expect(page.getByText("The photo didn’t upload.")).toBeVisible();
     await expect(pasted(page)).toBeVisible();
     await page.getByRole("button", { name: "Try again" }).click();
-    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*\.jpg/);
+    // The photo store retries busy requests (3e, decision C), which can take a few seconds on GitHub.
+    await expect(pasted(page)).toHaveAttribute("src", /supabase\.co.*\.jpg/, READY);
     await expect(page.getByText("The photo didn’t upload.")).toHaveCount(0);
     expect(await photoRows()).toMatchObject([{ status: "ready", active: true }]);
   });

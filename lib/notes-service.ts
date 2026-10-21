@@ -1,9 +1,13 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stylistContext } from "@/core/notes/context";
+import { feedbackOf, touchFeedback } from "@/core/notes/feedback";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
-import type { NotesReader, SwapRequest } from "@/core/notes/reader";
+import { createSampleCatalog } from "@/connectors/catalog/sample";
+import type { CatalogConnector } from "@/connectors/catalog/types";
+import type { LookForReader, NotesReader, SwapRequest } from "@/core/notes/reader";
+import { currentLooks } from "@/lib/looks-service";
 import type { StyleItem } from "@/core/photos/item";
 import { active, type NextQuestion, type Note, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
@@ -13,7 +17,8 @@ import { stylingPicks } from "@/lib/wardrobe-service";
 
 // My Styling Notes on the server (2c): words in, notes out, with latest word wins (R22).
 
-export type NotesDeps = { db: SupabaseClient; guard: BudgetGuard; reader: NotesReader };
+/** `catalog` names the looks' items for the notes reader (5a); the sample catalog when not given. */
+export type NotesDeps = { db: SupabaseClient; guard: BudgetGuard; reader: NotesReader; catalog?: CatalogConnector };
 
 export type { ShownNote };
 /** What the browser gets: the notes it shows, never their hidden details. */
@@ -38,6 +43,10 @@ export type HeardWords = {
   words: string;
   stylistSaid: string;
   final: boolean;
+  /** The number of the look most on the shopper's screen (5a), for feedback that doesn't name one. */
+  look?: number | null;
+  /** The page shows looks (5a): readings while the shopper talks leave reactions to them for the end. */
+  looks?: boolean;
   /**
    * The browser's label for the shopper's current turn. Claude sometimes leaves the question out of one
    * reading, so the session's question stays until a reading of a later turn replaces it (2c). It's
@@ -46,12 +55,16 @@ export type HeardWords = {
   turn?: string;
 };
 
-const shown = (notes: Note[]): ShownNote[] => active(notes).map(({ id, kind, text, status }) => ({ id, kind, text, status }));
+const shown = (notes: Note[]): ShownNote[] =>
+  active(notes).map((n) => {
+    const feedback = feedbackOf(n);
+    return { id: n.id, kind: n.kind, text: n.text, status: n.status, ...(feedback ? { feedback } : {}) };
+  });
 
-/** How many places have a look on screen (4c), so the reader listens for swaps. */
-async function looksOnScreen(db: SupabaseClient, sessionId: string) {
-  const { data } = await db.from("looks").select("input_versions").eq("session_id", sessionId).in("status", ["published", "needs_check"]).throwOnError();
-  return new Set((data ?? []).map((r) => (r.input_versions as { slot?: number }).slot).filter(Boolean)).size;
+/** The looks on screen with their items (4c, 5a), so the reader hears swaps and feedback. */
+async function looksForReader(deps: NotesDeps, guestId: string, sessionId: string): Promise<LookForReader[]> {
+  const looks = await currentLooks({ db: deps.db, catalog: deps.catalog ?? createSampleCatalog(deps.db) }, guestId, sessionId);
+  return looks.map((l, i) => ({ number: i + 1, slot: l.slot, name: l.name, items: l.items.map((it) => ({ id: it.id, name: it.name, group: it.group, owned: it.owned })) }));
 }
 
 /** The guest's open session, or null. */
@@ -115,13 +128,15 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
   // The photo to style around, so what the shopper says about it reaches it (3b), and at the end of a
   // turn the looks on screen, so a request to swap a piece is heard (4c). Only then: readings while the
   // shopper talks stay as short and quick as before (Phase 4 code review, R17).
-  const [photo, looks] = await Promise.all([activePhoto(deps.db, sessionId), heard.final ? looksOnScreen(deps.db, sessionId) : 0]);
+  const [photo, looks] = await Promise.all([activePhoto(deps.db, sessionId), heard.final ? looksForReader(deps, guestId, sessionId) : []]);
   const reading = await deps.reader.read({
     stylistSaid: heard.stylistSaid,
     words: heard.words,
     notes: quick.notes,
     item: photo?.item,
     looks,
+    inView: heard.look,
+    looksOnScreen: Boolean(heard.looks),
   });
   if (!reading) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
@@ -172,6 +187,39 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
     done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile
+    throw e;
+  }
+  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  return {
+    version: done.version,
+    notes: shown(done.notes),
+    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+  } satisfies NotesUpdate;
+}
+
+/**
+ * Keep or Change on an item of a look (POST /api/sessions/:id/feedback; R46, 5a): jotted under its look
+ * in ink, as if said, or taken back. Only sample products have them: the shopper's own pieces are always
+ * in the look. Null when the session, look or item isn't the guest's.
+ */
+export async function feedbackByTouch(
+  deps: Pick<NotesDeps, "db" | "catalog">,
+  guestId: string,
+  sessionId: string,
+  touch: { lookId: string; index: number; act: "keep" | "change"; on: boolean },
+) {
+  if (!(await ownSession(deps.db, guestId, sessionId))) return null;
+  const looks = await currentLooks({ db: deps.db, catalog: deps.catalog ?? createSampleCatalog(deps.db) }, guestId, sessionId);
+  const look = looks.find((l) => l.id === touch.lookId);
+  const item = look?.items[touch.index];
+  if (!look || !item || item.owned) return null;
+  let done: Awaited<ReturnType<typeof apply>>;
+  try {
+    const { wordsSeq } = await loadNotes(deps.db, sessionId);
+    const names = Object.fromEntries(look.items.map((i) => [i.id, i.name]));
+    done = await apply(deps.db, sessionId, (current) => touchFeedback(current, { look: look.slot, item: item.id, act: touch.act, on: touch.on, names }, wordsSeq));
+  } catch (e) {
+    if (e instanceof SessionEndedError) return null;
     throw e;
   }
   const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);

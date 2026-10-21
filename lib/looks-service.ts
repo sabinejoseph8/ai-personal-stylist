@@ -16,7 +16,7 @@ import { active, type Note } from "@/core/notes/types";
 import { chosenItem } from "@/core/photos/item";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { lookRequirements } from "@/lib/looks-inputs";
-import { loadNotes } from "@/lib/notes-store";
+import { loadNotes, SessionEndedError } from "@/lib/notes-store";
 import { activePhoto } from "@/lib/photos-service";
 import { loadProfile } from "@/lib/profile-store";
 import { categoryOf } from "@/lib/wardrobe";
@@ -63,7 +63,8 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
     activePhoto(db, sessionId),
     db.from("wardrobe_items").select("id, name, category, details").eq("user_id", guestId).eq("styling", true).eq("draft", false).order("created_at").throwOnError(),
   ]);
-  const confirmed = active(notes).filter((n) => n.status === "confirmed" && n.kind !== "budget");
+  // Feedback on a look (5a) is for revising it (5b), not a requirement every look must meet.
+  const confirmed = active(notes).filter((n) => n.status === "confirmed" && n.kind !== "budget" && n.kind !== "feedback");
   const owned: OwnedPiece[] = [];
   let anchor: Anchor | null = null;
   let inspiration: string | null = null;
@@ -281,8 +282,10 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
 
   const [rows, { data: session }] = await Promise.all([
     onScreen(db, guestId, sessionId),
-    db.from("sessions").select("looks_built_for").eq("id", sessionId).single().throwOnError(),
+    db.from("sessions").select("looks_built_for").eq("id", sessionId).maybeSingle().throwOnError(),
   ]);
+  // Deleted meanwhile (the shopper ended it): nothing to build (found in GitHub's log in 5a).
+  if (!session) throw new SessionEndedError();
   const isCurrent = (r: OnScreen) => r.status === "published" && r.requirements_key === g.key;
   const stale = rows.filter((r) => !isCurrent(r));
   const shownFrom = (list: OnScreen[], products: Map<string, Product>) =>
@@ -294,7 +297,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   // Nothing has changed since the last build on these requirements: no AI needed, whether it found three
   // looks, fewer, or none (Phase 4 code review: with none, every note made it build again). Try again
   // fills the empty places anyway.
-  const unchanged = !stale.length && (rows.length >= LOOKS_WANTED || (!options.force && (rows.length > 0 || session!.looks_built_for === g.key)));
+  const unchanged = !stale.length && (rows.length >= LOOKS_WANTED || (!options.force && (rows.length > 0 || session.looks_built_for === g.key)));
   if (unchanged && rows.length >= LOOKS_WANTED) {
     // Three looks: only their own products are needed, not the whole catalog.
     return { looks: shownFrom(rows, await productsOf(deps.catalog, rows.flatMap((r) => r.items))), noMatch: null };

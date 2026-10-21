@@ -10,7 +10,8 @@ import { announcement, type NoteChange, noteChanges, notesSummary } from "@/lib/
 // not a form. Saved preferences sit at the top, then the stylist's notes in the order she jotted them,
 // in pencil (To confirm) or ink (Confirmed). Tapping a note shows Confirm and Remove; a removed note
 // can be undone for 5 seconds. Every row is a multiple of the 28 px ruled lines, so text sits on them.
-// Style around this item (3a) sits between the saved preferences and the notes.
+// Style around this item (3a) sits between the saved preferences and the notes. Feedback on the looks
+// (5a) comes last, under a small heading for each look, and is confirmed, removed and undone like notes.
 
 const UNDO_MS = 5000;
 const STRIKE_MS = 600;
@@ -140,6 +141,7 @@ export function MyStylingNotes({
   titleRef,
   styleAround,
   thumbnail,
+  lookNumber = () => null,
 }: {
   notes: ShownNote[];
   /** Saved preferences that apply, in words, such as "Never: high heels" (R24). */
@@ -155,6 +157,8 @@ export function MyStylingNotes({
   styleAround?: ReactNode;
   /** The active photo's thumbnail, shown with the summary when the notebook is hidden (R27). */
   thumbnail?: ReactNode;
+  /** A look's number on screen, by its place, for feedback headings; null when it's gone (5a). */
+  lookNumber?: (slot: number) => number | null;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [removed, setRemoved] = useState<Removed[]>([]);
@@ -222,6 +226,37 @@ export function MyStylingNotes({
   const rows: ({ kind: "note"; note: ShownNote } | ({ kind: "removed" } & Removed))[] = notes.map((note) => ({ kind: "note" as const, note }));
   for (const r of [...gone].sort((a, b) => a.index - b.index)) rows.splice(Math.min(r.index, rows.length), 0, { kind: "removed", ...r });
   const summary = notesSummary(notes);
+  type Row = (typeof rows)[number];
+  const noteOf = (row: Row) => row.note;
+  const regular = rows.filter((row) => !noteOf(row).feedback);
+  // Feedback grouped by its look, in the looks' order on screen; a look no longer shown goes last.
+  const groups = new Map<number, Row[]>();
+  for (const row of rows) {
+    const look = noteOf(row).feedback?.look;
+    if (look) groups.set(look, [...(groups.get(look) ?? []), row]);
+  }
+  const feedback = [...groups.entries()]
+    .map(([slot, list]) => ({ slot, number: lookNumber(slot), list }))
+    .sort((a, b) => (a.number ?? 99) - (b.number ?? 99) || a.slot - b.slot);
+  const renderRow = (row: Row) =>
+    row.kind === "removed" ? (
+      <RemovedRow key={`removed-${row.note.id}`} id={row.note.id} text={row.note.text} onUndo={() => restore(row)} />
+    ) : (
+      <NoteRow
+        key={row.note.id}
+        note={row.note}
+        animate={!atStart.has(row.note.id)}
+        selected={selected === row.note.id}
+        focusMe={focusId === row.note.id}
+        onSelect={() => setSelected(row.note.id)}
+        onClose={() => setSelected(null)}
+        onConfirm={() => {
+          setSelected(null);
+          void touch(row.note, "confirm");
+        }}
+        onRemove={() => remove(row.note)}
+      />
+    );
 
   return (
     <section
@@ -275,27 +310,20 @@ export function MyStylingNotes({
         {styleAround}
 
         <ul aria-label="Notes" className={`m-0 list-none p-0 ${rows.length ? "" : "min-h-28"}`}>
-          {rows.map((row) =>
-            row.kind === "removed" ? (
-              <RemovedRow key={`removed-${row.note.id}`} id={row.note.id} text={row.note.text} onUndo={() => restore(row)} />
-            ) : (
-              <NoteRow
-                key={row.note.id}
-                note={row.note}
-                animate={!atStart.has(row.note.id)}
-                selected={selected === row.note.id}
-                focusMe={focusId === row.note.id}
-                onSelect={() => setSelected(row.note.id)}
-                onClose={() => setSelected(null)}
-                onConfirm={() => {
-                  setSelected(null);
-                  void touch(row.note, "confirm");
-                }}
-                onRemove={() => remove(row.note)}
-              />
-            ),
-          )}
+          {regular.map(renderRow)}
         </ul>
+
+        {feedback.map(({ slot, number, list }) => {
+          const heading = number ? `Look ${number}` : "An earlier look";
+          return (
+            <section key={slot} aria-label={`Feedback on ${heading}`}>
+              <h3 className={`${ROW} type-label m-0 leading-7 text-graphite`}>{heading}</h3>
+              <ul aria-label={`Feedback on ${heading}`} className="m-0 list-none p-0">
+                {list.map(renderRow)}
+              </ul>
+            </section>
+          );
+        })}
 
         {paused && (
           <p role="status" className={`${ROW} type-small m-0 leading-7 text-graphite`}>

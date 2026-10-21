@@ -1,4 +1,5 @@
-import { active, type Detail, type Note, NOTE_CAP, type NoteChanges, type NoteKind, sameDetails } from "./types";
+import { feedbackOf, isFeedback } from "./feedback";
+import { active, type Detail, FEEDBACK_CAP, type Note, NOTE_CAP, type NoteChanges, type NoteKind, sameDetails } from "./types";
 
 // Latest word wins (R22, tech spec 5, pattern 5). Readings can finish out of order, so each one
 // carries the sequence number its words arrived with, and only changes notes nothing newer has
@@ -81,46 +82,68 @@ export function mergeNotes(
   for (const a of changes.add) {
     const text = a.text.trim();
     if (!text) continue;
-    const all = [...byId.values()];
-    // Never bring back a note the shopper removed by touch, even reworded ("Emerald green" after
-    // "Emerald green, preferred", Phase 2 review), and never let a reading of older words bring back
-    // one removed by voice (a newer reading may, after a merge).
     const sameIdea = (n: Note) => norm(n.text) === norm(text) || within(text, n.text) || within(n.text, text);
-    if (all.some((n) => n.removed && sameIdea(n) && (n.source === "touch" || seq <= n.changedSeq))) continue;
-    // The same idea again keeps the note's wording; a second budget is a correction of the first.
-    if (active(all).some((n) => norm(n.text) === norm(text))) continue;
-    const twin = seen && active(all).find((n) => !seen.has(n.id) && !added.has(n.id) && n.kind === a.kind && shareWord(n.text, text));
-    if (twin) {
-      update(twin, text, twin.status, a.details);
-      continue;
-    }
-    // An idea already noted, in more words: "November" next to "Outdoor wedding, November", or
-    // "Relaxed" next to "Relaxed but put together". A date or season folds into a note of any kind.
-    // Budgets are left to the budget rule below.
-    if (a.kind !== "budget") {
-      const fits = (n: Note, kind: NoteKind) => n.kind !== "budget" && (kind === "timing" || n.kind === a.kind);
-      if (active(all).some((n) => fits(n, a.kind) && within(text, n.text))) continue;
-      // The same idea in fewer words: the fuller note takes its place, keeping its status.
-      const shorter = active(all).find((n) => !added.has(n.id) && fits(n, n.kind) && within(n.text, text));
+    // Feedback (5a) is compared only with feedback on the same look: "Keep the dress" under Look 1
+    // and under Look 2 are different lines. It has its own cap.
+    if (a.kind === "feedback") {
+      const look = feedbackOf(a)?.look;
+      if (!look) continue;
+      const mine = [...byId.values()].filter((n) => isFeedback(n) && feedbackOf(n)?.look === look);
+      if (mine.some((n) => n.removed && sameIdea(n) && (n.source === "touch" || seq <= n.changedSeq))) continue;
+      if (active(mine).some((n) => norm(n.text) === norm(text) || within(text, n.text))) continue;
+      // The same feedback in more words ("Keep the dress and bag" after "Keep the dress") takes its place.
+      const shorter = active(mine).find((n) => !added.has(n.id) && within(n.text, text));
       if (shorter) {
         if (fresh(shorter)) {
-          shorter.kind = a.kind;
           shorter.text = text;
-          if (a.details.length) shorter.details = a.details;
+          shorter.details = a.details;
+          if (a.status === "confirmed") shorter.status = "confirmed";
           mark(shorter);
         }
         continue;
       }
+      if (active([...byId.values()]).filter(isFeedback).length >= FEEDBACK_CAP) continue;
+    } else {
+      const all = [...byId.values()].filter((n) => !isFeedback(n));
+      // Never bring back a note the shopper removed by touch, even reworded ("Emerald green" after
+      // "Emerald green, preferred", Phase 2 review), and never let a reading of older words bring back
+      // one removed by voice (a newer reading may, after a merge).
+      if (all.some((n) => n.removed && sameIdea(n) && (n.source === "touch" || seq <= n.changedSeq))) continue;
+      // The same idea again keeps the note's wording; a second budget is a correction of the first.
+      if (active(all).some((n) => norm(n.text) === norm(text))) continue;
+      const twin = seen && active(all).find((n) => !seen.has(n.id) && !added.has(n.id) && n.kind === a.kind && shareWord(n.text, text));
+      if (twin) {
+        update(twin, text, twin.status, a.details);
+        continue;
+      }
+      // An idea already noted, in more words: "November" next to "Outdoor wedding, November", or
+      // "Relaxed" next to "Relaxed but put together". A date or season folds into a note of any kind.
+      // Budgets are left to the budget rule below.
+      if (a.kind !== "budget") {
+        const fits = (n: Note, kind: NoteKind) => n.kind !== "budget" && (kind === "timing" || n.kind === a.kind);
+        if (active(all).some((n) => fits(n, a.kind) && within(text, n.text))) continue;
+        // The same idea in fewer words: the fuller note takes its place, keeping its status.
+        const shorter = active(all).find((n) => !added.has(n.id) && fits(n, n.kind) && within(n.text, text));
+        if (shorter) {
+          if (fresh(shorter)) {
+            shorter.kind = a.kind;
+            shorter.text = text;
+            if (a.details.length) shorter.details = a.details;
+            mark(shorter);
+          }
+          continue;
+        }
+      }
+      const budget = a.kind === "budget" ? active(all).find((n) => n.kind === "budget") : undefined;
+      if (budget) {
+        // A clear correction keeps the note's status (Sabine's answer to Q1 in 2c).
+        update(budget, text, budget.status, a.details.length ? a.details : budget.details);
+        continue;
+      }
+      // The cap keeps one place for the budget, which plain code adds whenever it's said.
+      const others = active(all).filter((n) => n.kind !== "budget").length;
+      if (a.kind !== "budget" && others >= cap - 1) continue;
     }
-    const budget = a.kind === "budget" ? active(all).find((n) => n.kind === "budget") : undefined;
-    if (budget) {
-      // A clear correction keeps the note's status (Sabine's answer to Q1 in 2c).
-      update(budget, text, budget.status, a.details.length ? a.details : budget.details);
-      continue;
-    }
-    // The cap keeps one place for the budget, which plain code adds whenever it's said.
-    const others = active(all).filter((n) => n.kind !== "budget").length;
-    if (a.kind !== "budget" && others >= cap - 1) continue;
     const n: Note = { id: newId(), kind: a.kind, text, status: a.status, details: a.details, source: "voice", changedSeq: seq, version: 1, removed: false };
     byId.set(n.id, n);
     added.add(n.id);

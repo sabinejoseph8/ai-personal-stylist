@@ -22,7 +22,7 @@ import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { looksChanged, looksForStylist } from "@/core/looks/context";
-import type { ShownItem } from "@/core/looks/shown";
+import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import type { SwapRequest } from "@/core/notes/reader";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
@@ -121,6 +121,9 @@ export function StylingSession({
   // Set once the looks exist, further down.
   const resetLooks = useRef<(() => void) | null>(null);
   const swapBySpeech = useRef<((swap: SwapRequest) => void) | null>(null);
+  // The look most on screen, sent with the words for feedback that doesn't name a look (5a).
+  const inViewNow = useRef<number | null>(null);
+  const looksShownNow = useRef(false);
   const call = useConversation(openSessionId, { video, audio }, {
     onEvent: (e) => {
       notes.onEvent(e);
@@ -166,6 +169,7 @@ export function StylingSession({
     tell,
     (id, item) => photos.setItem(id, item),
     (swap) => swapBySpeech.current?.(swap),
+    () => ({ any: looksShownNow.current, inView: inViewNow.current }),
   );
 
   // The looks (4c): asked for again whenever what they must meet may have changed: the notes and whether
@@ -192,6 +196,7 @@ export function StylingSession({
   // The look most on screen, for a spoken swap that doesn't say which (Sabine's answer to Q2 in 4c).
   const [lookInView, setLookInView] = useState<number | null>(null);
   useLayoutEffect(() => {
+    looksShownNow.current = looks.looks.length > 0;
     resetLooks.current = looks.reset;
     swapBySpeech.current = (swap) => {
       const look = looks.looks[(swap.look || lookInView || 0) - 1];
@@ -201,6 +206,43 @@ export function StylingSession({
       if (index >= 0) void looks.swap(look.id, index);
     };
   });
+  // Keep and Change (5a): what the notes say about each item, with a tap shown at once while it saves.
+  const [pressing, setPressing] = useState<Record<string, "keep" | "change" | null>>({});
+  const feedbackFor = (look: ShownLook, item: ShownItem) => {
+    const key = `${look.id} ${item.id}`;
+    if (key in pressing) return pressing[key];
+    const said = notes.notes.filter((n) => n.feedback?.look === look.slot && n.feedback.items.includes(item.id) && (n.feedback.act === "keep" || n.feedback.act === "change"));
+    return (said.at(-1)?.feedback?.act as "keep" | "change" | undefined) ?? null;
+  };
+  async function giveFeedback(look: ShownLook, index: number, act: "keep" | "change", on: boolean) {
+    const id = call.sessionId;
+    const key = `${look.id} ${look.items[index].id}`;
+    if (!id) return;
+    setPressing((p) => ({ ...p, [key]: on ? act : null }));
+    try {
+      const res = await fetch(`/api/sessions/${id}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lookId: look.id, index, act, on }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      notes.receive(await res.json());
+    } catch {
+      toast("That didn't save. Try again.");
+    } finally {
+      setPressing((p) => {
+        const next = { ...p };
+        delete next[key];
+        return next;
+      });
+    }
+  }
+  /** The look's number on screen for a place, for feedback headings in the notebook (5a). */
+  const lookNumber = (slot: number) => {
+    const n = looks.looks.findIndex((l) => l.slot === slot);
+    return n >= 0 ? n + 1 : null;
+  };
+
   /** The shopper's own pieces show their own photos. */
   const imageFor = (item: ShownItem) =>
     (item.kind === "photo" ? photos.photos.find((p) => p.id === item.id)?.thumbnailUrl : wardrobe.find((w) => w.id === item.id)?.thumbnailUrl) ?? null;
@@ -309,11 +351,20 @@ export function StylingSession({
   // She's told about the looks whenever they change, before she's asked to present them.
   const looksBusy = looks.phase === "building" || looks.phase === "checking";
   useEffect(() => {
-    looksTold.current = looksForStylist({ looks: looks.looks, building: looksBusy, needs: looks.needs, noMatch: looks.noMatch, inView: lookInView, changed: looksChange });
+    const feedback = notes.notes.filter((n) => n.feedback && n.feedback.look);
+    looksTold.current = looksForStylist({
+      looks: looks.looks,
+      building: looksBusy,
+      needs: looks.needs,
+      noMatch: looks.noMatch,
+      inView: lookInView,
+      changed: looksChange,
+      feedback: feedback.map((n) => ({ look: lookNumber(n.feedback!.look), text: n.text, confirmed: n.status === "confirmed" })),
+    });
     if (flow === "live") call.updateContext(withCamera());
     // withCamera and call only read refs; this runs when the looks change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [looks.looks, looksBusy, looks.needs, looks.noMatch, lookInView, looksChange, flow]);
+  }, [looks.looks, looksBusy, looks.needs, looks.noMatch, lookInView, looksChange, flow, notes.notes]);
 
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {
@@ -569,6 +620,7 @@ export function StylingSession({
           open={notebookOpen}
           onOpenChange={setNotebookOpen}
           onTouch={notes.touch}
+          lookNumber={lookNumber}
           holdAnnouncements={someoneSpeaking(stage)}
           titleRef={notebookTitle}
           styleAround={
@@ -616,9 +668,14 @@ export function StylingSession({
         canTalk={flow === "live"}
         imageFor={imageFor}
         onSwap={(lookId, index) => void looks.swap(lookId, index)}
+        feedbackFor={feedbackFor}
+        onFeedback={(look, index, act, on) => void giveFeedback(look, index, act, on)}
         onTryAgain={looks.tryAgain}
         onChoice={call.sendPhrase}
-        onInView={setLookInView}
+        onInView={(n) => {
+          inViewNow.current = n;
+          setLookInView(n);
+        }}
       />
 
       {inCall && !stageInView && (

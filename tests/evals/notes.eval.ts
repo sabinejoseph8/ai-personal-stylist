@@ -3,7 +3,8 @@ import { expect, it } from "vitest";
 import { claudeAsk, type Effort, LIVE_MODEL } from "@/connectors/ai/claude";
 import { mergeNotes } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
-import { createNotesReader } from "@/core/notes/reader";
+import { feedbackOf } from "@/core/notes/feedback";
+import { createNotesReader, type LookForReader } from "@/core/notes/reader";
 import { active, type NextQuestion, type Note, NOTE_CAP } from "@/core/notes/types";
 import { changeItem, chosenItem, type DetailName, itemForReader, type StyleItem } from "@/core/photos/item";
 import { setting } from "../support/test-guests";
@@ -16,7 +17,8 @@ import { setting } from "../support/test-guests";
 // low), NOTES_EVAL_OVERLAP=0 (one reading at a time), NOTES_EVAL_SEND_MS and NOTES_EVAL_OUT (results file).
 // Cases with a photo (3b, Sabine's answer to Q3) give the reader the item to style around, and check
 // what the shopper's words changed about it, while the notes are timed as usual. Cases with looks on
-// screen (4c) check the request to swap a piece heard at the end of the turn, or that none was.
+// screen (4c, 5a) check the request to swap a piece and the feedback heard at the end of the turn (only
+// that reading is told about the looks, as in the app), or that there was none.
 
 type Expect = { after: string; has: string[]; lacks?: string[]; status?: "confirmed" };
 type Case = {
@@ -32,7 +34,34 @@ type Case = {
   /** Looks on screen, and the swap the last turn asks for (null: none) (4c). */
   looks?: number;
   swap?: { look: number; piece: string } | null;
+  /** The look on the shopper's screen, and the feedback jotted (5a); noFeedback: none at all. */
+  inView?: number;
+  feedback?: { look: number; has: string[]; act?: string; items?: string[]; scope?: string; status?: "confirmed" | "to_confirm" }[];
+  noFeedback?: boolean;
 };
+
+// The looks on screen in cases with looks (5a): sample products, by their catalog slugs.
+const piece = (id: string, name: string, group: string) => ({ id, name, group, owned: false });
+const LOOKS: LookForReader[] = [
+  {
+    number: 1,
+    slot: 1,
+    name: "Garden ceremony",
+    items: [piece("w-emerald-satin-midi-dress", "Emerald satin midi dress", "dress"), piece("w-nude-slingback-flats", "Nude slingback flats", "shoes"), piece("w-emerald-satin-clutch", "Emerald satin clutch", "bag"), piece("w-pearl-drop-earrings", "Pearl drop earrings", "accessory")],
+  },
+  {
+    number: 2,
+    slot: 2,
+    name: "Velvet evening",
+    items: [piece("w-burgundy-velvet-dress", "Burgundy velvet dress", "dress"), piece("w-tan-leather-loafers", "Tan leather loafers", "shoes"), piece("w-camel-leather-tote", "Camel leather tote", "bag")],
+  },
+  {
+    number: 3,
+    slot: 3,
+    name: "Camel classic",
+    items: [piece("w-white-silk-blouse", "White silk blouse", "top"), piece("w-camel-pleated-midi-skirt", "Camel pleated midi skirt", "bottom"), piece("w-black-ballet-flats", "Black ballet flats", "shoes"), piece("w-woven-straw-basket-bag", "Woven straw basket bag", "bag")],
+  },
+];
 
 const cases: Case[] = JSON.parse(readFileSync("tests/evals/notes-cases.json", "utf8"));
 // Settings to compare setups (all default to what the app does).
@@ -82,12 +111,15 @@ async function replay(c: Case) {
   let lastRead = "";
   let turnAt = 0;
   let questionTurn = -1;
+  // The turn's full words: only that reading is told about the looks (4e review).
+  let fullTurn = "";
   function startReading(words: string, stylistSaid: string, mine: number) {
     lastRead = words;
     const turnNo = turnAt;
     const started = now();
     const seen = new Set(active(notes).map((n) => n.id));
-    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined, looks: c.looks }).then((r) => {
+    const looks = c.looks && words === fullTurn ? LOOKS.slice(0, c.looks) : undefined;
+    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined, looks, inView: c.inView ?? null, looksOnScreen: Boolean(c.looks) }).then((r) => {
       durations.push(now() - started);
       running.delete(reading);
       if (!r) return void paused++;
@@ -111,6 +143,7 @@ async function replay(c: Case) {
     turnAt++;
     const words = turn.shopper.split(/\s+/);
     const full = words.join(" ");
+    fullTurn = full;
     const stylist = turn.stylist ?? "";
     const start = now();
     const at = (i: number) => start + ((i + 1) / WORDS_PER_SECOND) * 1000;
@@ -152,7 +185,8 @@ async function replay(c: Case) {
   }
   for (const f of c.forbid ?? []) checks.push({ what: `no "${f}"`, ok: !active(notes).some((n) => lower(n.text).includes(f)) });
   checks.push({ what: "no repeated notes", ok: !repeats(notes) });
-  if (!c.turns.some((t) => t.stylist)) checks.push({ what: "no ink without a question", ok: !active(notes).some((n) => n.status === "confirmed") });
+  // Clear feedback is jotted in ink (R47), so only notes count here.
+  if (!c.turns.some((t) => t.stylist)) checks.push({ what: "no ink without a question", ok: !active(notes).some((n) => n.status === "confirmed" && n.kind !== "feedback") });
   if (c.maxNotes !== undefined) checks.push({ what: `at most ${c.maxNotes} notes`, ok: active(notes).length <= c.maxNotes });
   if (c.photo && item) {
     const { ownership, chosen, detail } = c.photo;
@@ -169,6 +203,23 @@ async function replay(c: Case) {
     const want = c.swap;
     checks.push({ what: want ? `swap look ${want.look} ${want.piece}` : "no swap", ok: want ? heard?.look === want.look && heard?.piece === want.piece : heard === null });
   }
+  const feedbackNotes = active(notes).flatMap((n) => {
+    const f = feedbackOf(n);
+    return f ? [{ n, f }] : [];
+  });
+  if (c.noFeedback) checks.push({ what: "no feedback", ok: !feedbackNotes.length });
+  for (const want of c.feedback ?? []) {
+    const ok = feedbackNotes.some(
+      ({ n, f }) =>
+        f.look === want.look &&
+        want.has.every((h) => lower(n.text).includes(h)) &&
+        (!want.act || f.act === want.act) &&
+        (!want.scope || f.scope === want.scope) &&
+        (!want.status || n.status === want.status) &&
+        (!want.items || want.items.every((i) => f.items.includes(i))),
+    );
+    checks.push({ what: `feedback on look ${want.look}: ${want.has.join("+")}${want.act ? ` ${want.act}` : ""}${want.scope ? ` ${want.scope}` : ""}`, ok });
+  }
   if (c.question) {
     const q = question;
     const asked = q ? lower(`${q.text} ${q.options.join(" ")}`) : "";
@@ -177,7 +228,7 @@ async function replay(c: Case) {
   return {
     id: c.id,
     checks,
-    notes: active(notes).map((n) => `${n.text} [${n.status === "confirmed" ? "ink" : "pencil"}]`),
+    notes: active(notes).map((n) => `${n.kind === "feedback" ? `(look ${feedbackOf(n)?.look}, ${feedbackOf(n)?.act}, ${feedbackOf(n)?.scope}) ` : ""}${n.text} [${n.status === "confirmed" ? "ink" : "pencil"}]`),
     photo: item ? itemForReader(item).replace(/\n/g, " | ") : undefined,
     question,
     cost,

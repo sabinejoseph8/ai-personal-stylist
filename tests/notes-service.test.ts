@@ -52,9 +52,9 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
 
   it("hears a request to swap a piece only at the end of a turn, with the looks on screen (4c, 4e review)", async () => {
     await db.from("looks").insert({ user_id: guest.id, session_id: sessionId, status: "published", input_versions: { slot: 1 } }).throwOnError();
-    const seen: (number | undefined)[] = [];
+    const seen: number[] = [];
     const spy = createFakeNotesReader();
-    const reader: NotesReader = { read: (input) => (seen.push(input.looks), spy.read(input)) };
+    const reader: NotesReader = { read: (input) => (seen.push(input.looks?.length ?? 0), spy.read(input)) };
     const updates: NotesUpdate[] = [];
     await hearWords(deps({ reader }), guest.id, sessionId, { words: "Show me different", stylistSaid: "", final: false }, (u) => updates.push(u));
     await hearWords(deps({ reader }), guest.id, sessionId, { words: "Show me different shoes", stylistSaid: "", final: true }, (u) => updates.push(u));

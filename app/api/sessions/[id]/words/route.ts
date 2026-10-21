@@ -14,6 +14,10 @@ const Body = z.object({
   final: z.boolean().default(false),
   /** The browser's label for the shopper's turn: the session's question stays while the turn does. */
   turn: z.string().max(64).default(""),
+  /** The look most on the shopper's screen (5a), for feedback that doesn't name one. */
+  look: z.number().int().min(1).max(3).nullable().default(null),
+  /** The page shows looks: readings while the shopper talks leave reactions to them for the end (5a). */
+  looks: z.boolean().default(false),
 });
 
 export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[id]/words">) {

@@ -4,6 +4,7 @@ import { createFakeLooksBuilder, type LooksBuilder } from "@/core/looks/builder"
 import type { LookItem } from "@/core/looks/look";
 import { createFakeJudge, type Judge } from "@/core/looks/judge";
 import { behindTheScenesFor } from "@/lib/behind-the-scenes";
+import { feedbackByTouch } from "@/lib/notes-service";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { buildLooks, currentLooks, type LooksDeps, type ShownLook, swapPiece } from "@/lib/looks-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
@@ -386,6 +387,31 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     // Never a photo, a link or another guest's session.
     expect(JSON.stringify(entries)).not.toMatch(/https?:|\.jpg|guest-photos/);
     expect(await behindTheScenesFor({ db, catalog }, "00000000-0000-0000-0000-000000000000", session)).toBeNull();
+  }, 60_000);
+
+  it("Keep and Change by touch jot feedback under the look, and never make the looks need a new check (5a)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const catalog = createSampleCatalog(db);
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const shoes = look.items.findIndex((i) => i.group === "shoes");
+    const keep = await feedbackByTouch({ db, catalog }, guest.id, session, { lookId: look.id, index: 0, act: "keep", on: true });
+    expect(keep?.notes.filter((n) => n.feedback).map((n) => [n.text, n.status, n.feedback])).toEqual([
+      [`Keep the ${look.items[0].name.charAt(0).toLowerCase()}${look.items[0].name.slice(1)}`, "confirmed", { look: look.slot, items: [look.items[0].id], act: "keep", scope: "item" }],
+    ]);
+    const change = await feedbackByTouch({ db, catalog }, guest.id, session, { lookId: look.id, index: shoes, act: "change", on: true });
+    expect(change?.notes.filter((n) => n.feedback).map((n) => n.feedback!.act)).toEqual(["keep", "change"]);
+    const off = await feedbackByTouch({ db, catalog }, guest.id, session, { lookId: look.id, index: 0, act: "keep", on: false });
+    expect(off?.notes.filter((n) => n.feedback).map((n) => n.feedback!.act)).toEqual(["change"]);
+    // Feedback is for revising a look (5b), not a requirement: the looks stay current, and asking again builds nothing.
+    expect((await currentLooks(deps(), guest.id, session)).every((l) => l.current)).toBe(true);
+    const counter = counting();
+    await buildLooks(deps(counter.builder), guest.id, session);
+    expect(counter.calls).toBe(0);
+    // Not for another guest, and not for an index that isn't an item.
+    expect(await feedbackByTouch({ db, catalog }, "00000000-0000-0000-0000-000000000000", session, { lookId: look.id, index: 0, act: "keep", on: true })).toBeNull();
+    expect(await feedbackByTouch({ db, catalog }, guest.id, session, { lookId: look.id, index: 11, act: "keep", on: true })).toBeNull();
+    const entries = (await behindTheScenesFor({ db, catalog }, guest.id, session))!;
+    expect(entries.some((e) => e.text.startsWith(`Feedback on Look ${look.slot}: Change the `) && e.text.endsWith("Confirmed with a tap."))).toBe(true);
   }, 60_000);
 
   it("looks and their checks are deleted when the session ends (R63)", async () => {

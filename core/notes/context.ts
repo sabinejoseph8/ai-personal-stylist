@@ -16,7 +16,8 @@ export function stylistContext(
   item: StyleItem | null = null,
   wardrobe: WardrobePick[] = [],
 ): string {
-  const live = active(notes);
+  // Feedback on the looks (5a) is told with the looks, by the page, which knows their numbers.
+  const live = active(notes).filter((n) => n.kind !== "feedback");
   const confirmed = live.filter((n) => n.status === "confirmed").map((n) => n.text);
   const toConfirm = live.filter((n) => n.status === "to_confirm").map((n) => n.text);
   const label = { must_have: "Must have", never: "Never", likes: "Likes" } as Record<string, string>;

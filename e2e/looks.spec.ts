@@ -10,7 +10,7 @@ import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/
 // what's needed before looks appear (R39), three checked looks with totals and reasons (R40 to R42,
 // R55), Swap by touch and by voice (R43), and a changed budget bringing them up to date (R44, R58).
 // Phase 4's end-to-end test: with the sample profile, no look shows high heels across 10 swaps (S13).
-// 4d: Behind the scenes (R72).
+// 4d: Behind the scenes (R72). 5a: feedback by Keep and Change, and by voice, jotted under its look (R46, R47).
 test.describe("the looks", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -146,6 +146,36 @@ test.describe("the looks", () => {
     await expect(panel).toContainText(/Check blocked a candidate: \$\d+ over your \$250 limit\./);
     // The blocked looks' names never appear: only shown looks are named.
     for (const name of (await panel.innerText()).match(/Test look \d/g) ?? []) expect(shown).toContain(name);
+    await noSeriousA11yProblems(page);
+  });
+
+  test("Keep and Change, and spoken feedback, are jotted under the look, and the looks don't change (5a, R46, R47)", async ({ page }) => {
+    await weddingLooks(page);
+    const first = panels(page).first();
+    const dress = (await first.getByRole("listitem").first().getByRole("paragraph").first().textContent())!;
+    const feedback = notebookOf(page).getByRole("list", { name: "Feedback on Look 1" });
+
+    await first.getByRole("button", { name: `Keep ${dress}` }).click();
+    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toHaveAttribute("aria-pressed", "true");
+    await expect(feedback.getByRole("button", { name: new RegExp(`^Keep the ${dress.toLowerCase()} Confirmed$`, "i") })).toBeVisible();
+    // Change on the same item takes back Keep; pressing it again takes back Change.
+    await first.getByRole("button", { name: `Change ${dress}` }).click();
+    await expect(first.getByRole("button", { name: `Changing ${dress}` })).toHaveAttribute("aria-pressed", "true");
+    await expect(feedback.getByRole("button")).toHaveCount(1);
+    await expect(feedback).toContainText(/Change the/i);
+    await first.getByRole("button", { name: `Changing ${dress}` }).click();
+    await expect(notebookOf(page).getByRole("list", { name: "Feedback on Look 1" })).toHaveCount(0);
+
+    // Spoken, about the look on screen.
+    await first.scrollIntoViewIfNeeded();
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Keep the dress and bag, and lower heels please", final: true, turnId: "f1" });
+    await expect(feedback).toContainText("Keep the dress and bag", { timeout: 10_000 });
+    await expect(feedback).toContainText("Lower heels, this look only");
+    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toBeVisible();
+    // Feedback alone never makes the looks need a new check (5b revises them).
+    await expect(panels(page).first()).toContainText("Checked against your preferences");
+    await expect(page.getByText("Needs a new check")).toHaveCount(0);
+    expect((await sent(page, "updateContext")).at(-1)).toContain("Feedback the shopper has given");
     await noSeriousA11yProblems(page);
   });
 

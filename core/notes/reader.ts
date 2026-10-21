@@ -3,7 +3,8 @@ import type { Group } from "../looks/look";
 import { SWAPPABLE } from "../looks/swap";
 import { chosenItem, DETAIL_NAMES, type DetailName, type ItemChange, itemForReader, type StyleItem } from "../photos/item";
 import { shareWord } from "./merge";
-import { active, KINDS, type Note, NOTE_CAP, type NextQuestion, type NoteChanges, type NoteKind } from "./types";
+import { feedbackDetails, feedbackOf, isFeedback } from "./feedback";
+import { active, type Detail, type FeedbackInfo, KINDS, type NewNote, type Note, NOTE_CAP, type NextQuestion, type NoteChanges, type NoteKind } from "./types";
 
 // The notes reader (R15 to R19, tech spec 4.4): Claude Haiku 5.5 at low effort reads the shopper's words
 // and returns only what changed in the notebook, plus the one useful question to ask next. Money is
@@ -54,7 +55,8 @@ export const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        properties: { k: { type: "string", enum: KINDS }, t: { type: "string" }, d: details },
+        // Feedback (5a) is only offered to the reading at the end of a turn, which sees the looks.
+        properties: { k: { type: "string", enum: KINDS.filter((k) => k !== "feedback") }, t: { type: "string" }, d: details },
         required: ["k", "t", "d"],
       },
     },
@@ -105,15 +107,32 @@ export const PHOTO_SCHEMA_PART = {
   required: ["c", "o", "d", "k"],
 };
 
-// Looks on screen (4c): the same reading also hears a request to swap a piece ("show me different
-// shoes"), so it's as forgiving of how speech is written as the notes are. Without looks, the prompt
-// and answer are unchanged.
+// Looks on screen (4c, 5a): at the end of a turn, the same reading also hears a request to swap a piece
+// ("show me different shoes") and feedback on a look ("keep the dress and bag, lower heels"), so it's
+// as forgiving of how speech is written as the notes are. It's told what's in each look, by short item
+// codes. Without looks, the prompt and answer are unchanged.
+
+/** A look as the notes reader sees it (5a): its number on screen, its place (1 to 3), and its items. */
+export type LookForReader = { number: number; slot: number; name: string; items: { id: string; name: string; group: string; owned: boolean }[] };
+
 export const LOOKS_RULES = `
 
-The shopper can see looks numbered 1 to {n} on screen. When they ask to see a different piece in a look ("show me different shoes", "can I see another bag for look 2", "swap the jacket"), give w:
+The looks on the shopper's screen ({inView}):
+{looks}
+
+Feedback on a look: when the shopper reacts to a look, an item in it, or a detail (color, shape, length, formality, heel height), add a note with k "feedback": one short line in your words saying what to keep or change and its scope, such as "Keep the dress and bag", "Lower heels, this look only" or "No high heels in any look". Its details:
+- look=N: the look it's about, the one they named, otherwise the one on their screen.
+- items=i1,i3: the items it's about, by their codes above, or none for the whole look or a detail.
+- act=keep, change, like or dislike.
+- scope=item (these pieces in this look), look (this whole look) or session (every look from now on, such as "no high heels at all"; if the notebook already has that as a note, don't add it again).
+- about=the detail, if any, such as "lower heel" or "closed toe".
+- clear=yes when it's clear which look and items they mean; otherwise clear=no, and ask about it in q.
+Keep and change are always separate lines: "keep the dress and bag, show me lower heels" is "Keep the dress and bag" (act=keep, items=the dress and bag) and "Lower heels" (act=change, items=the shoes, about=lower heel). When it's unclear what they mean, such as "I like that but not this", still add the line with clear=no, and ask which they mean in q. Feedback is never jotted as an ordinary note, and never changes an ordinary note.
+
+A request to see a different piece right now, with nothing more said about what it should be ("show me different shoes", "another bag for look 2", "swap the jacket"), is a swap: give w:
 - l: the look's number if they said which (1 to {n}), otherwise 0.
 - p: the piece: dress, suit, top, outer (a jacket, blazer, cardigan or coat), bottom (trousers, jeans, a skirt or shorts), shoes, bag or accessory (jewelry, a belt or a scarf).
-Only a request for a different or another piece is a swap. Liking, disliking or asking about a piece ("I love the shoes in look one", "is that bag leather?") isn't: give p as "". A request to swap is never a note.`;
+Otherwise give p as "". A request with a detail ("lower heels", "closed-toe shoes") is feedback, not a swap. Liking, disliking or asking about a piece is never a swap.`;
 
 export const LOOKS_SCHEMA_PART = {
   type: "object",
@@ -122,8 +141,32 @@ export const LOOKS_SCHEMA_PART = {
   required: ["l", "p"],
 };
 
+/** The looks for the instructions, with a code for each item ("i1"), and the codes back to the items. */
+function looksForPrompt(looks: LookForReader[], inView: number | null | undefined) {
+  const codes = new Map<string, { look: LookForReader; id: string }>();
+  const lines = looks.map((look) => {
+    const items = look.items.map((it) => {
+      const code = `i${codes.size + 1}`;
+      codes.set(code, { look, id: it.id });
+      return `${code} ${it.name} (${it.group}${it.owned ? ", the shopper's own" : ""})`;
+    });
+    return `Look ${look.number}, "${look.name}": ${items.join("; ")}`;
+  });
+  const view = looks.some((l) => l.number === inView) ? `they're looking at Look ${inView}` : "no look is on their screen right now";
+  const text = LOOKS_RULES.replace("{inView}", view).replace("{looks}", lines.join("\n")).replaceAll("{n}", String(looks.length));
+  return { text, codes };
+}
+
+/**
+ * While the shopper talks with looks on screen (5a), readings aren't told what's in them, to stay quick,
+ * but they're told not to jot reactions to the looks: those are read when the turn ends.
+ */
+export const LOOKS_WHILE_TALKING = `
+
+Looks are on the shopper's screen. Reactions to them (keeping, changing, liking or disliking a piece or a look, or asking for a different piece) are never notes: leave them out, they're read when the shopper finishes speaking.`;
+
 /** The instructions and answer shape for this reading: the photo and looks parts only when there are some. */
-function readingShape(item: boolean, looks: number) {
+function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false) {
   const properties: Record<string, unknown> = { ...SCHEMA.properties };
   const required = [...SCHEMA.required];
   let system = SYSTEM;
@@ -132,12 +175,16 @@ function readingShape(item: boolean, looks: number) {
     properties.p = PHOTO_SCHEMA_PART;
     required.push("p");
   }
-  if (looks) {
-    system += LOOKS_RULES.replaceAll("{n}", String(looks));
+  if (!looksText && looksWhileTalking) system += LOOKS_WHILE_TALKING;
+  if (looksText) {
+    system += looksText;
     properties.w = LOOKS_SCHEMA_PART;
     required.push("w");
+    // Feedback lines can be added only here.
+    const add = SCHEMA.properties.add;
+    properties.add = { ...add, items: { ...add.items, properties: { ...add.items.properties, k: { type: "string", enum: KINDS } } } };
   }
-  return { system, schema: { ...SCHEMA, properties, required }, maxTokens: 1200 + (item ? 100 : 0) + (looks ? 50 : 0) };
+  return { system, schema: { ...SCHEMA, properties, required }, maxTokens: 1200 + (item ? 100 : 0) + (looksText ? 300 : 0) };
 }
 
 export type ReaderInput = {
@@ -148,8 +195,12 @@ export type ReaderInput = {
   notes: Note[];
   /** The photo to style around, when there is one (3b). */
   item?: StyleItem;
-  /** How many looks are on screen (4c), so a request to swap a piece is heard. */
-  looks?: number;
+  /** The looks on screen, at the end of a turn (4c, 5a), so a swap or feedback is heard. */
+  looks?: LookForReader[];
+  /** The number of the look most on the shopper's screen, if any (5a). */
+  inView?: number | null;
+  /** Looks are on screen, though this reading isn't told what's in them (while the shopper talks, 5a). */
+  looksOnScreen?: boolean;
 };
 
 /** A spoken request to swap a piece (4c): `look` is 1 to 3, or 0 when the shopper didn't say which. */
@@ -209,23 +260,34 @@ export function cleanQuestion(q: { text: string; options: string[] } | undefined
 
 export function createNotesReader(ask: Ask): NotesReader {
   return {
-    async read({ stylistSaid, words, notes, item, looks = 0 }) {
+    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false }) {
       const live = active(notes);
       // Short ids keep the prompt small and stop Claude inventing ids.
       const shortIds = new Map(live.map((n, i) => [`n${i + 1}`, n.id]));
-      const lines = live.map((n, i) => `- n${i + 1} [${n.kind}, ${n.status === "confirmed" ? "confirmed" : "to confirm"}]: ${n.text}`);
+      // Feedback (5a) is listed apart, under its look, and isn't counted in the notebook's limit.
+      const numberOf = (slot: number) => looks.find((l) => l.slot === slot)?.number;
+      const label = (n: Note) => {
+        const f = feedbackOf(n);
+        const look = f && numberOf(f.look);
+        return look ? `feedback on Look ${look}` : "feedback on an earlier look";
+      };
+      const listed = live.map((n, i) => ({ n, line: `- n${i + 1} [${isFeedback(n) ? label(n) : n.kind}, ${n.status === "confirmed" ? "confirmed" : "to confirm"}]: ${n.text}` }));
+      const lines = listed.filter((x) => !isFeedback(x.n)).map((x) => x.line);
+      const feedbackLines = listed.filter((x) => isFeedback(x.n)).map((x) => x.line);
       const removed = notes.filter((n) => n.removed).map((n) => `- ${n.text}`);
       const user = [
         stylistSaid ? `You last said: "${stylistSaid}"` : "",
         `The shopper is saying: "${words}"`,
-        `The notebook (${live.length} of at most ${NOTE_CAP} notes):\n${lines.length ? lines.join("\n") : "(empty)"}`,
+        `The notebook (${lines.length} of at most ${NOTE_CAP} notes):\n${lines.length ? lines.join("\n") : "(empty)"}`,
+        feedbackLines.length ? `Feedback already jotted:\n${feedbackLines.join("\n")}` : "",
         removed.length ? `Removed by the shopper, never jot again:\n${removed.join("\n")}` : "",
         item ? itemForReader(item) : "",
       ]
         .filter(Boolean)
         .join("\n\n");
 
-      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), looks) });
+      const forLooks = looks.length ? looksForPrompt(looks, inView) : null;
+      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen) });
       if (!data) return null;
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
@@ -242,19 +304,49 @@ export function createNotesReader(ask: Ask): NotesReader {
       // says it's theirs, though the photo already shows it (found by the notes eval in 3b).
       const photoType = item ? chosenItem(item.reading)?.details.type.value.toLowerCase() : undefined;
       const aboutPhoto = (a: Raw["add"][number]) => !!photoType && a.k === "owned_item" && a.t.toLowerCase().includes(photoType);
+      // Feedback (5a), only with looks on screen: its look and item codes become the look's place and the
+      // items' ids. Clear feedback is jotted in ink; unclear feedback in pencil, and the stylist asks (R47).
+      const feedback = (d: string[], before?: Note): { details: Detail[]; clear: boolean } | null => {
+        if (!forLooks) return null;
+        const given = Object.fromEntries(toDetails(d).map((x) => [x.name, x.value]));
+        const was = before ? feedbackOf(before) : null;
+        const named = given.look ? looks.find((l) => l.number === Number(given.look)) : looks.find((l) => l.slot === was?.look);
+        // No look it could be about: under the one on screen, or the first, in pencil for her to ask (R47).
+        const look = named ?? looks.find((l) => l.number === inView) ?? looks[0];
+        const sure = Boolean(named);
+        const codes = (given.items ?? "").split(",").map((c) => c.trim()).filter(Boolean);
+        const items = given.items !== undefined ? codes.flatMap((c) => { const it = forLooks.codes.get(c); return it && it.look === look ? [it.id] : []; }) : (was?.items ?? []);
+        const act = (given.act ?? was?.act ?? "change") as FeedbackInfo["act"];
+        const scope = (given.scope ?? was?.scope ?? "item") as FeedbackInfo["scope"];
+        const about = given.about ?? before?.details.find((x) => x.name === "about")?.value;
+        const info = feedbackOf({ kind: "feedback", details: feedbackDetails({ look: look.slot, items, act, scope }) })!;
+        return { details: feedbackDetails(info, about), clear: sure && given.clear === "yes" };
+      };
+      const adds = raw.add
+        .filter((a) => a.k !== "budget" && !aboutPhoto(a))
+        .flatMap((a): NewNote[] => {
+          if (a.k !== "feedback") return [{ kind: a.k, text: a.t, status: "to_confirm", details: toDetails(a.d) }];
+          const f = feedback(a.d);
+          return f ? [{ kind: "feedback", text: a.t, status: f.clear ? "confirmed" : "to_confirm", details: f.details }] : [];
+        });
       return {
         changes: {
-          add: raw.add.filter((a) => a.k !== "budget" && !aboutPhoto(a)).map((a) => ({ kind: a.k, text: a.t, status: "to_confirm" as const, details: toDetails(a.d) })),
+          add: adds,
           update: raw.update.flatMap((u) => {
             const id = real(u.i);
-            return id && !isBudget(id) ? [{ id, text: u.t, status: status(id, u.s), details: toDetails(u.d) }] : [];
+            const note = live.find((n) => n.id === id);
+            if (!id || !note || isBudget(id)) return [];
+            if (!isFeedback(note)) return [{ id, text: u.t, status: status(id, u.s), details: toDetails(u.d) }];
+            // A feedback line keeps what it's about unless the words change it.
+            const f = feedback(u.d, note);
+            return [{ id, text: u.t, status: u.s === "c" || note.status === "confirmed" ? "confirmed" : "to_confirm", details: f?.details ?? note.details }];
           }),
           remove: raw.remove.flatMap((id) => (real(id) && !isBudget(real(id)!) ? [real(id)!] : [])),
         },
         question: cleanQuestion({ text: raw.q.t, options: raw.q.o }),
         costUsd,
         ...(item ? { photo: photoChange(raw.p) } : {}),
-        ...(looks ? { swap: swapRequest(raw.w, looks) } : {}),
+        ...(forLooks ? { swap: swapRequest(raw.w, looks.length) } : {}),
       };
     },
   };
