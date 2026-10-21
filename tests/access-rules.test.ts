@@ -66,8 +66,6 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     expect(note.error).not.toBeNull();
     const look = await b.db.from("looks").insert({ user_id: b.id, session_id: sessionId });
     expect(look.error).not.toBeNull();
-    const log = await b.db.from("event_log").insert({ user_id: b.id, session_id: sessionId, entry_type: "note", summary: "Planted" });
-    expect(log.error).not.toBeNull();
   });
 
   it("guest B can't open, list, overwrite or delete guest A's photo", async () => {

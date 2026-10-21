@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { Sheet } from "@/components/ui/sheet";
@@ -33,9 +33,10 @@ export function BehindTheScenes() {
   const [entries, setEntries] = useState<{ session: string; list: Entry[] } | null>(null);
   const [problem, setProblem] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // The session whose entries are shown: a ref, so an answer arriving doesn't ask again (4e review).
+  const shownFor = useRef<string | null>(null);
 
   // Asked when opened, and again shortly after each change while open.
-  const shownFor = entries?.session;
   useEffect(() => {
     if (!open || !sessionId) return;
     let current = true;
@@ -45,17 +46,18 @@ export function BehindTheScenes() {
           .then((res) => (res.ok ? (res.json() as Promise<{ entries: Entry[] }>) : Promise.reject(new Error(String(res.status)))))
           .then((body) => {
             if (!current) return;
+            shownFor.current = sessionId;
             setEntries({ session: sessionId, list: body.entries });
             setProblem(false);
           })
           .catch(() => current && setProblem(true)),
-      shownFor === sessionId ? 800 : 0,
+      shownFor.current === sessionId ? 800 : 0,
     );
     return () => {
       current = false;
       clearTimeout(timer);
     };
-  }, [open, sessionId, changes, attempt, shownFor]);
+  }, [open, sessionId, changes, attempt]);
 
   const list = entries && entries.session === sessionId ? entries.list : null;
   return (

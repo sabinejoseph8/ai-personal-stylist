@@ -397,6 +397,7 @@ test.describe("the stylist stage", () => {
     await page.getByRole("button", { name: "Resume conversation" }).click();
     await expect(page.getByRole("heading", { name: "Talk with your stylist" })).toBeHidden();
     await expect(page.getByRole("button", { name: "End", exact: true })).toBeEnabled();
-    expect(await sessions()).toEqual([{ id: first, status: "active" }]);
+    // The status changes on the server a moment after End shows (a GitHub flake in 4b).
+    await expect.poll(sessions).toEqual([{ id: first, status: "active" }]);
   });
 });

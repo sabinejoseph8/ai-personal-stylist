@@ -2,17 +2,17 @@
  "summary": {
   "model": "claude-opus-5-5",
   "effort": "medium",
-  "date": "2026-10-21T06:20:28.837Z",
+  "date": "2026-10-21T16:37:52.640Z",
   "looks": 37,
   "ruleBreaksCaught": "16 of 16",
   "judgedRight": "21 of 21",
   "judgedRightPercent": 100,
   "wrong": [],
   "judgeSeconds": {
-   "median": 5,
+   "median": 5.1,
    "p95": 6.3
   },
-  "costUSD": 0.2516
+  "costUSD": 0.2519
  },
  "results": [
   {
@@ -198,13 +198,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Outdoor wedding, November: Satin midi with sleeves, wool coat and flats suit a cool outdoor wedding.",
-    "ok: Elegant: All pieces are elegant in style.",
-    "ok: Emerald green, preferred; likes earth tones: The main piece, the dress, is emerald.",
-    "ok: Colors go together: Emerald, camel and nude look harmonious."
+    "ok: Outdoor wedding, November: Formal satin midi dress, warm wool coat and closed-toe flats suit a cool outdoor wedding.",
+    "ok: Elegant: All pieces are elegant or classic in style.",
+    "ok: Emerald green, preferred; likes earth tones: The main piece, the dress, is emerald green.",
+    "ok: Colors go together: Emerald with camel and nude is a harmonious, classic pairing."
    ],
-   "seconds": 4.737216334000001,
-   "costUsd": 0.012184
+   "seconds": 5.782949708,
+   "costUsd": 0.012904
   },
   {
    "id": "wedding, no coat",
@@ -213,13 +213,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Outdoor wedding, November: Satin midi with three-quarter sleeves, flats and pearls suit an autumn wedding guest.",
-    "ok: Elegant: Every item is elegant in style.",
-    "ok: Emerald green preferred; likes earth tones: The main piece, the dress, is emerald green.",
-    "ok: Colors go together: Emerald, nude and ivory pair nicely."
+    "ok: Outdoor wedding, November: Satin midi with sleeves and flats suits an autumn wedding guest",
+    "ok: Elegant: All pieces are elegant in style",
+    "ok: Emerald green, preferred: The main dress is emerald green",
+    "ok: Colors go together: Emerald, nude and ivory pair nicely"
    ],
-   "seconds": 6.188408915999999,
-   "costUsd": 0.01362
+   "seconds": 5.451806374999999,
+   "costUsd": 0.01264
   },
   {
    "id": "wedding, navy dress, emerald accents",
@@ -228,13 +228,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "ok: Outdoor wedding, November: Long-sleeved knee-length dress, heeled mules and clutch suit an autumn wedding",
-    "ok: Elegant: Velvet mules and satin clutch lift the classic wrap dress",
-    "NO: Emerald green, preferred; likes earth tones: Dress is navy; emerald is only in shoes and bag",
-    "ok: Colors go together: Navy with emerald accents pairs well"
+    "ok: Outdoor wedding, November: Long-sleeve dress and closed-toe velvet mules suit a cool-weather wedding.",
+    "ok: Elegant: Emerald velvet and satin accessories lift the classic wrap dress.",
+    "NO: Emerald green, preferred; likes earth tones: The dress is navy; emerald appears only in the shoes and clutch.",
+    "ok: Colors go well together: Navy and emerald pair nicely."
    ],
-   "seconds": 6.839916542,
-   "costUsd": 0.015328
+   "seconds": 5.110532458,
+   "costUsd": 0.012348
   },
   {
    "id": "wedding, shorts",
@@ -243,13 +243,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "NO: Outdoor wedding, November: Shorts and espadrilles are too casual for a wedding and unsuited to November weather",
-    "NO: Elegant: Relaxed linen shorts and raffia espadrilles at formality 1 aren't elegant",
-    "ok: Emerald green, preferred; likes earth tones: No emerald, but sand beige shorts read as an earth tone",
-    "ok: Colors go well together: White, sand beige and natural raffia blend well"
+    "NO: Outdoor wedding, November: Linen shorts and raffia espadrilles are too casual for a wedding and too summery for November.",
+    "NO: Elegant: Relaxed shorts and espadrilles at formality 1 aren't elegant.",
+    "ok: Emerald green preferred; likes earth tones: Sand beige shorts are an earth tone.",
+    "ok: Colors go together: White, sand beige and natural blend well."
    ],
-   "seconds": 5.659276041999999,
-   "costUsd": 0.01352
+   "seconds": 5.116052208,
+   "costUsd": 0.01234
   },
   {
    "id": "wedding, knit and sneakers",
@@ -258,14 +258,14 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "NO: Outdoor wedding: Casual striped knit dress, sneakers and straw bag are too informal for a wedding",
-    "NO: November season: Straw basket bag and white sneakers are summery, not suited to November",
-    "NO: Elegant style: Relaxed preppy and sporty pieces aren't elegant",
-    "NO: Emerald green preferred / likes earth tones: Dress is navy and white; no emerald or earth tone in the main piece",
-    "ok: Colors go together: Navy, white and natural straw harmonize"
+    "NO: Outdoor wedding: Casual striped knit, sneakers and a straw bag are too casual for a wedding guest.",
+    "NO: November season: A straw basket bag is a summer piece, not one for November.",
+    "NO: Elegant style: Relaxed preppy and sporty pieces aren't elegant.",
+    "NO: Emerald green preferred, likes earth tones: The dress is navy and white, with no emerald or earth tones.",
+    "ok: Colors go together: Navy, white and natural straw work well together."
    ],
-   "seconds": 3.8731401669999994,
-   "costUsd": 0.009628
+   "seconds": 3.8523393329999998,
+   "costUsd": 0.009468
   },
   {
    "id": "interview, blazer and camel skirt",
@@ -274,13 +274,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Job interview, next week: Blazer, silk blouse, midi skirt and loafers suit an interview.",
-    "ok: Smart but comfortable: Polished classic pieces with low-heel loafers.",
-    "ok: Likes earth tones: Camel skirt is an earth tone.",
-    "ok: Colors go together: Navy, white, camel and tan are a classic match."
+    "ok: Job interview, next week: Blazer, blouse and midi skirt are interview-appropriate.",
+    "ok: Smart but comfortable: Polished pieces; low-heel loafers are comfortable.",
+    "ok: Likes: earth tones: The camel skirt is an earth tone.",
+    "ok: Colors go well together: Navy, white, camel and tan are a classic match."
    ],
-   "seconds": 4.214363666,
-   "costUsd": 0.0105
+   "seconds": 4.494612833,
+   "costUsd": 0.01138
   },
   {
    "id": "interview, black and white",
@@ -289,13 +289,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "ok: Job interview, next week: Silk blouse and tailored trousers suit an interview",
-    "ok: Smart but comfortable: Polished pieces with flat, comfy shoes",
-    "NO: Likes earth tones: Top is white and trousers black; neither is an earth tone",
-    "ok: Colors go well together: Classic white and black combination"
+    "ok: Job interview, next week: Silk blouse, tailored trousers and flats suit an interview",
+    "ok: Smart but comfortable: Polished classic pieces with flat shoes",
+    "NO: Likes earth tones: Top is white and trousers black; no earth tone",
+    "ok: Colors go together: White and black are a clean classic pairing"
    ],
-   "seconds": 4.234106250000001,
-   "costUsd": 0.010036
+   "seconds": 3.884365541,
+   "costUsd": 0.009696
   },
   {
    "id": "interview, camel sweater",
@@ -304,13 +304,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Job interview, next week: Tailored trousers, a fine cashmere sweater and loafers make a polished, interview-appropriate look.",
-    "ok: Smart but comfortable: Soft cashmere and low loafers stay comfortable, and the tailoring keeps it smart.",
+    "ok: Job interview, next week: Tailored trousers, a cashmere sweater and loafers make a polished interview look.",
+    "ok: Smart but comfortable: Soft cashmere, a classic cut and a low-heel loafer are smart yet comfortable.",
     "ok: Likes earth tones: The top is camel, an earth tone.",
-    "ok: Colors go together: Camel and black are a classic pair, and the tan loafers echo the sweater."
+    "ok: Colors go together: Camel, black and tan form a classic, harmonious mix."
    ],
-   "seconds": 6.22281625,
-   "costUsd": 0.014188
+   "seconds": 6.343648041000001,
+   "costUsd": 0.013288
   },
   {
    "id": "interview, leopard and leather mini",
@@ -319,13 +319,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "NO: Job interview: Leather mini skirt and leopard satin blouse are too edgy for an interview",
-    "NO: Smart but comfortable: Mini skirt and bold print aren't smart; formality 2 skirt too casual",
-    "ok: Likes earth tones: Top is tan leopard print, an earth tone",
-    "ok: Colors go together: Tan and black print pairs fine with black skirt and boots"
+    "NO: Job interview: Leopard satin blouse and leather mini skirt are too bold and casual for an interview",
+    "NO: Smart but comfortable: Faux leather mini skirt isn't smart; edgy look overall",
+    "ok: Likes earth tones: Top is tan leopard, an earth tone",
+    "ok: Colors go together: Tan and black print pairs well with black skirt and boots"
    ],
-   "seconds": 5.017763167,
-   "costUsd": 0.0111
+   "seconds": 4.727332458999999,
+   "costUsd": 0.01144
   },
   {
    "id": "interview, cargo and tee",
@@ -334,13 +334,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "NO: Job interview occasion: Cargo trousers, tee and sneakers are too casual for an interview",
+    "NO: Job interview, next week: Cargo trousers, tee and sneakers are too casual for an interview",
     "NO: Smart but comfortable: Comfortable, but nothing here reads as smart",
     "ok: Likes earth tones: Olive trousers are an earth tone",
     "ok: Colors go together: Olive, black and white pair well"
    ],
-   "seconds": 4.437227875,
-   "costUsd": 0.010348
+   "seconds": 3.920471375,
+   "costUsd": 0.009988
   },
   {
    "id": "flashy, sequins",
@@ -349,13 +349,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "NO: Never: anything too flashy: Bold sequin top is flashy",
-    "ok: Friend's birthday dinner, Saturday: Dinner-appropriate pieces",
-    "NO: Relaxed: Sequin top too dressy for relaxed",
-    "ok: Colors go well together: Black with nude flats works"
+    "NO: Never: anything too flashy: A bold sequin top is flashy.",
+    "ok: Friend's birthday dinner, Saturday: Dinner-appropriate pieces overall.",
+    "NO: Relaxed: A sequin top is too dressy for a relaxed setting.",
+    "ok: Colors go well together: Black with nude flats works well."
    ],
-   "seconds": 4.2137976660000005,
-   "costUsd": 0.011112
+   "seconds": 4.593772917,
+   "costUsd": 0.010452
   },
   {
    "id": "flashy, quiet look",
@@ -364,13 +364,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Never: anything too flashy: Striped top, plain jeans and tan loafers are all understated.",
-    "ok: Friend's birthday dinner, Saturday: A smart-casual look that suits a relaxed dinner with friends.",
-    "ok: Relaxed: Breton top, straight jeans and loafers feel easy and relaxed.",
-    "ok: Colors go well together: Navy and cream stripes, mid-blue denim and tan loafers are a classic mix."
+    "ok: Never: anything too flashy: Breton top, plain jeans and tan loafers are all understated.",
+    "ok: Friend's birthday dinner, Saturday: A smart-casual, classic look suits a casual dinner with friends.",
+    "ok: Relaxed: Jeans, a striped cotton top and loafers feel relaxed.",
+    "ok: Colors go well together: Navy and cream stripes, mid-blue denim and tan loafers are a classic pairing."
    ],
-   "seconds": 5.235236041,
-   "costUsd": 0.012088
+   "seconds": 5.997797375,
+   "costUsd": 0.012768
   },
   {
    "id": "jacket, none",
@@ -379,12 +379,12 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "NO: Must have: a jacket in every look: The look has no jacket.",
-    "ok: Office party, December: Long-sleeve wrap dress and slingbacks suit an indoor office party.",
+    "NO: Must have: a jacket in every look: The outfit has no jacket.",
+    "ok: Office party, December: A long-sleeved jersey wrap dress and nude flats suit a winter office party.",
     "ok: Colors go well together: Navy and nude pair well."
    ],
-   "seconds": 3.880633833,
-   "costUsd": 0.009336
+   "seconds": 3.6026597079999996,
+   "costUsd": 0.008916
   },
   {
    "id": "jacket, blazer",
@@ -393,12 +393,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Must have: a jacket in every look: Ivory tailored blazer is included.",
-    "ok: Office party, December: Long-sleeve wrap dress, blazer and closed-toe flats suit an indoor winter office party.",
+    "ok: Must have: a jacket in every look: Ivory tailored blazer serves as the jacket.",
+    "ok: Office party: Classic wrap dress, tailored blazer and elegant flats suit an office party.",
+    "ok: December: Long sleeves and blazer suit winter; closed-toe flats work for an indoor event.",
     "ok: Colors go well together: Navy, ivory and nude make a classic, harmonious mix."
    ],
-   "seconds": 4.254469083000001,
-   "costUsd": 0.01058
+   "seconds": 4.884615375,
+   "costUsd": 0.0115
   },
   {
    "id": "inspiration, similar",
@@ -407,14 +408,14 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Outdoor wedding, November: Elegant satin midi with wool coat and flats suits a cool outdoor wedding",
+    "ok: Outdoor wedding, November: Formal satin dress, warm wool coat, closed-toe flats suit an autumn outdoor wedding",
     "ok: Elegant: All pieces are elegant in style",
     "ok: Emerald green, preferred; likes earth tones: Main piece, the dress, is emerald green",
-    "ok: Colors go well together: Emerald, camel and nude complement each other",
-    "ok: Inspiration: emerald satin midi dress: Dress matches the inspiration closely"
+    "ok: Colors go together: Emerald, camel and nude work well together",
+    "ok: Inspiration: emerald satin midi dress: Dress closely matches the inspiration"
    ],
-   "seconds": 6.181591249999999,
-   "costUsd": 0.012844
+   "seconds": 6.1605719169999995,
+   "costUsd": 0.015144
   },
   {
    "id": "inspiration, different",
@@ -423,14 +424,14 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "ok: Outdoor wedding in November: Long-sleeved dress, wool coat and closed flats suit a cool outdoor wedding.",
-    "NO: Elegant style: A casual jersey wrap dress at formality 3 isn't clearly elegant.",
-    "NO: Emerald green preferred; likes earth tones: The main piece is a navy dress; the camel coat doesn't count.",
-    "ok: Colors go together: Navy, camel and nude work well together.",
-    "NO: Inspiration: emerald satin midi dress: A navy jersey knee-length dress isn't similar."
+    "ok: Outdoor wedding, November: Long-sleeve dress, wool coat and flats suit a cool outdoor wedding",
+    "ok: Elegant: Coat and flats are elegant; the classic wrap dress is acceptable",
+    "NO: Emerald green preferred; likes earth tones: Main piece is a navy dress; camel appears only in the coat",
+    "ok: Colors go together: Navy, camel and nude pair well",
+    "NO: Inspiration: emerald satin midi dress: Navy jersey knee-length dress isn't similar"
    ],
-   "seconds": 6.277669833,
-   "costUsd": 0.01468
+   "seconds": 6.453753041,
+   "costUsd": 0.0156
   },
   {
    "id": "birthday, black flats with warm colors",
@@ -439,13 +440,13 @@
    "got": "not pass",
    "verdict": "conflict",
    "reasons": [
-    "ok: Birthday dinner, Saturday: Turtleneck, midi skirt and blazer suit a dinner out.",
-    "ok: Relaxed: Knit top and flats keep the look relaxed.",
-    "ok: Likes earth tones: The top is burgundy and the skirt is camel.",
-    "NO: Colors go well together: Black flats clash with the navy, burgundy and camel; tan would suit better."
+    "ok: Birthday dinner, Saturday: Polished but comfortable pieces suit a dinner out.",
+    "ok: Relaxed: Turtleneck, midi skirt and flats feel easy, not stiff.",
+    "ok: Likes earth tones: Burgundy top and camel skirt are earth tones.",
+    "NO: Colors go together: Black flats clash with navy, burgundy and camel; tan would suit better."
    ],
-   "seconds": 4.685601584,
-   "costUsd": 0.011248
+   "seconds": 4.4938277079999995,
+   "costUsd": 0.011128
   },
   {
    "id": "birthday, tan loafers with warm colors",
@@ -454,13 +455,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Birthday dinner, Saturday: Smart, polished pieces suit a birthday dinner",
-    "ok: Relaxed: Classic smart-casual, comfortable and not overly formal",
-    "ok: Likes earth tones: Burgundy top and camel skirt are earth tones",
-    "ok: Colors go together: Navy, burgundy, camel and tan loafers harmonize well"
+    "ok: Birthday dinner, Saturday: Blazer, turtleneck, midi skirt and loafers suit a dinner out.",
+    "ok: Relaxed: Smart-casual pieces with comfortable loafers, not stiff or formal.",
+    "ok: Likes earth tones: Burgundy top and camel skirt are both earth tones.",
+    "ok: Colors go together: Navy, burgundy, camel and tan loafers pair well."
    ],
-   "seconds": 5.2775834580000005,
-   "costUsd": 0.012656
+   "seconds": 5.348172958,
+   "costUsd": 0.012836
   },
   {
    "id": "relaxed, black flats with stripes and denim",
@@ -469,13 +470,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Never: anything too flashy: Classic stripes, plain jeans and simple flats; nothing flashy.",
-    "ok: Friend's birthday dinner, Saturday: A smart-casual Breton look suits a relaxed dinner.",
-    "ok: Relaxed: Every piece is easy and relaxed.",
-    "ok: Colors go well together: Navy and cream stripes, denim and black flats are a classic pairing."
+    "ok: Never: anything too flashy: Striped top, jeans and flats are understated.",
+    "ok: Friend's birthday dinner, Saturday: Smart-casual look suits a relaxed dinner.",
+    "ok: Relaxed: Breton top and straight jeans are relaxed classics.",
+    "ok: Colors go together: Navy-cream stripes, blue denim and black flats are a classic mix."
    ],
-   "seconds": 5.00396275,
-   "costUsd": 0.01258
+   "seconds": 5.109768874999999,
+   "costUsd": 0.0116
   },
   {
    "id": "interview, burgundy turtleneck",
@@ -484,13 +485,13 @@
    "got": "pass",
    "verdict": "pass",
    "reasons": [
-    "ok: Job interview, next week: Turtleneck, tailored trousers and flats make a polished interview look",
-    "ok: Smart but comfortable: Soft merino, tailored trousers and flat shoes are smart yet comfortable",
-    "ok: Likes earth tones: The burgundy top is an earth tone",
-    "ok: Colors go together: Burgundy with black trousers and flats is a classic pairing"
+    "ok: Job interview: Tailored trousers, fine merino turtleneck and leather flats look polished enough.",
+    "ok: Smart but comfortable: Soft merino, tailored fit and flat shoes are both smart and comfortable.",
+    "ok: Likes earth tones: The top is burgundy, which counts as an earth tone.",
+    "ok: Colors go together: Burgundy with black trousers and black flats is a classic pairing."
    ],
-   "seconds": 5.160587250000001,
-   "costUsd": 0.012264
+   "seconds": 6.014883917,
+   "costUsd": 0.014744
   },
   {
    "id": "owned blazer",
@@ -500,12 +501,12 @@
    "verdict": "pass",
    "reasons": [
     "ok: Job interview, next week: Blazer, silk blouse, midi skirt and loafers are interview-appropriate.",
-    "ok: Smart but comfortable: Polished classic pieces; low-heel loafers stay comfortable.",
-    "ok: Likes earth tones: The camel skirt is an earth tone.",
-    "ok: Colors go together: Navy, white, camel and tan make a classic pairing."
+    "ok: Smart but comfortable: Polished pieces, low 2 cm heel, comfortable midi skirt.",
+    "ok: Likes: earth tones: Camel skirt is an earth-tone bottom.",
+    "ok: Colors go well together: Navy, white, camel and tan are a classic pairing."
    ],
-   "seconds": 4.277292167000001,
-   "costUsd": 0.01176
+   "seconds": 4.8446528330000005,
+   "costUsd": 0.01168
   }
  ]
 }

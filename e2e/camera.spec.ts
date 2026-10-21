@@ -14,6 +14,9 @@ test.describe("the camera", () => {
   let guest: TestGuest;
   const stage = (page: Page) => page.getByRole("region", { name: "Your stylist" });
   const cameraButton = (page: Page) => stage(page).getByRole("button", { name: /^Camera/ });
+  // The photo store retries busy requests for up to about 4 seconds (3e, decision C), so a still can
+  // take longer than the default 5 to be ready on GitHub's shared machines (two flakes in 4c and 4d).
+  const READY = { timeout: 15_000 };
   const photoRows = async () => (await serverDb().from("session_assets").select("source, status").eq("user_id", guest.id)).data ?? [];
   const contextSent = async (page: Page) =>
     (await commandsSent(page))
@@ -75,7 +78,7 @@ test.describe("the camera", () => {
     await expect(area.getByText("From your camera")).toBeVisible();
     // Reading the still takes several round trips to the database, slower on GitHub (flaky in 3e).
     await expect(area.getByText("Navy wool blazer", { exact: true })).toBeVisible({ timeout: 15_000 });
-    await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
+    await expect.poll(photoRows, READY).toEqual([{ source: "camera", status: "ready" }]);
   });
 
   test("saying 'use this one' takes the still (R34, Q1 in 3c)", async ({ page }) => {
@@ -84,7 +87,7 @@ test.describe("the camera", () => {
     await expect(stage(page).getByText("Navy wool blazer?")).toBeVisible({ timeout: 15_000 });
     await playInCall(page, { type: "words", speaker: "shopper", text: "Use this one", final: true, turnId: "1" });
     await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible();
-    await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
+    await expect.poll(photoRows, READY).toEqual([{ source: "camera", status: "ready" }]);
   });
 
   test("a misheard 'use this one' still takes the still (found on Sabine's iPhone in 3e, her decision D)", async ({ page }) => {
@@ -93,7 +96,7 @@ test.describe("the camera", () => {
     await expect(stage(page).getByText("Navy wool blazer?")).toBeVisible({ timeout: 15_000 });
     await playInCall(page, { type: "words", speaker: "shopper", text: "Juice, this one.", final: true, turnId: "1" });
     await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible({ timeout: 15_000 });
-    await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
+    await expect.poll(photoRows, READY).toEqual([{ source: "camera", status: "ready" }]);
   });
 
   test("'use this one' said before the name appears is acted on once it's named, even without a turn label (found on Sabine's iPhone)", async ({ page }) => {
@@ -105,7 +108,7 @@ test.describe("the camera", () => {
     await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible({ timeout: 15_000 });
     await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "false");
     // One still, not one per piece of the words.
-    await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
+    await expect.poll(photoRows, READY).toEqual([{ source: "camera", status: "ready" }]);
   });
 
   test("on phones the camera fills the stage and Done showing swaps back; desktops show a tile, and Switch camera flips it", async ({ page }, info) => {

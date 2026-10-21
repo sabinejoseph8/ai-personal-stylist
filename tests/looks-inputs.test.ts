@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSampleCatalog } from "@/connectors/catalog/sample";
-import { candidateProducts, lookRequirements } from "@/lib/looks-inputs";
+import { filterCandidates } from "@/core/looks/candidates";
+import { lookRequirements } from "@/lib/looks-inputs";
 import { SAMPLE_PROFILE } from "@/lib/profile";
 import { saveBudget, savePreferences, saveShopping } from "@/lib/profile-store";
+import { catalogProducts } from "./support/catalog-products";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // 4a: what a session's looks must meet, from the profile and the session's confirmed notes, and the
@@ -57,7 +59,8 @@ describe.skipIf(!canRunDatabaseTests)("a session's look requirements", () => {
   });
 
   it("narrow the real catalog to products that could appear, with every one left out explained", async () => {
-    const { kept, leftOut } = await candidateProducts({ db, catalog: createSampleCatalog(db) }, guest.id, session);
+    const req = await lookRequirements(db, guest.id, session);
+    const { kept, leftOut } = filterCandidates(await createSampleCatalog(db).search({ department: "womenswear", limit: 1000 }), req);
     expect(kept.length).toBeGreaterThan(5);
     for (const p of kept) {
       expect(p.department).toBe("womenswear");
@@ -69,5 +72,13 @@ describe.skipIf(!canRunDatabaseTests)("a session's look requirements", () => {
     expect(kept.some((p) => p.category === "dress")).toBe(true);
     expect(leftOut.length + kept.length).toBe(76);
     expect(leftOut.every((l) => l.reason.length > 0)).toBe(true);
+  });
+
+  it("judge a saved rule that isn't the right shape, rather than failing every look (Phase 4 code review)", async () => {
+    // A guest can write their own preference rows, so a rule may not be one setup made.
+    await db.from("saved_preferences").update({ rule: { type: "detail" } }).eq("user_id", guest.id).eq("words", "high heels").throwOnError();
+    const req = await lookRequirements(db, guest.id, session);
+    expect(req.rules.find((r) => r.words === "high heels")?.rule).toEqual({ type: "judged" });
+    expect(() => filterCandidates(catalogProducts, req)).not.toThrow();
   });
 });

@@ -62,8 +62,9 @@ function ItemTile({
   return (
     <li className="flex min-w-0 flex-col gap-1.5">
       <div className="relative aspect-square overflow-hidden rounded-image border border-hairline bg-page">
-        {/* A new piece is a new photo: keyed by the item, so it fades in rather than morphing. */}
-        <TilePhoto key={item.id} item={item} src={image} />
+        {/* A new piece is a new photo: keyed by the item, so it fades in rather than morphing, and by the
+            link, so a refreshed link for the shopper's own photo is tried again (4e review). */}
+        <TilePhoto key={`${item.id} ${image ?? ""}`} item={item} src={image} />
         {isNew && <span className="type-label absolute left-2 top-2 rounded-pill bg-emerald px-2 py-0.5 text-white">New</span>}
         {checking && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-page/85 p-2 text-center">

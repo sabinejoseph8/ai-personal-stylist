@@ -5,8 +5,9 @@ import { productGroup } from "./look";
 
 // The no-match explanation (R45, R59; Sabine's answer to Q2 in 4b): when fewer than three looks pass
 // after three tries, the stylist says which requirement is the limit and offers choices. Made by code
-// from what the candidate filter left out, so it names a real requirement, not a guess. Tested in
-// tests/checker.test.ts.
+// from what the candidate filter left out, so it names a real requirement, not a guess. Its choices are
+// only ones that work now (Sabine's decision A in 4e): allowing a preference for this session joins in
+// 5c, and sizes are changed in the profile. Tested in tests/checker.test.ts.
 
 export type NoMatch = { message: string; choices: string[] };
 
@@ -34,8 +35,8 @@ export function explainNoMatch(req: Requirements, kept: Product[], leftOut: Left
     const [kind, examples] = [...tally.entries()].filter(([k]) => k !== "department" && k !== "outfit").sort((a, b) => b[1].length - a[1].length)[0] ?? [];
     const only = `Only ${scarce.n} ${PIECES[scarce.group] ?? scarce.group}`;
     if (kind === "budget" && req.budget) return { message: `${only} fit under ${budgetWords(req.budget)}.`, choices: ["Raise the budget", "Try another outfit"] };
-    if (kind === "size") return { message: `${only} come in your size.`, choices: ["Try another outfit", "Change your size"] };
-    if (kind === "rule") return { message: `${only} meet ${examples![0].rule}.`, choices: ["Allow it for this session", "Try another outfit"] };
+    if (kind === "size") return { message: `${only} come in your size.`, choices: ["Try another outfit", "Try again"] };
+    if (kind === "rule") return { message: `${only} meet ${examples![0].rule}.`, choices: ["Try another outfit", "Try again"] };
   }
   const looks = found === 1 ? "1 look that meets" : `${found} looks that meet`;
   return { message: `I found ${looks} everything you've asked for.`, choices: ["Change a requirement", "Try again"] };
