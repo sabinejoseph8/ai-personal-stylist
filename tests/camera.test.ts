@@ -152,7 +152,10 @@ describe.skipIf(!canRunDatabaseTests)("a camera frame on the server", () => {
 
   it("one frame every 2 seconds at most (tech spec 6)", async () => {
     await db.from("rate_limits").delete().eq("user_id", a.id).throwOnError();
-    expect(await withinLimit(a.db, "cameraFrame")).toBe(true);
-    expect(await withinLimit(a.db, "cameraFrame")).toBe(false);
+    // The limit counts in fixed 2-second windows, so two tries can fall either side of a window's edge;
+    // of three quick tries, at least two share a window, and one of those is turned away.
+    const tries = [await withinLimit(a.db, "cameraFrame"), await withinLimit(a.db, "cameraFrame"), await withinLimit(a.db, "cameraFrame")];
+    expect(tries[0]).toBe(true);
+    expect(tries.filter((ok) => !ok).length).toBeGreaterThanOrEqual(1);
   });
 });
