@@ -1,4 +1,5 @@
 import type { NoMatch } from "./no-match";
+import { list } from "./rules";
 import type { ShownLook } from "./shown";
 
 // What the stylist is told about the looks on screen (4c, tech spec 1.3 step 6), added to her context
@@ -50,10 +51,10 @@ export function looksChanged(before: ShownLook[], after: ShownLook[]): string | 
   after.forEach((look, i) => (before.some((b) => b.id === look.id) ? kept : replaced).push(i + 1));
   const gone = before.length - kept.length - replaced.length;
   if (!replaced.length && gone <= 0) return "After the shopper's change, every look still meets everything they've asked for.";
-  const list = (n: number[]) => (n.length === 1 ? `Look ${n[0]}` : `Looks ${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`);
+  const looks = (n: number[]) => `${n.length === 1 ? "Look" : "Looks"} ${list(n.map(String), "and")}`;
   const parts = [];
-  if (replaced.length) parts.push(`${list(replaced)} ${replaced.length === 1 ? "is" : "are"} new, because the ${replaced.length === 1 ? "look there" : "looks there"} no longer met everything`);
-  if (kept.length) parts.push(`${list(kept)} still ${kept.length === 1 ? "meets" : "meet"} everything`);
+  if (replaced.length) parts.push(`${looks(replaced)} ${replaced.length === 1 ? "is" : "are"} new, because the ${replaced.length === 1 ? "look there" : "looks there"} no longer met everything`);
+  if (kept.length) parts.push(`${looks(kept)} still ${kept.length === 1 ? "meets" : "meet"} everything`);
   if (gone > 0 && after.length < before.length) parts.push(`there ${after.length === 1 ? "is" : "are"} now ${after.length} instead of ${before.length}`);
   return `After the shopper's change: ${parts.join("; ")}.`;
 }

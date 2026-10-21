@@ -112,9 +112,10 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     return;
   }
 
-  // The photo to style around, so what the shopper says about it reaches it (3b), and the looks on
-  // screen, so a request to swap a piece is heard (4c).
-  const [photo, looks] = await Promise.all([activePhoto(deps.db, sessionId), looksOnScreen(deps.db, sessionId)]);
+  // The photo to style around, so what the shopper says about it reaches it (3b), and at the end of a
+  // turn the looks on screen, so a request to swap a piece is heard (4c). Only then: readings while the
+  // shopper talks stay as short and quick as before (Phase 4 code review, R17).
+  const [photo, looks] = await Promise.all([activePhoto(deps.db, sessionId), heard.final ? looksOnScreen(deps.db, sessionId) : 0]);
   const reading = await deps.reader.read({
     stylistSaid: heard.stylistSaid,
     words: heard.words,
@@ -157,8 +158,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     seq,
     context: stylistContext(done.notes, preferences, question, latest?.item ?? null, wardrobe),
     ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
-    // Only once the turn is over: readings of a turn so far might not have heard which look yet.
-    ...(heard.final && reading.swap ? { swap: reading.swap } : {}),
+    ...(reading.swap ? { swap: reading.swap } : {}),
   });
 }
 

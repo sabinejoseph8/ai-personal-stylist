@@ -185,8 +185,11 @@ type Versions = {
   slot?: number;
   tried?: string[];
   swap?: { from: string; to: string };
-  /** Replacements for the piece at `index` that failed the check on these requirements: not checked again (found on Sabine's iPhone in 4d). */
-  failed?: { key: string; index: number; ids: string[] };
+  /**
+   * Replacements that failed the check on these requirements, by the piece's place in the look: not
+   * checked again (found on Sabine's iPhone in 4d; each piece kept apart since the 4e review).
+   */
+  failed?: { key: string; pieces: Record<string, string[]> };
 };
 type LookRow = { id: string; name: string | null; reason: string | null; items: LookItem[]; requirements_key: string | null; input_versions: Versions; status: string; created_at: string };
 type OnScreen = LookRow & { slot: number };
@@ -243,26 +246,32 @@ export type BuildOptions = {
  * Null when the session isn't the guest's open one.
  */
 export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: string, emit: (state: BuildStage) => void = () => {}, options: BuildOptions = {}): Promise<BuildResult | null> {
-  const { db } = deps;
-  if (!(await sessionOpen(db, guestId, sessionId))) return null;
-  // One build at a time per session (migration one_build_at_a_time): a request that finds one running
-  // waits for it, then starts again from what it made, which is usually nothing left to do.
-  for (let waited = 0; ; waited++) {
-    const { data: claimed } = await db.rpc("claim_looks_build", { session: sessionId }).throwOnError();
-    if (claimed) break;
-    if (waited === 0) emit("building");
-    if (waited >= BUILD_WAIT_SECONDS) return { stale: true };
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  try {
-    return await buildNow(deps, guestId, sessionId, emit, options);
-  } finally {
-    await db.rpc("release_looks_build", { session: sessionId });
-  }
+  if (!(await sessionOpen(deps.db, guestId, sessionId))) return null;
+  return inTurn(deps.db, sessionId, () => emit("building"), () => buildNow(deps, guestId, sessionId, emit, options));
 }
 
 /** How long a request waits for a build already running: as long as a build may take. */
 const BUILD_WAIT_SECONDS = 300;
+
+/**
+ * One build or swap at a time per session (migration one_build_at_a_time): a request that finds one
+ * running waits for it, then starts again from what it made. Swaps too (Phase 4 code review), so a swap
+ * and a build can't both fill the same place.
+ */
+async function inTurn<T>(db: SupabaseClient, sessionId: string, onWait: () => void, work: () => Promise<T>): Promise<T | { stale: true }> {
+  for (let waited = 0; ; waited++) {
+    const { data: claimed } = await db.rpc("claim_looks_build", { session: sessionId }).throwOnError();
+    if (claimed) break;
+    if (waited === 0) onWait();
+    if (waited >= BUILD_WAIT_SECONDS) return { stale: true };
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  try {
+    return await work();
+  } finally {
+    await db.rpc("release_looks_build", { session: sessionId });
+  }
+}
 
 async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emit: (state: BuildStage) => void, options: BuildOptions): Promise<BuildResult> {
   const { db } = deps;
@@ -270,25 +279,36 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   const ready = looksReadiness(g.notes);
   if (!ready.ready) return { needs: ready.needs };
 
-  const department = g.requirements.departments.length === 1 ? g.requirements.departments[0] : undefined;
-  const catalog = await deps.catalog.search({ department, limit: 1000 });
-  const products = new Map(catalog.map((p) => [p.id, p]));
-  const rows = await onScreen(db, guestId, sessionId);
+  const [rows, { data: session }] = await Promise.all([
+    onScreen(db, guestId, sessionId),
+    db.from("sessions").select("looks_built_for").eq("id", sessionId).single().throwOnError(),
+  ]);
   const isCurrent = (r: OnScreen) => r.status === "published" && r.requirements_key === g.key;
   const stale = rows.filter((r) => !isCurrent(r));
-  let filtered = filterCandidates(catalog, g.requirements);
-  const explain = (count: number) => (count < LOOKS_WANTED ? explainNoMatch(g.requirements, filtered.kept, filtered.leftOut, count) : null);
-  const looksNow = async () => {
-    const now = await onScreen(db, guestId, sessionId);
-    return now.flatMap((r) => {
+  const shownFrom = (list: OnScreen[], products: Map<string, Product>) =>
+    list.flatMap((r) => {
       const items = resolve(r.items, products, g.owned);
       return items ? [shownRow(r, items, g)] : [];
     });
-  };
 
-  // Nothing has changed since the looks on screen were checked: no AI needed.
-  if (rows.length && !stale.length && (!options.force || rows.length >= LOOKS_WANTED)) {
-    const looks = await looksNow();
+  // Nothing has changed since the last build on these requirements: no AI needed, whether it found three
+  // looks, fewer, or none (Phase 4 code review: with none, every note made it build again). Try again
+  // fills the empty places anyway.
+  const unchanged = !stale.length && (rows.length >= LOOKS_WANTED || (!options.force && (rows.length > 0 || session!.looks_built_for === g.key)));
+  if (unchanged && rows.length >= LOOKS_WANTED) {
+    // Three looks: only their own products are needed, not the whole catalog.
+    return { looks: shownFrom(rows, await productsOf(deps.catalog, rows.flatMap((r) => r.items))), noMatch: null };
+  }
+
+  const department = g.requirements.departments.length === 1 ? g.requirements.departments[0] : undefined;
+  const catalog = await deps.catalog.search({ department, limit: 1000 });
+  const products = new Map(catalog.map((p) => [p.id, p]));
+  let filtered = filterCandidates(catalog, g.requirements);
+  const explain = (count: number) => (count < LOOKS_WANTED ? explainNoMatch(g.requirements, filtered.kept, filtered.leftOut, count) : null);
+  const looksNow = async () => shownFrom(await onScreen(db, guestId, sessionId), products);
+
+  if (unchanged) {
+    const looks = shownFrom(rows, products);
     return { looks, noMatch: explain(looks.length) };
   }
   if (options.allowAi && !(await options.allowAi())) return { limited: true };
@@ -423,6 +443,8 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
       if (c.verdict !== "pass" && c.items) avoid.push(`${c.items.map(nameOf).join(" + ")}: ${failedWhy(c)}`);
     }
   }
+  // Built for these requirements: until they change, asking again doesn't build again.
+  await db.from("sessions").update({ looks_built_for: g.key }).eq("id", sessionId).throwOnError();
   const looks = await looksNow();
   return { looks, noMatch: explain(looks.length) };
 }
@@ -457,8 +479,12 @@ const SWAP_BATCH = 3;
  * name the piece swapped out. Null when the session or look isn't the guest's, or the piece can't be swapped.
  */
 export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: string, lookId: string, index: number, options: Pick<BuildOptions, "allowAi"> = {}): Promise<SwapResult | null> {
+  if (!(await sessionOpen(deps.db, guestId, sessionId))) return null;
+  return inTurn(deps.db, sessionId, () => {}, () => swapNow(deps, guestId, sessionId, lookId, index, options));
+}
+
+async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, lookId: string, index: number, options: Pick<BuildOptions, "allowAi">): Promise<SwapResult | null> {
   const { db } = deps;
-  if (!(await sessionOpen(db, guestId, sessionId))) return null;
   const g = await gather(db, guestId, sessionId);
   const rows = await onScreen(db, guestId, sessionId);
   const row = rows.find((r) => r.id === lookId);
@@ -485,11 +511,13 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
   // Replacements that already failed here, on these requirements, aren't checked again: a second Swap
   // would only pay for the same answer. A change to the requirements starts afresh.
   const before = row.input_versions.failed;
-  const failed = new Set(before && before.key === g.key && before.index === index ? before.ids : []);
-  const remember = (look: string, versions: Versions) =>
+  const known = before?.key === g.key && before.pieces ? before.pieces : {};
+  const failed = new Set(known[String(index)] ?? []);
+  // When a piece changes, what failed for the other pieces was checked against the old one: forgotten.
+  const remember = (look: string, versions: Versions, othersStill: boolean) =>
     db
       .from("looks")
-      .update({ input_versions: { ...versions, failed: { key: g.key, index, ids: [...failed] } } })
+      .update({ input_versions: { ...versions, failed: { key: g.key, pieces: { ...(othersStill ? known : {}), [index]: [...failed] } } } })
       .eq("id", look)
       .throwOnError();
   let tried = new Set([...(row.input_versions.tried ?? []), ref.productId]);
@@ -545,7 +573,7 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
     }
     if (winner) {
       // The other pieces are the same, so what failed here still fails with the new piece in.
-      await remember(winner.id, { ...row.input_versions, swap: { from: ref.productId, to: winner.product }, tried: [...tried] });
+      await remember(winner.id, { ...row.input_versions, swap: { from: ref.productId, to: winner.product }, tried: [...tried] }, false);
       const { data: ok } = await db.rpc("publish_look", { look: winner.id, current_requirements: g.key, replaces: row.id }).throwOnError();
       if (!ok) {
         await db.from("looks").update({ status: "held" }).eq("id", winner.id).throwOnError();
@@ -555,6 +583,6 @@ export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: str
       return { look, index };
     }
   }
-  await remember(row.id, row.input_versions);
+  await remember(row.id, row.input_versions, true);
   return { none: noOtherPiece(items[index]) };
 }

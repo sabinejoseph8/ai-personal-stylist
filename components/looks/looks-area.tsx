@@ -82,6 +82,8 @@ export function LooksArea({
     report.current = onInView;
   });
   useEffect(() => {
+    // Only the panels there are now: a look that's gone is never "the one on screen" (4e review).
+    shares.current.clear();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const e of entries) shares.current.set(Number((e.target as HTMLElement).dataset.look), e.isIntersecting ? e.intersectionRatio : 0);

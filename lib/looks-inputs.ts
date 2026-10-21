@@ -1,9 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CatalogConnector } from "@/connectors/catalog/types";
 import { budgetFrom } from "@/core/looks/budget";
-import { type FirmRule, filterCandidates, noteRules, outfitCategories, type Requirements } from "@/core/looks/candidates";
+import { type FirmRule, noteRules, outfitCategories, type Requirements } from "@/core/looks/candidates";
 import type { Rule } from "@/core/looks/rules";
+import { RuleSchema } from "@/lib/profile";
 import { loadNotes } from "@/lib/notes-store";
 import { loadProfile } from "@/lib/profile-store";
 
@@ -18,7 +18,8 @@ export async function lookRequirements(db: SupabaseClient, guestId: string, sess
   const [profile, { notes }] = await Promise.all([loadProfile(db, guestId), loadNotes(db, sessionId)]);
   const fromProfile = profile.preferences.flatMap((p): FirmRule[] =>
     // A firm preference without a rule yet is judged by the checker, which counts uncertainty as a fail.
-    p.kind === "likes" ? [] : [{ kind: p.kind, words: p.words, rule: p.rule ?? JUDGED, from: "profile" }],
+    // So is one whose stored rule isn't the right shape: a guest can write their own rows (4e review).
+    p.kind === "likes" ? [] : [{ kind: p.kind, words: p.words, rule: RuleSchema.safeParse(p.rule).data ?? JUDGED, from: "profile" }],
   );
   return {
     departments: profile.departments,
@@ -27,12 +28,4 @@ export async function lookRequirements(db: SupabaseClient, guestId: string, sess
     budget: budgetFrom(notes, profile.budget),
     rules: [...fromProfile, ...noteRules(notes)],
   };
-}
-
-/** The products that could appear in this session's looks, and those left out with the reason. */
-export async function candidateProducts(deps: { db: SupabaseClient; catalog: CatalogConnector }, guestId: string, sessionId: string) {
-  const requirements = await lookRequirements(deps.db, guestId, sessionId);
-  const department = requirements.departments.length === 1 ? requirements.departments[0] : undefined;
-  const products = await deps.catalog.search({ department, limit: 1000 });
-  return { requirements, ...filterCandidates(products, requirements) };
 }

@@ -36,9 +36,10 @@ test.describe("the looks", () => {
     await expect.poll(() => scriptDone(page)).toBe(true);
     await page.getByRole("button", { name: `“${SAMPLE_PHRASES[0]}”` }).click();
     await expect(note(page, "Outdoor wedding, November")).toBeVisible();
-    await expect(looksOf(page)).toContainText("Confirm the occasion to see looks");
+    // The page asks 1.2 seconds after a change, and may wait its turn behind a build (4d).
+    await expect(looksOf(page)).toContainText("Confirm the occasion to see looks", { timeout: 10_000 });
     await confirm(page, "Outdoor wedding, November");
-    await expect(looksOf(page)).toContainText("Confirm your budget to see looks");
+    await expect(looksOf(page)).toContainText("Confirm your budget to see looks", { timeout: 10_000 });
     await confirm(page, "Budget: up to $500");
     await expect(panels(page)).toHaveCount(3, { timeout: 20_000 });
     // Nothing is needed any more (found on Sabine's iPhone in 4c).

@@ -55,6 +55,12 @@ const NO_CAMERA = "My camera won't turn on.";
 const LOOKS_NEW = "Can you walk me through the looks you've put together?";
 const LOOKS_UPDATED = "What changed in my looks?";
 
+/** The gap between two lines she's asked to speak up about, when nobody has spoken in between. */
+const SPEAK_UP_GAP_MS = 5000;
+
+/** Something she speaks up about once nobody is talking. */
+type SpeakUp = { kind: "photo" | "camera" | "looks"; text: string; photo?: string };
+
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
 function ControlButton({
@@ -140,12 +146,15 @@ export function StylingSession({
   };
   // Things she speaks up about once nobody is talking: a newly read photo (Q1 in 3b), only if it's still
   // the one to style around, and what's on camera (3c).
-  const speakUp = useRef<{ text: string; photo?: string } | null>(null);
+  // One of each kind waits, the newest of its kind: a looks update no longer pushes out a photo that's
+  // waiting to be named (Phase 4 code review). She takes them one quiet moment at a time.
+  const speakUp = useRef<SpeakUp[]>([]);
+  const queue = (line: SpeakUp) => (speakUp.current = [...speakUp.current.filter((l) => l.kind !== line.kind), line]);
 
   // The item to style around (3a), and what the photo reader makes of it (3b).
   const photos = usePhotos(call.sessionId, initialPhotos, {
     onContext: tell,
-    onRead: (key) => (speakUp.current = { text: PHOTO_ADDED, photo: key }),
+    onRead: (key) => queue({ kind: "photo", text: PHOTO_ADDED, photo: key }),
   });
   // My Styling Notes (2c, 2d): words go to the server, notes and the next question come back, and the
   // stylist is told every change, including Confirm and Remove by touch. What the shopper says about
@@ -178,7 +187,7 @@ export function StylingSession({
       return;
     }
     setLooksChange(e.kind === "updated" ? looksChanged(e.before, e.looks) : null);
-    if (call.flow === "live") speakUp.current = { text: e.kind === "new" ? LOOKS_NEW : LOOKS_UPDATED };
+    if (call.flow === "live") queue({ kind: "looks", text: e.kind === "new" ? LOOKS_NEW : LOOKS_UPDATED });
   });
   // The look most on screen, for a spoken swap that doesn't say which (Sabine's answer to Q2 in 4c).
   const [lookInView, setLookInView] = useState<number | null>(null);
@@ -203,10 +212,10 @@ export function StylingSession({
   const camera = useCamera(call.sessionId, call.flow === "live", {
     onSeen: (seen) => {
       if (!seen) return;
-      speakUp.current = { text: ON_CAMERA };
+      queue({ kind: "camera", text: ON_CAMERA });
       if (seen.kind === "item") namedOnCamera.current?.();
     },
-    onUnavailable: () => (speakUp.current = { text: NO_CAMERA }),
+    onUnavailable: () => queue({ kind: "camera", text: NO_CAMERA }),
   });
   const toast = useToast();
   const pickPhoto = useRef<(() => void) | null>(null);
@@ -315,13 +324,31 @@ export function StylingSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera.state, camera.seen]);
 
-  // She speaks up once nobody is talking.
+  // She speaks up once nobody is talking, one line at a time: the next once someone has spoken, or after
+  // a few quiet seconds, so two lines never arrive together.
   const quiet = flow === "live" && !someoneSpeaking(stage);
+  const spokeUpAt = useRef(0);
+  const [, recheck] = useState(0);
   useEffect(() => {
-    const next = speakUp.current;
-    if (!next || !quiet) return;
-    speakUp.current = null;
-    if (!next.photo || photos.active?.key === next.photo) call.prompt(next.text);
+    if (!quiet) {
+      spokeUpAt.current = 0;
+      return;
+    }
+    if (!speakUp.current.length) return;
+    const wait = spokeUpAt.current + SPEAK_UP_GAP_MS - Date.now();
+    if (wait > 0) {
+      const timer = setTimeout(() => recheck((n) => n + 1), wait);
+      return () => clearTimeout(timer);
+    }
+    // A photo replaced meanwhile isn't spoken about.
+    while (speakUp.current.length) {
+      const [next, ...rest] = speakUp.current;
+      speakUp.current = rest;
+      if (next.photo && photos.active?.key !== next.photo) continue;
+      spokeUpAt.current = Date.now();
+      call.prompt(next.text);
+      return;
+    }
   });
   const inCall = flow === "starting" || flow === "live" || flow === "ending";
   const showVideo = inCall && !stage.microphone;

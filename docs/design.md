@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.13 (21 Oct 2026)
+**Status:** Agreed, version 1.14 (21 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -304,7 +304,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **Building:** three placeholder panels (Showroom blocks) with "Putting looks together", then "Checking your preferences".
 - **Item tiles:** the photo in a square with a Hairline outline, the name, the kind of piece, then a line with the hanger and "You own this", or the tag and "Sample product" with the price under it. **Swap** sits at the bottom of each sample product's tile, so a row's buttons line up; the shopper's own pieces have none. A swapped-in piece fades in with a **New** chip (Emerald, white text) on its photo. While a piece is being swapped, its photo shows a spinner and "Checking your preferences". If nothing else fits, a note on that piece's tile, above its Swap button, says so: "No other shoes fit everything you've asked for, so these stay." (moved onto the tile after your iPhone check in 4d, where the note under the tiles was easy to miss)
 - **After a change:** the looks stay, with Needs a new check, and a line with a spinner, "Updating your looks", above them, until they're checked again. Swap is paused meanwhile.
-- **Fewer than three:** a box after the looks says what limits them, with its choices as buttons. Tapping one says it to the stylist (only during a call); Try again builds again. With none at all, the same in a banner.
+- **Fewer than three:** a box after the looks says what limits them, with its choices as buttons, only ones that work now (your decision A in 4e: "Allow it for this session" arrives in 5c). Tapping one says it to the stylist (only during a call); Try again builds again. With none at all, the same in a banner.
 - **Error:** a red banner, "The looks couldn't be put together.", with Try again; anything already shown stays.
 - Keep and Change (5a), Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
 
@@ -579,6 +579,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.14 (21 Oct 2026):** Phase 4 code review: the no-match choices (your decision A, 4.3).
 - **1.13 (21 Oct 2026):** 4d: Behind the scenes as built (4.4).
 - **1.12 (21 Oct 2026):** 4c: the looks as built: where they sit on each screen size, before looks, building, the item tiles with Swap and New, after a change, fewer than three, and errors (4.3).
 - **1.11 (21 Oct 2026):** 4a: setup's read-back for each Must have and Never (5.2).

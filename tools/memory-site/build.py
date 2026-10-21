@@ -1246,7 +1246,6 @@ ER = [
   sessions ||--o{ session_assets : "uses"
   sessions ||--o{ looks : "builds"
   looks ||--o{ check_results : "checked by"
-  sessions ||--o{ event_log : "records"
   session_assets {
     uuid id PK
     uuid session_id FK
@@ -1267,12 +1266,6 @@ ER = [
     jsonb versions_checked
     text verdict
     jsonb reasons
-  }
-  event_log {
-    uuid id PK
-    uuid session_id FK
-    text entry_type
-    text summary
   }"""),
     ("Bag and catalog", """erDiagram
   profiles ||--o{ saved_looks : "keeps"

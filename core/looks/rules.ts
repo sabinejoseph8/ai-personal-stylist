@@ -141,7 +141,8 @@ const PLURAL: Record<Category, string> = {
   accessory: "accessories",
 };
 
-const list = (items: string[], joiner = "or") =>
+/** "a, b or c", or with "and". Shared by the looks' plain-language words (Behind the scenes, the stylist's context). */
+export const list = (items: string[], joiner: "or" | "and" = "or") =>
   items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} ${joiner} ${items.at(-1)}`;
 
 const NUMBER_WORDS: Record<NumberDetail, (op: string, n: number) => string> = {

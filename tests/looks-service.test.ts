@@ -193,6 +193,41 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(counter.calls).toBe(1);
   });
 
+  it("with no look passing, asking again builds again only after a change or Try again (Phase 4 code review)", async () => {
+    await db
+      .from("session_notes")
+      .insert([note("occasion", "Outdoor wedding, November", "confirmed"), note("budget", "Budget: up to $100", "confirmed", [["max", "100"]])])
+      .throwOnError();
+    const counter = counting();
+    // Every candidate goes over $100, so none passes.
+    const first = await buildLooks(deps(counter.builder), guest.id, session);
+    expect(looksOf(first)).toHaveLength(0);
+    const calls = counter.calls;
+    expect(calls).toBeGreaterThan(0);
+    // Nothing changed: the same explanation, at no cost.
+    expect(await buildLooks(deps(counter.builder), guest.id, session)).toEqual(first);
+    expect(counter.calls).toBe(calls);
+    await buildLooks(deps(counter.builder), guest.id, session, undefined, { force: true });
+    expect(counter.calls).toBeGreaterThan(calls);
+    const forced = counter.calls;
+    await setBudget(105);
+    await buildLooks(deps(counter.builder), guest.id, session);
+    expect(counter.calls).toBeGreaterThan(forced);
+  }, 60_000);
+
+  it("a swap waits for a build in progress, so they never fill the same place (Phase 4 code review)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    await db.rpc("claim_looks_build", { session }).throwOnError();
+    let done = false;
+    const swapping = swapPiece(deps(), guest.id, session, look.id, look.items.findIndex((i) => i.group === "shoes")).then((r) => ((done = true), r));
+    await new Promise((r) => setTimeout(r, 2500));
+    expect(done).toBe(false);
+    await db.rpc("release_looks_build", { session }).throwOnError();
+    const result = await swapping;
+    expect(result && "look" in result).toBe(true);
+  }, 60_000);
+
   it("builds once when two requests arrive together: the second waits, then answers from the first (found in 4d)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     const fake = createFakeLooksBuilder();
@@ -289,6 +324,14 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     const checked = judged;
     expect(await swapPiece(withStrict, guest.id, session, look.id, index)).toEqual(first);
     expect(judged).toBe(checked);
+    // Each piece is remembered apart: no bag passes either, and the shoes still aren't checked again.
+    const bag = look.items.findIndex((i) => i.group === "bag");
+    if (bag >= 0) {
+      await swapPiece(withStrict, guest.id, session, look.id, bag);
+      const afterBag = judged;
+      expect(await swapPiece(withStrict, guest.id, session, look.id, index)).toEqual(first);
+      expect(judged).toBe(afterBag);
+    }
     expect((await currentLooks(deps(), guest.id, session))[0].id).toBe(look.id);
 
     // A change to the requirements starts afresh: after the looks are brought up to date, they're checked again.

@@ -2,6 +2,7 @@ import type { NoteStatus } from "../notes/types";
 import { chosenItem, DETAIL_NAMES, type StyleItem } from "../photos/item";
 import type { LeftOut } from "./candidates";
 import type { CheckReason } from "./checker";
+import { list } from "./rules";
 
 // Behind the scenes (4d, R72, design 4.4): what the stylist captured and how each look was checked, in
 // plain words, made from the records the app already keeps (Sabine's answer to Q1 in 4d). A blocked
@@ -39,7 +40,6 @@ export function noteEntry(n: NoteRecord): Entry {
   return { at: n.at, kind: "captured", text: `Captured: ${n.text}. ${SOURCES[n.source] ?? "From what you said"}. ${sure}` };
 }
 
-const list = (words: string[]) => (words.length < 2 ? words.join("") : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`);
 
 export function photoEntry(p: PhotoRecord): Entry {
   const from = p.source === "camera" ? "your camera" : "your photo";
@@ -48,10 +48,10 @@ export function photoEntry(p: PhotoRecord): Entry {
   if (reading.state === "analyzing") return { at: p.at, kind: "photo", text: `Reading ${from}.` };
   if (reading.state === "failed" || !reading.items.length) return { at: p.at, kind: "photo", text: `Couldn't read ${from}, so you were asked to describe it.` };
   const item = chosenItem(reading);
-  if (!item) return { at: p.at, kind: "photo", text: `Found ${reading.items.length} items in ${from}: ${list(reading.items.map((i) => i.name))}. You haven't picked one yet.` };
+  if (!item) return { at: p.at, kind: "photo", text: `Found ${reading.items.length} items in ${from}: ${list(reading.items.map((i) => i.name), "and")}. You haven't picked one yet.` };
   const sure = DETAIL_NAMES.filter((d) => item.details[d].value && item.details[d].status === "confirmed");
   const unsure = DETAIL_NAMES.filter((d) => item.details[d].value && item.details[d].status !== "confirmed");
-  const certainty = [sure.length ? `Sure: ${list(sure)}.` : "", unsure.length ? `To confirm: ${list(unsure)}.` : ""].filter(Boolean).join(" ");
+  const certainty = [sure.length ? `Sure: ${list(sure, "and")}.` : "", unsure.length ? `To confirm: ${list(unsure, "and")}.` : ""].filter(Boolean).join(" ");
   return { at: p.at, kind: "photo", text: `Read from ${from}: ${item.name}. ${certainty} ${whose}`.replace(/\s+/g, " ") };
 }
 
