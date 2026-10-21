@@ -1,4 +1,5 @@
 import type { Product } from "../../connectors/catalog/types";
+import { type BudgetLimit, compareWithBudget } from "./budget";
 
 // What a look is made of (4b): sample products, the shopper's own item to style around (the photo item
 // marked "You own this"), and wardrobe items they chose with Style with these. Stored as references in
@@ -78,6 +79,38 @@ export function mainPieces(items: ResolvedItem[]): string {
     .sort()
     .join("|");
 }
+
+/**
+ * Whether a look whose main pieces aren't in `used` could still be made from these products and the
+ * shopper's own pieces: a dress, a suit, a top with a bottom, or a bottom with a jacket or cardigan, with
+ * every main piece the shopper is styling around, and with the cheapest shoes still inside the budget.
+ * When none can (every dress that fits is shown, or none fits the budget with shoes), the looks builder
+ * stops rather than paying for looks that can't be shown (Sabine's looks speed plan, 21 Oct 2026).
+ */
+export function canMakeAnother(products: Product[], owned: OwnedPiece[], mustUse: LookItem[], used: Set<string>, budget: BudgetLimit | null): boolean {
+  const pieces: ResolvedItem[] = [
+    ...products.map((product): ResolvedItem => ({ ref: { kind: "product", productId: product.id }, product })),
+    ...owned.map((piece): ResolvedItem => ({ ref: piece.ref, owned: piece })),
+  ];
+  const of = (group: Group) => pieces.filter((i) => groupOf(i) === group);
+  const cost = (i: ResolvedItem) => ("product" in i ? i.product.price.amountCents : 0);
+  const shoes = Math.min(...of("shoes").map(cost));
+  if (shoes === Infinity) return false;
+  const must = new Set(mustUse.map((ref) => JSON.stringify(ref)));
+  const musts = pieces.filter((i) => must.has(JSON.stringify(i.ref)) && mainPieces([i]));
+  const bottoms = of("bottom");
+  const options: ResolvedItem[][] = [
+    ...of("dress").map((d) => [d]),
+    ...of("suit").map((s) => [s]),
+    ...of("top").flatMap((t) => bottoms.map((b) => [t, b])),
+    ...(of("outer").length ? bottoms.map((b) => [b]) : []),
+  ];
+  const fits = (o: ResolvedItem[]) => compareWithBudget(o.reduce((sum, i) => sum + cost(i), shoes), budget).fits;
+  return options.some((o) => musts.every((m) => o.includes(m)) && !used.has(mainPieces(o)) && fits(o));
+}
+
+/** A candidate that repeats a look already shown isn't judged: it couldn't be shown (looks speed plan). */
+export const REPEATS_SHOWN = "The same main pieces as a look already shown";
 
 /** The same item twice. */
 export const duplicated = (refs: LookItem[]) => new Set(refs.map((r) => JSON.stringify(r))).size !== refs.length;

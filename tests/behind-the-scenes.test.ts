@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { behindTheScenes, type CheckRecord, checkEntry, noteEntry, photoEntry, productsEntry } from "@/core/looks/behind";
+import { REPEATS_SHOWN } from "@/core/looks/look";
 import type { StyleItem } from "@/core/photos/item";
 
 // 4d: Behind the scenes in plain words (R72): what was captured, with its source and certainty, and
@@ -54,8 +55,9 @@ describe("each preference check", () => {
     expect(blocked?.text).not.toContain("Silver evening shimmer");
   });
 
-  it("leaves out a spare that passed but wasn't needed", () => {
+  it("leaves out a spare that passed but wasn't needed, and a repeat that wasn't judged", () => {
     expect(checkEntry(check({ look: { shown: false, slot: null } }))).toBeNull();
+    expect(checkEntry(check({ verdict: "conflict", look: { shown: false, slot: null }, reasons: [{ about: "Outfit", ok: false, why: REPEATS_SHOWN }] }))).toBeNull();
   });
 
   it("says what a swap brought in, or why a replacement was blocked", () => {

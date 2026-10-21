@@ -2,6 +2,7 @@ import type { NoteStatus } from "../notes/types";
 import { chosenItem, DETAIL_NAMES, type StyleItem } from "../photos/item";
 import type { LeftOut } from "./candidates";
 import type { CheckReason } from "./checker";
+import { REPEATS_SHOWN } from "./look";
 import { list } from "./rules";
 
 // Behind the scenes (4d, R72, design 4.4): what the stylist captured and how each look was checked, in
@@ -91,6 +92,8 @@ export function checkEntry(c: CheckRecord): Entry | null {
         : null // checked at the same moment as the one that went in, and not needed
       : { at: c.at, kind: "swap", text: `Swap in Look ${c.look.slot}: ${to} was checked and blocked: ${failed(c.reasons)}.` };
   }
+  // A repeat of a look already shown was never judged, so it isn't news either.
+  if (!pass && c.reasons.every((r) => r.ok || r.why === REPEATS_SHOWN)) return null;
   if (!pass) return { at: c.at, kind: "blocked", text: `Check blocked a candidate: ${failed(c.reasons)}.` };
   // A spare that passed but wasn't needed isn't news.
   if (!c.look.shown) return null;

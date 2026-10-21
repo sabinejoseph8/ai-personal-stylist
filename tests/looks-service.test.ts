@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createSampleCatalog } from "@/connectors/catalog/sample";
 import { createFakeLooksBuilder, type LooksBuilder } from "@/core/looks/builder";
-import type { LookItem } from "@/core/looks/look";
+import { type LookItem, REPEATS_SHOWN } from "@/core/looks/look";
 import { createFakeJudge, type Judge } from "@/core/looks/judge";
 import { behindTheScenesFor } from "@/lib/behind-the-scenes";
 import { feedbackByTouch } from "@/lib/notes-service";
@@ -121,11 +121,17 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
       .from("session_notes")
       .insert([note("occasion", "Outdoor wedding, November", "confirmed"), note("budget", "Budget: up to $90", "confirmed", [["max", "90"]]), note("outfit", "Dress", "confirmed", [["outfit", "dress"]])])
       .throwOnError();
-    const result = await buildLooks(deps(), guest.id, session);
+    const counter = counting();
+    const result = await buildLooks(deps(counter.builder), guest.id, session);
     if (!result || !("looks" in result)) throw new Error(JSON.stringify(result));
     expect(result.looks.length).toBeLessThan(3);
     expect(result.noMatch?.message).toMatch(/^Only \d (dresses|shoes) fit under your \$90 limit\.$/);
     expect(result.noMatch?.choices).toContain("Raise the budget");
+    // No dress fits under $90 with even the cheapest shoes, so no look can be made: the builder is never
+    // asked, not even by Try again (looks speed plan).
+    expect(counter.calls).toBe(0);
+    await buildLooks(deps(counter.builder), guest.id, session, undefined, { force: true });
+    expect(counter.calls).toBe(0);
   });
 
   it("publishes nothing when the requirements change while the looks are being built (R52)", async () => {
@@ -146,18 +152,29 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     const fake = createFakeLooksBuilder();
     let dress: LookItem | undefined;
+    let judged = 0;
+    const judgedBefore: number[] = [];
     const sameDress: LooksBuilder = {
       async build(input) {
+        judgedBefore.push(judged);
         const { looks } = await fake.build(input);
         // Every look, in every round, gets the first look's dress.
         const first = (dress ??= looks[0].items[0]);
         return { looks: looks.map((l) => ({ ...l, items: [first, ...l.items.slice(1)] })), costUsd: 0 };
       },
     };
-    const result = await buildLooks(deps(sameDress), guest.id, session);
+    const judge = createFakeJudge();
+    const counted: Judge = { judge: (input) => ((judged += 1), judge.judge(input)) };
+    const result = await buildLooks({ ...deps(sameDress), judge: counted }, guest.id, session);
     if (!result || !("looks" in result)) throw new Error(JSON.stringify(result));
     expect(result.looks).toHaveLength(1);
     expect(result.noMatch).not.toBeNull();
+    // Only the first round is judged: later repeats of the shown dress aren't worth paying for.
+    expect(judgedBefore.length).toBeGreaterThan(1);
+    expect(judgedBefore[1]).toBeGreaterThan(0);
+    expect(judged).toBe(judgedBefore[1]);
+    const { data: checks } = await db.from("check_results").select("reasons").eq("session_id", session).throwOnError();
+    expect(checks!.filter((c) => JSON.stringify(c.reasons).includes(REPEATS_SHOWN)).length).toBeGreaterThan(0);
   });
 
   /** Builds looks, counting the builder's calls. */
@@ -197,22 +214,24 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
   it("with no look passing, asking again builds again only after a change or Try again (Phase 4 code review)", async () => {
     await db
       .from("session_notes")
-      .insert([note("occasion", "Outdoor wedding, November", "confirmed"), note("budget", "Budget: up to $100", "confirmed", [["max", "100"]])])
+      .insert([note("occasion", "Outdoor wedding, November", "confirmed"), note("budget", "Budget: up to $350", "confirmed", [["max", "350"]])])
       .throwOnError();
     const counter = counting();
-    // Every candidate goes over $100, so none passes.
-    const first = await buildLooks(deps(counter.builder), guest.id, session);
+    // The stylist's judgment turns every candidate down, so none passes.
+    const never: Judge = { judge: async () => ({ verdict: "conflict", reasons: [{ about: "Outdoor wedding, November", ok: false, why: "Not right for it" }], costUsd: 0 }) };
+    const failing = () => ({ ...deps(counter.builder), judge: never });
+    const first = await buildLooks(failing(), guest.id, session);
     expect(looksOf(first)).toHaveLength(0);
     const calls = counter.calls;
     expect(calls).toBeGreaterThan(0);
     // Nothing changed: the same explanation, at no cost.
-    expect(await buildLooks(deps(counter.builder), guest.id, session)).toEqual(first);
+    expect(await buildLooks(failing(), guest.id, session)).toEqual(first);
     expect(counter.calls).toBe(calls);
-    await buildLooks(deps(counter.builder), guest.id, session, undefined, { force: true });
+    await buildLooks(failing(), guest.id, session, undefined, { force: true });
     expect(counter.calls).toBeGreaterThan(calls);
     const forced = counter.calls;
-    await setBudget(105);
-    await buildLooks(deps(counter.builder), guest.id, session);
+    await setBudget(340);
+    await buildLooks(failing(), guest.id, session);
     expect(counter.calls).toBeGreaterThan(forced);
   }, 60_000);
 
