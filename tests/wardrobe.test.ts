@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { stylistContext } from "@/core/notes/context";
 import type { PhotoItem } from "@/core/photos/item";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { whileStoreBusy } from "@/lib/photos";
 import { addPhoto, deleteSessionPhotos, finishPhoto, PHOTO_BUCKET } from "@/lib/photos-service";
 import { categoryOf, WardrobeEdit } from "@/lib/wardrobe";
 import {
@@ -56,7 +57,9 @@ describe.skipIf(!canRunDatabaseTests)("the wardrobe", () => {
   let b: TestGuest;
   let session: string;
   const jpeg = () => sharp({ create: { width: 64, height: 48, channels: 3, background: "#1f2a44" } }).jpeg().toBuffer();
-  const put = (url: string, body: Buffer) => fetch(url, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: new Uint8Array(body) });
+  // Like the browser, tried again while the photo store is busy for a moment (decision C).
+  const put = (url: string, body: Buffer) =>
+    whileStoreBusy(() => fetch(url, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: new Uint8Array(body) }), (res) => res.status >= 500);
   const blazer: PhotoItem = {
     name: "Navy wool blazer",
     details: {
@@ -133,18 +136,26 @@ describe.skipIf(!canRunDatabaseTests)("the wardrobe", () => {
     const saved = await editItem(db, a.id, started.id, { name: "My navy blazer", category: "outerwear", details: { ...done.item.details, colors: "dark navy" } });
     expect(saved).toMatchObject({ name: "My navy blazer", details: { colors: "dark navy" } });
     expect((await listWardrobe(db, a.id)).map((i) => i.name)).toEqual(["My navy blazer"]);
+
+    // An upload is added only once: a second file on the same link can't replace the item's photo (Phase 3 code review).
+    const before = await db.storage.from(PHOTO_BUCKET).download(`${a.id}/wardrobe/${started.id}.jpg`);
+    await put(started.uploadUrl, await sharp({ create: { width: 64, height: 48, channels: 3, background: "#a33a2c" } }).jpeg().toBuffer());
+    expect(await finishUpload({ db, guard: guard(), reader }, a.id, started.id)).toEqual({ ok: false, reason: "missing" });
+    const after = await db.storage.from(PHOTO_BUCKET).download(`${a.id}/wardrobe/${started.id}.jpg`);
+    expect(Buffer.from(await after.data!.arrayBuffer()).equals(Buffer.from(await before.data!.arrayBuffer()))).toBe(true);
+    expect(await files(`${a.id}/incoming`)).toEqual([]);
   });
 
   it("Add item turns away a file that isn't a photo, and a draft left for an hour is deleted with its photo", async () => {
     const started = await startUpload(db, a.id, true);
     if (!started.ok) throw new Error(started.reason);
     await put(started.uploadUrl, Buffer.from("Shopping list"));
-    expect(await finishUpload({ db, guard: guard(), reader: { read: async () => null } }, a.id, started.id)).toEqual({ ok: false, reason: "type" });
+    expect(await finishUpload({ db, guard: guard(), reader: { read: async () => ({ items: null, costUsd: 0 }) } }, a.id, started.id)).toEqual({ ok: false, reason: "type" });
 
     const second = await startUpload(db, a.id, false);
     if (!second.ok) throw new Error(second.reason);
     await put(second.uploadUrl, await jpeg());
-    const done = await finishUpload({ db, guard: guard(), reader: { read: async () => null } }, a.id, second.id);
+    const done = await finishUpload({ db, guard: guard(), reader: { read: async () => ({ items: null, costUsd: 0 }) } }, a.id, second.id);
     expect(done).toMatchObject({ ok: true, read: false, item: { name: "New item", category: "other" } });
     await db.from("wardrobe_items").update({ created_at: new Date(Date.now() - 2 * 3600_000).toISOString() }).eq("id", second.id).throwOnError();
     expect(await listWardrobe(db, a.id)).toEqual([]);

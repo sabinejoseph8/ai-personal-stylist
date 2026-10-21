@@ -105,7 +105,7 @@ export function StylingSession({
     onEvent: (e) => {
       notes.onEvent(e);
       // "Use this one" takes the still, heard by plain code while an item is on camera (Q1 in 3c).
-      if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text)) heardCapture.current?.();
+      if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text, e.final)) heardCapture.current?.();
     },
     onPhrase: (text) => notes.say(text),
     onEnd: () => {

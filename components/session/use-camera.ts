@@ -73,6 +73,9 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
   const explained = useRef(false);
   // When an item was last on screen, so "use this one" just after its name cleared still counts (3c fix).
   const itemAt = useRef(0);
+  // When the camera was turned on: Switch camera keeps counting the same 2 minutes (Phase 3 code review).
+  const onSince = useRef(0);
+  const switched = useRef(false);
 
   function stopTracks() {
     tracks.current?.getTracks().forEach((t) => t.stop());
@@ -91,8 +94,9 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
     said.current.onSeen(null);
   }
 
-  async function start(want: Facing = facing) {
+  async function start(want: Facing = facing, switching = false) {
     const mine = ++run.current;
+    switched.current = switching;
     stopTracks();
     setMessage(null);
     setState("starting");
@@ -149,14 +153,16 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
     }
   }
 
-  // Off after 2 minutes (R35).
+  // Off 2 minutes after it was turned on (R35), however often the camera is switched.
   useEffect(() => {
     if (state !== "on") return;
-    const timer = setTimeout(() => stop("timedOut"), CAMERA_MINUTES * 60_000);
+    if (!switched.current) onSince.current = Date.now();
+    switched.current = false;
+    const timer = setTimeout(() => stop("timedOut"), Math.max(0, CAMERA_MINUTES * 60_000 - (Date.now() - onSince.current)));
     return () => clearTimeout(timer);
     // stop only reads refs and setters
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, stream]);
+  }, [state]);
 
   // The video element shows the stream.
   useEffect(() => {
@@ -205,7 +211,7 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
     stop: () => stop(),
     /** When an item was last on screen (0 when none has been). */
     lastItemAt: () => itemAt.current,
-    switchCamera: () => void start(facing === "environment" ? "user" : "environment"),
+    switchCamera: () => void start(facing === "environment" ? "user" : "environment", true),
     /** A full-size still of what's in view, as a photo file, or null before the video has a picture. */
     capture: async (): Promise<File | null> => {
       const el = video.current;

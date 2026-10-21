@@ -5,6 +5,7 @@ import { ANALYZING, changeItem, type ItemChange, type Ownership, savedReading, t
 import type { PhotoReader } from "@/core/photos/reader";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { cleanPhoto, type PhotoRefusal } from "@/lib/photo-cleaner";
+import { stored } from "@/lib/photo-store";
 import { MAX_PHOTO_BYTES, type PhotoSource, type ShownPhoto } from "@/lib/photos";
 
 // The item to style around (3a; R26, R27, R31, FR-27). Photos are the app's own record (decision A),
@@ -23,6 +24,7 @@ type Row = {
   id: string;
   user_id: string;
   version: number;
+  status: "uploading" | "ready";
   source: PhotoSource;
   active: boolean;
   photo_path: string;
@@ -31,7 +33,7 @@ type Row = {
   ownership: Ownership;
   details_seq: number;
 };
-const COLUMNS = "id, user_id, version, source, active, photo_path, thumbnail_path, recognized_details, ownership, details_seq";
+const COLUMNS = "id, user_id, version, status, source, active, photo_path, thumbnail_path, recognized_details, ownership, details_seq";
 
 const itemOf = (r: Row): StyleItem => ({ reading: savedReading(r.recognized_details), ownership: r.ownership });
 
@@ -41,7 +43,7 @@ const allPaths = (r: Row) => [r.photo_path, r.thumbnail_path, incomingPath(r.use
 
 export async function removeFiles(db: SupabaseClient, paths: string[]) {
   for (let i = 0; i < paths.length; i += 100) {
-    const { error } = await db.storage.from(PHOTO_BUCKET).remove(paths.slice(i, i + 100));
+    const { error } = await stored(() => db.storage.from(PHOTO_BUCKET).remove(paths.slice(i, i + 100)));
     if (error) throw new Error(`deleting photos failed: ${error.message}`);
   }
 }
@@ -51,7 +53,7 @@ export const logFailure = (what: string) => (e: unknown) => console.error(`${wha
 /** 30-minute links for files in the photo store, by path. Works with the guest's own sign-in or the server key. */
 export async function signedLinks(db: SupabaseClient, paths: string[]) {
   if (!paths.length) return new Map<string, string>();
-  const { data, error } = await db.storage.from(PHOTO_BUCKET).createSignedUrls(paths, LINK_SECONDS);
+  const { data, error } = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUrls(paths, LINK_SECONDS));
   if (error) throw new Error(`making photo links failed: ${error.message}`);
   return new Map(data.flatMap((d) => (d.path && d.signedUrl ? [[d.path, d.signedUrl] as const] : [])));
 }
@@ -111,7 +113,7 @@ export async function addPhoto(db: SupabaseClient, guestId: string, sessionId: s
   if ("refused" in added) return { ok: false as const, reason: added.refused };
   // The replaced version's files go straight away.
   if (replaces) await removeFiles(db, [...added.replaced_paths, incomingPath(guestId, added.id, added.version - 1)]).catch(logFailure("deleting a replaced photo"));
-  const link = await db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, added.id, added.version));
+  const link = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, added.id, added.version)));
   if (link.error) throw new Error(`making an upload link failed: ${link.error.message}`);
   return { ok: true as const, id: added.id, version: added.version, uploadUrl: link.data.signedUrl };
 }
@@ -119,9 +121,37 @@ export async function addPhoto(db: SupabaseClient, guestId: string, sessionId: s
 export type FinishRefusal = PhotoRefusal | "missing";
 
 /**
+ * Checks and cleans what the browser sent to its upload link (FR-27), keeps the clean photo and its
+ * thumbnail at the given paths, and deletes the original either way. Shared by session photos and
+ * Add item on the Wardrobe page (3d). Returns the clean JPEG for the photo reader, or why not.
+ */
+export async function keepUpload(db: SupabaseClient, original: string, paths: { photo: string; thumbnail: string }) {
+  const sent = await stored(() => db.storage.from(PHOTO_BUCKET).download(original));
+  if (sent.error || !sent.data) {
+    // Usually nothing arrived; anything else is the photo store's own trouble, worth seeing in the logs.
+    if (sent.error && !/not found/i.test(sent.error.message)) console.error(`photos: reading an upload failed: ${sent.error.message}`);
+    return { ok: false as const, reason: "missing" as FinishRefusal };
+  }
+  const cleaned = sent.data.size > MAX_PHOTO_BYTES ? { refused: "size" as const } : await cleanPhoto(Buffer.from(await sent.data.arrayBuffer()));
+  await removeFiles(db, [original]);
+  if ("refused" in cleaned) return { ok: false as const, reason: cleaned.refused as FinishRefusal };
+
+  const store = db.storage.from(PHOTO_BUCKET);
+  for (const [path, file] of [
+    [paths.photo, cleaned.photo],
+    [paths.thumbnail, cleaned.thumbnail],
+  ] as const) {
+    const { error } = await stored(() => store.upload(path, file, { contentType: "image/jpeg", upsert: true }));
+    if (error) throw new Error(`keeping a photo failed: ${error.message}`);
+  }
+  return { ok: true as const, jpeg: cleaned.photo };
+}
+
+/**
  * The browser has sent the photo: check it, clean it, and keep the clean copy (FR-27). The original
  * is deleted either way. A photo turned away is removed. Returns null when the photo has been
- * replaced or removed since, or its session has ended.
+ * replaced or removed since, its session has ended, or it was already kept: a photo is only ever
+ * checked and read once, so a repeated request can't pay for more readings (Phase 3 code review).
  */
 export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId: string, photoId: string, version: number) {
   const { data: row } = await db
@@ -133,27 +163,15 @@ export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId
     .maybeSingle<Row>()
     .throwOnError();
   const original = incomingPath(guestId, photoId, version);
-  if (!row || row.version !== version) {
+  if (!row || row.version !== version || row.status !== "uploading") {
     await removeFiles(db, [original]).catch(logFailure("deleting an outdated upload"));
     return null;
   }
 
-  const sent = await db.storage.from(PHOTO_BUCKET).download(original);
-  if (sent.error || !sent.data) return { ok: false as const, reason: "missing" as FinishRefusal };
-  const cleaned = sent.data.size > MAX_PHOTO_BYTES ? { refused: "size" as const } : await cleanPhoto(Buffer.from(await sent.data.arrayBuffer()));
-  await removeFiles(db, [original]);
-  if ("refused" in cleaned) {
-    await removePhoto(db, guestId, sessionId, photoId);
-    return { ok: false as const, reason: cleaned.refused as FinishRefusal };
-  }
-
-  const store = db.storage.from(PHOTO_BUCKET);
-  for (const [path, file] of [
-    [row.photo_path, cleaned.photo],
-    [row.thumbnail_path, cleaned.thumbnail],
-  ] as const) {
-    const { error } = await store.upload(path, file, { contentType: "image/jpeg", upsert: true });
-    if (error) throw new Error(`keeping a photo failed: ${error.message}`);
+  const cleaned = await keepUpload(db, original, { photo: row.photo_path, thumbnail: row.thumbnail_path });
+  if (!cleaned.ok) {
+    if (cleaned.reason !== "missing") await removePhoto(db, guestId, sessionId, photoId);
+    return cleaned;
   }
   const { data: kept } = await db.rpc("finish_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
   if (!kept) {
@@ -165,7 +183,7 @@ export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId
   await db.rpc("save_asset_details", { asset: photoId, expected_version: version, details: analyzing }).throwOnError();
   const [photo] = await shownPhotos(db, [{ ...row, recognized_details: analyzing, ownership: null }]);
   if (!photo) throw new Error("making photo links failed");
-  return { ok: true as const, photo, jpeg: cleaned.photo };
+  return { ok: true as const, photo, jpeg: cleaned.jpeg };
 }
 
 export type PhotoReadingDeps = { db: SupabaseClient; guard: BudgetGuard; reader: PhotoReader };
@@ -179,6 +197,7 @@ export async function readItems(deps: Omit<PhotoReadingDeps, "db">, guestId: str
   if (!money.ok) return [];
   const { data, info } = await sharp(jpeg).resize(READ_SIDE, READ_SIDE, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer({ resolveWithObject: true });
   const read = await deps.reader.read({ jpegBase64: data.toString("base64"), width: info.width, height: info.height }).catch(() => null);
+  // A failed reading still costs what Claude charged, so it counts toward the allowance too.
   if (read && read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
   return read?.items ?? [];
 }

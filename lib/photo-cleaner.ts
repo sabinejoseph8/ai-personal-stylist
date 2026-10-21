@@ -28,20 +28,28 @@ export function photoType(bytes: Uint8Array): PhotoType | null {
   return null;
 }
 
-async function decodeHeic(bytes: Buffer) {
+async function decodeHeic(bytes: Buffer, maxPixels: number) {
   const { default: decode } = await import("heic-decode");
-  const { width, height, data } = await decode({ buffer: bytes });
-  if (width * height > MAX_PIXELS) throw new Error("photo too large");
-  return sharp(Buffer.from(data.buffer, data.byteOffset, data.byteLength), { raw: { width, height, channels: 4 } });
+  // The size is checked before decoding: a small HEIC file can claim to be enormous, and decoding it
+  // would take 4 bytes for every pixel it claims (found by the Phase 3 code review).
+  const images = await decode.all({ buffer: bytes });
+  try {
+    const [first] = images;
+    if (!first || first.width * first.height > maxPixels) throw new Error("photo too large");
+    const { width, height, data } = await first.decode();
+    return sharp(Buffer.from(data.buffer, data.byteOffset, data.byteLength), { raw: { width, height, channels: 4 } });
+  } finally {
+    images.dispose();
+  }
 }
 
-/** The cleaned photo and its thumbnail, or why the file was turned away. */
-export async function cleanPhoto(bytes: Buffer): Promise<CleanPhoto | { refused: PhotoRefusal }> {
+/** The cleaned photo and its thumbnail, or why the file was turned away. `maxPixels` is lower only in tests. */
+export async function cleanPhoto(bytes: Buffer, maxPixels = MAX_PIXELS): Promise<CleanPhoto | { refused: PhotoRefusal }> {
   if (bytes.length > MAX_PHOTO_BYTES) return { refused: "size" };
   const type = photoType(bytes);
   if (!type) return { refused: "type" };
   try {
-    const image = type === "heic" ? await decodeHeic(bytes) : sharp(bytes, { limitInputPixels: MAX_PIXELS, failOn: "error" });
+    const image = type === "heic" ? await decodeHeic(bytes, maxPixels) : sharp(bytes, { limitInputPixels: maxPixels, failOn: "error" });
     // sharp keeps no metadata unless asked to, so the JPEG it writes has no location or camera details.
     // A see-through background turns white rather than black.
     const photo = await image

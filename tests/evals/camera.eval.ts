@@ -32,7 +32,7 @@ it("camera reader check: how often it names catalog items right at camera size",
   const jobs = [
     ...singles.map((p) => async () => {
       const { result, seconds } = await read(await (await photoOf(p.slug)).jpeg().toBuffer());
-      const s = result?.sighting ?? ({ kind: "none" } as Sighting);
+      const s = result.sighting ?? ({ kind: "none" } as Sighting);
       return {
         id: p.slug,
         expected: `${p.category}; ${p.colors.join("/")}`,
@@ -42,15 +42,15 @@ it("camera reader check: how often it names catalog items right at camera size",
         sure: s.kind === "item" && s.sure,
         two: false,
         seconds,
-        cost: result?.costUsd ?? 0,
+        cost: result.costUsd,
       };
     }),
     ...PAIRS.map(([a, b]) => async () => {
       const { result, seconds } = await read(await pairPhoto(a, b));
-      const s = result?.sighting ?? ({ kind: "none" } as Sighting);
+      const s = result.sighting ?? ({ kind: "none" } as Sighting);
       // Several items, or one of the two named: either is a fair answer for a two-item frame.
       const fair = s.kind === "several" || (s.kind === "item" && [a, b].some((p) => typeOk(p.category, s.type)));
-      return { id: `${a.slug} + ${b.slug}`, expected: `${a.category} + ${b.category}`, found: words(s), typeRight: fair, colorRight: fair, sure: false, two: true, seconds, cost: result?.costUsd ?? 0 };
+      return { id: `${a.slug} + ${b.slug}`, expected: `${a.category} + ${b.category}`, found: words(s), typeRight: fair, colorRight: fair, sure: false, two: true, seconds, cost: result.costUsd };
     }),
   ];
   const results: Awaited<ReturnType<(typeof jobs)[number]>>[] = [];

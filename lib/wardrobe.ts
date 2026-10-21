@@ -54,11 +54,19 @@ export type ShownWardrobeItem = {
 
 const text = (max: number) => z.string().trim().max(max);
 
+/** The longest each detail can be: the Wardrobe page's boxes stop at the same lengths. */
+export const DETAIL_LENGTHS: Record<keyof WardrobeDetails, number> = { type: 40, colors: 60, pattern: 40, style: 60 };
+
 /** What Edit can change (R37). A name is required; the rest are short words. */
 export const WardrobeEdit = z.object({
   name: z.string().trim().min(1, "Give the item a name.").max(120),
   category: z.enum(CATEGORIES),
-  details: z.object({ type: text(40), colors: text(60), pattern: text(40), style: text(60) }),
+  details: z.object({
+    type: text(DETAIL_LENGTHS.type),
+    colors: text(DETAIL_LENGTHS.colors),
+    pattern: text(DETAIL_LENGTHS.pattern),
+    style: text(DETAIL_LENGTHS.style),
+  }),
 });
 export type WardrobeEdit = z.infer<typeof WardrobeEdit>;
 
@@ -67,4 +75,5 @@ export const WARDROBE_MESSAGES = {
   notOwned: "Mark the item as yours before saving it to your wardrobe.",
   photo: "That photo has been removed.",
   saveFailed: "That didn't save. Check your connection and try again.",
+  cleared: "Your session won't use wardrobe items now.",
 } as const;

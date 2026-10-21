@@ -45,11 +45,11 @@ export const PHOTO_SCHEMA = {
 export const MAX_ITEMS = 4;
 
 export type PhotoInput = { jpegBase64: string; width: number; height: number };
-export type PhotoRead = { items: PhotoItem[]; costUsd: number };
+/** `items` is null when the reading failed (R32). The cost counts either way: a cut-off answer is still paid for. */
+export type PhotoRead = { items: PhotoItem[] | null; costUsd: number };
 
 export interface PhotoReader {
-  /** The items found, or null when the reading failed (R32). */
-  read(input: PhotoInput): Promise<PhotoRead | null>;
+  read(input: PhotoInput): Promise<PhotoRead>;
 }
 
 type Raw = { items: { n: string; t: { v: string; k: string }; c: { v: string; k: string }; p: { v: string; k: string }; s: { v: string; k: string } }[] };
@@ -83,8 +83,7 @@ export function createPhotoReader(ask: Ask): PhotoReader {
         schema: PHOTO_SCHEMA,
         maxTokens: 2000,
       });
-      if (!data) return null;
-      return { items: itemsFrom(data as Raw), costUsd };
+      return { items: data ? itemsFrom(data as Raw) : null, costUsd };
     },
   };
 }

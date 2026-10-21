@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.9 (20 Oct 2026)
+**Status:** Agreed, version 1.10 (20 Oct 2026)
 **Last updated:** 20 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -314,7 +314,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 **Wardrobe**
 - A grid of photos with category filters: All, Tops, Bottoms, Dresses, Outerwear, Shoes, Bags, Accessories. Each card shows the photo on a Showroom square, the name and the category, with "Styling with" for chosen items. Items in no category show under All.
 - **Add item**, edit details, **Delete** (after confirming), and a select mode with **Style with these**.
-- As built (3d): Add item asks for wardrobe photos first, then opens the photo picker; "Adding your item…" and "Analyzing" show while it's checked and read, then a sheet, "Check the details", offers the suggested name, category, type, colors, pattern and style, with **Add to wardrobe**. Tapping an item opens "Edit item" with **Save** and **Delete** ("Delete this item? Its photo is deleted too.", **Delete item** or **Keep it**). Select turns the cards into checkboxes with an Emerald check; **Style with these** goes back to the session.
+- As built (3d): Add item asks for wardrobe photos first, then opens the photo picker; "Adding your item…" and "Analyzing" show while it's checked and read, then a sheet, "Check the details", offers the suggested name, category, type, colors, pattern and style, with **Add to wardrobe**. Tapping an item opens "Edit item" with **Save** and **Delete** ("Delete this item? Its photo is deleted too.", **Delete item** or **Keep it**). Select turns the cards into checkboxes with an Emerald check; **Style with these** goes back to the session. With nothing ticked while items are chosen, the button is **Clear wardrobe items** (secondary), which stays on the page and says "Your session won't use wardrobe items now." (your decision B in the Phase 3 review). Detail boxes stop at the lengths the server allows (Type and Pattern 40 characters, Colors and Style 60).
 - States: empty, loading, list, selecting, deleting, error.
 
 **Saved looks**
@@ -567,6 +567,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.10 (20 Oct 2026):** Phase 3 code review: Clear wardrobe items when nothing is ticked (your decision B), and the Wardrobe page's detail lengths (4.2).
 - **1.9 (20 Oct 2026):** 3d: Save to wardrobe as built, From your wardrobe in the notebook, and the Wardrobe page as built (4.2).
 - **1.8 (20 Oct 2026):** 3c: the camera view as built: the tile's size, the swap on phones, Done showing, the camera's buttons, the camera off after Capture, and what screen readers hear (4.1).
 - **1.7 (20 Oct 2026):** 3b: Analyzing in the label, the item details review as built, the several-items list, the failed-recognition line and what screen readers hear (4.2).

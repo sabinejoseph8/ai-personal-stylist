@@ -150,4 +150,25 @@ test.describe("the wardrobe", () => {
       .poll(async () => (await commandsSent(page)).filter((c) => c.name === "updateContext").map((c) => String(c.value)).join("\n"))
       .toContain("The shopper chose these items they own, from their wardrobe, to style with: Navy wool blazer");
   });
+
+  test("with nothing ticked, Clear wardrobe items stops the session using them (Sabine's decision B in 3e)", async ({ page }) => {
+    await serverDb()
+      .from("wardrobe_items")
+      .insert([
+        { user_id: guest.id, name: "Navy wool blazer", category: "outerwear", styling: true, details: { type: "blazer", colors: "navy", pattern: "solid", style: "classic" } },
+        { user_id: guest.id, name: "White leather sneakers", category: "shoes", styling: true, details: { type: "sneakers", colors: "white", pattern: "solid", style: "minimal" } },
+      ])
+      .throwOnError();
+    await page.goto("/wardrobe");
+    await page.getByRole("button", { name: "Select" }).click();
+    await expect(page.getByRole("button", { name: "Style with these" })).toBeEnabled();
+    await wardrobe(page).getByRole("button", { name: /Navy wool blazer/ }).click();
+    await wardrobe(page).getByRole("button", { name: /White leather sneakers/ }).click();
+    await page.getByRole("button", { name: "Clear wardrobe items" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Your session won't use wardrobe items now." })).toBeVisible();
+    await expect.poll(async () => (await serverDb().from("wardrobe_items").select("id").eq("user_id", guest.id).eq("styling", true)).data).toEqual([]);
+    await page.goto("/session");
+    await expect(page.getByRole("region", { name: "My Styling Notes" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "From your wardrobe" })).toHaveCount(0);
+  });
 });

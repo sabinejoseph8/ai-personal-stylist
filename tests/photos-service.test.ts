@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PhotoItem } from "@/core/photos/item";
 import type { PhotoReader } from "@/core/photos/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { whileStoreBusy } from "@/lib/photos";
 import {
   addPhoto,
   changePhoto,
@@ -28,8 +29,12 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
   let session: string;
 
   const jpeg = (color: string) => sharp({ create: { width: 64, height: 48, channels: 3, background: color } }).jpeg().toBuffer();
+  // Like the browser, tried again while the photo store is busy for a moment (decision C).
   const put = (url: string, body: Buffer, type = "image/jpeg") =>
-    fetch(url, { method: "PUT", headers: { "content-type": type }, body: new Uint8Array(body) });
+    whileStoreBusy(
+      () => fetch(url, { method: "PUT", headers: { "content-type": type }, body: new Uint8Array(body) }),
+      (res) => res.status >= 500,
+    );
 
   /** Add a photo the way the page does: ask, send, then finish. */
   async function upload(guest: TestGuest, body: Buffer, replaces: string | null = null) {
@@ -142,6 +147,32 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     expect((await listPhotos(db, a.id, session)).map((p) => p.id)).toEqual([ids[0], ids[2], ids[3], ids[4]]);
   }, 60_000);
 
+  it("adding, choosing and removing at the same moment wait their turn, keeping one active photo (Phase 3 code review)", async () => {
+    const first = (await upload(a, await jpeg("#575e6a"))).id;
+    for (let i = 0; i < 3; i++) {
+      const [added, chose] = await Promise.all([addPhoto(db, a.id, session, "upload"), choosePhoto(db, a.id, session, first)]);
+      expect(added.ok).toBe(true);
+      expect(chose).toBe(true);
+    }
+    const [, removed] = await Promise.all([addPhoto(db, a.id, session, "upload"), removePhoto(db, a.id, session, first)]);
+    expect(removed).toBe(true);
+    expect((await rows()).filter((r) => r.active)).toHaveLength(1);
+  }, 30_000);
+
+  it("the stylist's context for a session deleted meanwhile is nothing, quietly (Phase 3 code review)", async () => {
+    await db.from("sessions").delete().eq("id", session).throwOnError();
+    expect(await sessionContext(db, a.id, session)).toBeNull();
+  });
+
+  it("a photo is checked and kept only once: asking again does nothing (Phase 3 code review)", async () => {
+    const { id, version, uploadUrl } = await upload(a, await jpeg("#0b6b4f"));
+    // The one-time link still takes a second file, but the photo is already kept.
+    await put(uploadUrl, await jpeg("#a33a2c"));
+    expect(await finishPhoto(db, a.id, session, id, version)).toBeNull();
+    expect(await files(`${a.id}/incoming`)).toEqual([]);
+    expect(await rows()).toMatchObject([{ id, status: "ready", version: 1 }]);
+  });
+
   it("a session's photos are deleted when it ends, and an idle session's on the next clean-up (R63, Q4)", async () => {
     await upload(a, await jpeg("#0b6b4f"));
     expect(await deleteSessionPhotos(db, session)).toBe(1);
@@ -168,7 +199,7 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     },
   };
   const tee: PhotoItem = { ...blazer, name: "White T-shirt", details: { ...blazer.details, type: { value: "t-shirt", status: "confirmed" } } };
-  const standIn = (items: PhotoItem[] | null, costUsd = 0.0125): PhotoReader => ({ read: async () => (items ? { items, costUsd } : null) });
+  const standIn = (items: PhotoItem[] | null, costUsd = 0.0125): PhotoReader => ({ read: async () => ({ items, costUsd }) });
   const guard = (dailyAiUsd = 1) =>
     createBudgetGuard(db, { ...readBudgetLimits({}), dailyAiUsd, monthlyClaudeUsd: 1e6, monthlyOpenaiUsd: 1e6, monthlyVideoSeconds: 1e9 });
   const spent = async () => (await db.from("usage").select("claude_microdollars").eq("user_id", a.id).maybeSingle()).data?.claude_microdollars ?? 0;
@@ -203,8 +234,11 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
   });
 
   it("a failed reading, or the day's AI used up, leaves the photo with Describe it instead (R32)", async () => {
+    await db.from("usage").delete().eq("user_id", a.id).throwOnError();
     const one = await kept();
     expect((await readPhoto({ db, guard: guard(), reader: standIn(null) }, a.id, one.id, one.version, one.finished.jpeg))?.reading.state).toBe("failed");
+    // A cut-off answer is still paid for, so it counts toward the allowance (3e).
+    expect(await spent()).toBe(12500);
     const nothing = await readPhoto({ db, guard: guard(), reader: standIn([]) }, a.id, one.id, one.version, one.finished.jpeg);
     expect(nothing?.reading.state).toBe("failed");
     let asked = false;

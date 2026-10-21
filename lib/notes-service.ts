@@ -153,10 +153,10 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
 /** Confirm, Remove or Undo by touch (PATCH /api/sessions/:id/notes/:noteId, R20). Null if not the guest's. */
 export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, noteId: string, action: TouchAction) {
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
-  const { notes, wordsSeq } = await loadNotes(deps.db, sessionId);
-  if (!notes.some((n) => n.id === noteId)) return null;
   let done: Awaited<ReturnType<typeof apply>>;
   try {
+    const { notes, wordsSeq } = await loadNotes(deps.db, sessionId);
+    if (!notes.some((n) => n.id === noteId)) return null;
     done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile

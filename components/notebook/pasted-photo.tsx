@@ -256,7 +256,10 @@ export function StyleAroundThisItem({
           </div>
 
           {active.state === "ready" && active.item && (
+            // Its own for each photo, so a question about one (Save photos to your wardrobe) never
+            // carries over to another (Phase 3 code review).
             <ItemDetails
+              key={active.key}
               item={active.item}
               onConfirm={(detail) => onConfirm(active, detail)}
               onChoose={(index) => onChooseItem(active, index)}

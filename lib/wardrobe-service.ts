@@ -2,9 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { WardrobePick } from "@/core/notes/context";
 import { chosenItem, savedReading } from "@/core/photos/item";
-import { cleanPhoto } from "@/lib/photo-cleaner";
-import { MAX_PHOTO_BYTES } from "@/lib/photos";
-import { logFailure, PHOTO_BUCKET, type PhotoReadingDeps, readItems, removeFiles, signedLinks } from "@/lib/photos-service";
+import { stored } from "@/lib/photo-store";
+import { keepUpload, logFailure, PHOTO_BUCKET, type PhotoReadingDeps, readItems, removeFiles, signedLinks } from "@/lib/photos-service";
 import { type Category, categoryOf, type ShownWardrobeItem, type WardrobeDetails, type WardrobeEdit } from "@/lib/wardrobe";
 
 // The wardrobe (3d; R36, R37). Items the shopper owns, kept beyond a session: saved from a session
@@ -102,7 +101,7 @@ async function photosAllowed(db: SupabaseClient, guestId: string, allow: boolean
 
 /** Copies a file within the photo store. */
 async function copyFile(db: SupabaseClient, from: string, to: string) {
-  const { error } = await db.storage.from(PHOTO_BUCKET).copy(from, to);
+  const { error } = await stored(() => db.storage.from(PHOTO_BUCKET).copy(from, to));
   if (error) throw new Error(`copying a photo failed: ${error.message}`);
 }
 
@@ -176,7 +175,7 @@ export async function saveFromPhoto(db: SupabaseClient, guestId: string, photoId
 export async function startUpload(db: SupabaseClient, guestId: string, allow: boolean) {
   if (!(await photosAllowed(db, guestId, allow))) return { ok: false as const, reason: "permission" as const };
   const id = crypto.randomUUID();
-  const link = await db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, id));
+  const link = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, id)));
   if (link.error) throw new Error(`making an upload link failed: ${link.error.message}`);
   return { ok: true as const, id, uploadUrl: link.data.signedUrl };
 }
@@ -184,27 +183,21 @@ export async function startUpload(db: SupabaseClient, guestId: string, allow: bo
 /**
  * Add item, step 2: the photo has arrived. It's checked and cleaned (FR-27), kept, and read by the
  * photo reader, which suggests a name, category and details (3b). The item is a draft until the
- * shopper saves its details (step 3, `editItem`).
+ * shopper saves its details (step 3, `editItem`). An upload is only ever added once, so a repeated
+ * request can't replace an item's photo or pay for more readings (Phase 3 code review).
  */
 export async function finishUpload(deps: PhotoReadingDeps, guestId: string, id: string) {
   const { db } = deps;
   const original = incomingPath(guestId, id);
-  const sent = await db.storage.from(PHOTO_BUCKET).download(original);
-  if (sent.error || !sent.data) return { ok: false as const, reason: "missing" as const };
-  const cleaned = sent.data.size > MAX_PHOTO_BYTES ? { refused: "size" as const } : await cleanPhoto(Buffer.from(await sent.data.arrayBuffer()));
-  await removeFiles(db, [original]);
-  if ("refused" in cleaned) return { ok: false as const, reason: cleaned.refused };
-
-  const store = db.storage.from(PHOTO_BUCKET);
-  for (const [path, file] of [
-    [photoPath(guestId, id), cleaned.photo],
-    [thumbnailPath(guestId, id), cleaned.thumbnail],
-  ] as const) {
-    const { error } = await store.upload(path, file, { contentType: "image/jpeg", upsert: true });
-    if (error) throw new Error(`keeping a photo failed: ${error.message}`);
+  const { data: taken } = await db.from("wardrobe_items").select("id").eq("id", id).maybeSingle().throwOnError();
+  if (taken) {
+    await removeFiles(db, [original]).catch(logFailure("deleting a repeated upload"));
+    return { ok: false as const, reason: "missing" as const };
   }
+  const cleaned = await keepUpload(db, original, { photo: photoPath(guestId, id), thumbnail: thumbnailPath(guestId, id) });
+  if (!cleaned.ok) return cleaned;
   // The most prominent item is the one being added.
-  const [found] = await readItems(deps, guestId, cleaned.photo);
+  const [found] = await readItems(deps, guestId, cleaned.jpeg);
   const details: WardrobeDetails = found
     ? { type: found.details.type.value, colors: found.details.colors.value, pattern: found.details.pattern.value, style: found.details.style.value }
     : detailsOf(null);

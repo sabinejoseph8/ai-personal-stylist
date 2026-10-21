@@ -10,21 +10,25 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
 import { Sheet } from "@/components/ui/sheet";
-import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, uploadType } from "@/lib/photos";
-import { CATEGORIES, CATEGORY_LABELS, type Category, FILTERS, type Filter, type ShownWardrobeItem, WARDROBE_MESSAGES } from "@/lib/wardrobe";
+import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, storeBusy, uploadType, whileStoreBusy } from "@/lib/photos";
+import { CATEGORIES, CATEGORY_LABELS, type Category, DETAIL_LENGTHS, FILTERS, type Filter, type ShownWardrobeItem, WARDROBE_MESSAGES } from "@/lib/wardrobe";
 
 // The Wardrobe page (3d; R36, R37, design 4.2 and 5.8): saved items as a photo grid with category
 // filters. Add item uploads a photo, which is checked, cleaned and read like a session photo, and the
 // photo reader suggests its details to check (Sabine's answer to Q1). Edit changes the details, Delete
-// asks first. Select, then Style with these, chooses items for the session (Q2).
+// asks first. Select, then Style with these, chooses items for the session (Q2). With nothing ticked
+// the button is Clear wardrobe items, so the session can stop using them (Sabine's decision B in 3e).
 
 const inputClass = "focus-ring type-body min-h-touch w-full rounded-control border border-control-edge bg-page px-3 text-ink";
 const FILTER_LABELS: Record<Filter, string> = { all: "All", ...CATEGORY_LABELS };
 
-/** Sends the file to its one-time upload link. Resolves true when it arrived. */
+/** Sends the file to its one-time upload link, again if the store is busy for a moment. Resolves true when it arrived. */
 async function sendFile(url: string, file: File, type: string) {
-  const res = await fetch(url, { method: "PUT", headers: { "content-type": type }, body: file }).catch(() => null);
-  return !!res?.ok;
+  const once = async () => {
+    const res = await fetch(url, { method: "PUT", headers: { "content-type": type }, body: file }).catch(() => null);
+    return { ok: !!res?.ok, busy: !!res && !res.ok && storeBusy(await res.text().catch(() => "")) };
+  };
+  return (await whileStoreBusy(once, (r) => r.busy)).ok;
 }
 
 function ItemForm({
@@ -66,10 +70,11 @@ function ItemForm({
     else setProblem(WARDROBE_MESSAGES.saveFailed);
   }
 
-  const field = (key: keyof typeof details, label: string) => (
+  // The same lengths the server allows (WardrobeEdit), so a long detail can't be turned away.
+  const field = (key: keyof typeof details, label: string, max: number) => (
     <label className="flex flex-col gap-1">
       <span className="type-label text-ink">{label}</span>
-      <input className={inputClass} value={details[key]} maxLength={60} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+      <input className={inputClass} value={details[key]} maxLength={max} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
     </label>
   );
 
@@ -103,10 +108,10 @@ function ItemForm({
           <ChevronDown aria-hidden="true" size={20} strokeWidth={1.5} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-graphite" />
         </span>
       </label>
-      {field("type", "Type")}
-      {field("colors", "Colors")}
-      {field("pattern", "Pattern")}
-      {field("style", "Style")}
+      {field("type", "Type", DETAIL_LENGTHS.type)}
+      {field("colors", "Colors", DETAIL_LENGTHS.colors)}
+      {field("pattern", "Pattern", DETAIL_LENGTHS.pattern)}
+      {field("style", "Style", DETAIL_LENGTHS.style)}
       {problem && (
         <p role="alert" className="type-small m-0 text-red-pen">
           {problem}
@@ -145,6 +150,7 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
   const [asking, setAsking] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const picker = useRef<HTMLInputElement>(null);
   // Focus goes back to the item (or Add item) when its sheet closes.
   const returnTo = useRef<HTMLElement | null>(null);
@@ -198,14 +204,21 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
   }
 
   async function styleWithThese() {
+    setProblem(null);
+    setNotice(null);
     const res = await fetch("/api/wardrobe/styling", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: [...selected] }),
     }).catch(() => null);
     if (!res?.ok) return setProblem(WARDROBE_MESSAGES.saveFailed);
-    router.push("/session");
+    if (selected.size) return router.push("/session");
+    // Clear wardrobe items: nothing from the wardrobe in My Styling Notes, and the stylist isn't told about any.
+    setItems((list) => list.map((i) => ({ ...i, styling: false })));
+    setSelecting(false);
+    setNotice(WARDROBE_MESSAGES.cleared);
   }
+  const styling = items.some((i) => i.styling);
 
   return (
     <div className="flex flex-col gap-5">
@@ -234,9 +247,15 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
       <div className="flex flex-wrap gap-2">
         {selecting ? (
           <>
-            <Button icon="confirmed" disabled={!selected.size} onClick={() => void styleWithThese()}>
-              Style with these
-            </Button>
+            {selected.size || !styling ? (
+              <Button icon="confirmed" disabled={!selected.size} onClick={() => void styleWithThese()}>
+                Style with these
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={() => void styleWithThese()}>
+                Clear wardrobe items
+              </Button>
+            )}
             <Button variant="secondary" onClick={() => setSelecting(false)}>
               Cancel
             </Button>
@@ -247,7 +266,13 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
               Add item
             </Button>
             {items.length > 0 && (
-              <Button variant="secondary" onClick={() => setSelecting(true)}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setNotice(null);
+                  setSelecting(true);
+                }}
+              >
                 Select
               </Button>
             )}
@@ -273,6 +298,11 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
         </p>
       )}
       {problem && <Banner tone="error" title={problem} />}
+      {notice && (
+        <p role="status" className="type-body m-0 text-ink">
+          {notice}
+        </p>
+      )}
 
       {items.length === 0 && !adding ? (
         <p className="type-body m-0 text-graphite">{WARDROBE_MESSAGES.empty}</p>

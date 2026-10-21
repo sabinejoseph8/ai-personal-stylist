@@ -33,6 +33,25 @@ export const PHOTO_MESSAGES = {
   tooMany: "You've added 10 photos in the last hour. Please wait a little, then try again.",
 } as const;
 
+/**
+ * The photo store sometimes turns a request away for a moment when Supabase's connection limit is full
+ * ("Too many connections"). Only bursts of test traffic fill it, but the tests share the project with
+ * the live site, so every request to the store, from the server or the browser, is tried again shortly
+ * (Sabine's decision C in the Phase 3 code review).
+ */
+export const storeBusy = (message: string) => /too many connections|max_client_conn/i.test(message);
+/** Waits before the second and third tries: about a second in all. */
+const STORE_WAITS_MS = [300, 600];
+
+/** A photo store request, tried up to twice more while `busy` says the store turned it away for a moment. */
+export async function whileStoreBusy<T>(request: () => PromiseLike<T>, busy: (result: T) => boolean): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    const result = await request();
+    if (attempt >= STORE_WAITS_MS.length || !busy(result)) return result;
+    await new Promise((r) => setTimeout(r, STORE_WAITS_MS[attempt]));
+  }
+}
+
 const TYPES: Record<string, string> = {
   "image/jpeg": "image/jpeg",
   "image/png": "image/png",

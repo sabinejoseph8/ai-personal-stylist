@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
 import { notesDeps } from "@/lib/notes-deps";
@@ -26,7 +27,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
 
   const deps = notesDeps();
   const encoder = new TextEncoder();
-  // If the browser goes away mid-answer (a reload), the reading still finishes and is saved.
+  // If the browser goes away mid-answer (a reload), the reading still finishes and is saved: it's
+  // registered with after(), because Vercel stops work a cancelled response leaves behind (Phase 3 review).
   let listening = true;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -38,16 +40,19 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
           listening = false;
         }
       };
-      try {
-        const found = await hearWords(deps, guest.id, id, body.data, (update: NotesUpdate) => send(update));
-        if (!found) send({ error: "No such session." });
-      } catch (e) {
-        console.error(`notes: hearing words failed: ${e instanceof Error ? e.message : e}`);
-        send({ paused: true });
-      } finally {
-        if (listening) controller.close();
-        listening = false;
-      }
+      const hearing = (async () => {
+        try {
+          const found = await hearWords(deps, guest.id, id, body.data, (update: NotesUpdate) => send(update));
+          if (!found) send({ error: "No such session." });
+        } catch (e) {
+          console.error(`notes: hearing words failed: ${e instanceof Error ? e.message : e}`);
+          send({ paused: true });
+        }
+      })();
+      after(hearing);
+      await hearing;
+      if (listening) controller.close();
+      listening = false;
     },
     cancel() {
       listening = false;

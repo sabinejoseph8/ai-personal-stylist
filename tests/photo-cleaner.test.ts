@@ -104,6 +104,12 @@ describe("cleaning a photo", () => {
     expect(after.format).toBe("jpeg");
     expect([after.width, after.height]).toEqual([120, 80]);
   });
+
+  it("turns away a HEIC photo bigger than the pixel limit, checked before it's decoded (3e)", async () => {
+    // The fixture is 120 × 80: a lower limit stands in for a file that claims to be enormous.
+    expect(await cleanPhoto(readFileSync("tests/fixtures/photo.heic"), 120 * 80 - 1)).toEqual({ refused: "unreadable" });
+    expect("refused" in (await cleanPhoto(readFileSync("tests/fixtures/photo.heic"), 120 * 80))).toBe(false);
+  });
 });
 
 describe("what the page checks before sending", () => {

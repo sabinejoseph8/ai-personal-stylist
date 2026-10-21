@@ -31,7 +31,7 @@ const toNote = (r: Row): Note => ({
 /** Every note in the session, removed ones included, in the order they were jotted, and the notebook's version. */
 export async function loadNotes(db: SupabaseClient, sessionId: string): Promise<{ notes: Note[]; version: number; wordsSeq: number }> {
   const [session, rows] = await Promise.all([
-    db.from("sessions").select("notes_version, words_seq").eq("id", sessionId).single().throwOnError(),
+    db.from("sessions").select("notes_version, words_seq").eq("id", sessionId).maybeSingle().throwOnError(),
     db
       .from("session_notes")
       .select("id, kind, note_text, status, hidden_details, source, changed_seq, version, removed")
@@ -39,6 +39,8 @@ export async function loadNotes(db: SupabaseClient, sessionId: string): Promise<
       .order("created_at")
       .throwOnError(),
   ]);
+  // Deleted while words were being read (a guest deleted, or a test tidying up): the same as ended.
+  if (!session.data) throw new SessionEndedError();
   return { notes: (rows.data as Row[]).map(toNote), version: session.data.notes_version, wordsSeq: Number(session.data.words_seq) };
 }
 
@@ -56,7 +58,8 @@ export async function saveNotes(db: SupabaseClient, sessionId: string, expected:
     removed: n.removed,
   }));
   const { data, error } = await db.rpc("save_notes", { session: sessionId, expected_version: expected, rows });
-  if (error?.message.includes("session ended")) throw new SessionEndedError();
+  // Ended, or deleted meanwhile (a guest deleted, or a test tidying up).
+  if (error && /session ended|no such session/.test(error.message)) throw new SessionEndedError();
   if (error) throw new Error(`saving notes failed: ${error.message}`);
   return data as number | null;
 }
@@ -78,7 +81,8 @@ export async function saveQuestion(db: SupabaseClient, sessionId: string, seq: n
 
 /** The session's kept question and the turn it belongs to. */
 export async function loadQuestion(db: SupabaseClient, sessionId: string): Promise<{ question: NextQuestion; turn: string | null }> {
-  const { data } = await db.from("sessions").select("question, question_turn").eq("id", sessionId).single().throwOnError();
+  const { data } = await db.from("sessions").select("question, question_turn").eq("id", sessionId).maybeSingle().throwOnError();
+  if (!data) throw new SessionEndedError();
   return { question: (data.question as NextQuestion) ?? null, turn: data.question_turn };
 }
 

@@ -2,25 +2,25 @@
  "summary": {
   "model": "claude-opus-5-5",
   "effort": "low",
-  "date": "2026-10-20T22:29:59.793Z",
+  "date": "2026-10-21T02:22:49.537Z",
   "photos": 24,
   "detailChecks": 80,
-  "detailsRight": 75,
-  "detailsRightPercent": 94,
+  "detailsRight": 74,
+  "detailsRightPercent": 93,
   "byDetail": {
    "type": "17 of 20",
    "colors": "20 of 20",
-   "pattern": "19 of 20",
+   "pattern": "18 of 20",
    "style": "19 of 20"
   },
   "twoItemChecks": 12,
   "twoItemChecksRight": 12,
   "failedReadings": 0,
   "seconds": {
-   "median": 2.48,
-   "p95": 3.65
+   "median": 2.35,
+   "p95": 2.62
   },
-  "costUSD": 0.3007,
+  "costUSD": 0.3008,
   "costPerPhotoUSD": 0.0125
  },
  "results": [
@@ -48,7 +48,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.475030833,
+   "seconds": 2.609906,
    "cost": 0.012536,
    "failed": false
   },
@@ -76,7 +76,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.4815892089999996,
+   "seconds": 2.52257775,
    "cost": 0.012616,
    "failed": false
   },
@@ -84,7 +84,7 @@
    "id": "m-black-bow-tie",
    "expected": "accessory; black; solid; elegant",
    "found": [
-    "Black satin bow tie [tie, black, solid, classic, elegant]"
+    "Black satin bow tie [bow tie, black, solid, classic, elegant]"
    ],
    "checks": [
     {
@@ -104,8 +104,8 @@
      "ok": true
     }
    ],
-   "seconds": 2.3742043749999997,
-   "cost": 0.012516,
+   "seconds": 2.449082875,
+   "cost": 0.012556,
    "failed": false
   },
   {
@@ -132,7 +132,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.290465084,
+   "seconds": 2.104036875,
    "cost": 0.012576,
    "failed": false
   },
@@ -140,7 +140,7 @@
    "id": "m-black-dress-shirt",
    "expected": "shirt; black; solid; edgy/elegant",
    "found": [
-    "Black button-up dress shirt [shirt, black, solid, classic, minimal]"
+    "Black cotton button-up shirt [shirt, black, solid, classic, minimal]"
    ],
    "checks": [
     {
@@ -160,15 +160,15 @@
      "ok": false
     }
    ],
-   "seconds": 2.3728981670000002,
-   "cost": 0.012576,
+   "seconds": 1.9705117920000002,
+   "cost": 0.012596,
    "failed": false
   },
   {
    "id": "m-black-leather-weekender",
    "expected": "bag; black; solid; minimal/classic",
    "found": [
-    "Black pebbled leather duffle bag [bag, black, solid, classic, minimal]"
+    "Black pebbled leather weekender bag [bag, black, solid, classic, minimal]"
    ],
    "checks": [
     {
@@ -188,7 +188,7 @@
      "ok": true
     }
    ],
-   "seconds": 3.8877177910000005,
+   "seconds": 2.4669192090000007,
    "cost": 0.012616,
    "failed": false
   },
@@ -196,7 +196,7 @@
    "id": "m-black-slim-jeans",
    "expected": "jeans; black; solid; edgy/minimal",
    "found": [
-    "Black denim jeans [jeans, black, solid, classic, minimal?]"
+    "Black five-pocket denim jeans [jeans, black, solid, classic, minimal?]"
    ],
    "checks": [
     {
@@ -216,8 +216,8 @@
      "ok": true
     }
    ],
-   "seconds": 3.649330125,
-   "cost": 0.012516,
+   "seconds": 2.8893265,
+   "cost": 0.012616,
    "failed": false
   },
   {
@@ -244,7 +244,7 @@
      "ok": true
     }
    ],
-   "seconds": 1.766953833,
+   "seconds": 1.843709625,
    "cost": 0.012636,
    "failed": false
   },
@@ -272,7 +272,7 @@
      "ok": true
     }
    ],
-   "seconds": 1.9857027500000004,
+   "seconds": 1.917155167,
    "cost": 0.012696,
    "failed": false
   },
@@ -300,7 +300,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.5108545,
+   "seconds": 2.3195054580000005,
    "cost": 0.012716,
    "failed": false
   },
@@ -328,7 +328,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.0700833329999995,
+   "seconds": 1.8244477500000003,
    "cost": 0.012756,
    "failed": false
   },
@@ -356,7 +356,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.151168708,
+   "seconds": 1.9057041660000005,
    "cost": 0.012716,
    "failed": false
   },
@@ -384,7 +384,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.604483,
+   "seconds": 2.370119957999999,
    "cost": 0.012616,
    "failed": false
   },
@@ -392,7 +392,7 @@
    "id": "w-black-column-gown",
    "expected": "dress; black; solid; elegant/minimal",
    "found": [
-    "Black turtleneck long-sleeve maxi dress [dress, black, solid, elegant, minimal]"
+    "Black long-sleeve turtleneck maxi dress [dress, black, solid, elegant, minimal]"
    ],
    "checks": [
     {
@@ -412,7 +412,7 @@
      "ok": true
     }
    ],
-   "seconds": 1.9655232919999999,
+   "seconds": 1.6900188750000016,
    "cost": 0.012736,
    "failed": false
   },
@@ -420,7 +420,7 @@
    "id": "w-black-fitted-tee",
    "expected": "top; black; solid; minimal",
    "found": [
-    "Black crew-neck cotton t-shirt [t-shirt, black, solid, minimal, relaxed]"
+    "Black crew-neck cotton t-shirt [t-shirt, black, solid, minimal, relaxed?]"
    ],
    "checks": [
     {
@@ -440,7 +440,7 @@
      "ok": true
     }
    ],
-   "seconds": 1.9612077090000002,
+   "seconds": 1.9427969589999994,
    "cost": 0.012756,
    "failed": false
   },
@@ -448,7 +448,7 @@
    "id": "w-black-leather-mini-skirt",
    "expected": "skirt; black; solid; edgy/bold",
    "found": [
-    "Black faux leather mini skirt [skirt, black, solid, edgy, minimal?]"
+    "Black leather mini skirt [skirt, black, solid, edgy, minimal?]"
    ],
    "checks": [
     {
@@ -468,15 +468,15 @@
      "ok": true
     }
    ],
-   "seconds": 2.322978332999999,
-   "cost": 0.012616,
+   "seconds": 2.4631897090000003,
+   "cost": 0.012576,
    "failed": false
   },
   {
    "id": "w-grey-long-cardigan",
    "expected": "cardigan; heather grey; solid; relaxed/minimal",
    "found": [
-    "Grey longline knit cardigan [cardigan, heather grey, solid, relaxed, minimal]"
+    "Heather grey longline knit cardigan [cardigan, heather grey, solid, relaxed, minimal]"
    ],
    "checks": [
     {
@@ -496,15 +496,15 @@
      "ok": true
     }
    ],
-   "seconds": 2.0798734999999997,
-   "cost": 0.012716,
+   "seconds": 2.480060125,
+   "cost": 0.012756,
    "failed": false
   },
   {
    "id": "m-burgundy-patterned-tie",
    "expected": "accessory; burgundy/navy; geometric; classic/bold",
    "found": [
-    "Burgundy silk micro-pattern tie [tie, burgundy, navy, geometric, classic, elegant]"
+    "Burgundy silk foulard tie [tie, burgundy, navy, foulard, classic, preppy]"
    ],
    "checks": [
     {
@@ -517,22 +517,22 @@
     },
     {
      "what": "pattern",
-     "ok": true
+     "ok": false
     },
     {
      "what": "style",
      "ok": true
     }
    ],
-   "seconds": 2.595353416,
-   "cost": 0.012796,
+   "seconds": 2.0027757500000005,
+   "cost": 0.012736,
    "failed": false
   },
   {
    "id": "m-floral-short-sleeve-shirt",
    "expected": "shirt; navy/white; floral; bold/relaxed",
    "found": [
-    "Navy hibiscus print camp-collar shirt [shirt, navy, white, floral, relaxed, bold]"
+    "Navy hibiscus print camp-collar shirt [shirt, navy, white, floral, relaxed, bohemian?]"
    ],
    "checks": [
     {
@@ -552,8 +552,8 @@
      "ok": true
     }
    ],
-   "seconds": 2.58756725,
-   "cost": 0.012796,
+   "seconds": 2.347457875,
+   "cost": 0.012836,
    "failed": false
   },
   {
@@ -580,7 +580,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.602203540999999,
+   "seconds": 2.6174277920000004,
    "cost": 0.012796,
    "failed": false
   },
@@ -588,8 +588,8 @@
    "id": "m-brown-tweed-blazer + m-black-slim-jeans",
    "expected": "blazer + jeans",
    "found": [
-    "Brown herringbone tweed blazer [blazer, brown, taupe, herringbone, classic, preppy]",
-    "Black washed denim jeans [jeans, washed black, solid, relaxed, minimal?]"
+    "Brown herringbone tweed blazer [blazer, brown, tan, herringbone, classic, preppy]",
+    "Black washed denim jeans [jeans, black, solid, relaxed, minimal?]"
    ],
    "checks": [
     {
@@ -605,8 +605,8 @@
      "ok": true
     }
    ],
-   "seconds": 3.2114194160000005,
-   "cost": 0.011932,
+   "seconds": 2.1806777919999987,
+   "cost": 0.011872,
    "failed": false
   },
   {
@@ -630,7 +630,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.477909625,
+   "seconds": 2.502553583000001,
    "cost": 0.011932,
    "failed": false
   },
@@ -638,8 +638,8 @@
    "id": "m-black-dress-shirt + m-black-leather-weekender",
    "expected": "shirt + bag",
    "found": [
-    "Black button-down dress shirt [shirt, black, solid, classic, minimal]",
-    "Black pebbled leather duffel bag [bag, black, solid, classic, elegant?]"
+    "Black button-up dress shirt [shirt, black, solid, classic, minimal]",
+    "Black pebbled leather duffel bag [bag, black, solid, classic, minimal]"
    ],
    "checks": [
     {
@@ -655,7 +655,7 @@
      "ok": true
     }
    ],
-   "seconds": 2.1709132499999995,
+   "seconds": 2.0813024579999984,
    "cost": 0.011712,
    "failed": false
   },
@@ -663,8 +663,8 @@
    "id": "m-beige-trench-coat + m-charcoal-wool-trousers",
    "expected": "coat + trousers",
    "found": [
-    "Beige double-breasted trench coat [coat, beige, solid, classic]",
-    "Charcoal pleated wool trousers [trousers, charcoal grey, solid?, classic, elegant]"
+    "Beige double-breasted trench coat [coat, beige, solid, classic, elegant]",
+    "Charcoal wool pleated trousers [trousers, charcoal grey, solid?, classic, elegant]"
    ],
    "checks": [
     {
@@ -680,8 +680,8 @@
      "ok": true
     }
    ],
-   "seconds": 3.085159540999999,
-   "cost": 0.011792,
+   "seconds": 2.4404201250000006,
+   "cost": 0.011872,
    "failed": false
   }
  ]
