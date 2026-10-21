@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PhotoItem } from "@/core/photos/item";
 import type { PhotoReader } from "@/core/photos/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { whileStoreBusy } from "@/lib/photos";
 import {
   addPhoto,
   changePhoto,
@@ -28,8 +29,12 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
   let session: string;
 
   const jpeg = (color: string) => sharp({ create: { width: 64, height: 48, channels: 3, background: color } }).jpeg().toBuffer();
+  // Like the browser, tried again while the photo store is busy for a moment (decision C).
   const put = (url: string, body: Buffer, type = "image/jpeg") =>
-    fetch(url, { method: "PUT", headers: { "content-type": type }, body: new Uint8Array(body) });
+    whileStoreBusy(
+      () => fetch(url, { method: "PUT", headers: { "content-type": type }, body: new Uint8Array(body) }),
+      (res) => res.status >= 500,
+    );
 
   /** Add a photo the way the page does: ask, send, then finish. */
   async function upload(guest: TestGuest, body: Buffer, replaces: string | null = null) {

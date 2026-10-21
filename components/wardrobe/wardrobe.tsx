@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
 import { Sheet } from "@/components/ui/sheet";
-import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, uploadType } from "@/lib/photos";
+import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, storeBusy, uploadType, whileStoreBusy } from "@/lib/photos";
 import { CATEGORIES, CATEGORY_LABELS, type Category, DETAIL_LENGTHS, FILTERS, type Filter, type ShownWardrobeItem, WARDROBE_MESSAGES } from "@/lib/wardrobe";
 
 // The Wardrobe page (3d; R36, R37, design 4.2 and 5.8): saved items as a photo grid with category
@@ -22,10 +22,13 @@ import { CATEGORIES, CATEGORY_LABELS, type Category, DETAIL_LENGTHS, FILTERS, ty
 const inputClass = "focus-ring type-body min-h-touch w-full rounded-control border border-control-edge bg-page px-3 text-ink";
 const FILTER_LABELS: Record<Filter, string> = { all: "All", ...CATEGORY_LABELS };
 
-/** Sends the file to its one-time upload link. Resolves true when it arrived. */
+/** Sends the file to its one-time upload link, again if the store is busy for a moment. Resolves true when it arrived. */
 async function sendFile(url: string, file: File, type: string) {
-  const res = await fetch(url, { method: "PUT", headers: { "content-type": type }, body: file }).catch(() => null);
-  return !!res?.ok;
+  const once = async () => {
+    const res = await fetch(url, { method: "PUT", headers: { "content-type": type }, body: file }).catch(() => null);
+    return { ok: !!res?.ok, busy: !!res && !res.ok && storeBusy(await res.text().catch(() => "")) };
+  };
+  return (await whileStoreBusy(once, (r) => r.busy)).ok;
 }
 
 function ItemForm({

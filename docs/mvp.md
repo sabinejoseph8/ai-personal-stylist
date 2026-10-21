@@ -141,11 +141,11 @@ Reviewed all Phase 3 code (78 files, about 5,900 lines, apart from docs) at extr
 | No way to stop styling with wardrobe items | Decision B: Clear wardrobe items, with a browser test |
 
 Also from the plan:
-- "Too many connections" (seen in 3c and 3d) turned out to be Supabase's connection limit filling during bursts of test traffic. The tests share the project with the live site, so a shopper could hit it during a test run. Decision C: the photo store tries a busy request again, and the unit tests run at most 4 files at once.
+- "Too many connections" (seen in 3c and 3d) turned out to be Supabase's connection limit filling during bursts of test traffic. The tests share the project with the live site, so a shopper could hit it during a test run. Decision C: the photo store tries a busy request again, from the server and from the browser's uploads, and the tests run at most 2 files at once. GitHub's first run of the 3e pull request showed why the browser needs it too: the test's own upload was turned away while two test runs overlapped.
 - The "Cannot coerce" server log is gone: a session deleted mid-reading now counts as ended.
 - The TEST_PAGE_PASSCODE setting was already gone from .env.local; Sabine deletes it in Vercel.
 
-After the fixes: 253 unit and database tests and 131 browser tests pass, and the photo eval had 93% of details right (pass mark 85%), with every item found in the two-item photos.
+After the fixes: 254 unit and database tests and 131 browser tests pass, and the photo eval had 93% of details right (pass mark 85%), with every item found in the two-item photos.
 
 ## 7. Decisions log
 

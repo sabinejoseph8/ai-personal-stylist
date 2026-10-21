@@ -4,6 +4,9 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
+  // 2 at once, as on GitHub's 4-core machines: more filled Supabase's connection limit on this Mac,
+  // and the tests share the project with the live site (Phase 3 code review, decision C).
+  workers: 2,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",

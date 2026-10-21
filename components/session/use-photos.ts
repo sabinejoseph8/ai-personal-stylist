@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { readLines } from "@/components/session/use-notes";
 import { changeItem, type ItemChange, type StyleItem } from "@/core/photos/item";
-import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, type PhotoSource, type ShownPhoto, uploadType } from "@/lib/photos";
+import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, type PhotoSource, type ShownPhoto, storeBusy, uploadType, whileStoreBusy } from "@/lib/photos";
 
 // The browser's side of the item to style around (3a; R26, R27, R31, R32). A picked photo shows at
 // once from the shopper's own device, with progress while it uploads. The app gives a one-time upload
@@ -49,17 +49,22 @@ export type PhotoHooks = {
   onRead: (key: string) => void;
 };
 
-/** Sends the file to its one-time upload link. Resolves true when it arrived. */
-function sendFile(url: string, file: File, type: string, onProgress: (share: number) => void) {
-  return new Promise<boolean>((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-    xhr.setRequestHeader("content-type", type);
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300);
-    xhr.onerror = () => resolve(false);
-    xhr.send(file);
-  });
+/** Sends the file to its one-time upload link, again if the store is busy for a moment. Resolves true when it arrived. */
+async function sendFile(url: string, file: File, type: string, onProgress: (share: number) => void) {
+  const once = () =>
+    new Promise<{ ok: boolean; busy: boolean }>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url);
+      xhr.setRequestHeader("content-type", type);
+      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+      xhr.onload = () => {
+        const ok = xhr.status >= 200 && xhr.status < 300;
+        resolve({ ok, busy: !ok && storeBusy(xhr.responseText) });
+      };
+      xhr.onerror = () => resolve({ ok: false, busy: false });
+      xhr.send(file);
+    });
+  return (await whileStoreBusy(once, (r) => r.busy)).ok;
 }
 
 /** Loads an image before it's shown, so swapping the preview for the kept photo doesn't flash. */
