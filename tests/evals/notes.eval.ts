@@ -15,7 +15,8 @@ import { setting } from "../support/test-guests";
 // Run: npm run eval:notes. It costs about 10 cents. To compare setups (2c), set NOTES_EVAL_EFFORT (off or
 // low), NOTES_EVAL_OVERLAP=0 (one reading at a time), NOTES_EVAL_SEND_MS and NOTES_EVAL_OUT (results file).
 // Cases with a photo (3b, Sabine's answer to Q3) give the reader the item to style around, and check
-// what the shopper's words changed about it, while the notes are timed as usual.
+// what the shopper's words changed about it, while the notes are timed as usual. Cases with looks on
+// screen (4c) check the request to swap a piece heard at the end of the turn, or that none was.
 
 type Expect = { after: string; has: string[]; lacks?: string[]; status?: "confirmed" };
 type Case = {
@@ -28,6 +29,9 @@ type Case = {
   /** The photo to style around, and what the words should change about it (3b). */
   item?: StyleItem;
   photo?: { ownership?: "owned" | "inspiration"; chosen?: number; detail?: { name: DetailName; has: string; status?: "confirmed" } };
+  /** Looks on screen, and the swap the last turn asks for (null: none) (4c). */
+  looks?: number;
+  swap?: { look: number; piece: string } | null;
 };
 
 const cases: Case[] = JSON.parse(readFileSync("tests/evals/notes-cases.json", "utf8"));
@@ -68,6 +72,8 @@ async function replay(c: Case) {
   const snapshots: { at: number; notes: Note[] }[] = [];
   const timeline: { word: string; at: number }[] = [];
   const snap = () => snapshots.push({ at: now(), notes });
+  // The swap each reading heard, by the words it read: the app acts on the end-of-turn reading's only.
+  const swaps = new Map<string, { look: number; piece: string } | null>();
 
   // As in the browser (components/session/use-notes.ts): with each send, plain code reads money and
   // dates at once and a Claude reading of the latest words starts. Readings overlap and merge in the
@@ -81,10 +87,11 @@ async function replay(c: Case) {
     const turnNo = turnAt;
     const started = now();
     const seen = new Set(active(notes).map((n) => n.id));
-    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined }).then((r) => {
+    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined, looks: c.looks }).then((r) => {
       durations.push(now() - started);
       running.delete(reading);
       if (!r) return void paused++;
+      swaps.set(words, r.swap ?? null);
       cost += r.costUsd;
       if (item && r.photo) item = changeItem(item, r.photo);
       const merged = mergeNotes(notes, r.changes, mine, NOTE_CAP, undefined, seen);
@@ -155,6 +162,12 @@ async function replay(c: Case) {
       const d = chosenItem(item.reading)?.details[detail.name];
       checks.push({ what: `photo ${detail.name} ${detail.has}`, ok: !!d && lower(d.value).includes(detail.has) && (!detail.status || d.status === detail.status) });
     }
+  }
+  if (c.swap !== undefined) {
+    const last = c.turns[c.turns.length - 1].shopper.split(/\s+/).join(" ");
+    const heard = swaps.get(last) ?? null;
+    const want = c.swap;
+    checks.push({ what: want ? `swap look ${want.look} ${want.piece}` : "no swap", ok: want ? heard?.look === want.look && heard?.piece === want.piece : heard === null });
   }
   if (c.question) {
     const q = question;

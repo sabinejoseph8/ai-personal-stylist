@@ -1,7 +1,7 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.19
-**Last updated:** 20 Oct 2026
+**Status:** Living document, version 1.20
+**Last updated:** 21 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
@@ -89,7 +89,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
 | 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. Handled for the item to style around in 3a: every photo has a version, and the database refuses a late result for a replaced one (tested). Feedback and looks follow the same pattern as they're built |
-| 6 | The preference check lets a breaking look through | Phase 4 (4a, 4b) | Handled in 4a and 4b, open until Phase 4's end-to-end swap test (4c). Firm preferences are rules checked in plain code on the catalog's details, and a missing detail fails. Every look is checked by those rules again, then judged one at a time, and is published only by a database step that needs a passing check of that exact look on current requirements. The checker eval caught all 16 rule breaks and judged all 21 looks right, including the color cases from Sabine's review |
+| 6 | The preference check lets a breaking look through | Phase 4 (4a, 4b, 4c) | Handled in 4a to 4c. Phase 4's end-to-end swap test passes in 4c: no high heels across 10 swaps, on phone and desktop sizes. Swaps and looks checked again after a change go through the same checker and gate. Firm preferences are rules checked in plain code on the catalog's details, and a missing detail fails. Every look is checked by those rules again, then judged one at a time, and is published only by a database step that needs a passing check of that exact look on current requirements. The checker eval caught all 16 rule breaks and judged all 21 looks right, including the color cases from Sabine's review |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
 | 9 | Recognition reads garments wrong | Phase 3 (3b, 3c) | The camera reader check (3c) named the catalog items' type 18 of 20 and color 20 of 20 at camera size, and an item is only named after two frames agree. Handled in 3b: the photo eval had 94% of details right (pass mark 85%) and found every item in two-item photos; uncertain details show To confirm, and any detail can be confirmed by touch or corrected by voice. Catalog photos are cleaner than phone photos, so real photos are checked on Sabine's iPhone |
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 21 Oct 2026 | 4c plan, the recommended answers. Q1: Swap picks 3 replacements in code and checks them at once, and the first that passes goes in (the other option had Claude pick, about 15 to 20 seconds a swap). Q2: a spoken swap means the look on screen, or the one named, and she asks if it's unclear (the other option always asked). Q3: after a change, the looks on screen are checked again and only those that fail are replaced (the other option built all new looks each time). Q4: she presents new looks in her own words, kept short (the other option was a fixed line) | Sabine | tech spec 1.24, design 1.12 |
 | 21 Oct 2026 | 4b, Sabine's review of the sample looks. A preferred or liked color must be in the main piece (the dress or suit, or the top or bottom), not only in the shoes or bag, and burgundy counts as an earth tone while navy doesn't. Shoes and bag go with the outfit's colors, as a stylist would choose them: black goes with many outfits, but black flats with a navy blazer, a burgundy top and a camel skirt don't, and tan or a neutral suits those colors better (a first wording, black only with black or grey clothes, was too strict, Sabine said). A coat or wrap the shopper didn't ask for is never a reason to fail a look. Each look shown has a different dress, or a different top and bottom, so the same dress with other shoes isn't shown twice | Sabine | tech spec 1.23 |
 | 21 Oct 2026 | 4b plan, the recommended answers. Q1: a sample looks report to review before looks are on screen (the other option was waiting for 4c). Q2: if fewer than 3 looks pass after 3 tries, those that passed are shown with an explanation (the other option showed none). Q3: the judgment step checks one look at a time (the other option checked all candidates in one call, about half the cost) | Sabine | tech spec 1.23 |
 | 21 Oct 2026 | 4a plan, the recommended answers. Q1: setup reads back each Must have and Never ("Read as: …"), and finishing setup confirms them (the other option was a confirm button on each). Q2: "around" budgets allow up to 10% over (the other option treated "around" as "up to"). Q3: a preference that isn't about a product detail is judged by the preference checker (the other option asked the shopper to reword it) | Sabine | tech spec 1.22, design 1.11 |
@@ -393,6 +394,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.20 (21 Oct 2026):** 4c decisions (Q1 to Q4), and the preference check risk's end-to-end swap test passing.
 - **1.19 (21 Oct 2026):** 4b decisions (Q1 to Q3), the rules from Sabine's review of the sample looks, and the preference check risk handled by the checker and the publishing gate.
 - **1.18 (21 Oct 2026):** 4a decisions (Q1 to Q3), and the preference check risk's 4a progress.
 - **1.17 (20 Oct 2026):** The Phase 3 code review (3e): 15 findings and decisions A to D, and what "Too many connections" turned out to be.

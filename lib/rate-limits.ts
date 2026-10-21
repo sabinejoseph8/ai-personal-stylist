@@ -9,7 +9,10 @@ export const LIMITS = {
   photo: { max: 10, windowSeconds: 3600 },
   changePhoto: { max: 4, windowSeconds: 1 },
   cameraFrame: { max: 1, windowSeconds: 2 },
+  // Asking for the looks is cheap when nothing changed (4c); building or checking them again counts as a build.
+  looksRequest: { max: 120, windowSeconds: 3600 },
   buildLooks: { max: 20, windowSeconds: 3600 },
+  swapPiece: { max: 40, windowSeconds: 3600 },
   makeRule: { max: 20, windowSeconds: 3600 },
 } as const;
 

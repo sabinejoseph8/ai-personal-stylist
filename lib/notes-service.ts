@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { stylistContext } from "@/core/notes/context";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
-import type { NotesReader } from "@/core/notes/reader";
+import type { NotesReader, SwapRequest } from "@/core/notes/reader";
 import type { StyleItem } from "@/core/photos/item";
 import { active, type NextQuestion, type Note, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
@@ -30,6 +30,8 @@ export type NotesUpdate = {
   paused?: boolean;
   /** The photo's item, when the shopper's words changed it (3b). */
   photo?: { id: string; item: StyleItem };
+  /** A spoken request to swap a piece (4c), from the reading at the end of a turn only. */
+  swap?: SwapRequest;
 };
 
 export type HeardWords = {
@@ -45,6 +47,12 @@ export type HeardWords = {
 };
 
 const shown = (notes: Note[]): ShownNote[] => active(notes).map(({ id, kind, text, status }) => ({ id, kind, text, status }));
+
+/** How many places have a look on screen (4c), so the reader listens for swaps. */
+async function looksOnScreen(db: SupabaseClient, sessionId: string) {
+  const { data } = await db.from("looks").select("input_versions").eq("session_id", sessionId).in("status", ["published", "needs_check"]).throwOnError();
+  return new Set((data ?? []).map((r) => (r.input_versions as { slot?: number }).slot).filter(Boolean)).size;
+}
 
 /** The guest's open session, or null. */
 async function ownSession(db: SupabaseClient, guestId: string, sessionId: string) {
@@ -104,13 +112,15 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     return;
   }
 
-  // The photo to style around, so what the shopper says about it reaches it (3b).
-  const photo = await activePhoto(deps.db, sessionId);
+  // The photo to style around, so what the shopper says about it reaches it (3b), and the looks on
+  // screen, so a request to swap a piece is heard (4c).
+  const [photo, looks] = await Promise.all([activePhoto(deps.db, sessionId), looksOnScreen(deps.db, sessionId)]);
   const reading = await deps.reader.read({
     stylistSaid: heard.stylistSaid,
     words: heard.words,
     notes: quick.notes,
     item: photo?.item,
+    looks,
   });
   if (!reading) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
@@ -147,6 +157,8 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     seq,
     context: stylistContext(done.notes, preferences, question, latest?.item ?? null, wardrobe),
     ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
+    // Only once the turn is over: readings of a turn so far might not have heard which look yet.
+    ...(heard.final && reading.swap ? { swap: reading.swap } : {}),
   });
 }
 

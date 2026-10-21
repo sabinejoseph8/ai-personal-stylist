@@ -138,8 +138,9 @@ export function createFakeLooksBuilder(): LooksBuilder {
       const ownedGroups = input.owned.filter((o) => input.mustUse.some((m) => JSON.stringify(m) === JSON.stringify(o.ref))).map((o) => groupOf({ ref: o.ref, owned: o }));
       const [dresses, tops, bottoms, shoes, bags] = [by("dress"), by("top"), by("bottom"), by("shoes"), by("bag")];
       const looks: BuiltLook[] = [];
+      // Each look named in `avoid` moves the picks along, so a later round tries other products.
       for (let n = 0; n < 5; n++) {
-        const pick = (list: Product[]) => list[n % Math.max(list.length, 1)];
+        const pick = (list: Product[]) => list[(n + input.avoid.length) % Math.max(list.length, 1)];
         const main = dresses.length && !ownedGroups.includes("top") && !ownedGroups.includes("outer") ? [pick(dresses)] : [pick(tops), pick(bottoms)];
         const parts = [...main, pick(shoes), bags[0]].filter((p): p is Product => Boolean(p));
         looks.push({ name: `Test look ${n + 1}`, reason: "A fake look for tests.", items: [...input.mustUse, ...parts.map((p): LookItem => ({ kind: "product", productId: p.id }))] });

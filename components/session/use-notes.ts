@@ -3,13 +3,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ConversationEvent } from "@/connectors/conversation/types";
 import type { NextQuestion, ShownNote } from "@/core/notes/types";
+import type { SwapRequest } from "@/core/notes/reader";
 import type { StyleItem } from "@/core/photos/item";
 
 // The browser's side of My Styling Notes (2c, 2d): it sends the shopper's words about twice a second
 // while they talk (R17, Sabine's option 3 in 2c), and right away when they finish, and shows the notes
 // the server sends back. Each send starts its own reading, so readings overlap and the server merges
 // them. A late answer never replaces a newer one (R22): each update carries the notebook's version.
-// Confirm, Remove and Undo by touch (R20) go to the server too.
+// Confirm, Remove and Undo by touch (R20) go to the server too. A spoken request to swap a piece (4c)
+// is passed on once per turn.
 
 export type { ShownNote };
 export type TouchAction = "confirm" | "remove" | "restore";
@@ -35,6 +37,8 @@ type Update = {
   error?: string;
   /** The photo's item, when the shopper's words changed it (3b). */
   photo?: { id: string; item: StyleItem };
+  /** A spoken request to swap a piece (4c). */
+  swap?: SwapRequest;
 };
 
 const SEND_EVERY_MS = 500;
@@ -64,6 +68,7 @@ export function useNotes(
   initial: ShownNote[],
   onContext: (context: string) => void,
   onPhoto?: (id: string, item: StyleItem) => void,
+  onSwap?: (swap: SwapRequest) => void,
 ) {
   const [notes, setNotes] = useState<ShownNote[]>(initial);
   const [question, setQuestion] = useState<NextQuestion>(null);
@@ -74,19 +79,27 @@ export function useNotes(
   const stylistSaid = useRef("");
   const context = useRef(onContext);
   const photo = useRef(onPhoto);
+  const swapHook = useRef(onSwap);
   const session = useRef(sessionId);
   useLayoutEffect(() => {
     context.current = onContext;
     photo.current = onPhoto;
+    swapHook.current = onSwap;
     session.current = sessionId;
   });
+  // The turns whose swap was already passed on: a turn's words can be read more than once.
+  const swapped = useRef(new Set<string>());
 
   // Readings overlap, so only a reading of newer words (a higher sequence) replaces the question.
   const questionSeq = useRef(0);
 
   /** An answer from the server. One for a session that has since ended is ignored (Phase 2 review). */
-  function apply(u: Update, from: string) {
+  function apply(u: Update, from: string, turnKey?: string) {
     if (from !== session.current) return;
+    if (u.swap && turnKey && !swapped.current.has(turnKey)) {
+      swapped.current.add(turnKey);
+      swapHook.current?.(u.swap);
+    }
     if (u.error || u.version === undefined) {
       if (u.paused) setPaused(true);
       return;
@@ -126,7 +139,7 @@ export function useNotes(
         setPaused(true);
         return true;
       }
-      await readLines(res, (u) => apply(u, id));
+      await readLines(res, (u) => apply(u, id, key));
     } catch {
       setPaused(true);
     }
