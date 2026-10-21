@@ -87,6 +87,15 @@ test.describe("the camera", () => {
     await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
   });
 
+  test("a misheard 'use this one' still takes the still (found on Sabine's iPhone in 3e, her decision D)", async ({ page }) => {
+    await inCall(page);
+    await cameraOn(page);
+    await expect(stage(page).getByText("Navy wool blazer?")).toBeVisible({ timeout: 15_000 });
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Juice, this one.", final: true, turnId: "1" });
+    await expect(page.getByText("Photo added to your notes", { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
+  });
+
   test("'use this one' said before the name appears is acted on once it's named, even without a turn label (found on Sabine's iPhone)", async ({ page }) => {
     await inCall(page);
     await cameraOn(page);
