@@ -154,6 +154,11 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     expect((await rows()).filter((r) => r.active)).toHaveLength(1);
   }, 30_000);
 
+  it("the stylist's context for a session deleted meanwhile is nothing, quietly (Phase 3 code review)", async () => {
+    await db.from("sessions").delete().eq("id", session).throwOnError();
+    expect(await sessionContext(db, a.id, session)).toBeNull();
+  });
+
   it("a photo is checked and kept only once: asking again does nothing (Phase 3 code review)", async () => {
     const { id, version, uploadUrl } = await upload(a, await jpeg("#0b6b4f"));
     // The one-time link still takes a second file, but the photo is already kept.

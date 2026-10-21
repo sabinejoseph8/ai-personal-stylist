@@ -1,8 +1,8 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.16
+**Status:** Living document, version 1.17
 **Last updated:** 20 Oct 2026
-**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.9, tech spec 1.20 and progress.md
+**Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.10, tech spec 1.21 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
 ---
@@ -87,7 +87,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
 | 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 (2c) | Met in the 2c eval with your option 3: 97 to 99% of notes within 2 seconds, 96 to 99% right, target unchanged. The eval leaves out the phone's connection and the database; on Sabine's iPhone the notes felt quick (2c check, 20 Oct 2026). Closed |
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
-| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on) |
+| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. Handled for the item to style around in 3a: every photo has a version, and the database refuses a late result for a replaced one (tested). Feedback and looks follow the same pattern as they're built |
 | 6 | The preference check lets a breaking look through | Phase 4 (4b) | Open |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
@@ -118,12 +118,42 @@ The tech spec's risk table has the full detail. This list tracks status.
 | About 6 full demos a month is enough for job applications | The $40 budget | Phase 7 monitoring |
 | Visitors trying the demo can talk out loud and have a working microphone | Recruiters try it on a phone or laptop | Phase 7 monitoring |
 
+### Phase 3 code review (3e, 20 Oct 2026)
+
+Reviewed all Phase 3 code (78 files, about 5,900 lines, apart from docs) at extra-high effort. 15 findings:
+
+| Finding | Outcome |
+|---|---|
+| A small HEIC photo could claim to be enormous, and it was decoded before its size was checked, enough to exhaust the server's memory | Fixed: the size is checked first, with a test |
+| A connection dropping after a photo was kept marked it failed, or left it on Analyzing | Fixed: the photo stays and the page asks the server for its reading, with a browser test |
+| Failed or cut-off photo and camera readings weren't counted by the budget guard, though they still cost money | Fixed: every reading's cost counts, with tests |
+| On Vercel, a reading could stop if the page closed mid-reading | Fixed: photo and notes readings are registered with after() |
+| A repeated "photo has arrived" request re-checked and re-read a kept photo, outside the hourly photo limit, and could replace a wardrobe item's photo | Fixed: a photo or upload is processed only once, with tests |
+| Choosing or removing a photo at the same instant as adding one could fail | Fixed: they take the session's lock, as adding does (migration photo_locks), with a test |
+| Switch camera restarted the 2-minute camera limit | Fixed: 2 minutes from turning it on, with a browser test |
+| Two quick taps on the photo's details could briefly undo the first | Fixed: each change starts from the last one's result |
+| The wardrobe question could follow the shopper to another photo | Fixed: it belongs to its photo |
+| Wardrobe detail boxes allowed more than the server, giving a technical error | Fixed: the same lengths |
+| An extra photo lookup on every send of words | No change: it runs alongside the other lookups, and keeps the stylist right when the shopper switches photos mid-reading |
+| Two copies of the photo checking steps | Fixed: one, shared by session photos and Add item |
+| Test clean-up listed the photo store all at once | Fixed: one folder at a time |
+| "Use this one" caught everyday phrases ("I'd use that for work") | Decision A: only clear requests, with tests |
+| No way to stop styling with wardrobe items | Decision B: Clear wardrobe items, with a browser test |
+
+Also from the plan:
+- "Too many connections" (seen in 3c and 3d) turned out to be Supabase's connection limit filling during bursts of test traffic. The tests share the project with the live site, so a shopper could hit it during a test run. Decision C: the photo store tries a busy request again, and the unit tests run at most 4 files at once.
+- The "Cannot coerce" server log is gone: a session deleted mid-reading now counts as ended.
+- The TEST_PAGE_PASSCODE setting was already gone from .env.local; Sabine deletes it in Vercel.
+
+After the fixes: 253 unit and database tests and 131 browser tests pass, and the photo eval had 93% of details right (pass mark 85%), with every item found in the two-item photos.
+
 ## 7. Decisions log
 
 Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 20 Oct 2026 | Phase 3 code review. A: "use this one" hears only clear requests ("use this one", "use that one", "use this", "capture", "take a photo or picture", or "this one" on its own), rather than leaving the broader phrases from the 3c fix. B: with nothing ticked, Style with these becomes Clear wardrobe items (the other option was a Remove link in the notebook). C: the photo store tries a busy request again, rather than a separate Supabase project for tests (about $10 a month more) or leaving it | Sabine | tech spec 1.21, design 1.10 |
 | 20 Oct 2026 | 3d plan, the recommended answers. Q1: Add item uploads a photo on the Wardrobe page, and the photo reader suggests its details (the other option sent the shopper to a session). Q2: Style with these shows the chosen items in My Styling Notes under From your wardrobe and tells the stylist; they stay chosen until changed (the other option only remembered them for Phase 4). Q3: the Wardrobe page is linked from the session page and the welcome-back screen until the app menu, which is added to Phase 7 (7a) because no task built it (the other option was building the menu in 3d) | Sabine | tech spec 1.20, design 1.9, progress.md (7a) |
 | 20 Oct 2026 | 3d: wardrobe items join the app's own records (decision A), written only by the server, so a photo path can't point at anything unchecked. The stylist is now told the session's context as each call starts, not only after the first change | Claude, in the 3d build | tech spec 1.20 |
 | 20 Oct 2026 | 3c plan, the recommended answers. Q1: "use this one" is heard by plain code in the page (instant and free) rather than the notes reader (more ways of saying it, but slower while the shopper holds the item still). Q2: the camera turns off after Capture, so the stylist talks about the captured photo rather than naming the camera item and the photo one after the other | Sabine | tech spec 1.18, design 1.8 |
@@ -358,6 +388,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.17 (20 Oct 2026):** The Phase 3 code review (3e): 15 findings and decisions A to C, and what "Too many connections" turned out to be.
 - **1.16 (20 Oct 2026):** 3d decisions (Q1 to Q3), wardrobe items written only by the server, and the stylist told everything as a call starts.
 - **1.15 (20 Oct 2026):** 3c decisions (Q1, Q2), the camera reader check in risk 9, and D08 and D09 built.
 - **1.14 (20 Oct 2026):** 3b decisions (Q1 to Q3), no outline on the photo in v1, risk 9 handled with the photo eval result, and D10 built.

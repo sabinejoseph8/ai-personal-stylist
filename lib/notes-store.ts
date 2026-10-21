@@ -58,7 +58,8 @@ export async function saveNotes(db: SupabaseClient, sessionId: string, expected:
     removed: n.removed,
   }));
   const { data, error } = await db.rpc("save_notes", { session: sessionId, expected_version: expected, rows });
-  if (error?.message.includes("session ended")) throw new SessionEndedError();
+  // Ended, or deleted meanwhile (a guest deleted, or a test tidying up).
+  if (error && /session ended|no such session/.test(error.message)) throw new SessionEndedError();
   if (error) throw new Error(`saving notes failed: ${error.message}`);
   return data as number | null;
 }
