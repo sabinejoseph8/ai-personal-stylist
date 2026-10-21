@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { storeBusy } from "../../lib/photos";
 
 // Test guests for database tests. Bot protection blocks normal sign-in in tests, so the
 // server key creates them directly (Sabine's decision, 1b). The key never reaches the app.
@@ -55,6 +56,11 @@ async function photoFiles(folder: string): Promise<string[]> {
   const files: string[] = [];
   for (const f of items) files.push(...(f.id ? [`${folder}/${f.name}`] : await photoFiles(`${folder}/${f.name}`)));
   return files;
+}
+
+/** Whether the photo store turned a direct upload away because it was busy, as the browser checks (decision C). */
+export async function busyAnswer(res: Response) {
+  return !res.ok && (res.status >= 500 || storeBusy(await res.clone().text()));
 }
 
 /** Deletes everything in a guest's photo folder. */

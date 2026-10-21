@@ -40,14 +40,17 @@ export const PHOTO_MESSAGES = {
  * (Sabine's decision C in the Phase 3 code review).
  */
 export const storeBusy = (message: string) => /too many connections|max_client_conn/i.test(message);
-/** Waits before the second and third tries: about a second in all. */
-const STORE_WAITS_MS = [300, 600];
+/**
+ * Waits before each new try: about 4 seconds in all. A busy spell can outlast a second (GitHub's run of
+ * the 3e fix had a test upload turned away for longer).
+ */
+const STORE_WAITS_MS = [500, 1000, 2500];
 
-/** A photo store request, tried up to twice more while `busy` says the store turned it away for a moment. */
-export async function whileStoreBusy<T>(request: () => PromiseLike<T>, busy: (result: T) => boolean): Promise<T> {
+/** A photo store request, tried up to 3 more times while `busy` says the store turned it away for a moment. */
+export async function whileStoreBusy<T>(request: () => PromiseLike<T>, busy: (result: T) => boolean | PromiseLike<boolean>): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     const result = await request();
-    if (attempt >= STORE_WAITS_MS.length || !busy(result)) return result;
+    if (attempt >= STORE_WAITS_MS.length || !(await busy(result))) return result;
     await new Promise((r) => setTimeout(r, STORE_WAITS_MS[attempt]));
   }
 }

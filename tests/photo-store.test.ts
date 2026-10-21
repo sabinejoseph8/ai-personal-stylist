@@ -16,10 +16,10 @@ describe("photo store requests", () => {
     expect(calls).toBe(3);
   });
 
-  it("give up after three tries, and never retry other errors", async () => {
+  it("give up after four tries, and never retry other errors", { timeout: 10_000 }, async () => {
     let calls = 0;
     expect(await stored(async () => (calls++, busy))).toEqual(busy);
-    expect(calls).toBe(3);
+    expect(calls).toBe(4);
     calls = 0;
     const missing = { data: null, error: { message: "Object not found" } };
     expect(await stored(async () => (calls++, missing))).toEqual(missing);
