@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.23
+**Status:** Living document, version 1.24
 **Last updated:** 21 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -86,7 +86,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 |---|---|---|---|
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
 | 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 (2c) | Met in the 2c eval with your option 3: 97 to 99% of notes within 2 seconds, 96 to 99% right, target unchanged. The eval leaves out the phone's connection and the database; on Sabine's iPhone the notes felt quick (2c check, 20 Oct 2026). Closed |
-| 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6 |
+| 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6. On 21 Oct 2026 the Starter minutes ran out before the app's own 110-minute stop (Tavus answers 402 "out of conversational credits"; it also counts test calls the app doesn't), and the app showed "try again in a moment". Sabine upgraded the plan. Open: the app's stop and message for this case |
 | 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for. In 4d, a second looks build started while one was running (which doubled the cost) is prevented: one build at a time per session. In 4e, a build that found no look is never repeated on unchanged requirements |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. Handled for the item to style around in 3a: every photo has a version, and the database refuses a late result for a replaced one (tested). Feedback and looks follow the same pattern as they're built |
 | 6 | The preference check lets a breaking look through | Phase 4 (4a, 4b, 4c) | Closed with Phase 4 (21 Oct 2026). Handled in 4a to 4c. Phase 4's end-to-end swap test passes in 4c: no high heels across 10 swaps, on phone and desktop sizes. Swaps and looks checked again after a change go through the same checker and gate. Firm preferences are rules checked in plain code on the catalog's details, and a missing detail fails. Every look is checked by those rules again, then judged one at a time, and is published only by a database step that needs a passing check of that exact look on current requirements. The checker eval caught all 16 rule breaks and judged all 21 looks right, including the color cases from Sabine's review |
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 21 Oct 2026 | Tavus Starter's 120 minutes ran out, and Tavus has no way to add minutes to a plan. Sabine upgraded the Tavus plan, with 175 minutes available (the other options were waiting for the renewal, or building the voice-only stylist from 6c first) | Sabine | progress.md, risk 3 |
 | 21 Oct 2026 | 5a plan, the recommended answers. Q1: feedback is kept as notes in the notebook (the other option was the separate feedback table). Q2: spoken feedback is read when the shopper finishes speaking (the other option read it while they talk, slower and costlier). Q3: Keep and Change by touch are jotted as Confirmed (the other option jotted them To confirm) | Sabine | tech spec 1.27, design 1.15 |
 | 21 Oct 2026 | Phase 4 code review (4e). Q1: delete the unused event_log table (the other option kept it for a possible history log). A: until 5c, the no-match box offers only choices that work; "Allow it for this session" returns with session exceptions (the other option left them as they were) | Sabine | tech spec 1.26, design 1.14 |
 | 21 Oct 2026 | 4d plan, the recommended answers. Q1: Behind the scenes is made from the records the app already keeps (the other option also wrote a separate log, keeping changes like "$500 to $350"). Q2: it's on for everyone, closed until opened (the other option hid it behind a setting). Q3: it starts with which products fit now (the other option left that out) | Sabine | tech spec 1.25, design 1.13 |
@@ -397,6 +398,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.24 (21 Oct 2026):** 5a done. The Tavus minutes running out, Sabine's plan upgrade, and risk 3 updated.
 - **1.23 (21 Oct 2026):** 5a decisions (Q1 to Q3).
 - **1.22 (21 Oct 2026):** Phase 4 code review decisions (Q1, A), and the cost risk's new guard: no rebuild on unchanged requirements.
 - **1.21 (21 Oct 2026):** 4d decisions (Q1 to Q3).
