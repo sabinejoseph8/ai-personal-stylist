@@ -47,10 +47,24 @@ export function nextSeen(shown: Seen | null, before: Sighting | null, now: Sight
 export const seenLabel = (seen: Seen) => (seen.kind === "several" ? "Several items" : `${seen.name}${seen.sure ? "" : "?"}`);
 
 // "Use this one" takes the still (R34), heard by plain code while the camera is on (Sabine's answer to Q1 in 3c).
-const CAPTURE = /\b(use (this|that) one|capture (it|this|that)|take (a|the) (picture|photo)|this one)\b/i;
+const CAPTURE = /\b(use (this|that)|capture|take (a|the) (picture|photo)|this (one|1))\b/i;
 
 /** Whether the shopper's words ask to capture what's on camera. */
 export const asksToCapture = (words: string) => CAPTURE.test(words);
+
+/**
+ * How long "use this one" still counts after an item was last on screen, and how long it waits for a
+ * name. On Sabine's iPhone (3c) it did nothing: holding an item up while talking, two unclear frames can
+ * clear the name just as the shopper speaks, and the words can come just before the name appears.
+ */
+export const CAPTURE_GRACE_MS = 8000;
+
+/** Whether "use this one" takes the still now, waits for an item to be named, or does nothing because the camera is off. */
+export function whenToCapture(now: number, camera: { on: boolean; itemShown: boolean; lastItemAt: number }): "now" | "wait" | "no" {
+  if (!camera.on) return "no";
+  if (camera.itemShown || now - camera.lastItemAt <= CAPTURE_GRACE_MS) return "now";
+  return "wait";
+}
 
 export type CameraNote = { seen: Seen | null; blocked: boolean } | null;
 

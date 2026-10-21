@@ -15,7 +15,7 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
 import { useToast } from "@/components/ui/toast";
-import { asksToCapture, type CameraNote, cameraForStylist } from "@/core/camera/sightings";
+import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
 import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/lib/stage";
@@ -100,7 +100,7 @@ export function StylingSession({
     onEvent: (e) => {
       notes.onEvent(e);
       // "Use this one" takes the still, heard by plain code while an item is on camera (Q1 in 3c).
-      if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text)) heardCapture.current?.(e.turnId);
+      if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text)) heardCapture.current?.();
     },
     onPhrase: (text) => notes.say(text),
     onEnd: () => {
@@ -136,27 +136,46 @@ export function StylingSession({
 
   // The camera (3c): she names what's shown, and Capture or "use this one" adds a still to the notes.
   const camera = useCamera(call.sessionId, call.flow === "live", {
-    onSeen: (seen) => seen && (speakUp.current = { text: ON_CAMERA }),
+    onSeen: (seen) => {
+      if (!seen) return;
+      speakUp.current = { text: ON_CAMERA };
+      if (seen.kind === "item") namedOnCamera.current?.();
+    },
     onUnavailable: () => (speakUp.current = { text: NO_CAMERA }),
   });
   const toast = useToast();
   const pickPhoto = useRef<(() => void) | null>(null);
+  // One still at a time: "use this one" arrives in several pieces as it's heard.
+  const capturing = useRef(false);
+  const captureWaitsUntil = useRef(0);
   async function capture() {
-    const file = await camera.capture();
-    if (!file) return;
-    // The still is now the item, so the camera turns off (Sabine's answer to Q2 in 3c).
-    camera.stop();
-    photos.add(file, "camera");
-    setNotebookOpen(true);
-    toast("Photo added to your notes");
+    if (capturing.current) return;
+    capturing.current = true;
+    try {
+      const file = await camera.capture();
+      if (!file) return;
+      // The still is now the item, so the camera turns off (Sabine's answer to Q2 in 3c).
+      camera.stop();
+      photos.add(file, "camera");
+      setNotebookOpen(true);
+      toast("Photo added to your notes");
+    } finally {
+      capturing.current = false;
+    }
   }
-  const heardCapture = useRef<((turn: string) => void) | null>(null);
-  const capturedTurn = useRef("");
+  const heardCapture = useRef<(() => void) | null>(null);
+  const namedOnCamera = useRef<(() => void) | null>(null);
   useLayoutEffect(() => {
-    heardCapture.current = (turn) => {
-      if (camera.seen?.kind !== "item" || capturedTurn.current === turn) return;
-      capturedTurn.current = turn;
+    // "Use this one" said just before the name appeared.
+    namedOnCamera.current = () => {
+      if (captureWaitsUntil.current <= Date.now()) return;
+      captureWaitsUntil.current = 0;
       void capture();
+    };
+    heardCapture.current = () => {
+      const when = whenToCapture(Date.now(), { on: camera.state === "on", itemShown: camera.seen?.kind === "item", lastItemAt: camera.lastItemAt() });
+      if (when === "now") void capture();
+      if (when === "wait") captureWaitsUntil.current = Date.now() + CAPTURE_GRACE_MS;
     };
   });
   const [confirmEnd, setConfirmEnd] = useState(false);

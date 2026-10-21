@@ -71,6 +71,8 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
   const run = useRef(0);
   const tracks = useRef<MediaStream | null>(null);
   const explained = useRef(false);
+  // When an item was last on screen, so "use this one" just after its name cleared still counts (3c fix).
+  const itemAt = useRef(0);
 
   function stopTracks() {
     tracks.current?.getTracks().forEach((t) => t.stop());
@@ -81,6 +83,7 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
   /** Turns the camera off. `why` says what the shopper sees afterwards. */
   function stop(why?: keyof typeof CAMERA_MESSAGES) {
     run.current++;
+    itemAt.current = 0;
     stopTracks();
     setState("off");
     setSeen(null);
@@ -137,6 +140,7 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
           const next = nextSeen(shown, before, answer.sighting);
           if (next.shown !== shown) setSeen(next.shown);
           shown = next.shown;
+          if (shown?.kind === "item") itemAt.current = Date.now();
           if (next.news) said.current.onSeen(shown);
           before = answer.sighting;
         }
@@ -199,6 +203,8 @@ export function useCamera(sessionId: string | null, live: boolean, hooks: Camera
       setMessage(CAMERA_MESSAGES.notNow);
     },
     stop: () => stop(),
+    /** When an item was last on screen (0 when none has been). */
+    lastItemAt: () => itemAt.current,
     switchCamera: () => void start(facing === "environment" ? "user" : "environment"),
     /** A full-size still of what's in view, as a photo file, or null before the video has a picture. */
     capture: async (): Promise<File | null> => {
