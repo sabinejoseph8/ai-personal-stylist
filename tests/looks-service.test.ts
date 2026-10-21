@@ -131,6 +131,23 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(data!.every((r) => r.status !== "published")).toBe(true);
   });
 
+  it("never shows two looks with the same main pieces, only different shoes (Sabine's review of the sample looks)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const fake = createFakeLooksBuilder();
+    const sameDress: LooksBuilder = {
+      async build(input) {
+        const { looks } = await fake.build(input);
+        // Every look gets the first look's dress.
+        const dress = looks[0].items[0];
+        return { looks: looks.map((l) => ({ ...l, items: [dress, ...l.items.slice(1)] })), costUsd: 0 };
+      },
+    };
+    const result = await buildLooks(deps(sameDress), guest.id, session);
+    if (!result || !("looks" in result)) throw new Error(JSON.stringify(result));
+    expect(result.looks).toHaveLength(1);
+    expect(result.noMatch).not.toBeNull();
+  });
+
   it("looks and their checks are deleted when the session ends (R63)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     await buildLooks(deps(), guest.id, session);

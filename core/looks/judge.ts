@@ -10,15 +10,19 @@ import { type ResolvedItem } from "./look";
 // at a time (Sabine's answer to Q3 in 4b). Anything uncertain doesn't pass.
 
 export type Verdict = "pass" | "conflict" | "needs_clarification";
-export type JudgeInput = { items: ResolvedItem[]; notes: string[]; judged: string[]; inspiration: string | null };
+export type JudgeInput = { items: ResolvedItem[]; notes: string[]; judged: string[]; likes: string[]; inspiration: string | null };
 
 export const JUDGE_SYSTEM = `You check one outfit for a personal stylist, before the shopper sees it. Code has already checked the budget, sizes, colors to avoid and every measurable preference. You check what code can't.
 
 Check each of these, one point each:
 - every firm preference listed: it must clearly hold for every item
-- the occasion, season and setting in the shopper's notes: the outfit must be suitable
-- any other note that applies, such as a style or a color they prefer
+- the occasion, season and setting in the shopper's notes: every item in the outfit must be suitable
+- any other note that applies, such as a style
+- colors, when the notes name a preferred color or their Likes name colors: the main piece (the dress or suit), or at least one of the top and bottom, must be in one of those colors. The color only in the shoes, bag or jewelry doesn't count, and neither does a navy, black or white main piece
+- the colors in the outfit go well together, shoes and bag included: they should pick up a color in the clothes, or a neutral that suits them. Black shoes or a black bag with clothes in warm colors, earth tones or navy, and nothing black or grey, don't go together
 - an inspiration item, if there is one: the look must include a sample item clearly similar to it
+
+Judge what's in the outfit. A piece the shopper didn't ask for, such as a coat, wrap or bag, is never missing: fail a look for something missing only when they explicitly asked for it, such as "a jacket in every look".
 
 For each point, give a: what it's about (the preference or note, in its own words), ok: true or false, w: why, in a few plain words.
 
@@ -27,7 +31,7 @@ Then the verdict, v:
 - "conflict" when a point clearly fails
 - "clarify" when you can't tell, for example a detail you'd need isn't given
 
-Be strict: the shopper was promised no look breaks their preferences. Likes don't need checking.`;
+Be strict: the shopper was promised no look breaks their preferences. Likes that aren't colors don't need checking.`;
 
 export const JUDGE_SCHEMA = {
   type: "object",
@@ -69,6 +73,7 @@ export function judgePrompt(input: JudgeInput) {
     `The outfit:\n${input.items.map(itemLine).join("\n")}`,
     `The shopper's confirmed notes: ${input.notes.length ? input.notes.join("; ") : "none"}.`,
     `Firm preferences: ${input.judged.length ? input.judged.join("; ") : "none to judge"}.`,
+    input.likes.length ? `They like: ${input.likes.join("; ")}.` : "",
     input.inspiration ? `Their inspiration item: ${input.inspiration}.` : "",
   ]
     .filter(Boolean)

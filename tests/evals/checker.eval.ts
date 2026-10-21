@@ -16,7 +16,9 @@ import { setting } from "../support/test-guests";
 // caught (the core promise). Looks that only judgment can decide, such as sequins with "Never: anything
 // too flashy" or shorts at a November wedding, must be right at least 90% of the time. It runs the real
 // checker: rules in code, then the judgment step (Opus 5.5, medium) for looks that pass them, one look at
-// a time (Sabine's answer to Q3 in 4b). About 40 cents. Run: npm run eval:checker.
+// a time (Sabine's answer to Q3 in 4b). About 15 cents. Run: npm run eval:checker. After Sabine's review of
+// the sample looks in 4b, it also checks that the main pieces are in her preferred or liked colors, and
+// that a coat she didn't ask for is never "missing".
 
 const judge = createJudge(claudeAsk(LOOKS_MODEL, "medium", setting("ANTHROPIC_API_KEY")));
 const OUT = "tests/evals/results/checker-latest.json";
@@ -35,17 +37,23 @@ const highHeels = profileRules[0];
 const judged = (words: string, kind: "never" | "must_have" = "never"): FirmRule => ({ kind, words, rule: { type: "judged" }, from: "profile" });
 const notBlack: FirmRule = { kind: "never", words: "Not black", rule: { type: "detail", categories: [], test: { detail: "color", op: "one_of", values: ["black"] } }, from: "notes" };
 
-type Scene = { requirements: Requirements; notes: string[]; anchor?: Anchor; owned?: OwnedPiece[]; inspiration?: string };
+type Scene = { requirements: Requirements; notes: string[]; likes?: string[]; anchor?: Anchor; owned?: OwnedPiece[]; inspiration?: string };
 const base = { departments: ["womenswear" as const], categories: null, sizes: SAMPLE_PROFILE.sizes };
 const WEDDING: Scene = {
   requirements: { ...base, budget: { meaning: "up_to", amount: 600, from: "notes" }, rules: profileRules },
   notes: ["Outdoor wedding, November", "Elegant", "Emerald green, preferred"],
+  likes: ["earth tones"],
 };
-const INTERVIEW: Scene = { requirements: { ...base, budget: { meaning: "up_to", amount: 500, from: "notes" }, rules: profileRules }, notes: ["Job interview, next week", "Smart but comfortable"] };
+const INTERVIEW: Scene = {
+  requirements: { ...base, budget: { meaning: "up_to", amount: 500, from: "notes" }, rules: profileRules },
+  notes: ["Job interview, next week", "Smart but comfortable"],
+  likes: ["earth tones"],
+};
 const FLASHY: Scene = { requirements: { ...base, budget: { meaning: "up_to", amount: 600, from: "notes" }, rules: [highHeels, judged("anything too flashy")] }, notes: ["Friend's birthday dinner, Saturday", "Relaxed"] };
 const JACKET: Scene = { requirements: { ...base, budget: { meaning: "up_to", amount: 600, from: "notes" }, rules: [highHeels, judged("a jacket in every look", "must_have")] }, notes: ["Office party, December"] };
 const blazerPiece: OwnedPiece = { ref: { kind: "photo", photoId: "photo-1", version: 1 }, name: "Navy wool blazer", group: "outer", words: "blazer, navy, solid, classic" };
 const OWNED: Scene = { ...INTERVIEW, anchor: { photoId: "photo-1", version: 1, name: "Navy wool blazer", owned: true }, owned: [blazerPiece] };
+const BIRTHDAY: Scene = { ...OWNED, notes: ["Birthday dinner, Saturday", "Relaxed"] };
 const INSPIRED: Scene = { ...WEDDING, anchor: { photoId: "photo-2", version: 1, name: "Emerald satin midi dress", owned: false }, inspiration: "Emerald satin midi dress (dress, emerald green, solid, elegant)" };
 
 const noHeel = { ...bySlug("w-tan-leather-loafers"), details: { ...bySlug("w-tan-leather-loafers").details, heelCm: undefined } };
@@ -74,11 +82,15 @@ const CASES: Case[] = [
 
   // Judgment: right at least 90% of the time.
   { id: "wedding, emerald dress and coat", scene: WEDDING, items: [item("w-emerald-satin-midi-dress"), item("w-camel-wool-coat"), item("w-nude-slingback-flats")], expect: "pass", why: "elegant, emerald, warm" },
-  { id: "wedding, velvet dress", scene: WEDDING, items: [item("w-burgundy-velvet-dress"), item("w-emerald-velvet-mules"), item("w-pearl-drop-earrings")], expect: "pass", why: "elegant November wedding look" },
+  // A coat the shopper didn't ask for is never missing (Sabine's review of "Pearl garden elegance").
+  { id: "wedding, no coat", scene: WEDDING, items: [item("w-emerald-satin-midi-dress"), item("w-nude-slingback-flats"), item("w-pearl-drop-earrings")], expect: "pass", why: "no coat needed unless asked" },
+  // The main piece in a preferred or liked color, not just the accents (Sabine's review of the navy wrap dress look).
+  { id: "wedding, navy dress, emerald accents", scene: WEDDING, items: [item("w-navy-wrap-dress"), item("w-emerald-velvet-mules"), item("w-emerald-satin-clutch")], expect: "not pass", why: "the navy dress isn't emerald or earth tones" },
   { id: "wedding, shorts", scene: WEDDING, items: [item("w-linen-shorts"), item("w-linen-button-up-shirt"), item("w-raffia-espadrilles")], expect: "not pass", why: "shorts at a November wedding" },
   { id: "wedding, knit and sneakers", scene: WEDDING, items: [item("w-striped-knit-dress"), item("w-white-leather-sneakers"), item("w-woven-straw-basket-bag")], expect: "not pass", why: "too casual for an elegant wedding" },
-  { id: "interview, blazer and trousers", scene: INTERVIEW, items: [item("w-navy-wool-blazer"), item("w-white-silk-blouse"), item("w-black-tailored-trousers"), item("w-tan-leather-loafers")], expect: "pass", why: "smart and comfortable" },
-  { id: "interview, pantsuit", scene: INTERVIEW, items: [item("w-emerald-pantsuit"), item("w-white-silk-blouse"), item("w-nude-slingback-flats")], expect: "pass", why: "smart" },
+  { id: "interview, blazer and camel skirt", scene: INTERVIEW, items: [item("w-navy-wool-blazer"), item("w-white-silk-blouse"), item("w-camel-pleated-midi-skirt"), item("w-tan-leather-loafers")], expect: "pass", why: "smart, with an earth-tone skirt" },
+  { id: "interview, black and white", scene: INTERVIEW, items: [item("w-white-silk-blouse"), item("w-black-tailored-trousers"), item("w-black-ballet-flats")], expect: "not pass", why: "no earth tones in the main pieces" },
+  { id: "interview, camel sweater", scene: INTERVIEW, items: [item("w-camel-cashmere-sweater"), item("w-black-tailored-trousers"), item("w-tan-leather-loafers")], expect: "pass", why: "smart and comfortable, in camel" },
   { id: "interview, leopard and leather mini", scene: INTERVIEW, items: [item("w-leopard-print-blouse"), item("w-black-leather-mini-skirt"), item("w-black-ankle-boots")], expect: "not pass", why: "not smart enough for an interview" },
   { id: "interview, cargo and tee", scene: INTERVIEW, items: [item("w-olive-cargo-trousers"), item("w-black-fitted-tee"), item("w-white-leather-sneakers")], expect: "not pass", why: "too casual for an interview" },
   { id: "flashy, sequins", scene: FLASHY, items: [item("w-black-sequin-top"), item("w-black-tailored-trousers"), item("w-nude-slingback-flats")], expect: "not pass", why: "Never: anything too flashy" },
@@ -87,7 +99,9 @@ const CASES: Case[] = [
   { id: "jacket, blazer", scene: JACKET, items: [item("w-navy-wrap-dress"), item("w-ivory-tailored-blazer"), item("w-nude-slingback-flats")], expect: "pass", why: "has a jacket" },
   { id: "inspiration, similar", scene: INSPIRED, items: [item("w-emerald-satin-midi-dress"), item("w-camel-wool-coat"), item("w-nude-slingback-flats")], expect: "pass", why: "a similar emerald satin dress" },
   { id: "inspiration, different", scene: INSPIRED, items: [item("w-navy-wrap-dress"), item("w-camel-wool-coat"), item("w-nude-slingback-flats")], expect: "not pass", why: "nothing like the emerald dress" },
-  { id: "owned blazer", scene: OWNED, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-white-silk-blouse"), item("w-black-tailored-trousers"), item("w-tan-leather-loafers")], expect: "pass", why: "styles the shopper's blazer" },
+  { id: "birthday, black flats with warm colors", scene: BIRTHDAY, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-burgundy-turtleneck"), item("w-camel-pleated-midi-skirt"), item("w-black-ballet-flats")], expect: "not pass", why: "black shoes don't go with navy, burgundy and camel (Sabine's review)" },
+  { id: "birthday, tan loafers with warm colors", scene: BIRTHDAY, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-burgundy-turtleneck"), item("w-camel-pleated-midi-skirt"), item("w-tan-leather-loafers")], expect: "pass", why: "tan shoes pick up the camel skirt" },
+  { id: "owned blazer", scene: OWNED, items: [{ ref: blazerPiece.ref, owned: blazerPiece }, item("w-white-silk-blouse"), item("w-camel-pleated-midi-skirt"), item("w-tan-leather-loafers")], expect: "pass", why: "styles the shopper's blazer" },
 ];
 
 it("checker eval: every rule break caught, and judgment right at least 90% of the time", async () => {
@@ -100,6 +114,7 @@ it("checker eval: every rule break caught, and judgment right at least 90% of th
         items: c.items,
         notes: c.scene.notes,
         judged: c.scene.requirements.rules.filter((r) => r.rule.type === "judged").map((r) => `${r.kind === "never" ? "Never" : "Must have"}: ${r.words}`),
+        likes: c.scene.likes ?? [],
         inspiration: c.scene.inspiration ?? null,
       });
       return { ...c, items: undefined, scene: undefined, got: j.verdict === "pass" ? "pass" : "not pass", verdict: j.verdict, reasons: j.reasons.map((r) => `${r.ok ? "ok" : "NO"}: ${r.about}: ${r.why}`), seconds: (performance.now() - started) / 1000, costUsd: j.costUsd };

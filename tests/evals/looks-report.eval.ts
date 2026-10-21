@@ -103,7 +103,7 @@ function section(s: Scenario, r: Awaited<ReturnType<typeof run>>) {
   for (const row of blocked) {
     const check = (row.check_results as { verdict: string; reasons: { about: string; ok: boolean; why: string }[] }[])[0];
     const failed = check?.reasons.filter((x) => !x.ok).map((x) => `${x.about}: ${x.why}`) ?? [];
-    out.push(`- **${row.name}**: ${check?.verdict === "pass" ? "passed, but 3 looks were already published" : failed.join("; ") || check?.verdict}`);
+    out.push(`- **${row.name}**: ${check?.verdict === "pass" ? "passed, but not needed: 3 looks were already chosen, or it had the same dress, or the same top and bottom, as one of them" : failed.join("; ") || check?.verdict}`);
   }
   out.push("", `Built in ${Math.round(r.seconds)} seconds, for $${r.cost.toFixed(2)} of Claude.`, "");
   return out.join("\n");

@@ -4,7 +4,7 @@ import { builderPrompt, createFakeLooksBuilder, looksFrom } from "@/core/looks/b
 import { type FirmRule, filterCandidates, type Requirements } from "@/core/looks/candidates";
 import { codeCheck } from "@/core/looks/checker";
 import { createFakeJudge, verdictFrom } from "@/core/looks/judge";
-import type { OwnedPiece, ResolvedItem } from "@/core/looks/look";
+import { mainPieces, type OwnedPiece, type ResolvedItem } from "@/core/looks/look";
 import { explainNoMatch } from "@/core/looks/no-match";
 import { looksReadiness } from "@/core/looks/readiness";
 import { describeRule } from "@/core/looks/rules";
@@ -73,6 +73,14 @@ describe("the preference checker's rules in code", () => {
   });
 });
 
+describe("what makes a look itself", () => {
+  it("is its main pieces: the same dress with other shoes is the same look", () => {
+    const other = find((p) => p.category === "shoes" && p.id !== flats.id && (p.details.heelCm ?? 99) <= 2);
+    expect(mainPieces([product(sleevedDress), product(flats), product(bag)])).toBe(mainPieces([product(bag), product(other), product(sleevedDress)]));
+    expect(mainPieces([product(sleevedDress), product(flats)])).not.toBe(mainPieces([product(find((p) => p.category === "dress" && p.id !== sleevedDress.id)), product(flats)]));
+  });
+});
+
 describe("when looks are built (R39)", () => {
   const note = (kind: Note["kind"], status: Note["status"], details: [string, string][] = []): Note => ({
     id: `${kind}${status}`,
@@ -97,7 +105,7 @@ describe("when looks are built (R39)", () => {
 
 describe("the looks builder's numbers", () => {
   it("lists products by number only, and drops a look that uses a number it wasn't given", () => {
-    const { user, ids } = builderPrompt({ products: [sleevedDress, flats], owned: [blazer], mustUse: [blazer.ref], inspiration: null, notes: ["Outdoor wedding, November"], budget: "up to $350", likes: [], judged: [], avoid: [] });
+    const { user, ids } = builderPrompt({ products: [sleevedDress, flats], owned: [blazer], mustUse: [blazer.ref], inspiration: null, notes: ["Outdoor wedding, November"], budget: "up to $350", preferredColors: [], likes: [], judged: [], avoid: [] });
     expect(user).toContain(`p1: ${sleevedDress.name}`);
     expect(user).toContain("o1: Navy wool blazer (blazer, navy) (must use)");
     expect(user).not.toContain(sleevedDress.id);
@@ -107,7 +115,7 @@ describe("the looks builder's numbers", () => {
 
   it("the fake builder for tests makes complete looks with the shopper's own item", async () => {
     const { kept } = filterCandidates(catalogProducts, req);
-    const { looks } = await createFakeLooksBuilder().build({ products: kept, owned: [blazer], mustUse: [blazer.ref], inspiration: null, notes: [], budget: null, likes: [], judged: [], avoid: [] });
+    const { looks } = await createFakeLooksBuilder().build({ products: kept, owned: [blazer], mustUse: [blazer.ref], inspiration: null, notes: [], budget: null, preferredColors: [], likes: [], judged: [], avoid: [] });
     expect(looks).toHaveLength(5);
     for (const look of looks) expect(look.items[0]).toEqual(blazer.ref);
   });
@@ -125,7 +133,7 @@ describe("the judgment step's verdict", () => {
 
   it("the fake judge for tests fails sequins under a 'flashy' preference", async () => {
     const sequins = find((p) => /sequin/i.test(`${p.details.material} ${p.details.pattern}`));
-    const result = await createFakeJudge().judge({ items: [product(sequins)], notes: [], judged: ["Never: anything too flashy"], inspiration: null });
+    const result = await createFakeJudge().judge({ items: [product(sequins)], notes: [], judged: ["Never: anything too flashy"], likes: [], inspiration: null });
     expect(result.verdict).toBe("conflict");
   });
 });
@@ -140,5 +148,6 @@ describe("the no-match explanation (R45, R59)", () => {
     expect(explainNoMatch(sized, s.kept, s.leftOut, 0).message).toBe("Only 0 dresses come in your size.");
     const { kept: all, leftOut: none } = filterCandidates(catalogProducts, req);
     expect(explainNoMatch(req, all, none, 2)).toEqual({ message: "I found 2 looks that meet everything you've asked for.", choices: ["Change a requirement", "Try again"] });
+    expect(explainNoMatch(req, all, none, 1).message).toBe("I found 1 look that meets everything you've asked for.");
   });
 });

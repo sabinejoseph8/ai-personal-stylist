@@ -66,5 +66,18 @@ export function incomplete(items: ResolvedItem[]): string | null {
   return "Not a complete outfit: it needs a dress, a suit, or a top with something on the bottom";
 }
 
+/**
+ * What makes a look itself: its main pieces (the dress or suit, or the top and bottom), shopper's own
+ * included. Two looks with the same main pieces are the same look with different shoes (Sabine's review
+ * of the sample looks in 4b), so only one of them is shown.
+ */
+export function mainPieces(items: ResolvedItem[]): string {
+  const main = items.filter((i) => ["dress", "suit", "top", "bottom"].includes(groupOf(i)));
+  return main
+    .map((i) => JSON.stringify(i.ref))
+    .sort()
+    .join("|");
+}
+
 /** The same item twice. */
 export const duplicated = (refs: LookItem[]) => new Set(refs.map((r) => JSON.stringify(r))).size !== refs.length;

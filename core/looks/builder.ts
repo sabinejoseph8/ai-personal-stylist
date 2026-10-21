@@ -21,6 +21,8 @@ export type BuildInput = {
   notes: string[];
   /** The budget for the whole look, in words, or null. */
   budget: string | null;
+  /** Colors from confirmed notes ("prefer=emerald green"), for the main pieces. */
+  preferredColors: string[];
   /** Likes, and firm preferences only judgment can check ("Never: anything too flashy"). */
   likes: string[];
   judged: string[];
@@ -37,7 +39,9 @@ Make up to 5 different looks. Each look is a complete outfit:
 - add a bag, an outer layer or one accessory when it helps the occasion
 - never two dresses, two bottoms, two pairs of shoes or two bags
 
-Use only the listed numbers. Items starting with "o" belong to the shopper and cost nothing. Any item marked "must use" goes in every look. Keep each look's sample items within the budget. Follow the shopper's notes and preferences: dress for the occasion, season and setting, use the colors they asked for, and avoid what they said to avoid. Make the 5 looks clearly different from each other.
+Use only the listed numbers. Items starting with "o" belong to the shopper and cost nothing. Any item marked "must use" goes in every look. Keep each look's sample items within the budget. Follow the shopper's notes and preferences: dress for the occasion, season and setting, and avoid what they said to avoid. Make the 5 looks clearly different from each other: each one has a different dress or suit, or a different top and bottom. Changing only the shoes, bag or jewelry doesn't make a different look.
+
+Colors: when the shopper has preferred colors or liked colors, the main piece (the dress or suit), or at least one of the top and bottom, is in one of them. A navy, black or white main piece with the preferred color only in the shoes or bag doesn't count. Other colors are for accents. The colors in a look must go well together. Shoes and bag pick up the outfit's colors: a color already in the clothes, or a neutral that suits them, such as tan, cognac, brown or nude with warm colors, earth tones and navy. Black shoes or a black bag only when the clothes include black or grey.
 
 For each look:
 - n: a short name for it, 2 to 4 words, such as "Garden ceremony"
@@ -83,7 +87,8 @@ export function builderPrompt(input: BuildInput): { user: string; ids: Map<strin
   const user = [
     `The shopper's notes: ${input.notes.length ? input.notes.join("; ") : "none yet"}.`,
     input.budget ? `Budget for each look's sample items: ${input.budget}.` : "No budget given.",
-    input.likes.length ? `They like: ${input.likes.join("; ")}.` : "",
+    input.preferredColors.length ? `Preferred colors, for the main pieces: ${input.preferredColors.join(", ")}.` : "",
+    input.likes.length ? `They like: ${input.likes.join("; ")}. Liked colors also count for the main pieces.` : "",
     input.judged.length ? `Firm preferences: ${input.judged.join("; ")}.` : "",
     input.inspiration ? `Their inspiration photo shows: ${input.inspiration}. Include a sample item similar to it in every look.` : "",
     owned.length ? `What they own:\n${owned.join("\n")}` : "",

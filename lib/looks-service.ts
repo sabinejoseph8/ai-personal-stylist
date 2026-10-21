@@ -6,7 +6,7 @@ import { type BuiltLook, type LooksBuilder } from "@/core/looks/builder";
 import { filterCandidates, type Requirements, ruleLabel } from "@/core/looks/candidates";
 import { type Anchor, type CheckReason, codeCheck } from "@/core/looks/checker";
 import type { Judge, Verdict } from "@/core/looks/judge";
-import { type LookItem, nameOf, type OwnedPiece, ownedGroup, type ResolvedItem } from "@/core/looks/look";
+import { type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, type ResolvedItem } from "@/core/looks/look";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
 import { looksReadiness } from "@/core/looks/readiness";
 import { type LookTotal, lookTotal } from "@/core/looks/totals";
@@ -86,6 +86,7 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
     owned.push({ ref: { kind: "wardrobe", itemId: w.id }, name: w.name, group: ownedGroup(w.category ?? "other"), words: [d.type, d.colors, d.pattern, d.style].filter(Boolean).join(", ") });
   }
   const likes = profile.preferences.filter((p) => p.kind === "likes").map((p) => p.words);
+  const preferredColors = confirmed.flatMap((n) => n.details.filter((d) => d.name === "prefer" && d.value.trim()).map((d) => d.value.trim()));
   const judged = requirements.rules.filter((r) => r.rule.type === "judged").map(ruleLabel);
   const noteWords = confirmed.map((n) => n.text);
   const key = createHash("sha256")
@@ -100,7 +101,7 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
       }),
     )
     .digest("hex");
-  return { requirements, notes, noteWords, owned, anchor, inspiration, likes, judged, key };
+  return { requirements, notes, noteWords, owned, anchor, inspiration, likes, preferredColors, judged, key };
 }
 
 type Gathered = Awaited<ReturnType<typeof gather>>;
@@ -156,7 +157,7 @@ async function check(deps: LooksDeps, guestId: string, g: Gathered, items: Resol
   if (!code.ok) return { verdict: "conflict", reasons: code.reasons, failedProducts: code.failedProducts };
   const money = await deps.guard.checkAi(guestId, "claude");
   if (!money.ok) return { verdict: "needs_clarification", reasons: [...code.reasons, { about: "Judgment", ok: false, why: "Today's AI allowance is used up" }], failedProducts: [] };
-  const judged = await deps.judge.judge({ items, notes: g.noteWords, judged: g.judged, inspiration: g.inspiration });
+  const judged = await deps.judge.judge({ items, notes: g.noteWords, judged: g.judged, likes: g.likes, inspiration: g.inspiration });
   if (judged.costUsd > 0) await deps.guard.recordAi(guestId, "claude", judged.costUsd);
   return { verdict: judged.verdict, reasons: [...code.reasons, ...judged.reasons], failedProducts: [] };
 }
@@ -178,6 +179,8 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
   const products = new Map(catalog.map((p) => [p.id, p]));
   const build = randomUUID();
   const published: ShownLook[] = [];
+  // The main pieces of each published look: no two looks share them (Sabine's review of the sample looks).
+  const shownMains = new Set<string>();
   const excluded = new Set<string>();
   const avoid: string[] = [];
   let filtered = filterCandidates(catalog, g.requirements);
@@ -195,6 +198,7 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
       inspiration: g.inspiration,
       notes: g.noteWords,
       budget: budgetText(g.requirements),
+      preferredColors: g.preferredColors,
       likes: g.likes,
       judged: g.judged,
       avoid,
@@ -236,14 +240,17 @@ export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: st
       return { stale: true };
     }
     for (const c of checked) {
-      if (c.verdict === "pass" && c.items && published.length < LOOKS_WANTED) {
+      const main = c.items ? mainPieces(c.items) : "";
+      if (c.verdict === "pass" && c.items && published.length < LOOKS_WANTED && !shownMains.has(main)) {
         // The one publishing gate: the database checks the pass was for these exact items and requirements.
         const { data: ok } = await db.rpc("publish_look", { look: c.id, current_requirements: g.key }).throwOnError();
         if (ok) {
           published.push(shown(c.id, c.look, c.items, g.requirements, true));
+          shownMains.add(main);
           continue;
         }
       }
+      if (c.verdict === "pass" && c.items && shownMains.has(main)) avoid.push(`${c.items.map(nameOf).join(" + ")}: the same main pieces as a look already chosen`);
       await db.from("looks").update({ status: "held" }).eq("id", c.id).throwOnError();
       for (const id of c.failedProducts) excluded.add(id);
       if (c.verdict !== "pass" && c.items) avoid.push(`${c.items.map(nameOf).join(" + ")}: ${c.reasons.filter((r) => !r.ok).map((r) => r.why).join("; ")}`);

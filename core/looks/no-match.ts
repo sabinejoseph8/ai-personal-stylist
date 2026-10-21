@@ -37,6 +37,6 @@ export function explainNoMatch(req: Requirements, kept: Product[], leftOut: Left
     if (kind === "size") return { message: `${only} come in your size.`, choices: ["Try another outfit", "Change your size"] };
     if (kind === "rule") return { message: `${only} meet ${examples![0].rule}.`, choices: ["Allow it for this session", "Try another outfit"] };
   }
-  const looks = found === 1 ? "1 look" : `${found} looks`;
-  return { message: `I found ${looks} that meet everything you've asked for.`, choices: ["Change a requirement", "Try again"] };
+  const looks = found === 1 ? "1 look that meets" : `${found} looks that meet`;
+  return { message: `I found ${looks} everything you've asked for.`, choices: ["Change a requirement", "Try again"] };
 }
