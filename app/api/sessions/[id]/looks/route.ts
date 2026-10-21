@@ -8,8 +8,8 @@ import { withinLimit } from "@/lib/rate-limits";
 
 // Looks (tech spec 4.1; R39, R40, R44, R54, R55, R58, R59). POST brings them up to date: the answer
 // streams one line of JSON per stage ("updating" while the looks on screen are checked again, then
-// "building" and "checking" for new ones), then the looks, with a no-match explanation when fewer than
-// three pass. With nothing changed it answers at once, at no cost. { force: true } is Try again. 20
+// "building" and "checking" for new ones, and "revising" with the places of looks revised from feedback,
+// 5b), then the looks, with a no-match explanation when fewer than three pass. With nothing changed it answers at once, at no cost. { force: true } is Try again. 20
 // builds an hour; asking is limited to 120. GET gives the looks on screen. Swap is .../:lookId/swap.
 
 const Body = z.object({ force: z.boolean().default(false) });
@@ -44,7 +44,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
       // Registered with after(), so the build finishes and is saved if the page goes away (Phase 3 review).
       const building = (async () => {
         try {
-          const result = await buildLooks(deps, guest.id, id, (state) => send({ state }), {
+          const result = await buildLooks(deps, guest.id, id, (state, slots) => send(slots ? { state, slots } : { state }), {
             force: body.data.force,
             allowAi: () => withinLimit(guest.db, "buildLooks"),
           });

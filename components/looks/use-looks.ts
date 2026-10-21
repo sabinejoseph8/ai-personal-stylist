@@ -10,11 +10,12 @@ import type { ShownLook } from "@/core/looks/shown";
 // asks the server to bring them up to date, after a short wait so the shopper can finish. The server
 // answers at once when nothing changed, checks the looks on screen again when something did (keeping
 // those that still pass), and fills empty places. Only the newest request's answer is shown (R52).
-// Swap asks for a different piece in one look (R43).
+// Swap asks for a different piece in one look (R43). Feedback revises a look (5b): the server says which
+// places it's revising, and those looks show Revising until the revised look arrives.
 
-export type LooksPhase = "idle" | "building" | "checking" | "updating" | "ready" | "error";
+export type LooksPhase = "idle" | "building" | "checking" | "updating" | "revising" | "ready" | "error";
 
-type Line = { state?: "building" | "checking" | "updating"; needs?: string; looks?: ShownLook[]; noMatch?: NoMatch | null; stale?: true; error?: string };
+type Line = { state?: "building" | "checking" | "updating" | "revising"; slots?: number[]; needs?: string; looks?: ShownLook[]; noMatch?: NoMatch | null; stale?: true; error?: string };
 
 /** Something the stylist should hear about. */
 export type LooksEvent = { kind: "new"; before: ShownLook[]; looks: ShownLook[] } | { kind: "updated"; before: ShownLook[]; looks: ShownLook[] } | { kind: "swapped"; look: ShownLook; index: number; number: number };
@@ -23,7 +24,11 @@ export type LooksEvent = { kind: "new"; before: ShownLook[]; looks: ShownLook[] 
 const WAIT_MS = 1200;
 const FAILED = "The looks couldn't be put together.";
 
-export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: LooksEvent) => void) {
+/**
+ * `holdUntil` gives a time to wait for before asking: after a Keep or Change tap, 2 seconds, so several
+ * taps make one revision (Sabine's answer to Q1 in 5b).
+ */
+export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: LooksEvent) => void, holdUntil: () => number = () => 0) {
   const [looks, setLooks] = useState<ShownLook[]>([]);
   const [phase, setPhase] = useState<LooksPhase>("idle");
   const [needs, setNeeds] = useState<string | null>(null);
@@ -34,6 +39,8 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
   const [fresh, setFresh] = useState<Record<string, number>>({});
   // What a swap couldn't do, shown on the piece's own tile (found on Sabine's iPhone in 4d).
   const [swapNote, setSwapNote] = useState<{ lookId: string; index: number; text: string } | null>(null);
+  // The places of the looks being revised from feedback (5b).
+  const [revising, setRevising] = useState<number[]>([]);
 
   const latest = useRef(0);
   // Counts finished swaps: an answer read before a swap finished would bring back the old piece.
@@ -41,9 +48,11 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
   const shown = useRef<ShownLook[]>([]);
   const session = useRef(sessionId);
   const hook = useRef(onEvent);
+  const hold = useRef(holdUntil);
   useLayoutEffect(() => {
     session.current = sessionId;
     hook.current = onEvent;
+    hold.current = holdUntil;
   });
 
   function show(next: ShownLook[]) {
@@ -73,15 +82,18 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
           // goes as building starts, not when the looks arrive (found on Sabine's iPhone in 4c).
           setNeeds(null);
           if (line.state === "updating") rechecked = true;
+          if (line.state === "revising") setRevising((r) => [...new Set([...r, ...(line.slots ?? [])])]);
         } else answer = line;
       });
     } catch (e) {
       if (mine !== latest.current || id !== session.current) return;
+      setRevising([]);
       setProblem(e instanceof Error && e.message !== "Failed to fetch" ? e.message : FAILED);
       setPhase("error");
       return;
     }
     if (mine !== latest.current || id !== session.current) return;
+    setRevising([]);
     if (swapsDone.current !== swapsBefore) return refresh(force, staleTries);
     const got = answer as Line | null;
     if (got?.stale && staleTries > 0) {
@@ -108,7 +120,8 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
     setNoMatch(got.noMatch ?? null);
     show(next);
     setPhase("ready");
-    const same = next.length === before.length && next.every((l, i) => l.id === before[i].id) && before.every((l) => l.current);
+    // A revision that couldn't be made changes no look, but its note is news too (5b).
+    const same = next.length === before.length && next.every((l, i) => l.id === before[i].id && (l.note ?? null) === (before[i].note ?? null)) && before.every((l) => l.current);
     if (!before.length && next.length) hook.current({ kind: "new", before, looks: next });
     else if (before.length && (rechecked || !same)) hook.current({ kind: "updated", before, looks: next });
   }
@@ -143,7 +156,7 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
   // Asks after each change to what the looks must meet, once things settle.
   useEffect(() => {
     if (!sessionId) return;
-    const timer = setTimeout(() => void refresh(), WAIT_MS);
+    const timer = setTimeout(() => void refresh(), Math.max(WAIT_MS, hold.current() - Date.now()));
     return () => clearTimeout(timer);
     // refresh only reads refs and sets state
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,6 +171,7 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
     swapping,
     fresh,
     swapNote,
+    revising,
     /** Try again (R45). */
     tryAgain: () => void refresh(true),
     swap,
@@ -171,6 +185,7 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
       setProblem(null);
       setFresh({});
       setSwapNote(null);
+      setRevising([]);
     },
   };
 }

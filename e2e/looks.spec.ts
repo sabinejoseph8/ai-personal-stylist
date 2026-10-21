@@ -11,6 +11,7 @@ import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/
 // R55), Swap by touch and by voice (R43), and a changed budget bringing them up to date (R44, R58).
 // Phase 4's end-to-end test: with the sample profile, no look shows high heels across 10 swaps (S13).
 // 4d: Behind the scenes (R72). 5a: feedback by Keep and Change, and by voice, jotted under its look (R46, R47).
+// 5b: feedback revises its look, with the pieces kept and a change summary (R48, R50).
 test.describe("the looks", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -172,10 +173,32 @@ test.describe("the looks", () => {
     await expect(feedback).toContainText("Keep the dress and bag", { timeout: 10_000 });
     await expect(feedback).toContainText("Lower heels, this look only");
     await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toBeVisible();
-    // Feedback alone never makes the looks need a new check (5b revises them).
+    // "Lower heels" revises the look on screen (5b), keeping the dress; feedback never makes the looks need a new check.
+    await expect(first).toContainText("(you asked for lower heel)", { timeout: 20_000 });
+    await expect(first.getByRole("button", { name: `Keeping ${dress}` })).toBeVisible();
     await expect(panels(page).first()).toContainText("Checked against your preferences");
     await expect(page.getByText("Needs a new check")).toHaveCount(0);
     expect((await sent(page, "updateContext")).at(-1)).toContain("Feedback the shopper has given");
+    await noSeriousA11yProblems(page);
+  });
+
+  test("Change on a piece revises its look: the new piece marked New, the rest kept, and a change summary (5b, R48, R50)", async ({ page }) => {
+    await weddingLooks(page);
+    const first = panels(page).first();
+    const tiles = first.getByRole("listitem");
+    const read = () => tiles.evaluateAll((els) => els.map((el) => [...el.querySelectorAll("p")].slice(0, 2).map((p) => p.textContent ?? "")));
+    const before = await read();
+    const at = before.findIndex(([, kind]) => kind === "Shoes");
+    const shoes = before[at][0];
+    await first.getByRole("button", { name: `Change ${shoes}` }).click();
+    await expect(first).toContainText(new RegExp(`Changed: ${shoes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} to .+\\. Kept: .+\\. New total: \\$`), { timeout: 20_000 });
+    const after = await read();
+    expect(after[at][0]).not.toBe(shoes);
+    expect(after.filter((_, i) => i !== at)).toEqual(before.filter((_, i) => i !== at));
+    await expect(tiles.nth(at)).toContainText("New");
+    await expect(first).toContainText("Checked against your preferences");
+    // The stylist hears what changed, to say it briefly.
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("revised from the shopper's feedback");
     await noSeriousA11yProblems(page);
   });
 

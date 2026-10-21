@@ -10,18 +10,18 @@ import { list } from "./rules";
 // look is only ever its one-line reason, never the look itself. No audio, words, video or photos.
 // Plain code, tested in tests/behind-the-scenes.test.ts.
 
-export type EntryKind = "products" | "captured" | "removed" | "photo" | "passed" | "blocked" | "swap" | "recheck";
+export type EntryKind = "products" | "captured" | "removed" | "photo" | "passed" | "blocked" | "swap" | "recheck" | "revision";
 export type Entry = { at: string; kind: EntryKind; text: string };
 
 /** `look` is the place of the look a feedback line is about (5a). */
 export type NoteRecord = { text: string; status: NoteStatus; source: string; removed: boolean; at: string; look?: number | null };
 export type PhotoRecord = { source: string; item: StyleItem; at: string };
-/** A check of a look, with what the look was: built, a swap (the pieces' names), or checked again after a change. */
+/** A check of a look, with what the look was: built, a swap (the pieces' names), a revision (its summary, 5b), or checked again after a change. */
 export type CheckRecord = {
   at: string;
   verdict: "pass" | "conflict" | "needs_clarification";
   reasons: CheckReason[];
-  look: { name: string; slot: number | null; shown: boolean; swap: { from: string; to: string } | null };
+  look: { name: string; slot: number | null; shown: boolean; swap: { from: string; to: string } | null; revision?: string | null };
   /** This look had been checked before: this one is a check again after a change. */
   again: boolean;
 };
@@ -84,6 +84,10 @@ export function checkEntry(c: CheckRecord): Entry | null {
     return pass
       ? { at: c.at, kind: "recheck", text: `Checked again after your change: ${look} still meets everything.` }
       : { at: c.at, kind: "recheck", text: `Checked again after your change: ${look} no longer fits: ${failed(c.reasons)}. A new look takes its place.` };
+  if (c.look.revision) {
+    if (pass && c.look.shown) return { at: c.at, kind: "revision", text: `Revised Look ${c.look.slot} from your feedback, and checked: ${c.look.revision}` };
+    if (pass) return null;
+  }
   if (c.look.swap) {
     const { from, to } = c.look.swap;
     return pass

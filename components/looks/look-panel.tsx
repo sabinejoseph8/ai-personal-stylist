@@ -12,7 +12,8 @@ import type { ShownItem, ShownLook } from "@/core/looks/shown";
 // items with their photos, "You own this" or "Sample product" and a price, Swap, the total to buy and
 // how it compares with the budget, the one-line reason, and "Checked against your preferences", or
 // "Needs a new check" while it's checked again after a change. Keep and Change (5a) jot feedback under
-// the look, as if said; Save look, Give feedback, Compare and Add to bag join in Phases 5 and 6.
+// the look, as if said. A look revised from feedback (5b) shows Revising meanwhile, then its change
+// summary above the items, with New on the pieces it changed. Save look, Compare and Add to bag join later.
 
 const KINDS: Record<string, string> = {
   outer: "Jacket",
@@ -52,6 +53,7 @@ function ItemTile({
   canSwap,
   onSwap,
   feedback,
+  paused,
   onFeedback,
 }: {
   item: ShownItem;
@@ -63,6 +65,8 @@ function ItemTile({
   onSwap: () => void;
   /** What the shopper said or tapped about this item: keep it, change it, or nothing yet (5a). */
   feedback: "keep" | "change" | null;
+  /** The look is being revised: Keep and Change wait (5b). */
+  paused: boolean;
   onFeedback: (act: "keep" | "change", on: boolean) => void;
 }) {
   return (
@@ -101,7 +105,7 @@ function ItemTile({
                 const on = feedback === act;
                 const word = act === "keep" ? (on ? "Keeping" : "Keep") : on ? "Changing" : "Change";
                 return (
-                  <Chip key={act} selected={on} aria-label={`${word} ${item.name}`} onClick={() => onFeedback(act, !on)}>
+                  <Chip key={act} selected={on} disabled={paused} aria-label={`${word} ${item.name}`} onClick={() => onFeedback(act, !on)}>
                     {word}
                   </Chip>
                 );
@@ -127,6 +131,7 @@ export function LookPanel({
   number,
   count,
   updating,
+  revising,
   swappingIndex,
   newIndex,
   note,
@@ -142,6 +147,8 @@ export function LookPanel({
   count: number;
   /** The looks are being brought up to date after a change. */
   updating: boolean;
+  /** This look is being revised from feedback (5b). */
+  revising: boolean;
   /** The piece being swapped in this look, if any. */
   swappingIndex: number | null;
   /** The piece a swap just brought in. */
@@ -167,18 +174,26 @@ export function LookPanel({
           {look.name}
         </h3>
       </header>
+      {/* The change summary sits above a revised look (design 4.3, R50). */}
+      {look.change && <p className="type-body m-0 rounded-print bg-emerald-wash px-3 py-2 text-ink">{look.change}</p>}
+      {look.note && (
+        <p role="status" className="type-body m-0 rounded-print bg-showroom px-3 py-2 text-ink">
+          {look.note}
+        </p>
+      )}
       <ul aria-label={`Items in ${look.name}`} className="m-0 grid list-none grid-cols-2 gap-3 p-0 desktop:grid-cols-3">
         {look.items.map((item, i) => (
           <ItemTile
             key={`${i}-${item.id}`}
             item={item}
             image={item.owned ? imageFor(item) : item.imageUrl}
-            isNew={newIndex === i}
+            isNew={newIndex === i || (look.changed ?? []).includes(i)}
             note={note?.index === i ? note.text : null}
             feedback={feedbackFor(item)}
+            paused={revising}
             onFeedback={(act, on) => onFeedback(i, act, on)}
             checking={swappingIndex === i}
-            canSwap={canSwap && look.current && !updating}
+            canSwap={canSwap && look.current && !updating && !revising}
             onSwap={() => onSwap(i)}
           />
         ))}
@@ -189,7 +204,7 @@ export function LookPanel({
       </div>
       <p className="type-body m-0 text-ink">{look.reason}</p>
       <div className="flex flex-wrap items-center gap-2">
-        {look.current ? <StatusChip status="checked" /> : <StatusChip status="needsNewCheck" />}
+        {revising ? <StatusChip status="revising" /> : look.current ? <StatusChip status="checked" /> : <StatusChip status="needsNewCheck" />}
         {updating && !look.current && <span className="type-label text-graphite">Updating</span>}
       </div>
     </article>

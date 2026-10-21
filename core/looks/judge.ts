@@ -127,15 +127,18 @@ export function createJudge(ask: Ask): Judge {
 
 /**
  * A fake judge for browser tests and the service's tests: passes, unless a firm preference mentions
- * "flashy" and an item is sequinned or metallic. Only used when LOOKS_BUILDER=fake, never on the live site.
+ * "flashy" and an item is sequinned or metallic, or a note says "no high heels" (feedback for every look,
+ * 5b) and a heel is over 5 cm. Only used when LOOKS_BUILDER=fake, never on the live site.
  */
 export function createFakeJudge(): Judge {
   return {
-    async judge({ items, judged, withReason }) {
+    async judge({ items, notes, judged, withReason }) {
       const flashy = judged.some((j) => /flashy/i.test(j)) && items.some((i) => "product" in i && /sequin|metallic/i.test(`${i.product.details.material} ${i.product.details.pattern}`));
-      return flashy
-        ? { verdict: "conflict", reasons: [{ about: judged.find((j) => /flashy/i.test(j))!, ok: false, why: "Sequins are flashy" }], costUsd: 0 }
-        : { verdict: "pass", reasons: [{ about: "The occasion", ok: true, why: "Suits it" }], costUsd: 0, ...(withReason ? { reason: "A fake reason for a swapped look." } : {}) };
+      const noHeels = notes.find((n) => /no high heels/i.test(n));
+      const heels = noHeels && items.some((i) => "product" in i && (i.product.details.heelCm ?? 0) > 5);
+      if (flashy) return { verdict: "conflict", reasons: [{ about: judged.find((j) => /flashy/i.test(j))!, ok: false, why: "Sequins are flashy" }], costUsd: 0 };
+      if (heels) return { verdict: "conflict", reasons: [{ about: noHeels, ok: false, why: "The shoes have high heels" }], costUsd: 0 };
+      return { verdict: "pass", reasons: [{ about: "The occasion", ok: true, why: "Suits it" }], costUsd: 0, ...(withReason ? { reason: "A fake reason for a swapped look." } : {}) };
     },
   };
 }

@@ -27,4 +27,10 @@ export type ShownLook = {
   total: LookTotal;
   /** Checked against the current requirements; false means it needs a new check (R58). */
   current: boolean;
+  /** A revised look's change summary (5b, R50): "Changed: … Kept: … New total: …". */
+  change?: string | null;
+  /** The places of the pieces a revision brought in, for their New chips. */
+  changed?: number[];
+  /** Why the last revision couldn't be made, so the look stayed: "No other shoes fit everything …". */
+  note?: string | null;
 };

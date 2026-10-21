@@ -14,7 +14,7 @@ export function Chip({
       aria-pressed={selected}
       className={[
         "focus-ring type-label inline-flex min-h-touch items-center gap-1.5 rounded-pill border px-4",
-        "transition-colors duration-standard ease-arrive",
+        "transition-colors duration-standard ease-arrive disabled:cursor-not-allowed disabled:opacity-55",
         selected ? "border-emerald bg-emerald-wash text-ink" : "border-control-edge bg-page text-ink hover:bg-showroom",
         className,
       ].join(" ")}

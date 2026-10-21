@@ -5,7 +5,8 @@ import type { ShownLook } from "./shown";
 // What the stylist is told about the looks on screen (4c, tech spec 1.3 step 6), added to her context
 // by the page after the notes, since only the page knows which look the shopper is looking at. She
 // presents new looks in her own words, kept short (Sabine's answer to Q4 in 4c), and says what changed
-// after a change (R44).
+// after a change (R44). A look revised from feedback (5b) comes with its change summary, which she says
+// in a few words (R50); one that couldn't be revised comes with why, so she can ask what to change (R49).
 
 export type LooksNow = {
   looks: ShownLook[];
@@ -20,6 +21,8 @@ export type LooksNow = {
   changed?: string | null;
   /** Feedback jotted on the looks (5a), by look number (null for a look no longer on screen). */
   feedback?: { look: number | null; text: string; confirmed: boolean }[];
+  /** The numbers of the looks being revised from feedback right now (5b). */
+  revising?: number[];
 };
 
 const itemWords = (look: ShownLook) => look.items.map((i) => (i.owned ? `${i.name} (the shopper's own)` : i.name)).join(", ");
@@ -34,15 +37,19 @@ export function looksForStylist(now: LooksNow): string {
   now.looks.forEach((look, i) => {
     const money = [look.total.toBuy, look.total.comparison].filter(Boolean).join(", ");
     lines.push(`- Look ${i + 1}, "${look.name}": ${itemWords(look)}. ${money}. Why it works: ${look.reason}${look.current ? "" : " (being checked again after a change)"}`);
+    if (look.change) lines.push(`  Revised from their feedback. ${look.change}`);
+    if (look.note) lines.push(`  Their last feedback couldn't be applied: ${look.note}`);
   });
   if (now.noMatch) lines.push(`Only ${now.looks.length} ${now.looks.length === 1 ? "look meets" : "looks meet"} everything. ${now.noMatch.message} Explain this briefly and offer the choices: ${now.noMatch.choices.join(", ")}.`);
   if (now.needs) lines.push(`They need a new check first: the shopper's screen says "${now.needs}".`);
   if (now.changed) lines.push(now.changed);
+  if (now.revising?.length) lines.push(`${now.revising.length === 1 ? "Look" : "Looks"} ${list(now.revising.map(String), "and")} ${now.revising.length === 1 ? "is" : "are"} being revised from their feedback right now.`);
   if (now.feedback?.length) {
     lines.push("Feedback the shopper has given, jotted under its look:");
     for (const f of now.feedback) lines.push(`- ${f.look ? `Look ${f.look}` : "An earlier look"}: ${f.text}${f.confirmed ? "" : " (not confirmed yet: check what they meant)"}`);
-    // Revising looks from feedback arrives in 5b.
-    lines.push("Say in a few words that you've noted their feedback, and that the look will be revised next. If they want a piece changed right away, offer Swap.");
+    lines.push(
+      "Feedback asking for a change revises that look by itself: say in a few words what you'll change. The look shows Revising, then the revised look appears with what changed above it. Feedback in pencil waits until it's confirmed, so check what they meant first.",
+    );
   }
   lines.push(now.inView ? `The shopper is looking at Look ${now.inView}.` : "No look is on the shopper's screen right now.");
   lines.push(
@@ -52,8 +59,20 @@ export function looksForStylist(now: LooksNow): string {
   return lines.join("\n");
 }
 
-/** What changed after the looks were brought up to date, by look number, for the stylist to say (R44). */
+/**
+ * What changed after the looks were brought up to date, by look number, for the stylist to say (R44): a
+ * revision's summary (5b, R50), why a revision couldn't be made (R49), or which looks were replaced after
+ * a change.
+ */
 export function looksChanged(before: ShownLook[], after: ShownLook[]): string | null {
+  const revised: string[] = [];
+  after.forEach((look, i) => {
+    const was = before.find((b) => b.slot === look.slot);
+    if (look.change && was && was.id !== look.id) revised.push(`Look ${i + 1} is revised from the shopper's feedback. ${look.change} Say what changed in a few words.`);
+    else if (look.note && was?.id === look.id && was.note !== look.note)
+      revised.push(`Look ${i + 1} couldn't be revised as they asked: ${look.note} Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.`);
+  });
+  if (revised.length) return revised.join(" ");
   const kept: number[] = [];
   const replaced: number[] = [];
   after.forEach((look, i) => (before.some((b) => b.id === look.id) ? kept : replaced).push(i + 1));

@@ -16,7 +16,7 @@ import { SessionEndedError } from "@/lib/notes-store";
 
 export type { Entry };
 
-type LookRow = { id: string; name: string | null; status: string; input_versions: { slot?: number; swap?: { from: string; to: string } } };
+type LookRow = { id: string; name: string | null; status: string; input_versions: { slot?: number; swap?: { from: string; to: string }; revision?: { summary?: string } } };
 const SHOWN = ["published", "needs_check", "replaced", "saved"];
 type CheckRow = { look_id: string; verdict: CheckRecord["verdict"]; reasons: CheckReason[]; created_at: string };
 
@@ -81,6 +81,7 @@ export async function behindTheScenesFor(deps: { db: SupabaseClient; catalog: Ca
           slot: look.input_versions.slot ?? null,
           shown: SHOWN.includes(look.status) || (total.get(c.look_id) ?? 0) > 1,
           swap: swap ? { from: names.get(swap.from) ?? "the old piece", to: names.get(swap.to) ?? "a new piece" } : null,
+          revision: look.input_versions.revision?.summary ?? null,
         },
         again: before > 0,
       },

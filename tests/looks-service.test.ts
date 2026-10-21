@@ -421,7 +421,7 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(change?.notes.filter((n) => n.feedback).map((n) => n.feedback!.act)).toEqual(["keep", "change"]);
     const off = await feedbackByTouch({ db, catalog }, guest.id, session, { lookId: look.id, index: 0, act: "keep", on: false });
     expect(off?.notes.filter((n) => n.feedback).map((n) => n.feedback!.act)).toEqual(["change"]);
-    // Feedback is for revising a look (5b), not a requirement: the looks stay current, and asking again builds nothing.
+    // Feedback revises its look (5b), it isn't a requirement: the looks stay current, and Change swaps the piece without the builder.
     expect((await currentLooks(deps(), guest.id, session)).every((l) => l.current)).toBe(true);
     const counter = counting();
     await buildLooks(deps(counter.builder), guest.id, session);
@@ -431,6 +431,131 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(await feedbackByTouch({ db, catalog }, guest.id, session, { lookId: look.id, index: 11, act: "keep", on: true })).toBeNull();
     const entries = (await behindTheScenesFor({ db, catalog }, guest.id, session))!;
     expect(entries.some((e) => e.text.startsWith(`Feedback on Look ${look.slot}: Change the `) && e.text.endsWith("Confirmed with a tap."))).toBe(true);
+  }, 60_000);
+
+  /** A feedback line under the look in place `slot`, as the notes reader or a tap jots it (5a). */
+  const feedback = (text: string, slot: number, act: string, items: string[], scope = "item", about = "") =>
+    note("feedback", text, "confirmed", [["look", String(slot)], ["items", items.join(",")], ["act", act], ["scope", scope], ...(about ? [["about", about] as [string, string]] : [])]);
+  const stagesOf = () => {
+    const stages: string[] = [];
+    return { stages, emit: (state: string, slots?: number[]) => void stages.push(slots ? `${state} ${slots.join(",")}` : state) };
+  };
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  it("revises a look from feedback: 'Not these shoes' changes only that pair, in that look, and never brings it back (5b, R48, R50)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const first = looksOf(await buildLooks(deps(), guest.id, session));
+    const [look] = first;
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    const shoes = look.items[at];
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [shoes.id])).throwOnError();
+    const { stages, emit } = stagesOf();
+    const after = looksOf(await buildLooks(deps(), guest.id, session, emit));
+    expect(stages).toContain(`revising ${look.slot}`);
+    const revised = after.find((l) => l.slot === look.slot)!;
+    expect(revised.id).not.toBe(look.id);
+    expect(revised.items[at].id).not.toBe(shoes.id);
+    expect(revised.items.filter((_, i) => i !== at).map((i) => i.id)).toEqual(look.items.filter((_, i) => i !== at).map((i) => i.id));
+    expect(revised.changed).toEqual([at]);
+    expect(revised.change).toMatch(new RegExp(`^Changed: ${esc(shoes.name)} to ${esc(revised.items[at].name)}\\. Kept: .+\\. New total: \\$\\d+, .+\\.$`));
+    // The other looks are as they were, and asking again revises nothing more.
+    expect(after.filter((l) => l.slot !== look.slot).map((l) => l.id)).toEqual(first.filter((l) => l.slot !== look.slot).map((l) => l.id));
+    const again = stagesOf();
+    expect(looksOf(await buildLooks(deps(), guest.id, session, again.emit)).map((l) => l.id)).toEqual(after.map((l) => l.id));
+    expect(again.stages).toEqual([]);
+    // Swap in that look never brings the turned-down pair back.
+    for (let n = 0; n < 3; n++) {
+      const current = (await currentLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+      expect(current.items[at].id).not.toBe(shoes.id);
+      const swapped = await swapPiece(deps(), guest.id, session, current.id, at);
+      if (!swapped || !("look" in swapped)) break;
+      expect(swapped.look.change ?? null).toBeNull();
+    }
+  }, 120_000);
+
+  it("feedback for every look ('no high heels in any look') is a requirement for all of them, not a revision of one (5b, R48)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const first = looksOf(await buildLooks(deps(), guest.id, session));
+    const heard: string[][] = [];
+    const judge = createFakeJudge();
+    const spying: Judge = { judge: (input) => (heard.push(input.notes), judge.judge(input)) };
+    await db.from("session_notes").insert(feedback("No high heels in any look", 2, "change", [], "session", "high heel")).throwOnError();
+    const { stages, emit } = stagesOf();
+    const after = looksOf(await buildLooks({ ...deps(), judge: spying }, guest.id, session, emit));
+    expect(stages).toContain("updating");
+    expect(stages.some((s) => s.startsWith("revising"))).toBe(false);
+    expect(heard.length).toBeGreaterThanOrEqual(first.length);
+    expect(heard.every((notes) => notes.includes("No high heels in any look"))).toBe(true);
+    expect(after.every((l) => l.current)).toBe(true);
+  }, 60_000);
+
+  it("kept pieces stay through 3 rounds of changes (5b, R49, S12)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    const kept = look.items.filter((_, i) => i !== at).map((i) => i.id);
+    await db.from("session_notes").insert(feedback("Keep the dress and bag", look.slot, "keep", kept)).throwOnError();
+    const shown = [look.items[at].id];
+    let current = look;
+    for (let round = 1; round <= 3; round++) {
+      await db.from("session_notes").insert(feedback(`Change the shoes, round ${round}`, look.slot, "change", [current.items[at].id])).throwOnError();
+      current = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+      expect(current.items.filter((_, i) => i !== at).map((i) => i.id)).toEqual(kept);
+      expect(shown).not.toContain(current.items[at].id);
+      shown.push(current.items[at].id);
+      expect(current.total.fits).toBe(true);
+    }
+  }, 120_000);
+
+  it("drops a revision built on an old budget, and the look then fits the new one (5b, R52, S15)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    await db.from("session_notes").insert(feedback("Change the shoes", look.slot, "change", [look.items[at].id])).throwOnError();
+    const judge = createFakeJudge();
+    let changed = false;
+    const changing: Judge = {
+      async judge(input) {
+        if (!changed) {
+          changed = true;
+          await setBudget(300);
+        }
+        return judge.judge(input);
+      },
+    };
+    expect(await buildLooks({ ...deps(), judge: changing }, guest.id, session)).toEqual({ stale: true });
+    const { data: shownRevisions } = await db.from("looks").select("id").eq("revision_of", look.id).eq("status", "published").throwOnError();
+    expect(shownRevisions).toEqual([]);
+    // Asked again on the newest: the look in that place fits $300.
+    const after = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(after.current).toBe(true);
+    expect(after.total.fits).toBe(true);
+    expect(after.total.comparison).toMatch(/\$300 limit/);
+  }, 90_000);
+
+  it("when no revision passes, the look stays with a note, isn't tried again, and the profile never changes (5b, R48, R53)", async () => {
+    const profileBefore = await Promise.all([
+      db.from("saved_preferences").select("*").eq("user_id", guest.id).order("id").throwOnError(),
+      db.from("profiles").select("departments, style_words, sizes, budget_amount_cents, budget_meaning, budget_max_cents").eq("user_id", guest.id).throwOnError(),
+    ]);
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [look.items[at].id])).throwOnError();
+    let judged = 0;
+    const never: Judge = { judge: async () => (judged++, { verdict: "conflict", reasons: [{ about: "Outdoor wedding, November", ok: false, why: "Not right for it" }], costUsd: 0 }) };
+    const after = looksOf(await buildLooks({ ...deps(), judge: never }, guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(after.id).toBe(look.id);
+    expect(after.note).toBe("No other shoes fit everything you've asked for, so these stay.");
+    const tried = judged;
+    expect(tried).toBeGreaterThan(0);
+    await buildLooks({ ...deps(), judge: never }, guest.id, session);
+    expect(judged).toBe(tried);
+    const profileAfter = await Promise.all([
+      db.from("saved_preferences").select("*").eq("user_id", guest.id).order("id").throwOnError(),
+      db.from("profiles").select("departments, style_words, sizes, budget_amount_cents, budget_meaning, budget_max_cents").eq("user_id", guest.id).throwOnError(),
+    ]);
+    expect(profileAfter.map((r) => r.data)).toEqual(profileBefore.map((r) => r.data));
   }, 60_000);
 
   it("looks and their checks are deleted when the session ends (R63)", async () => {

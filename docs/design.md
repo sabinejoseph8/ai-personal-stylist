@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.15 (21 Oct 2026)
+**Status:** Agreed, version 1.16 (21 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -234,7 +234,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - While the shopper is speaking, screen reader updates are grouped, for example "3 notes added", so they do not talk over the conversation.
 
 **Status chip**
-- A small pill with an icon and a word: To confirm, Confirmed, Saved preference, This session only, Checking, Checked, Needs a new check.
+- A small pill with an icon and a word: To confirm, Confirmed, Saved preference, This session only, Checking, Checked, Needs a new check, Revising (a pencil, 5b).
 - Always an icon plus a word. Never color alone.
 
 **Note actions**
@@ -308,6 +308,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **Fewer than three:** a box after the looks says what limits them, with its choices as buttons, only ones that work now (your decision A in 4e: "Allow it for this session" arrives in 5c). Tapping one says it to the stylist (only during a call); Try again builds again. With none at all, the same in a banner.
 - **Error:** a red banner, "The looks couldn't be put together.", with Try again; anything already shown stays.
 - **Keep and Change (5a):** two toggles (chips) on each sample product's tile, above Swap, reading Keeping and Changing (with the check) when pressed; the shopper's own pieces have none.
+- **Revisions (5b):** a look being revised shows the Revising chip in place of its check status, with Swap, Keep and Change paused, and "Revising your look" with a spinner above the looks. The revised look's change summary sits above its items in an Emerald-wash box, and its new pieces carry the New chip. When no revision fits, a note in a Showroom box above the items says so, and the look stays. After a Keep or Change tap the looks wait 2 seconds, so several taps make one revision.
 - Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
 
 **Preference check status**
@@ -581,6 +582,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.16 (21 Oct 2026):** 5b: the Revising chip, the change summary box, New on revised pieces and the nothing-fits note (4.3).
 - **1.15 (21 Oct 2026):** 5a: Keep and Change on the tiles (4.3), and feedback under each look in the notebook (4.2).
 - **1.14 (21 Oct 2026):** Phase 4 code review: the no-match choices (your decision A, 4.3).
 - **1.13 (21 Oct 2026):** 4d: Behind the scenes as built (4.4).
