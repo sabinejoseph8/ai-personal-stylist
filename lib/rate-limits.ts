@@ -13,6 +13,8 @@ export const LIMITS = {
   looksRequest: { max: 120, windowSeconds: 3600 },
   buildLooks: { max: 20, windowSeconds: 3600 },
   swapPiece: { max: 40, windowSeconds: 3600 },
+  // Behind the scenes (4d): read only, asked again while open as notes and looks change.
+  behindTheScenes: { max: 240, windowSeconds: 3600 },
   makeRule: { max: 20, windowSeconds: 3600 },
 } as const;
 

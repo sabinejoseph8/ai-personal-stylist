@@ -10,6 +10,7 @@ import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/
 // what's needed before looks appear (R39), three checked looks with totals and reasons (R40 to R42,
 // R55), Swap by touch and by voice (R43), and a changed budget bringing them up to date (R44, R58).
 // Phase 4's end-to-end test: with the sample profile, no look shows high heels across 10 swaps (S13).
+// 4d: Behind the scenes (R72).
 test.describe("the looks", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -113,6 +114,38 @@ test.describe("the looks", () => {
     await playInCall(page, { type: "words", speaker: "shopper", text: "Can you show me different shoes", final: true, turnId: "s1" });
     await expect(first.getByText("New", { exact: true })).toBeVisible({ timeout: 15_000 });
     await expect(first.getByRole("button", { name: /^Swap / }).nth(1)).not.toHaveAttribute("aria-label", before!);
+  });
+
+  test("Behind the scenes shows what was captured and each check, a blocked candidate only as its reason (R72)", async ({ page }) => {
+    await fakeMicrophone(page, "allowed", true);
+    await page.goto("/session");
+    await page.getByRole("button", { name: "Behind the scenes" }).click();
+    const panel = page.getByRole("dialog", { name: "Behind the scenes" });
+    await expect(panel).toContainText("Start a conversation, and what the stylist captures and checks appears here.");
+    await page.keyboard.press("Escape");
+
+    await page.getByRole("button", { name: "Start conversation" }).click();
+    await expect.poll(() => scriptDone(page)).toBe(true);
+    await page.getByRole("button", { name: `“${SAMPLE_PHRASES[0]}”` }).click();
+    await expect(note(page, "Outdoor wedding, November")).toBeVisible();
+    // A tight budget, so the checker blocks some candidates.
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Actually, make my budget $250", final: true, turnId: "b1" });
+    await expect(note(page, "Budget: up to $250")).toBeVisible();
+    await confirm(page, "Outdoor wedding, November");
+    await confirm(page, "Budget: up to $250");
+    await expect(panels(page).first()).toBeVisible({ timeout: 20_000 });
+    // The looks on screen, read before the panel covers the page.
+    const shown = await panels(page).getByRole("heading", { level: 3 }).allTextContents();
+
+    await page.getByRole("button", { name: "Behind the scenes" }).click();
+    await expect(panel).toContainText(/Right now \d+ of \d+ womenswear sample products fit everything you've asked for\./);
+    await expect(panel).toContainText("Captured: Outdoor wedding, November. From what you said. Confirmed by you with a tap.");
+    await expect(panel).toContainText("Captured: Elegant. From what you said. Not confirmed yet.");
+    await expect(panel).toContainText(/Check passed: Look 1, Test look \d\. It meets Never: high heels/);
+    await expect(panel).toContainText(/Check blocked a candidate: \$\d+ over your \$250 limit\./);
+    // The blocked looks' names never appear: only shown looks are named.
+    for (const name of (await panel.innerText()).match(/Test look \d/g) ?? []) expect(shown).toContain(name);
+    await noSeriousA11yProblems(page);
   });
 
   test("a changed budget brings the looks up to date, and every one fits it (R44, R58)", async ({ page }) => {

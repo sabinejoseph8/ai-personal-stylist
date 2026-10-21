@@ -236,6 +236,27 @@ export type BuildOptions = {
 export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: string, emit: (state: BuildStage) => void = () => {}, options: BuildOptions = {}): Promise<BuildResult | null> {
   const { db } = deps;
   if (!(await sessionOpen(db, guestId, sessionId))) return null;
+  // One build at a time per session (migration one_build_at_a_time): a request that finds one running
+  // waits for it, then starts again from what it made, which is usually nothing left to do.
+  for (let waited = 0; ; waited++) {
+    const { data: claimed } = await db.rpc("claim_looks_build", { session: sessionId }).throwOnError();
+    if (claimed) break;
+    if (waited === 0) emit("building");
+    if (waited >= BUILD_WAIT_SECONDS) return { stale: true };
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  try {
+    return await buildNow(deps, guestId, sessionId, emit, options);
+  } finally {
+    await db.rpc("release_looks_build", { session: sessionId });
+  }
+}
+
+/** How long a request waits for a build already running: as long as a build may take. */
+const BUILD_WAIT_SECONDS = 300;
+
+async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emit: (state: BuildStage) => void, options: BuildOptions): Promise<BuildResult> {
+  const { db } = deps;
   const g = await gather(db, guestId, sessionId);
   const ready = looksReadiness(g.notes);
   if (!ready.ready) return { needs: ready.needs };

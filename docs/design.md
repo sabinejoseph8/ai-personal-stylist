@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.12 (21 Oct 2026)
+**Status:** Agreed, version 1.13 (21 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -350,6 +350,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
   - "Check passed: Look 2 meets Never: high heels, your budget and your colors."
   - "Check blocked a candidate: 9 cm heels break Never: high heels. Shoes replaced."
 - Never shows audio, transcripts, video or photos.
+- **As built (4d):** a Behind the scenes button beside Wardrobe until the app menu (Phase 7). On for everyone, closed until opened (your Q2). It starts with a "Now" line: how many products fit everything now, and why the rest were left out (your Q3). Each entry shows its time in Graphite, then the sentence; passed checks have the shield (Emerald), blocked candidates the warning icon (Red pen), and checks after a change the circular arrows. A note confirmed with a tap says "Confirmed by you with a tap."
 
 **App bar and menu**
 - Phones: the app name and a **Menu** button. Desktops: the same items across the top.
@@ -578,6 +579,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.13 (21 Oct 2026):** 4d: Behind the scenes as built (4.4).
 - **1.12 (21 Oct 2026):** 4c: the looks as built: where they sit on each screen size, before looks, building, the item tiles with Swap and New, after a change, fewer than three, and errors (4.3).
 - **1.11 (21 Oct 2026):** 4a: setup's read-back for each Must have and Never (5.2).
 - **1.10 (20 Oct 2026):** Phase 3 code review: Clear wardrobe items when nothing is ticked (your decision B), and the Wardrobe page's detail lengths (4.2).

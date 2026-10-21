@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BehindTheScenes } from "@/components/behind/behind-the-scenes";
 import { redirect } from "next/navigation";
 import { StylingSession } from "@/components/session/styling-session";
 import { buttonClasses } from "@/components/ui/button";
@@ -71,6 +72,8 @@ export default async function SessionPage() {
             <Link href="/wardrobe" className={buttonClasses("secondary")}>
               Wardrobe
             </Link>
+            {/* A portfolio extra (4d), here until the app menu arrives in Phase 7. */}
+            <BehindTheScenes />
             <Link href="/" className={buttonClasses("quiet")}>
               Back to the start
             </Link>
