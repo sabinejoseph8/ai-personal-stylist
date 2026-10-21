@@ -1,5 +1,7 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
+import { SessionEndedError } from "@/lib/notes-store";
 import { photoReadingDeps } from "@/lib/photo-deps";
 import { PHOTO_MESSAGES } from "@/lib/photos";
 import { type FinishRefusal, finishPhoto, readPhoto } from "@/lib/photos-service";
@@ -10,7 +12,8 @@ import { sessionContext } from "@/lib/session-context";
 // cleans it (no location or camera details) and keeps it (FR-27). It shares the 4-a-second limit on
 // photo changes. The answer streams one line of JSON per update: first the kept photo, with its
 // short-lived links, showing Analyzing; then what the photo reader found (3b), with the stylist's
-// context. If the browser goes away meanwhile, the reading still finishes and is saved.
+// context. If the browser goes away meanwhile, the reading still finishes and is saved: it's
+// registered with after(), because Vercel stops work a cancelled response leaves behind (Phase 3 review).
 
 const Body = z.object({ version: z.number().int().positive() });
 
@@ -35,6 +38,19 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
   if (!result.ok) return Response.json({ reason: result.reason, error: PHOTO_MESSAGES[result.reason] }, { status: REFUSED[result.reason] });
   const { photo, jpeg } = result;
 
+  const reading = (async () => {
+    try {
+      const item = await readPhoto(deps, guest.id, assetId, photo.version, jpeg);
+      // Null: replaced or removed while it was being read, so its answer is dropped (R31).
+      return item ? { id: assetId, version: photo.version, item, context: await sessionContext(deps.db, guest.id, id) } : null;
+    } catch (e) {
+      if (e instanceof SessionEndedError) return null; // the session was deleted meanwhile
+      console.error(`photos: reading a photo failed: ${e instanceof Error ? e.message : e}`);
+      return { id: assetId, version: photo.version, item: { reading: { state: "failed", items: [], chosen: null }, ownership: null } };
+    }
+  })();
+  after(reading);
+
   const encoder = new TextEncoder();
   let listening = true;
   const stream = new ReadableStream<Uint8Array>({
@@ -48,17 +64,10 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
         }
       };
       send({ photo });
-      try {
-        const item = await readPhoto(deps, guest.id, assetId, photo.version, jpeg);
-        // Null: replaced or removed while it was being read, so its answer is dropped (R31).
-        if (item) send({ id: assetId, version: photo.version, item, context: await sessionContext(deps.db, guest.id, id) });
-      } catch (e) {
-        console.error(`photos: reading a photo failed: ${e instanceof Error ? e.message : e}`);
-        send({ id: assetId, version: photo.version, item: { reading: { state: "failed", items: [], chosen: null }, ownership: null } });
-      } finally {
-        if (listening) controller.close();
-        listening = false;
-      }
+      const line = await reading;
+      if (line) send(line);
+      if (listening) controller.close();
+      listening = false;
     },
     cancel() {
       listening = false;

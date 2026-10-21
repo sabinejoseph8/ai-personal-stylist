@@ -42,6 +42,6 @@ export async function readFrame(deps: CameraDeps, guestId: string, sessionId: st
   const money = await deps.guard.checkAi(guestId, "claude");
   if (!money.ok) return { ok: false, reason: "allowance" };
   const read = await deps.reader.read(frame.toString("base64"));
-  if (read && read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
-  return read ? { ok: true, sighting: read.sighting } : { ok: false, reason: "failed" };
+  if (read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
+  return read.sighting ? { ok: true, sighting: read.sighting } : { ok: false, reason: "failed" };
 }

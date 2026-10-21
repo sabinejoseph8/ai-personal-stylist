@@ -30,7 +30,7 @@ const summarize = (items: PhotoItem[]) => items.map((it) => `${it.name} [${Objec
 
 async function single(p: Product) {
   const { result, seconds } = await read(await (await photoOf(p.slug)).jpeg().toBuffer());
-  const it = result?.items[0];
+  const it = result.items?.[0];
   const d = it?.details;
   const checks = [
     { what: "type", ok: !!d && typeOk(p.category, d.type.value) },
@@ -39,17 +39,17 @@ async function single(p: Product) {
     { what: "style", ok: !!d && styleOk(p.style_tags, d.style.value) },
   ];
   const expected = `${p.category}; ${p.colors.join("/")}; ${p.attributes.pattern ?? "solid"}; ${p.style_tags.join("/")}`;
-  return { id: p.slug, expected, found: summarize(result?.items ?? []), checks, seconds, cost: result?.costUsd ?? 0, failed: !result };
+  return { id: p.slug, expected, found: summarize(result.items ?? []), checks, seconds, cost: result.costUsd, failed: !result.items };
 }
 
 async function pair([a, b]: [Product, Product]) {
   const { result, seconds } = await read(await pairPhoto(a, b));
-  const items = result?.items ?? [];
+  const items = result.items ?? [];
   const checks = [
     { what: "found 2 or more items", ok: items.length >= 2 },
     ...[a, b].map((p) => ({ what: `found the ${p.category}`, ok: items.some((it) => typeOk(p.category, it.details.type.value)) })),
   ];
-  return { id: `${a.slug} + ${b.slug}`, expected: `${a.category} + ${b.category}`, found: summarize(items), checks, seconds, cost: result?.costUsd ?? 0, failed: !result };
+  return { id: `${a.slug} + ${b.slug}`, expected: `${a.category} + ${b.category}`, found: summarize(items), checks, seconds, cost: result.costUsd, failed: !result.items };
 }
 
 it("photo evaluation: at least 85% of details right, and both items found in two-item photos", async () => {

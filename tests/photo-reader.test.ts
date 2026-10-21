@@ -48,13 +48,13 @@ describe("the photo reader's answer", () => {
     expect(itemsFrom({ items: [{ n: "", t: raw("h"), c: raw("h"), p: raw("h"), s: raw("h") }] })).toEqual([]);
   });
 
-  it("sends Claude the photo, and gives null when Claude can't answer (R32)", async () => {
+  it("sends Claude the photo, and gives no items but still the cost when Claude can't answer (R32)", async () => {
     const asked: Parameters<Ask>[0][] = [];
     const ask: Ask = async (request) => {
       asked.push(request);
       return { data: null, costUsd: 0.01 };
     };
-    expect(await createPhotoReader(ask).read({ jpegBase64: "abc", width: 10, height: 10 })).toBeNull();
+    expect(await createPhotoReader(ask).read({ jpegBase64: "abc", width: 10, height: 10 })).toEqual({ items: null, costUsd: 0.01 });
     expect(asked[0].user).toEqual([
       { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "abc" } },
       { type: "text", text: "What items are in this photo?" },
@@ -63,9 +63,9 @@ describe("the photo reader's answer", () => {
 
   it("the fake reader for browser tests goes by the photo's shape", async () => {
     const fake = createFakePhotoReader();
-    expect((await fake.read({ jpegBase64: "", width: 300, height: 400 }))?.items.map((i) => i.name)).toEqual(["Navy wool blazer"]);
-    expect((await fake.read({ jpegBase64: "", width: 800, height: 400 }))?.items.map((i) => i.name)).toEqual(["Denim jacket", "White T-shirt"]);
-    expect((await fake.read({ jpegBase64: "", width: 200, height: 500 }))?.items).toEqual([]);
+    expect((await fake.read({ jpegBase64: "", width: 300, height: 400 })).items?.map((i) => i.name)).toEqual(["Navy wool blazer"]);
+    expect((await fake.read({ jpegBase64: "", width: 800, height: 400 })).items?.map((i) => i.name)).toEqual(["Denim jacket", "White T-shirt"]);
+    expect((await fake.read({ jpegBase64: "", width: 200, height: 500 })).items).toEqual([]);
   });
 });
 

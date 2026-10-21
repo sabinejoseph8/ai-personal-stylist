@@ -11,7 +11,7 @@ import { Icon } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
 import { Sheet } from "@/components/ui/sheet";
 import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, uploadType } from "@/lib/photos";
-import { CATEGORIES, CATEGORY_LABELS, type Category, FILTERS, type Filter, type ShownWardrobeItem, WARDROBE_MESSAGES } from "@/lib/wardrobe";
+import { CATEGORIES, CATEGORY_LABELS, type Category, DETAIL_LENGTHS, FILTERS, type Filter, type ShownWardrobeItem, WARDROBE_MESSAGES } from "@/lib/wardrobe";
 
 // The Wardrobe page (3d; R36, R37, design 4.2 and 5.8): saved items as a photo grid with category
 // filters. Add item uploads a photo, which is checked, cleaned and read like a session photo, and the
@@ -66,10 +66,11 @@ function ItemForm({
     else setProblem(WARDROBE_MESSAGES.saveFailed);
   }
 
-  const field = (key: keyof typeof details, label: string) => (
+  // The same lengths the server allows (WardrobeEdit), so a long detail can't be turned away.
+  const field = (key: keyof typeof details, label: string, max: number) => (
     <label className="flex flex-col gap-1">
       <span className="type-label text-ink">{label}</span>
-      <input className={inputClass} value={details[key]} maxLength={60} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+      <input className={inputClass} value={details[key]} maxLength={max} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
     </label>
   );
 
@@ -103,10 +104,10 @@ function ItemForm({
           <ChevronDown aria-hidden="true" size={20} strokeWidth={1.5} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-graphite" />
         </span>
       </label>
-      {field("type", "Type")}
-      {field("colors", "Colors")}
-      {field("pattern", "Pattern")}
-      {field("style", "Style")}
+      {field("type", "Type", DETAIL_LENGTHS.type)}
+      {field("colors", "Colors", DETAIL_LENGTHS.colors)}
+      {field("pattern", "Pattern", DETAIL_LENGTHS.pattern)}
+      {field("style", "Style", DETAIL_LENGTHS.style)}
       {problem && (
         <p role="alert" className="type-small m-0 text-red-pen">
           {problem}

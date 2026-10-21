@@ -140,4 +140,18 @@ test.describe("the photo reader", () => {
     await expect(area(page).getByText("Black blazer", { exact: true })).toBeVisible();
     await expect(details(page, "Black blazer").getByRole("listitem").filter({ hasText: "Type: blazer" })).toContainText("Confirmed");
   });
+
+  test("if the connection drops after the photo is kept, the photo stays and its reading still arrives (Phase 3 code review)", async ({ page }) => {
+    // The server finishes the reading, but the page only gets the first line: the kept photo.
+    await page.route("**/assets/*/ready", async (route) => {
+      const res = await route.fetch();
+      const [first] = (await res.text()).split("\n");
+      await route.fulfill({ response: res, body: `${first}\n` });
+    });
+    await inCall(page);
+    await addPhoto(page, await photo(300, 400));
+    await read(area(page).getByText("Navy wool blazer", { exact: true })).toBeVisible();
+    await expect(area(page).getByText("The photo didn’t upload.")).toHaveCount(0);
+    await expect(area(page).getByRole("button", { name: "Enlarge" })).toBeVisible();
+  });
 });

@@ -31,11 +31,11 @@ export const CAMERA_SCHEMA = {
 /** What one frame shows. `sure` is false when the reader isn't sure of the name. */
 export type Sighting = { kind: "item"; name: string; type: string; color: string; sure: boolean } | { kind: "several" } | { kind: "none" };
 
-export type CameraRead = { sighting: Sighting; costUsd: number };
+/** `sighting` is null when the reading failed. The cost counts either way. */
+export type CameraRead = { sighting: Sighting | null; costUsd: number };
 
 export interface CameraReader {
-  /** What the frame shows, or null when the reading failed. */
-  read(jpegBase64: string): Promise<CameraRead | null>;
+  read(jpegBase64: string): Promise<CameraRead>;
 }
 
 type Raw = { s: "one" | "several" | "none"; n: string; t: string; c: string; k: "h" | "m" | "l" };
@@ -60,8 +60,7 @@ export function createCameraReader(ask: Ask): CameraReader {
         schema: CAMERA_SCHEMA,
         maxTokens: 1000,
       });
-      if (!data) return null;
-      return { sighting: sightingFrom(data as Raw), costUsd };
+      return { sighting: data ? sightingFrom(data as Raw) : null, costUsd };
     },
   };
 }

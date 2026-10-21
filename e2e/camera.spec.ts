@@ -117,11 +117,15 @@ test.describe("the camera", () => {
     await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "false");
   });
 
-  test("the camera turns itself off after 2 minutes (R35)", async ({ page }) => {
+  test("the camera turns itself off after 2 minutes, even if it was switched meanwhile (R35)", async ({ page }) => {
     await page.clock.install();
     await inCall(page);
     await cameraOn(page);
-    await page.clock.fastForward("02:01");
+    await page.clock.fastForward("01:30");
+    // Switching cameras doesn't start the 2 minutes again (Phase 3 code review).
+    await page.getByRole("button", { name: "Switch camera" }).click();
+    await expect(stage(page).getByText("Video isn’t saved.")).toBeVisible();
+    await page.clock.fastForward("00:31");
     await expect(page.getByText("Camera turned off. Turn it on again to show another item.")).toBeVisible();
     await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "false");
   });

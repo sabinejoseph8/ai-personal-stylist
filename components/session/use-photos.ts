@@ -73,6 +73,8 @@ const preload = (url: string) =>
 export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks: PhotoHooks) {
   const [photos, setPhotos] = useState<PagePhoto[]>(() => initial.map(fromServer));
   const [problem, setProblem] = useState<string | null>(null);
+  // Photos whose reading the page asks the server for, rather than waiting for it on the upload.
+  const [awaiting, setAwaiting] = useState(() => new Set(initial.map((p) => p.id)));
   const session = useRef(sessionId);
   const said = useRef(hooks);
   useLayoutEffect(() => {
@@ -160,21 +162,29 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       if (done.ok && done.body) {
         // The kept photo first (Analyzing), then the photo reader's answer.
         let kept = false;
-        await readLines<ReadyLine>(done, (line) => {
-          if (line.photo && !kept) {
-            kept = true;
-            const p = line.photo;
-            void preload(p.photoUrl).then(() => {
-              if (update(key, ticket, { state: "ready", progress: 1, photoUrl: p.photoUrl, thumbnailUrl: p.thumbnailUrl, version: p.version, file: undefined }))
-                URL.revokeObjectURL(preview);
-            });
-            update(key, ticket, { item: p.item });
-          } else if (line.item && update(key, ticket, { item: line.item })) {
-            if (line.context) said.current.onContext(line.context);
-            said.current.onRead(key);
-          }
-        });
+        let read = false;
+        try {
+          await readLines<ReadyLine>(done, (line) => {
+            if (line.photo && !kept) {
+              kept = true;
+              const p = line.photo;
+              void preload(p.photoUrl).then(() => {
+                if (update(key, ticket, { state: "ready", progress: 1, photoUrl: p.photoUrl, thumbnailUrl: p.thumbnailUrl, version: p.version, file: undefined }))
+                  URL.revokeObjectURL(preview);
+              });
+              update(key, ticket, { item: p.item });
+            } else if (line.item && update(key, ticket, { item: line.item })) {
+              read = true;
+              if (line.context) said.current.onContext(line.context);
+              said.current.onRead(key);
+            }
+          });
+        } catch {
+          // The connection dropped after the photo was kept (a weak signal): the photo isn't lost.
+        }
         if (!kept) failed();
+        // The reading is saved on the server even so, so the page asks for it (Phase 3 code review).
+        else if (!read && tickets.current.get(key) === ticket) setAwaiting((keys) => new Set(keys).add(key));
         return;
       }
       const result = (await done.json().catch(() => ({}))) as ReadyLine;
@@ -215,18 +225,25 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
    */
   // A change still on its way to the server: Save to wardrobe waits for it, so tapping Save straight
   // after It's mine doesn't reach the server first (found by the 3d browser tests).
-  const changing = useRef<Promise<unknown>>(Promise.resolve());
+  // Each change passes on the item as it left it, so a quick second tap starts from the first one's
+  // result rather than from the photo as it was when tapped (Phase 3 code review).
+  type Changed = { id: string; version: number; item: StyleItem } | null;
+  const changing = useRef<Promise<Changed>>(Promise.resolve(null));
   function change(photo: PagePhoto, what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" }) {
-    const done = changing.current.then(() => sendChange(photo, what));
+    const done = changing.current.then((last) => sendChange(photo, what, last));
     changing.current = done.catch(() => null);
     return done;
   }
 
-  async function sendChange(photo: PagePhoto, what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" }) {
+  async function sendChange(
+    photo: PagePhoto,
+    what: { confirm: ItemChange["confirm"] } | { choose: number } | { ownership: "owned" | "inspiration" },
+    last: Changed,
+  ): Promise<Changed> {
     setProblem(null);
     const id = session.current;
-    if (!id || !photo.id || !photo.item) return;
-    const before = photo.item;
+    if (!id || !photo.id || !photo.item) return null;
+    const before = last && last.id === photo.id && last.version === photo.version ? last.item : photo.item;
     const local: ItemChange = "confirm" in what ? { confirm: what.confirm } : what;
     setItem(photo.id, changeItem(before, local));
     const body = "confirm" in what ? { confirm: what.confirm?.[0] } : what;
@@ -239,10 +256,11 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     if (!answer?.item) {
       setItem(photo.id, before);
       setProblem("That didn't save. Check your connection and try again.");
-      return;
+      return { id: photo.id, version: photo.version, item: before };
     }
     setItem(photo.id, answer.item);
     if (answer.context) said.current.onContext(answer.context);
+    return { id: photo.id, version: photo.version, item: answer.item };
   }
 
   /**
@@ -314,15 +332,14 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     }
   }
 
-  // A photo still being read when the page opened (a reload mid-reading) has no answer on its way to
-  // this page, so the page looks again shortly.
-  const [fromLoad] = useState(() => new Set(initial.map((p) => p.id)));
-  const reloadedWhileReading = photos.some((p) => fromLoad.has(p.key) && p.state === "ready" && p.item?.reading.state === "analyzing");
+  // A photo still being read with no answer on its way to this page looks again shortly: one being
+  // read when the page opened (a reload mid-reading), or one whose answer was cut off by the connection.
+  const waitingForReading = photos.some((p) => awaiting.has(p.key) && p.state === "ready" && p.item?.reading.state === "analyzing");
   useEffect(() => {
-    if (!reloadedWhileReading) return;
+    if (!waitingForReading) return;
     const timer = setTimeout(() => void fetchPhotos(), 4000);
     return () => clearTimeout(timer);
-  }, [reloadedWhileReading, photos]);
+  }, [waitingForReading, photos]);
 
   return {
     photos,

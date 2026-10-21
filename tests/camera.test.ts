@@ -27,13 +27,13 @@ describe("the camera reader's answer", () => {
     expect(sightingFrom({ s: "one", n: "", t: "blazer", c: "navy", k: "h" })).toEqual(none);
   });
 
-  it("sends Claude the frame, and gives null when Claude can't answer", async () => {
+  it("sends Claude the frame, and gives no sighting but still the cost when Claude can't answer", async () => {
     const asked: Parameters<Ask>[0][] = [];
     const ask: Ask = async (request) => {
       asked.push(request);
-      return { data: null, costUsd: 0 };
+      return { data: null, costUsd: 0.0002 };
     };
-    expect(await createCameraReader(ask).read("abc")).toBeNull();
+    expect(await createCameraReader(ask).read("abc")).toEqual({ sighting: null, costUsd: 0.0002 });
     expect(asked[0].user).toEqual([
       { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "abc" } },
       { type: "text", text: "What is being shown?" },
@@ -138,6 +138,13 @@ describe.skipIf(!canRunDatabaseTests)("a camera frame on the server", () => {
     expect(usage.data!.claude_microdollars).toBe(200);
     expect((await db.from("session_assets").select("id").eq("session_id", session)).data).toEqual([]);
     expect(((await db.storage.from("guest-photos").list(a.id)).data ?? []).filter((f) => f.id)).toEqual([]);
+  });
+
+  it("a failed reading is still charged to the AI allowance (3e)", async () => {
+    const failing = { read: async () => ({ sighting: null, costUsd: 0.0003 }) };
+    expect(await readFrame({ db, guard: guard(), reader: failing }, a.id, session, await frame())).toEqual({ ok: false, reason: "failed" });
+    const usage = await db.from("usage").select("claude_microdollars").eq("user_id", a.id).single().throwOnError();
+    expect(usage.data!.claude_microdollars).toBe(300);
   });
 
   it("is turned away for another guest's session, an ended session, something that isn't a JPEG, or when AI is used up", async () => {

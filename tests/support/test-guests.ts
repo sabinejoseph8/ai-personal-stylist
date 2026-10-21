@@ -45,11 +45,16 @@ async function newGuest() {
   return { db, id: created.data.user.id };
 }
 
-/** Every file in a folder of the photo store, including its subfolders (a session's photos, uploads on their way). */
+/**
+ * Every file in a folder of the photo store, including its subfolders (a session's photos, uploads on
+ * their way). One folder at a time: listing them all at once, from every test worker, ran the photo
+ * store out of database connections ("Too many connections", Phase 3 code review).
+ */
 async function photoFiles(folder: string): Promise<string[]> {
   const items = (await serverDb().storage.from("guest-photos").list(folder, { limit: 1000 })).data ?? [];
-  const nested = await Promise.all(items.map((f) => (f.id ? [`${folder}/${f.name}`] : photoFiles(`${folder}/${f.name}`))));
-  return nested.flat();
+  const files: string[] = [];
+  for (const f of items) files.push(...(f.id ? [`${folder}/${f.name}`] : await photoFiles(`${folder}/${f.name}`)));
+  return files;
 }
 
 /** Deletes everything in a guest's photo folder. */
