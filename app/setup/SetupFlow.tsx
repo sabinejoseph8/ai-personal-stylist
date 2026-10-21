@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Icon } from "@/components/ui/icons";
+import { describeRule } from "@/core/looks/rules";
 import {
   DEPARTMENTS,
   PREFERENCE_KINDS,
@@ -15,6 +16,7 @@ import {
   type PreferenceKind,
   type Preferences,
   type Profile,
+  RuleSchema,
 } from "@/lib/profile";
 import { applySampleProfile, saveBudgetAndPreferencesStep, saveShoppingStep } from "./actions";
 
@@ -44,12 +46,14 @@ function Steps({ step, children }: { step: 1 | 2 | 3; children: React.ReactNode 
   );
 }
 
-function Actions({ onBack, onSkip, onContinue, busy, continueLabel = "Continue" }: {
+function Actions({ onBack, onSkip, onContinue, busy, continueLabel = "Continue", waiting }: {
   onBack: () => void;
   onSkip: () => void;
   onContinue: () => void;
   busy: boolean;
   continueLabel?: string;
+  /** Continue waits for this, shown as its label. */
+  waiting?: string;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
@@ -60,46 +64,72 @@ function Actions({ onBack, onSkip, onContinue, busy, continueLabel = "Continue" 
       <Button variant="secondary" onClick={onSkip} disabled={busy}>
         Skip
       </Button>
-      <Button onClick={onContinue} disabled={busy}>
-        {busy ? "Saving…" : continueLabel}
+      <Button onClick={onContinue} disabled={busy || Boolean(waiting)}>
+        {busy ? "Saving…" : (waiting ?? continueLabel)}
       </Button>
     </div>
   );
 }
 
-function PreferenceList({ kind, label, hint, items, onChange }: {
+type Preference = Preferences[number];
+const isFirm = (kind: PreferenceKind) => kind === "must_have" || kind === "never";
+const keyOf = (p: Pick<Preference, "kind" | "words">) => `${p.kind}:${p.words.toLowerCase()}`;
+
+/** How the app reads a Must have or Never preference (4a, Sabine's answer to Q1): "Read as: no shoes with heels over 5 cm". */
+function readBack(p: Preference, reading: boolean) {
+  if (reading) return "Reading it…";
+  if (p.kind === "likes") return null;
+  // Not made yet (the rule maker couldn't be reached): until it is, the stylist's judgment checks it.
+  const said = p.rule ? describeRule(p.kind, p.rule) : "Checked by your stylist's judgment";
+  return `Read as: ${said.charAt(0).toLowerCase()}${said.slice(1)}`;
+}
+
+function PreferenceList({ kind, label, hint, items, reading, onChange, onAdded }: {
   kind: PreferenceKind;
   label: string;
   hint: string;
   items: Preferences;
+  /** Preferences whose rule is being made, by keyOf. */
+  reading: Set<string>;
   onChange: (next: Preferences) => void;
+  onAdded: (added: Preference) => void;
 }) {
   const [draft, setDraft] = useState("");
   const id = useId();
   const mine = items.filter((p) => p.kind === kind);
+  const firm = isFirm(kind);
   const add = () => {
     const words = draft.trim().slice(0, 80);
     if (!words || mine.some((p) => p.words.toLowerCase() === words.toLowerCase())) return;
-    onChange([...items, { kind, words }]);
+    const added: Preference = { kind, words };
+    onChange([...items, added]);
+    onAdded(added);
     setDraft("");
   };
   return (
     <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
       <legend className="type-subheading mb-1 p-0">{label}</legend>
       {mine.length > 0 && (
-        <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+        <ul className={`m-0 flex list-none gap-2 p-0 ${firm ? "flex-col items-start" : "flex-wrap"}`}>
           {mine.map((p) => (
-            <li key={p.words} className="type-label inline-flex min-h-touch items-center gap-1 rounded-pill border border-hairline bg-page pl-3">
-              <Icon name="savedPreference" className="text-graphite" />
-              {label}: {p.words}
-              <button
-                type="button"
-                className="focus-ring inline-flex size-touch items-center justify-center rounded-pill text-graphite hover:text-red-pen"
-                aria-label={`Remove ${label}: ${p.words}`}
-                onClick={() => onChange(items.filter((x) => x !== p))}
-              >
-                ×
-              </button>
+            <li key={p.words} className="flex flex-col items-start gap-1">
+              <span className="type-label inline-flex min-h-touch items-center gap-1 rounded-pill border border-hairline bg-page pl-3">
+                <Icon name="savedPreference" className="text-graphite" />
+                {label}: {p.words}
+                <button
+                  type="button"
+                  className="focus-ring inline-flex size-touch items-center justify-center rounded-pill text-graphite hover:text-red-pen"
+                  aria-label={`Remove ${label}: ${p.words}`}
+                  onClick={() => onChange(items.filter((x) => x !== p))}
+                >
+                  ×
+                </button>
+              </span>
+              {firm && (
+                <span aria-live="polite" className="type-small pl-3 text-graphite">
+                  {readBack(p, reading.has(keyOf(p)))}
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -136,6 +166,42 @@ export function SetupFlow({ initial }: { initial: Profile }) {
   const [profile, setProfile] = useState<Profile>(initial);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
+
+  // Each Must have and Never gets its rule from the rule maker, read back before it's saved (4a). A
+  // preference saved before 4a has none yet, so it's made when setup opens; each is asked for once.
+  const missingRule = (p: Preference) => isFirm(p.kind) && !p.rule;
+  const [reading, setReading] = useState(() => new Set(initial.preferences.filter(missingRule).map(keyOf)));
+  const asked = useRef(new Set<string>());
+  async function makeRule(p: Preference) {
+    if (asked.current.has(keyOf(p))) return;
+    asked.current.add(keyOf(p));
+    const res = await fetch("/api/preferences/rule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: p.kind, words: p.words }),
+    }).catch(() => null);
+    const answer = res?.ok ? ((await res.json().catch(() => null)) as { rule?: unknown } | null) : null;
+    const rule = RuleSchema.safeParse(answer?.rule);
+    if (rule.success) setProfile((prev) => ({ ...prev, preferences: prev.preferences.map((x) => (keyOf(x) === keyOf(p) ? { ...x, rule: rule.data } : x)) }));
+    setReading((prev) => {
+      const next = new Set(prev);
+      next.delete(keyOf(p));
+      return next;
+    });
+  }
+  useEffect(() => {
+    // The rule maker is an outside system: its answers set state when they arrive, not during the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    for (const p of initial.preferences) if (missingRule(p)) void makeRule(p);
+    // Once, for the preferences setup opened with; makeRule asks for each one only once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const ruleFor = (p: Preference) => {
+    if (!isFirm(p.kind)) return;
+    asked.current.delete(keyOf(p));
+    setReading((prev) => new Set(prev).add(keyOf(p)));
+    void makeRule(p);
+  };
 
   const [meaning, setMeaning] = useState<"up_to" | "around" | "between">(initial.budget?.meaning ?? "up_to");
   const [amount, setAmount] = useState(initial.budget ? String(initial.budget.amount) : "");
@@ -293,10 +359,19 @@ export function SetupFlow({ initial }: { initial: Profile }) {
               label={k.label}
               hint={k.hint}
               items={profile.preferences}
+              reading={reading}
               onChange={(preferences) => setProfile({ ...profile, preferences })}
+              onAdded={ruleFor}
             />
           ))}
-          <Actions busy={busy} onBack={() => go(2)} onSkip={() => go("session")} onContinue={saveStep3} continueLabel="Finish setup" />
+          <Actions
+            busy={busy}
+            onBack={() => go(2)}
+            onSkip={() => go("session")}
+            onContinue={saveStep3}
+            continueLabel="Finish setup"
+            waiting={[...reading].some((k) => profile.preferences.some((p) => keyOf(p) === k)) ? "Reading your preferences…" : undefined}
+          />
         </Steps>
       )}
     </main>

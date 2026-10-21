@@ -20,7 +20,7 @@ export default defineConfig({
     url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    // Conversations, notes, photo readings and camera frames in browser tests use fakes: free, and the same every time.
-    env: { CONVERSATION_ENGINE: "fake", NOTES_READER: "fake", PHOTO_READER: "fake", CAMERA_READER: "fake" },
+    // Conversations, notes, photo readings, camera frames and preference rules in browser tests use fakes: free, and the same every time.
+    env: { CONVERSATION_ENGINE: "fake", NOTES_READER: "fake", PHOTO_READER: "fake", CAMERA_READER: "fake", RULE_MAKER: "fake" },
   },
 });

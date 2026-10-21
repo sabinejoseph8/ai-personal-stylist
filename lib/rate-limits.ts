@@ -10,6 +10,7 @@ export const LIMITS = {
   changePhoto: { max: 4, windowSeconds: 1 },
   cameraFrame: { max: 1, windowSeconds: 2 },
   buildLooks: { max: 20, windowSeconds: 3600 },
+  makeRule: { max: 20, windowSeconds: 3600 },
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

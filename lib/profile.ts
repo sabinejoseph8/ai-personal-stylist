@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CATEGORIES, FREE_DETAILS, NUMBER_DETAILS, type Rule, WORD_VALUES } from "@/core/looks/rules";
 
 // The guest's profile (R4) and the sample profile (R5). Shared by the server actions and the screens.
 
@@ -48,8 +49,25 @@ export const BudgetSchema = z
   .nullable();
 export type Budget = z.infer<typeof BudgetSchema>;
 
+/** A Must have or Never preference's rule (4a), checked in shape before it's saved. */
+export const RuleSchema: z.ZodType<Rule> = z.union([
+  z.object({
+    type: z.literal("detail"),
+    categories: z.array(z.enum(CATEGORIES)).max(CATEGORIES.length),
+    test: z.union([
+      z.object({ detail: z.enum(NUMBER_DETAILS), op: z.enum(["over", "under", "at_least", "at_most"]), value: z.number().min(0).max(30) }),
+      z.object({
+        detail: z.enum([...(Object.keys(WORD_VALUES) as (keyof typeof WORD_VALUES)[]), ...FREE_DETAILS]),
+        op: z.literal("one_of"),
+        values: z.array(z.string().trim().min(1).max(30)).min(1).max(12),
+      }),
+    ]),
+  }),
+  z.object({ type: z.literal("judged") }),
+]);
+
 export const PreferencesSchema = z.array(
-  z.object({ kind: z.enum(["must_have", "never", "likes"]), words: z.string().trim().min(1).max(80) }),
+  z.object({ kind: z.enum(["must_have", "never", "likes"]), words: z.string().trim().min(1).max(80), rule: RuleSchema.optional() }),
 ).max(30);
 export type Preferences = z.infer<typeof PreferencesSchema>;
 
@@ -63,9 +81,14 @@ export const SAMPLE_PROFILE: Profile = {
   styleWords: ["Classic", "Elegant"],
   sizes: { dress: "8", top: "M", bottoms: "30", shoes: "7" },
   budget: { meaning: "up_to", amount: 400 },
+  // Their rules are ready-made, so the sample profile costs nothing and its read-back shows at once (4a).
   preferences: [
-    { kind: "never", words: "high heels" },
-    { kind: "must_have", words: "sleeves" },
+    { kind: "never", words: "high heels", rule: { type: "detail", categories: ["shoes"], test: { detail: "heelCm", op: "over", value: 5 } } },
+    {
+      kind: "must_have",
+      words: "sleeves",
+      rule: { type: "detail", categories: [], test: { detail: "sleeve", op: "one_of", values: ["cap", "short", "elbow", "three_quarter", "long"] } },
+    },
     { kind: "likes", words: "earth tones" },
   ],
 };

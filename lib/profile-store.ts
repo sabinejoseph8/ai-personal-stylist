@@ -23,7 +23,7 @@ function budgetFromRow(row: ProfileRow): Budget {
 export async function loadProfile(db: SupabaseClient, userId: string): Promise<Profile> {
   const [profile, prefs] = await Promise.all([
     db.from("profiles").select("departments, style_words, sizes, budget_amount_cents, budget_meaning, budget_max_cents").eq("user_id", userId).maybeSingle<ProfileRow>(),
-    db.from("saved_preferences").select("kind, words").eq("user_id", userId).order("created_at"),
+    db.from("saved_preferences").select("kind, words, rule").eq("user_id", userId).order("created_at"),
   ]);
   const row = profile.data;
   return {
@@ -31,7 +31,8 @@ export async function loadProfile(db: SupabaseClient, userId: string): Promise<P
     styleWords: (row?.style_words ?? []) as Profile["styleWords"],
     sizes: row?.sizes ?? {},
     budget: row ? budgetFromRow(row) : null,
-    preferences: (prefs.data ?? []) as Preferences,
+    // A rule is left out until it's been made (4a): setup makes the missing ones.
+    preferences: (prefs.data ?? []).map((p) => ({ kind: p.kind, words: p.words, ...(p.rule ? { rule: p.rule } : {}) })) as Preferences,
   };
 }
 
@@ -57,7 +58,7 @@ export async function saveBudget(db: SupabaseClient, userId: string, budget: Bud
 
 /** Replaces the signed-in guest's saved preferences with this list, all or nothing, in one database step. */
 export async function savePreferences(db: SupabaseClient, preferences: Preferences) {
-  const items = preferences.map((p) => ({ kind: p.kind, words: p.words }));
+  const items = preferences.map((p) => ({ kind: p.kind, words: p.words, rule: p.rule ?? null }));
   const { error } = await db.rpc("replace_saved_preferences", { items });
   if (error) throw new Error(`saving preferences failed: ${error.message}`);
 }
