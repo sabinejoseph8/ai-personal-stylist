@@ -78,7 +78,14 @@ describe("naming what's on camera", () => {
 
 describe("'use this one'", () => {
   it("is heard in the ways people say it", () => {
-    for (const words of ["Use this one", "OK, use that one please", "capture it", "Can you take a picture", "this one", "Use this.", "use this 1", "Capture"]) expect(asksToCapture(words)).toBe(true);
+    for (const words of ["Use this one", "OK, use that one please", "capture it", "Can you take a picture", "This one.", "Use this.", "use this 1", "Capture"]) expect(asksToCapture(words)).toBe(true);
+  });
+  it("hears only clear requests, not everyday words (Sabine's decision A in 3e)", () => {
+    for (const words of ["I'd use that for work", "I'm not sure about this one", "Does this one come in black?"]) expect(asksToCapture(words)).toBe(false);
+    // "This one" alone counts once the words are final: it may be the start of a longer sentence.
+    expect(asksToCapture("This one", false)).toBe(false);
+    expect(asksToCapture("This one", true)).toBe(true);
+    expect(asksToCapture("Use this one", false)).toBe(true);
   });
   it("counts for a few seconds after the name clears, and waits for a name said just before it appears (found on Sabine's iPhone in 3c)", () => {
     const now = 100_000;

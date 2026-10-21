@@ -75,4 +75,5 @@ export const WARDROBE_MESSAGES = {
   notOwned: "Mark the item as yours before saving it to your wardrobe.",
   photo: "That photo has been removed.",
   saveFailed: "That didn't save. Check your connection and try again.",
+  cleared: "Your session won't use wardrobe items now.",
 } as const;

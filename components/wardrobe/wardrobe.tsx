@@ -16,7 +16,8 @@ import { CATEGORIES, CATEGORY_LABELS, type Category, DETAIL_LENGTHS, FILTERS, ty
 // The Wardrobe page (3d; R36, R37, design 4.2 and 5.8): saved items as a photo grid with category
 // filters. Add item uploads a photo, which is checked, cleaned and read like a session photo, and the
 // photo reader suggests its details to check (Sabine's answer to Q1). Edit changes the details, Delete
-// asks first. Select, then Style with these, chooses items for the session (Q2).
+// asks first. Select, then Style with these, chooses items for the session (Q2). With nothing ticked
+// the button is Clear wardrobe items, so the session can stop using them (Sabine's decision B in 3e).
 
 const inputClass = "focus-ring type-body min-h-touch w-full rounded-control border border-control-edge bg-page px-3 text-ink";
 const FILTER_LABELS: Record<Filter, string> = { all: "All", ...CATEGORY_LABELS };
@@ -146,6 +147,7 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
   const [asking, setAsking] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const picker = useRef<HTMLInputElement>(null);
   // Focus goes back to the item (or Add item) when its sheet closes.
   const returnTo = useRef<HTMLElement | null>(null);
@@ -199,14 +201,21 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
   }
 
   async function styleWithThese() {
+    setProblem(null);
+    setNotice(null);
     const res = await fetch("/api/wardrobe/styling", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: [...selected] }),
     }).catch(() => null);
     if (!res?.ok) return setProblem(WARDROBE_MESSAGES.saveFailed);
-    router.push("/session");
+    if (selected.size) return router.push("/session");
+    // Clear wardrobe items: nothing from the wardrobe in My Styling Notes, and the stylist isn't told about any.
+    setItems((list) => list.map((i) => ({ ...i, styling: false })));
+    setSelecting(false);
+    setNotice(WARDROBE_MESSAGES.cleared);
   }
+  const styling = items.some((i) => i.styling);
 
   return (
     <div className="flex flex-col gap-5">
@@ -235,9 +244,15 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
       <div className="flex flex-wrap gap-2">
         {selecting ? (
           <>
-            <Button icon="confirmed" disabled={!selected.size} onClick={() => void styleWithThese()}>
-              Style with these
-            </Button>
+            {selected.size || !styling ? (
+              <Button icon="confirmed" disabled={!selected.size} onClick={() => void styleWithThese()}>
+                Style with these
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={() => void styleWithThese()}>
+                Clear wardrobe items
+              </Button>
+            )}
             <Button variant="secondary" onClick={() => setSelecting(false)}>
               Cancel
             </Button>
@@ -248,7 +263,13 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
               Add item
             </Button>
             {items.length > 0 && (
-              <Button variant="secondary" onClick={() => setSelecting(true)}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setNotice(null);
+                  setSelecting(true);
+                }}
+              >
                 Select
               </Button>
             )}
@@ -274,6 +295,11 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
         </p>
       )}
       {problem && <Banner tone="error" title={problem} />}
+      {notice && (
+        <p role="status" className="type-body m-0 text-ink">
+          {notice}
+        </p>
+      )}
 
       {items.length === 0 && !adding ? (
         <p className="type-body m-0 text-graphite">{WARDROBE_MESSAGES.empty}</p>
