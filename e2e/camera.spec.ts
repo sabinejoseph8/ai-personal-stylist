@@ -73,7 +73,8 @@ test.describe("the camera", () => {
     await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "false");
     const area = page.getByRole("region", { name: "Style around this item" });
     await expect(area.getByText("From your camera")).toBeVisible();
-    await expect(area.getByText("Navy wool blazer", { exact: true })).toBeVisible();
+    // Reading the still takes several round trips to the database, slower on GitHub (flaky in 3e).
+    await expect(area.getByText("Navy wool blazer", { exact: true })).toBeVisible({ timeout: 15_000 });
     await expect.poll(photoRows).toEqual([{ source: "camera", status: "ready" }]);
   });
 

@@ -76,7 +76,7 @@ test.describe("the photo to style around", () => {
     await expect(page.getByText("Uploading", { exact: true })).toHaveCount(0);
     expect(await photoRows()).toMatchObject([{ status: "ready", active: true, version: 1 }]);
     // Screen readers hear it too (R68).
-    await expect(page.getByRole("region", { name: "Style around this item" }).locator("p[aria-live]")).toHaveText(/Recognized: Navy wool blazer\./);
+    await expect(page.getByRole("region", { name: "Style around this item" }).locator("p[aria-live]")).toHaveText(/Recognized: Navy wool blazer\./, { timeout: 15_000 });
     await noSeriousA11yProblems(page);
 
     // Enlarge: the full photo, untilted, with its description. Escape closes it, and focus goes back.
