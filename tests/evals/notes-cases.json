@@ -99,5 +99,9 @@
   {"id": "Feedback: for every look", "looks": 3, "inView": 2, "turns": [{"shopper": "No high heels in any of the looks, please"}], "expect": [{"after": "heels", "has": ["heel"]}]},
   {"id": "Feedback: love the look on screen", "looks": 3, "inView": 2, "turns": [{"shopper": "Oh, I love this one"}], "expect": [], "feedback": [{"look": 2, "has": [], "act": "like", "scope": "look"}], "swap": null},
   {"id": "Feedback: unclear reference", "looks": 3, "inView": 1, "turns": [{"shopper": "I like that but not this"}], "expect": [], "feedback": [{"look": 1, "has": [], "status": "to_confirm"}]},
-  {"id": "Feedback: none without looks", "turns": [{"shopper": "Keep the dress simple, I'm not one for ruffles"}], "expect": [{"after": "ruffles", "has": ["ruffle"]}], "noFeedback": true}
+  {"id": "Feedback: none without looks", "turns": [{"shopper": "Keep the dress simple, I'm not one for ruffles"}], "expect": [{"after": "ruffles", "has": ["ruffle"]}], "noFeedback": true},
+  {"id": "Saved: asks for high heels", "saved": true, "turns": [{"shopper": "I'm going to an outdoor wedding in November, and I'd love to wear some high heels"}], "expect": [{"after": "November", "has": ["wedding"]}], "forbid": ["heel"], "exception": "high heels"},
+  {"id": "Saved: asks for something sleeveless", "saved": true, "turns": [{"shopper": "Could you find me a sleeveless dress for the gala?"}], "expect": [{"after": "gala", "has": ["gala"]}], "forbid": ["sleeveless"], "exception": "sleeves"},
+  {"id": "Saved: mentions without asking", "saved": true, "turns": [{"shopper": "I usually avoid heels, they hurt my feet, so something comfortable for the job interview"}], "expect": [{"after": "interview", "has": ["interview"]}], "exception": null},
+  {"id": "Saved: nothing broken", "saved": true, "turns": [{"shopper": "For the birthday dinner I'd like flats and a dress with long sleeves"}], "expect": [{"after": "dinner", "has": ["dinner"]}], "exception": null}
 ]

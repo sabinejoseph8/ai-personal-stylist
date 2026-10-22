@@ -4,9 +4,11 @@ import { createFakeLooksBuilder, type LooksBuilder } from "@/core/looks/builder"
 import { type LookItem, REPEATS_SHOWN } from "@/core/looks/look";
 import { createFakeJudge, type Judge } from "@/core/looks/judge";
 import { behindTheScenesFor } from "@/lib/behind-the-scenes";
-import { feedbackByTouch } from "@/lib/notes-service";
+import { allowException, removeException, saveExceptionToProfile } from "@/lib/exceptions-service";
+import { lookRequirements } from "@/lib/looks-inputs";
+import { feedbackByTouch, takeBackFeedback } from "@/lib/notes-service";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
-import { buildLooks, currentLooks, type LooksDeps, type ShownLook, swapPiece } from "@/lib/looks-service";
+import { buildLooks, currentLooks, lookHistory, type LooksDeps, restoreLook, type ShownLook, swapPiece } from "@/lib/looks-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
 import { saveBudget, savePreferences, saveShopping } from "@/lib/profile-store";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
@@ -557,6 +559,112 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     ]);
     expect(profileAfter.map((r) => r.data)).toEqual(profileBefore.map((r) => r.data));
   }, 60_000);
+
+  it("a session exception lets a saved preference be broken for this session only, ends with the session, and never changes the profile (5c, R57)", async () => {
+    const prefs = () => db.from("saved_preferences").select("id, kind, words, rule").eq("user_id", guest.id).order("id").throwOnError();
+    const before = (await prefs()).data!;
+    const heels = before.find((p) => p.kind === "never")!;
+    const likes = before.find((p) => p.kind === "likes")!;
+    const ruled = async () => (await lookRequirements(db, guest.id, session)).rules.some((r) => r.id === heels.id);
+    expect(await ruled()).toBe(true);
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    looksOf(await buildLooks(deps(), guest.id, session));
+
+    const allowed = [{ id: heels.id, kind: "never", words: "high heels", text: "High heels allowed for this session. Your profile still says Never: high heels." }];
+    expect(await allowException(db, guest.id, session, heels.id)).toEqual(allowed);
+    expect(await allowException(db, guest.id, session, heels.id)).toEqual(allowed);
+    expect(await ruled()).toBe(false);
+    // The looks are checked again on the new requirements.
+    const { stages, emit } = stagesOf();
+    looksOf(await buildLooks(deps(), guest.id, session, emit));
+    expect(stages).toContain("updating");
+    // Not for another guest, and not for a Like.
+    expect(await allowException(db, "00000000-0000-0000-0000-000000000000", session, heels.id)).toBeNull();
+    expect(await allowException(db, guest.id, session, likes.id)).toBeNull();
+    // Remove: it limits the looks again.
+    expect(await removeException(db, guest.id, session, heels.id)).toEqual([]);
+    expect(await ruled()).toBe(true);
+    // An exception ends with the session, and the profile never changed (Phase 5 automated test).
+    await allowException(db, guest.id, session, heels.id);
+    await db.rpc("delete_session_data", { session }).throwOnError();
+    expect((await db.from("session_exceptions").select("id").eq("session_id", session)).data).toEqual([]);
+    expect((await prefs()).data).toEqual(before);
+  }, 60_000);
+
+  it("Save to my profile takes the preference off the profile, with its exception (5c, Q2)", async () => {
+    try {
+      const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+      // Only for a preference allowed in this session.
+      expect(await saveExceptionToProfile(db, guest.id, session, heels.id)).toBeNull();
+      await allowException(db, guest.id, session, heels.id);
+      const saved = await saveExceptionToProfile(db, guest.id, session, heels.id);
+      expect(saved?.exceptions).toEqual([]);
+      expect(saved?.preferences).toEqual(["Must have: sleeves", "Likes: earth tones"]);
+      expect((await db.from("saved_preferences").select("id").eq("id", heels.id)).data).toEqual([]);
+    } finally {
+      await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    }
+  }, 60_000);
+
+  it("Undo feedback brings back the look before the revision, checked first, and takes back its feedback (5c, R51)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [look.items[at].id])).throwOnError();
+    const revised = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(revised.canUndo).toBe(true);
+    expect(revised.earlier).toBe(true);
+    // Compare lists the earlier version and what's different.
+    const history = await lookHistory(deps(), guest.id, session, revised.id);
+    expect(history?.earlier.map((e) => [e.items.map((i) => i.id), e.differences])).toEqual([[look.items.map((i) => i.id), ["Different shoes"]]]);
+
+    const undone = await restoreLook(deps(), guest.id, session, revised.id, { undo: true });
+    if (!undone || !("look" in undone)) throw new Error(JSON.stringify(undone));
+    expect(undone.look.items.map((i) => i.id)).toEqual(look.items.map((i) => i.id));
+    expect(undone.look.id).not.toBe(look.id);
+    expect(undone.takeBack).toHaveLength(1);
+    const notes = await takeBackFeedback({ db }, guest.id, session, undone.takeBack);
+    expect(notes?.notes.some((n) => n.text === "Not these shoes")).toBe(false);
+    // The look that came back isn't revised again, and it can be compared with the revision.
+    const after = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(after.id).toBe(undone.look.id);
+    expect(after.canUndo).toBe(false);
+    expect((await lookHistory(deps(), guest.id, session, after.id))?.earlier[0].items[at].id).toBe(revised.items[at].id);
+  }, 90_000);
+
+  it("an earlier look that no longer fits stays out, and the answer says why (5c, R51)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    const old = look.items[at].id;
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [old])).throwOnError();
+    const revised = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    // The judgment step now turns the old shoes down.
+    const judge = createFakeJudge();
+    const picky: Judge = { judge: (input) => (input.items.some((i) => "product" in i && i.product.id === old) ? Promise.resolve({ verdict: "conflict", reasons: [{ about: "Elegant", ok: false, why: "The shoes aren't elegant" }], costUsd: 0 }) : judge.judge(input)) };
+    const answer = await restoreLook({ ...deps(), judge: picky }, guest.id, session, revised.id, { undo: true });
+    expect(answer).toEqual({ none: "That earlier look no longer fits everything you've asked for (The shoes aren't elegant), so this one stays." });
+    expect((await currentLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)?.id).toBe(revised.id);
+    // Undo is only for a revision, and a look that isn't the guest's isn't found.
+    expect(await restoreLook(deps(), guest.id, session, look.id, { undo: true })).toEqual({ stale: true });
+    expect(await restoreLook(deps(), "00000000-0000-0000-0000-000000000000", session, revised.id, { undo: true })).toBeNull();
+  }, 90_000);
+
+  it("when the checks can't run, the look says so and tries again next time (5c, Q4)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [look.items[at].id])).throwOnError();
+    let judged = 0;
+    const failing: Judge = { judge: async () => (judged++, { verdict: "needs_clarification", reasons: [{ about: "Judgment", ok: false, why: "The check couldn't be completed" }], costUsd: 0 }) };
+    const after = looksOf(await buildLooks({ ...deps(), judge: failing }, guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(after.note).toBe("The new shoes couldn't be checked just now, so these stay. Try again in a moment.");
+    const tried = judged;
+    const again = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(judged).toBe(tried);
+    expect(again.id).not.toBe(look.id);
+    expect(again.note).toBeNull();
+  }, 90_000);
 
   it("looks and their checks are deleted when the session ends (R63)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();

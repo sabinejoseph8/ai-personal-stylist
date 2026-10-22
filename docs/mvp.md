@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.27
+**Status:** Living document, version 1.28
 **Last updated:** 21 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 22 Oct 2026 | 5c plan, the recommended answers. Q1: the notes reader is told the saved Must have and Never, and flags a request that breaks one (the other option: only from the no-match box). Q2: Save to my profile takes the preference off the profile, after a confirmation (the other: wait for Phase 6). Q3: Compare on phones is a Current and Earlier switch (the other: a list). Q4: the nothing-fits note names the budget and says when a check couldn't run (the other: leave it) | Sabine | tech spec 1.30, design 1.17 |
 | 21 Oct 2026 | 5b iPhone check: A, C and D passed. B.1 failed while the Claude credit was out; Sabine added credit and chose not to redo it | Sabine | progress.md |
 | 21 Oct 2026 | 5b plan Q3: the app's monthly video stop is 165 minutes, 10 below the upgraded Tavus plan's 175 a month (it was 110, for Starter's 120) | Sabine | tech spec 1.29 |
 | 21 Oct 2026 | 5b plan, the recommended answers. Q1: a look is revised automatically once clear feedback asks for a change (when the shopper finishes speaking, or 2 seconds after the last Keep or Change tap); the other option revised only when asked. Q2: changing a piece works like Swap, guided by what was said, and a whole-look change asks the builder; the other option used the builder for every revision (slower and costlier) | Sabine | tech spec 1.29, design 1.16 |
@@ -402,6 +403,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.28 (22 Oct 2026):** 5c decisions (Q1 to Q4).
 - **1.27 (21 Oct 2026):** 5b done, and the Claude credit gap under risk 4.
 - **1.26 (21 Oct 2026):** 5b decisions (Q1 to Q3), with the video stop raised to 165 minutes.
 - **1.25 (21 Oct 2026):** The looks speed plan (Q1), and what it measured.

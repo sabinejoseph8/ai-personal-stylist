@@ -11,7 +11,8 @@ import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/
 // R55), Swap by touch and by voice (R43), and a changed budget bringing them up to date (R44, R58).
 // Phase 4's end-to-end test: with the sample profile, no look shows high heels across 10 swaps (S13).
 // 4d: Behind the scenes (R72). 5a: feedback by Keep and Change, and by voice, jotted under its look (R46, R47).
-// 5b: feedback revises its look, with the pieces kept and a change summary (R48, R50).
+// 5b: feedback revises its look, with the pieces kept and a change summary (R48, R50). 5c: "This session
+// only" exceptions (R57, S14), Undo feedback and Compare (R51).
 test.describe("the looks", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -213,6 +214,52 @@ test.describe("the looks", () => {
     // The stylist hears what changed, to say it briefly.
     await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("revised from the shopper's feedback");
     await noSeriousA11yProblems(page);
+  });
+
+  test("asking for high heels with Never: high heels saved: the card asks first, Allow jots This session only, Remove takes it back (5c, R57, S14)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await expect(card).toContainText("Your profile says Never: high heels. Allow high heels for this session?", { timeout: 10_000 });
+    // The stylist is told to ask first, and the request isn't jotted as a note.
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Before anything else, ask");
+    await expect(notebookOf(page).getByText(/high heels/i)).toHaveCount(1);
+    await card.getByRole("button", { name: "Allow for this session" }).click();
+    const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
+    await expect(exceptions).toContainText("High heels allowed for this session. Your profile still says Never: high heels.");
+    await expect(card).toHaveCount(0);
+    // The profile still says Never: high heels (S14).
+    await expect(notebookOf(page).getByRole("list", { name: "Saved preferences" })).toContainText("Never: high heels");
+    await noSeriousA11yProblems(page);
+    await exceptions.getByRole("button", { name: "Remove" }).click();
+    await expect(exceptions).toHaveCount(0);
+  });
+
+  test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    const first = panels(page).first();
+    const tiles = first.getByRole("listitem");
+    const read = () => tiles.evaluateAll((els) => els.map((el) => el.querySelector("p")?.textContent ?? ""));
+    const before = await read();
+    const at = (await tiles.evaluateAll((els) => els.map((el) => el.querySelectorAll("p")[1]?.textContent ?? ""))).indexOf("Shoes");
+    await first.getByRole("button", { name: `Change ${before[at]}` }).click();
+    await expect(first).toContainText(`Changed: ${before[at]} to `, { timeout: 20_000 });
+    const revised = await read();
+
+    await first.getByRole("button", { name: "Undo feedback" }).click();
+    await expect.poll(read, { timeout: 15_000 }).toEqual(before);
+    await expect(first).not.toContainText("Changed:");
+    await expect(notebookOf(page).getByRole("list", { name: "Feedback on Look 1" })).toHaveCount(0);
+
+    await first.getByRole("button", { name: "Compare" }).click();
+    const sheet = page.getByRole("dialog", { name: "Compare Look 1" });
+    await expect(sheet.getByRole("list", { name: "Differences" })).toContainText("Different shoes");
+    await noSeriousA11yProblems(page);
+    await sheet.getByRole("button", { name: "Use this look" }).click();
+    await expect(sheet).toHaveCount(0, { timeout: 15_000 });
+    await expect.poll(read, { timeout: 15_000 }).toEqual(revised);
   });
 
   test("a changed budget brings the looks up to date, and every one fits it (R44, R58)", async ({ page }) => {

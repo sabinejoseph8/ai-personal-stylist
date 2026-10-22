@@ -22,6 +22,8 @@ import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { looksChanged, looksForStylist } from "@/core/looks/context";
+import { exceptionsForStylist, type FirmPreference, type ShownException } from "@/core/looks/exceptions";
+import { ALLOW_CHOICE } from "@/core/looks/no-match";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import type { SwapRequest } from "@/core/notes/reader";
 import { notesSummary } from "@/lib/notebook";
@@ -62,7 +64,9 @@ const tapWaitEnds = () => Date.now() + TAP_WAIT_MS;
 const SPEAK_UP_GAP_MS = 5000;
 
 /** Something she speaks up about once nobody is talking. */
-type SpeakUp = { kind: "photo" | "camera" | "looks"; text: string; photo?: string };
+type SpeakUp = { kind: "photo" | "camera" | "looks" | "exception"; text: string; photo?: string };
+/** Said for the shopper after they ask for something a saved preference rules out (5c), so the stylist asks first. */
+const EXCEPTION_ASKED = "Does that go against my saved preferences?";
 
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
@@ -144,8 +148,10 @@ export function StylingSession({
   // camera (3c), which only the page knows: which look is in view, and frames are thrown away.
   const told = useRef("");
   const looksTold = useRef("");
+  // "This session only" exceptions and a request she should ask about (5c), which only the page knows.
+  const exceptionsTold = useRef("");
   const cameraNote = useRef<CameraNote>(null);
-  const withCamera = () => [told.current, looksTold.current, cameraForStylist(cameraNote.current)].filter(Boolean).join("\n");
+  const withCamera = () => [told.current, exceptionsTold.current, looksTold.current, cameraForStylist(cameraNote.current)].filter(Boolean).join("\n");
   const tell = (context: string) => {
     told.current = context;
     call.updateContext(withCamera());
@@ -173,7 +179,65 @@ export function StylingSession({
     (id, item) => photos.setItem(id, item),
     (swap) => swapBySpeech.current?.(swap),
     () => ({ any: looksShownNow.current, inView: inViewNow.current }),
+    (preference) => askException.current(preference),
   );
+
+  // "This session only" exceptions (5c, R57): the card asks, as the stylist does, before a saved Must
+  // have or Never is broken. Allowed ones are jotted in the notebook and stop limiting this session's looks.
+  const [exceptions, setExceptions] = useState<ShownException[]>([]);
+  const [asking, setAsking] = useState<FirmPreference | null>(null);
+  const [savedPreferences, setSavedPreferences] = useState(preferences);
+  const exceptionsNow = useRef<ShownException[]>([]);
+  const askException = useRef((preference: FirmPreference) => {
+    if (exceptionsNow.current.some((e) => e.id === preference.id)) return;
+    setAsking(preference);
+    if (call.flow === "live") queue({ kind: "exception", text: EXCEPTION_ASKED });
+  });
+  useLayoutEffect(() => {
+    exceptionsNow.current = exceptions;
+  });
+  useEffect(() => {
+    const id = call.sessionId;
+    if (!id) return;
+    let current = true;
+    fetch(`/api/sessions/${id}/exceptions`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { exceptions?: ShownException[] } | null) => {
+        if (current) setExceptions(body?.exceptions ?? []);
+      })
+      .catch(() => null);
+    return () => {
+      current = false;
+    };
+  }, [call.sessionId]);
+  async function allowException(preference: FirmPreference) {
+    const id = call.sessionId;
+    if (!id) return false;
+    const res = await fetch(`/api/sessions/${id}/exceptions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ preferenceId: preference.id }) }).catch(() => null);
+    const body = (await res?.json().catch(() => null)) as { exceptions?: ShownException[] } | null;
+    if (!res?.ok || !body?.exceptions) {
+      toast("That didn't save. Try again.");
+      return false;
+    }
+    setExceptions(body.exceptions);
+    setAsking(null);
+    return true;
+  }
+  async function changeException(exception: ShownException, action: "remove" | "save") {
+    const id = call.sessionId;
+    if (!id) return false;
+    const res = await fetch(action === "remove" ? `/api/sessions/${id}/exceptions/${exception.id}` : `/api/sessions/${id}/exceptions/${exception.id}/save`, {
+      method: action === "remove" ? "DELETE" : "POST",
+    }).catch(() => null);
+    const body = (await res?.json().catch(() => null)) as { exceptions?: ShownException[]; preferences?: string[] } | null;
+    if (!res?.ok || !body?.exceptions) {
+      toast("That didn't save. Try again.");
+      return false;
+    }
+    setExceptions(body.exceptions);
+    if (body.preferences) setSavedPreferences(body.preferences);
+    return true;
+  }
 
   // The looks (4c): asked for again whenever what they must meet may have changed: the notes and whether
   // they're confirmed (R39), the item to style around once it's known whose it is, and the wardrobe
@@ -184,8 +248,9 @@ export function StylingSession({
         notes.notes.map((n) => [n.id, n.text, n.status]),
         photos.active?.id && photos.active.item?.ownership ? [photos.active.id, photos.active.version, photos.active.item] : null,
         wardrobe.map((w) => w.id),
+        exceptions.map((e) => e.id),
       ]),
-    [notes.notes, photos.active, wardrobe],
+    [notes.notes, photos.active, wardrobe, exceptions],
   );
   const [looksChange, setLooksChange] = useState<string | null>(null);
   // When the looks may ask again after a Keep or Change tap (TAP_WAIT_MS).
@@ -196,6 +261,12 @@ export function StylingSession({
     (e: LooksEvent) => {
     if (e.kind === "swapped") {
       setLooksChange(`Just swapped in Look ${e.number}: ${e.look.items[e.index].name}, checked against their preferences.`);
+      return;
+    }
+    if (e.kind === "restored") {
+      setLooksChange(
+        `Look ${e.number} is back to ${e.undo ? "how it was before their last feedback" : "an earlier version they chose in Compare"}, checked against their preferences first. Say so in a few words.`,
+      );
       return;
     }
     setLooksChange(e.kind === "updated" ? looksChanged(e.before, e.looks) : null);
@@ -389,6 +460,14 @@ export function StylingSession({
     // withCamera and call only read refs; this runs when the looks change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [looks.looks, looksBusy, looks.needs, looks.noMatch, lookInView, looksChange, looks.revising, flow, notes.notes]);
+
+  // She's told the exceptions allowed, and a request to ask about, whenever they change (5c).
+  useEffect(() => {
+    exceptionsTold.current = exceptionsForStylist(exceptions, asking);
+    if (flow === "live") call.updateContext(withCamera());
+    // withCamera and call only read refs; this runs when the exceptions change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exceptions, asking, flow]);
 
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {
@@ -639,7 +718,9 @@ export function StylingSession({
       <div className="flex flex-col gap-6 tablet:col-start-1 desktop:col-start-2">
         <MyStylingNotes
           notes={notes.notes}
-          preferences={preferences}
+          preferences={savedPreferences}
+          exceptions={exceptions}
+          onException={changeException}
           paused={notes.paused}
           open={notebookOpen}
           onOpenChange={setNotebookOpen}
@@ -680,6 +761,15 @@ export function StylingSession({
 
       <LooksArea
         className="tablet:col-start-2 tablet:row-span-2 tablet:row-start-2 desktop:col-start-3 desktop:row-span-1"
+        sessionId={call.sessionId}
+        restoring={looks.restoring}
+        restoreNote={looks.restoreNote}
+        onRestore={async (lookId, target) => {
+          const answer = await looks.restore(lookId, target);
+          // Undo takes back the feedback the revision answered: the notebook shows it gone.
+          if (answer.ok && answer.notes) notes.receive(answer.notes as Parameters<typeof notes.receive>[0]);
+          return answer.ok ? true : (answer.none ?? "That look couldn't be checked. Try again.");
+        }}
         started={Boolean(call.sessionId)}
         looks={looks.looks}
         phase={looks.phase}
@@ -690,13 +780,20 @@ export function StylingSession({
         fresh={looks.fresh}
         swapNote={looks.swapNote}
         revising={looks.revising}
+        asking={asking}
+        onAllow={() => (asking ? allowException(asking) : Promise.resolve(false))}
+        onKeep={() => setAsking(null)}
         canTalk={flow === "live"}
         imageFor={imageFor}
         onSwap={(lookId, index) => void looks.swap(lookId, index)}
         feedbackFor={feedbackFor}
         onFeedback={(look, index, act, on) => void giveFeedback(look, index, act, on)}
         onTryAgain={looks.tryAgain}
-        onChoice={call.sendPhrase}
+        onChoice={(choice) => {
+          // "Allow it for this session" asks with the card first (5c, R57).
+          if (choice === ALLOW_CHOICE && looks.noMatch?.preference) setAsking(looks.noMatch.preference);
+          else call.sendPhrase(choice);
+        }}
         onInView={(n) => {
           inViewNow.current = n;
           setLookInView(n);

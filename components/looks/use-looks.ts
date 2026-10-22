@@ -18,7 +18,14 @@ export type LooksPhase = "idle" | "building" | "checking" | "updating" | "revisi
 type Line = { state?: "building" | "checking" | "updating" | "revising"; slots?: number[]; needs?: string; looks?: ShownLook[]; noMatch?: NoMatch | null; stale?: true; error?: string };
 
 /** Something the stylist should hear about. */
-export type LooksEvent = { kind: "new"; before: ShownLook[]; looks: ShownLook[] } | { kind: "updated"; before: ShownLook[]; looks: ShownLook[] } | { kind: "swapped"; look: ShownLook; index: number; number: number };
+export type LooksEvent =
+  | { kind: "new"; before: ShownLook[]; looks: ShownLook[] }
+  | { kind: "updated"; before: ShownLook[]; looks: ShownLook[] }
+  | { kind: "swapped"; look: ShownLook; index: number; number: number }
+  | { kind: "restored"; look: ShownLook; number: number; undo: boolean };
+
+/** What bringing back an earlier look did (5c): the notes after Undo, or why it couldn't. */
+export type RestoreAnswer = { ok: true; notes?: unknown } | { ok: false; none?: string };
 
 /** Waits this long after a change before asking, so a few quick changes make one request. */
 const WAIT_MS = 1200;
@@ -41,6 +48,9 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
   const [swapNote, setSwapNote] = useState<{ lookId: string; index: number; text: string } | null>(null);
   // The places of the looks being revised from feedback (5b).
   const [revising, setRevising] = useState<number[]>([]);
+  // A look whose earlier version is being checked before it comes back, and why one couldn't (5c).
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const [restoreNote, setRestoreNote] = useState<{ lookId: string; text: string } | null>(null);
 
   const latest = useRef(0);
   // Counts finished swaps: an answer read before a swap finished would bring back the old piece.
@@ -153,6 +163,39 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
     }
   }
 
+  /**
+   * Undo feedback, or Use this look from Compare (5c, R51): the earlier look is checked first, then
+   * takes the place, or the look stays with a note saying why.
+   */
+  async function restore(lookId: string, target: { undo: true } | { versionId: string }): Promise<RestoreAnswer> {
+    const id = session.current;
+    if (!id || restoring || swapping) return { ok: false };
+    setRestoring(lookId);
+    setRestoreNote(null);
+    try {
+      const res = await fetch(`/api/sessions/${id}/looks/${lookId}/restore`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(target) });
+      const body = (await res.json().catch(() => null)) as { look?: ShownLook; notes?: unknown; none?: string; stale?: true; error?: string } | null;
+      if (id !== session.current) return { ok: false };
+      if (body?.look) {
+        const look = body.look;
+        swapsDone.current++;
+        const number = shown.current.findIndex((l) => l.id === lookId) + 1;
+        show(shown.current.map((l) => (l.id === lookId ? look : l)));
+        hook.current({ kind: "restored", look, number, undo: "undo" in target });
+        return { ok: true, notes: body.notes };
+      }
+      if (body?.stale) void refresh();
+      const text = body?.none ?? body?.error ?? "That look couldn't be checked. Try again.";
+      setRestoreNote({ lookId, text });
+      return { ok: false, none: text };
+    } catch {
+      setRestoreNote({ lookId, text: "That look couldn't be checked. Try again." });
+      return { ok: false };
+    } finally {
+      setRestoring(null);
+    }
+  }
+
   // Asks after each change to what the looks must meet, once things settle.
   useEffect(() => {
     if (!sessionId) return;
@@ -172,6 +215,9 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
     fresh,
     swapNote,
     revising,
+    restoring,
+    restoreNote,
+    restore,
     /** Try again (R45). */
     tryAgain: () => void refresh(true),
     swap,
@@ -186,6 +232,7 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
       setFresh({});
       setSwapNote(null);
       setRevising([]);
+      setRestoreNote(null);
     },
   };
 }

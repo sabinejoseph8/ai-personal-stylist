@@ -1,4 +1,5 @@
 import type { Department, Product } from "../../connectors/catalog/types";
+import type { FirmPreference } from "./exceptions";
 import { active, type Note } from "../notes/types";
 import { type BudgetLimit, dollars, limitCents } from "./budget";
 import { CATEGORIES, type Category, checkRule, describeRule, type FirmKind, type Rule } from "./rules";
@@ -10,7 +11,8 @@ import { CATEGORIES, type Category, checkRule, describeRule, type FirmKind, type
 // recorded with the reason, for Behind the scenes (4d). Pure rules, tested in tests/candidates.test.ts.
 
 /** A firm rule to apply, from a saved preference or a confirmed note, with the words the shopper sees. */
-export type FirmRule = { kind: FirmKind; words: string; rule: Rule; from: "profile" | "notes" };
+/** `id` is the saved preference's, for one from the profile: a "This session only" exception names it (5c). */
+export type FirmRule = { kind: FirmKind; words: string; rule: Rule; from: "profile" | "notes"; id?: string };
 
 export type SizeField = "dress" | "top" | "bottoms" | "suit" | "shoes";
 
@@ -27,7 +29,8 @@ export type Requirements = {
 /** What kind of requirement left a product out, so a no-match explanation can name it (4b). */
 export type LeftOutKind = "department" | "outfit" | "category" | "size" | "budget" | "rule";
 /** A product the filter left out, and why; `rule` names the firm rule when one did it. */
-export type LeftOut = { productId: string; name: string; category: string; kind: LeftOutKind; reason: string; rule?: string };
+/** `preference` is the saved Must have or Never that left it out, which can be allowed for a session (5c). */
+export type LeftOut = { productId: string; name: string; category: string; kind: LeftOutKind; reason: string; rule?: string; preference?: FirmPreference };
 
 const ONE_SIZE = "one size";
 
@@ -115,7 +118,16 @@ export function filterCandidates(products: Product[], req: Requirements): { kept
   const leftOut: LeftOut[] = [];
   for (const p of products) {
     const why = whyNot(p, req);
-    if (why) leftOut.push({ productId: p.id, name: p.name, category: p.category, kind: why.kind, reason: why.reason, ...(why.rule ? { rule: ruleLabel(why.rule) } : {}) });
+    if (why)
+      leftOut.push({
+        productId: p.id,
+        name: p.name,
+        category: p.category,
+        kind: why.kind,
+        reason: why.reason,
+        ...(why.rule ? { rule: ruleLabel(why.rule) } : {}),
+        ...(why.rule?.id && why.rule.from === "profile" ? { preference: { id: why.rule.id, kind: why.rule.kind, words: why.rule.words } } : {}),
+      });
     else kept.push(p);
   }
   return { kept, leftOut };

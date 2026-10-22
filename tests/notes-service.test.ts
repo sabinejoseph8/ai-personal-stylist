@@ -2,7 +2,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createFakeNotesReader } from "@/core/notes/fake-reader";
 import type { NotesReader, Reading } from "@/core/notes/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { allowException } from "@/lib/exceptions-service";
 import { hearWords, type NotesDeps, type NotesUpdate, touchSessionNote } from "@/lib/notes-service";
+import { SAMPLE_PROFILE } from "@/lib/profile";
+import { savePreferences } from "@/lib/profile-store";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // 2c: words in, notes out, against the real database with the fake notes reader: the quick money
@@ -60,6 +63,19 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     await hearWords(deps({ reader }), guest.id, sessionId, { words: "Show me different shoes", stylistSaid: "", final: true }, (u) => updates.push(u));
     expect(seen).toEqual([0, 1]);
     expect(updates.at(-1)?.swap).toEqual({ look: 0, piece: "shoes" });
+  });
+
+  it("flags a request that breaks a saved Never, so the stylist asks first, until it's allowed (5c, R57)", async () => {
+    await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    try {
+      const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+      const { last } = await hear("I'd love some high heels");
+      expect(last.exception).toEqual({ id: heels.id, kind: "never", words: "high heels" });
+      await allowException(db, guest.id, sessionId, heels.id);
+      expect((await hear("I'd love some high heels")).last.exception).toBeUndefined();
+    } finally {
+      await savePreferences(guest.db, []);
+    }
   });
 
   it("a voice correction replaces the budget (R21)", async () => {

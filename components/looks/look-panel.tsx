@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Icon } from "@/components/ui/icons";
@@ -13,7 +13,8 @@ import type { ShownItem, ShownLook } from "@/core/looks/shown";
 // how it compares with the budget, the one-line reason, and "Checked against your preferences", or
 // "Needs a new check" while it's checked again after a change. Keep and Change (5a) jot feedback under
 // the look, as if said. A look revised from feedback (5b) shows Revising meanwhile, then its change
-// summary above the items, with New on the pieces it changed. Save look, Compare and Add to bag join later.
+// summary above the items, with New on the pieces it changed, and Undo feedback (5c). Compare opens the
+// look's earlier versions (5c). Save look and Add to bag join in 6a.
 
 const KINDS: Record<string, string> = {
   outer: "Jacket",
@@ -132,6 +133,10 @@ export function LookPanel({
   count,
   updating,
   revising,
+  restoring,
+  restoreNote,
+  onUndo,
+  compare,
   swappingIndex,
   newIndex,
   note,
@@ -149,6 +154,14 @@ export function LookPanel({
   updating: boolean;
   /** This look is being revised from feedback (5b). */
   revising: boolean;
+  /** An earlier version of this look is being checked before it comes back (5c). */
+  restoring: boolean;
+  /** Why an earlier version couldn't come back (5c). */
+  restoreNote: string | null;
+  /** Undo feedback: the look before the last revision, checked first (5c, R51). */
+  onUndo: () => void;
+  /** The Compare button and its sheet, for a look with earlier versions (5c). */
+  compare: ReactNode;
   /** The piece being swapped in this look, if any. */
   swappingIndex: number | null;
   /** The piece a swap just brought in. */
@@ -174,8 +187,28 @@ export function LookPanel({
           {look.name}
         </h3>
       </header>
-      {/* The change summary sits above a revised look (design 4.3, R50). */}
-      {look.change && <p className="type-body m-0 rounded-print bg-emerald-wash px-3 py-2 text-ink">{look.change}</p>}
+      {/* The change summary sits above a revised look (design 4.3, R50), with Undo feedback (5c, R51). */}
+      {look.change && (
+        <div className="flex flex-col items-start gap-1 rounded-print bg-emerald-wash px-3 py-2">
+          <p className="type-body m-0 text-ink">{look.change}</p>
+          {look.canUndo && (
+            <Button variant="quiet" icon="undo" disabled={restoring || revising || updating} onClick={onUndo}>
+              Undo feedback
+            </Button>
+          )}
+        </div>
+      )}
+      {restoring && (
+        <p role="status" className="type-body m-0 flex items-center gap-2 text-graphite">
+          <span aria-hidden="true" className="size-4 animate-spin rounded-pill border-2 border-hairline border-t-emerald" />
+          Checking the earlier look against your preferences
+        </p>
+      )}
+      {restoreNote && (
+        <p role="status" className="type-body m-0 rounded-print bg-showroom px-3 py-2 text-ink">
+          {restoreNote}
+        </p>
+      )}
       {look.note && (
         <p role="status" className="type-body m-0 rounded-print bg-showroom px-3 py-2 text-ink">
           {look.note}
@@ -190,10 +223,10 @@ export function LookPanel({
             isNew={newIndex === i || (look.changed ?? []).includes(i)}
             note={note?.index === i ? note.text : null}
             feedback={feedbackFor(item)}
-            paused={revising}
+            paused={revising || restoring}
             onFeedback={(act, on) => onFeedback(i, act, on)}
             checking={swappingIndex === i}
-            canSwap={canSwap && look.current && !updating && !revising}
+            canSwap={canSwap && look.current && !updating && !revising && !restoring}
             onSwap={() => onSwap(i)}
           />
         ))}
@@ -207,6 +240,7 @@ export function LookPanel({
         {revising ? <StatusChip status="revising" /> : look.current ? <StatusChip status="checked" /> : <StatusChip status="needsNewCheck" />}
         {updating && !look.current && <span className="type-label text-graphite">Updating</span>}
       </div>
+      {compare && <div className="flex flex-wrap gap-2">{compare}</div>}
     </article>
   );
 }

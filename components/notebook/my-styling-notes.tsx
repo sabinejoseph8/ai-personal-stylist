@@ -4,6 +4,7 @@ import { type ReactNode, type Ref, useEffect, useRef, useState } from "react";
 import type { ShownNote, TouchAction } from "@/components/session/use-notes";
 import { Button } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/status-chip";
+import { type ShownException, takeOffQuestion } from "@/core/looks/exceptions";
 import { announcement, type NoteChange, noteChanges, notesSummary } from "@/lib/notebook";
 
 // My Styling Notes (2d; R15, R16, R20, R23 to R25, R68; design 4.2 and 5.7): a ruled notebook page,
@@ -130,6 +131,52 @@ function RemovedRow({ id, text, onUndo }: { id: string; text: string; onUndo: ()
 
 type Removed = { note: ShownNote; index: number; until: number };
 
+/**
+ * A "This session only" exception (5c, R57, design 4.2): a clock, its words, and Save to my profile
+ * (after a confirmation, Sabine's answer to Q2) and Remove.
+ */
+function ExceptionRow({ exception, onAction }: { exception: ShownException; onAction: (action: "remove" | "save") => Promise<boolean> }) {
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const act = async (action: "remove" | "save") => {
+    setBusy(true);
+    const ok = await onAction(action);
+    if (!ok) setBusy(false);
+  };
+  return (
+    <li className={ROW}>
+      <div className="flex min-h-7 items-start justify-between gap-3">
+        <span className="type-note leading-7 text-ink">{exception.text}</span>
+        <span className="flex h-7 shrink-0 items-center">
+          <StatusChip status="thisSessionOnly" />
+        </span>
+      </div>
+      {asking ? (
+        <div role="group" aria-label="Save to my profile">
+          <p className="type-small m-0 leading-7 text-ink">{takeOffQuestion(exception)}</p>
+          <div className="flex h-14 items-center gap-2">
+            <Button disabled={busy} onClick={() => void act("save")}>
+              Take it off
+            </Button>
+            <Button variant="secondary" disabled={busy} onClick={() => setAsking(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div role="group" aria-label={`Change “${exception.text}”`} className="flex h-14 items-center gap-2">
+          <Button variant="secondary" disabled={busy} onClick={() => setAsking(true)}>
+            Save to my profile
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => void act("remove")}>
+            Remove
+          </Button>
+        </div>
+      )}
+    </li>
+  );
+}
+
 export function MyStylingNotes({
   notes,
   preferences,
@@ -142,6 +189,8 @@ export function MyStylingNotes({
   styleAround,
   thumbnail,
   lookNumber = () => null,
+  exceptions = [],
+  onException = async () => false,
 }: {
   notes: ShownNote[];
   /** Saved preferences that apply, in words, such as "Never: high heels" (R24). */
@@ -159,6 +208,9 @@ export function MyStylingNotes({
   thumbnail?: ReactNode;
   /** A look's number on screen, by its place, for feedback headings; null when it's gone (5a). */
   lookNumber?: (slot: number) => number | null;
+  /** Saved preferences allowed for this session only (5c, R57). */
+  exceptions?: ShownException[];
+  onException?: (exception: ShownException, action: "remove" | "save") => Promise<boolean>;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [removed, setRemoved] = useState<Removed[]>([]);
@@ -312,6 +364,14 @@ export function MyStylingNotes({
         <ul aria-label="Notes" className={`m-0 list-none p-0 ${rows.length ? "" : "min-h-28"}`}>
           {regular.map(renderRow)}
         </ul>
+
+        {exceptions.length > 0 && (
+          <ul aria-label="This session only" className="m-0 list-none p-0">
+            {exceptions.map((e) => (
+              <ExceptionRow key={e.id} exception={e} onAction={(action) => onException(e, action)} />
+            ))}
+          </ul>
+        )}
 
         {feedback.map(({ slot, number, list }) => {
           const heading = number ? `Look ${number}` : "An earlier look";

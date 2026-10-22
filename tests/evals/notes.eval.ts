@@ -3,6 +3,7 @@ import { expect, it } from "vitest";
 import { claudeAsk, type Effort, LIVE_MODEL } from "@/connectors/ai/claude";
 import { mergeNotes } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
+import type { FirmPreference } from "@/core/looks/exceptions";
 import { feedbackOf } from "@/core/notes/feedback";
 import { createNotesReader, type LookForReader } from "@/core/notes/reader";
 import { active, type NextQuestion, type Note, NOTE_CAP } from "@/core/notes/types";
@@ -38,7 +39,16 @@ type Case = {
   inView?: number;
   feedback?: { look: number; has: string[]; act?: string; items?: string[]; scope?: string; status?: "confirmed" | "to_confirm" }[];
   noFeedback?: boolean;
+  /** The sample profile's Never: high heels and Must have: sleeves are saved, and the one the words ask to break (null: none) (5c). */
+  saved?: boolean;
+  exception?: string | null;
 };
+
+// The saved preferences in cases with them (5c): the sample profile's Never and Must have.
+const SAVED: FirmPreference[] = [
+  { id: "pref-heels", kind: "never", words: "high heels" },
+  { id: "pref-sleeves", kind: "must_have", words: "sleeves" },
+];
 
 // The looks on screen in cases with looks (5a): sample products, by their catalog slugs.
 const piece = (id: string, name: string, group: string) => ({ id, name, group, owned: false });
@@ -103,6 +113,8 @@ async function replay(c: Case) {
   const snap = () => snapshots.push({ at: now(), notes });
   // The swap each reading heard, by the words it read: the app acts on the end-of-turn reading's only.
   const swaps = new Map<string, { look: number; piece: string } | null>();
+  // The saved preferences the end-of-turn reading flagged as asked to break (5c).
+  const flagged = new Set<string>();
 
   // As in the browser (components/session/use-notes.ts): with each send, plain code reads money and
   // dates at once and a Claude reading of the latest words starts. Readings overlap and merge in the
@@ -119,11 +131,13 @@ async function replay(c: Case) {
     const started = now();
     const seen = new Set(active(notes).map((n) => n.id));
     const looks = c.looks && words === fullTurn ? LOOKS.slice(0, c.looks) : undefined;
-    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined, looks, inView: c.inView ?? null, looksOnScreen: Boolean(c.looks) }).then((r) => {
+    const reading: Promise<void> = reader.read({ stylistSaid, words, notes, item: item ?? undefined, looks, inView: c.inView ?? null, looksOnScreen: Boolean(c.looks), saved: c.saved ? SAVED : undefined }).then((r) => {
       durations.push(now() - started);
       running.delete(reading);
       if (!r) return void paused++;
       swaps.set(words, r.swap ?? null);
+      // The app acts only on the end-of-turn reading's flag, as for a swap.
+      if (r.exception && words === fullTurn) flagged.add(r.exception);
       cost += r.costUsd;
       if (item && r.photo) item = changeItem(item, r.photo);
       const merged = mergeNotes(notes, r.changes, mine, NOTE_CAP, undefined, seen);
@@ -208,6 +222,10 @@ async function replay(c: Case) {
     return f ? [{ n, f }] : [];
   });
   if (c.noFeedback) checks.push({ what: "no feedback", ok: !feedbackNotes.length });
+  if (c.exception !== undefined) {
+    const want = SAVED.find((p) => p.words === c.exception);
+    checks.push({ what: want ? `asks to break ${want.words}` : "no saved preference flagged", ok: want ? flagged.has(want.id) && flagged.size === 1 : flagged.size === 0 });
+  }
   for (const want of c.feedback ?? []) {
     const ok = feedbackNotes.some(
       ({ n, f }) =>

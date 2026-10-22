@@ -9,17 +9,24 @@ import { loadProfile } from "@/lib/profile-store";
 
 // What a session's looks must meet (4a; tech spec 1.3 steps 1 and 2): the profile's departments, sizes,
 // budget and firm preferences, and the session's confirmed notes. Then the candidate filter narrows the
-// catalog to the products that could appear. 4b's looks builder composes looks from what's kept.
+// catalog to the products that could appear. 4b's looks builder composes looks from what's kept. A saved
+// preference allowed for this session only (5c, R57) doesn't limit this session's looks.
 
 const JUDGED: Rule = { type: "judged" };
 
+/** The saved preferences allowed for this session only (5c, R57), by id. */
+export async function sessionExceptions(db: SupabaseClient, sessionId: string): Promise<Set<string>> {
+  const { data } = await db.from("session_exceptions").select("saved_preference_id").eq("session_id", sessionId).throwOnError();
+  return new Set((data ?? []).map((r) => r.saved_preference_id as string));
+}
+
 /** The session's requirements, with the server key (the profile's rows and the session's notes). */
 export async function lookRequirements(db: SupabaseClient, guestId: string, sessionId: string): Promise<Requirements> {
-  const [profile, { notes }] = await Promise.all([loadProfile(db, guestId), loadNotes(db, sessionId)]);
+  const [profile, { notes }, allowed] = await Promise.all([loadProfile(db, guestId), loadNotes(db, sessionId), sessionExceptions(db, sessionId)]);
   const fromProfile = profile.preferences.flatMap((p): FirmRule[] =>
     // A firm preference without a rule yet is judged by the checker, which counts uncertainty as a fail.
     // So is one whose stored rule isn't the right shape: a guest can write their own rows (4e review).
-    p.kind === "likes" ? [] : [{ kind: p.kind, words: p.words, rule: RuleSchema.safeParse(p.rule).data ?? JUDGED, from: "profile" }],
+    p.kind === "likes" || (p.id && allowed.has(p.id)) ? [] : [{ kind: p.kind, words: p.words, rule: RuleSchema.safeParse(p.rule).data ?? JUDGED, from: "profile", id: p.id }],
   );
   return {
     departments: profile.departments,

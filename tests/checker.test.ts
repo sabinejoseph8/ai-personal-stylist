@@ -173,10 +173,18 @@ describe("the no-match explanation (R45, R59)", () => {
     const sized: Requirements = { ...req, categories: ["dress", "shoes", "bag"], sizes: { dress: "18" } };
     const s = filterCandidates(catalogProducts, sized);
     expect(explainNoMatch(sized, s.kept, s.leftOut, 0)).toEqual({ message: "Only 0 dresses come in your size.", choices: ["Try another outfit", "Try again"] });
-    // Only choices that work until 5c: no "Allow it for this session" yet (Sabine's decision A in 4e).
-    const strict: Requirements = { ...req, categories: ["dress", "shoes", "bag"], rules: [...rules, { kind: "never", words: "Not dresses", rule: { type: "detail", categories: [], test: { detail: "category", op: "one_of", values: ["dress"] } }, from: "notes" }] };
+    // A note's rule can't be allowed for the session: only a saved preference can (5c, R57).
+    const notDresses = { kind: "never" as const, words: "Not dresses", rule: { type: "detail" as const, categories: [], test: { detail: "category" as const, op: "one_of" as const, values: ["dress"] } } };
+    const strict: Requirements = { ...req, categories: ["dress", "shoes", "bag"], rules: [...rules, { ...notDresses, from: "notes" }] };
     const r = filterCandidates(catalogProducts, strict);
     expect(explainNoMatch(strict, r.kept, r.leftOut, 0)).toEqual({ message: "Only 0 dresses meet Not dresses.", choices: ["Try another outfit", "Try again"] });
+    const saved: Requirements = { ...strict, rules: [...rules, { ...notDresses, words: "dresses", from: "profile", id: "pref-1" }] };
+    const p = filterCandidates(catalogProducts, saved);
+    expect(explainNoMatch(saved, p.kept, p.leftOut, 0)).toEqual({
+      message: "Only 0 dresses meet Never: dresses.",
+      choices: ["Allow it for this session", "Try another outfit"],
+      preference: { id: "pref-1", kind: "never", words: "dresses" },
+    });
     const { kept: all, leftOut: none } = filterCandidates(catalogProducts, req);
     expect(explainNoMatch(req, all, none, 2)).toEqual({ message: "I found 2 looks that meet everything you've asked for.", choices: ["Change a requirement", "Try again"] });
     expect(explainNoMatch(req, all, none, 1).message).toBe("I found 1 look that meets everything you've asked for.");

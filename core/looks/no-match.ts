@@ -1,15 +1,19 @@
 import { budgetWords } from "./checker";
 import type { LeftOut, LeftOutKind, Requirements } from "./candidates";
+import type { FirmPreference } from "./exceptions";
 import type { Product } from "../../connectors/catalog/types";
 import { productGroup } from "./look";
 
 // The no-match explanation (R45, R59; Sabine's answer to Q2 in 4b): when fewer than three looks pass
 // after three tries, the stylist says which requirement is the limit and offers choices. Made by code
 // from what the candidate filter left out, so it names a real requirement, not a guess. Its choices are
-// only ones that work now (Sabine's decision A in 4e): allowing a preference for this session joins in
-// 5c, and sizes are changed in the profile. Tested in tests/checker.test.ts.
+// only ones that work now (Sabine's decision A in 4e): a saved Must have or Never can be allowed for this
+// session (5c, R57), and sizes are changed in the profile. Tested in tests/checker.test.ts.
 
-export type NoMatch = { message: string; choices: string[] };
+/** `preference` is the saved one that limits the looks, for "Allow it for this session" (5c). */
+export type NoMatch = { message: string; choices: string[]; preference?: FirmPreference };
+
+export const ALLOW_CHOICE = "Allow it for this session";
 
 const PIECES: Record<string, string> = { dress: "dresses", shoes: "shoes", top: "tops", bottom: "trousers or skirts", suit: "suits" };
 
@@ -36,7 +40,12 @@ export function explainNoMatch(req: Requirements, kept: Product[], leftOut: Left
     const only = `Only ${scarce.n} ${PIECES[scarce.group] ?? scarce.group}`;
     if (kind === "budget" && req.budget) return { message: `${only} fit under ${budgetWords(req.budget)}.`, choices: ["Raise the budget", "Try another outfit"] };
     if (kind === "size") return { message: `${only} come in your size.`, choices: ["Try another outfit", "Try again"] };
-    if (kind === "rule") return { message: `${only} meet ${examples![0].rule}.`, choices: ["Try another outfit", "Try again"] };
+    if (kind === "rule") {
+      const preference = examples!.find((l) => l.preference)?.preference;
+      return preference
+        ? { message: `${only} meet ${examples![0].rule}.`, choices: [ALLOW_CHOICE, "Try another outfit"], preference }
+        : { message: `${only} meet ${examples![0].rule}.`, choices: ["Try another outfit", "Try again"] };
+    }
   }
   const looks = found === 1 ? "1 look that meets" : `${found} looks that meet`;
   return { message: `I found ${looks} everything you've asked for.`, choices: ["Change a requirement", "Try again"] };
