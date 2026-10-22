@@ -186,7 +186,7 @@ export const ALLOWED_RULES = `
 
 The shopper has allowed these for this session only, though their saved preferences rule them out:
 {allowed}
-When the shopper asks for something one of these allows, such as high heels when Never: high heels is allowed, don't jot it as a note: give x as its code, such as "a1", and it's jotted for them.`;
+When the shopper asks for something one of these allows, such as high heels when Never: high heels is allowed, don't jot it as a note: give x as its "a" code, such as "a1", and it's jotted for them. These have only "a" codes, never an "s" code.`;
 
 const CODE_RULE = `
 Give a code only for the preference the request is about, never for another one. Otherwise give x as "".`;
@@ -409,9 +409,10 @@ export function createNotesReader(ask: Ask): NotesReader {
       const coded = forSaved && raw.x ? forSaved.codes.get(raw.x.trim().toLowerCase()) : undefined;
       let flagged = coded && saved.includes(coded) ? coded : undefined;
       let wanted = coded && allowed.includes(coded) ? coded : undefined;
-      // A safety check: words naming one already allowed ("heels") and nothing of the flagged one ask for
-      // the allowed one, with no card (fix plan 5, found on Sabine's iPhone in 5c, A.7).
-      const instead = flagged && !names(words, flagged) ? allowed.find((p) => names(words, p)) : undefined;
+      // A safety check: a code that isn't one allowed, with words naming one allowed ("heels") and nothing
+      // of the flagged one, asks for the allowed one, with no card (fix plan 5, found on Sabine's iPhone in
+      // 5c, A.7). That includes a made-up code: the notes eval caught "s2" for high heels once allowed.
+      const instead = raw.x?.trim() && !wanted && !(flagged && names(words, flagged)) ? allowed.find((p) => names(words, p)) : undefined;
       if (instead) [flagged, wanted] = [undefined, instead];
       const about = flagged ?? wanted;
       const stems = about ? about.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5)) : [];

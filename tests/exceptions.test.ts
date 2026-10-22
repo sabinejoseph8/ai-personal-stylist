@@ -104,6 +104,10 @@ describe("the notes reader and saved preferences (Q1 in 5c)", () => {
     const wrong = await reading("s1").reader.read({ stylistSaid: "", words: "I'd love some high heels", notes: [], saved: [sleeves], allowed: [heels] });
     expect(wrong?.exception).toBeUndefined();
     expect(wrong?.wanted).toBe("pref-heels");
+    // Or a made-up code: the notes eval caught "s2" for high heels once allowed.
+    expect((await reading("s2").reader.read({ stylistSaid: "", words: "I'd love to wear some high heels", notes: [], saved: [sleeves], allowed: [heels] }))?.wanted).toBe("pref-heels");
+    // No code at all is no request: "I usually avoid heels" stays as it is.
+    expect((await reading("").reader.read({ stylistSaid: "", words: "I usually avoid heels", notes: [], saved: [sleeves], allowed: [heels] }))?.wanted).toBeUndefined();
     // A request that names the flagged one still asks, and so does one with no allowed one named.
     expect((await reading("s1").reader.read({ stylistSaid: "", words: "A sleeveless dress, please", notes: [], saved: [sleeves], allowed: [heels] }))?.exception).toBe("pref-sleeves");
     expect((await reading("s1").reader.read({ stylistSaid: "", words: "A strapless gown, please", notes: [], saved: [sleeves], allowed: [heels] }))?.exception).toBe("pref-sleeves");

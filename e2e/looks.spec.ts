@@ -272,7 +272,7 @@ test.describe("the looks", () => {
     await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed");
     // Remove on the note takes back the request, not the permission (Sabine's answer to Q2).
     await note(page, "High heels").click();
-    await notebookOf(page).getByRole("button", { name: "Remove", exact: true }).click();
+    await notebookOf(page).getByRole("list", { name: "Notes" }).getByRole("button", { name: "Remove", exact: true }).click();
     await expect(note(page, "High heels")).toHaveCount(0, { timeout: 10_000 });
     const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
     await expect(exceptions).toContainText("High heels allowed for this session.");
