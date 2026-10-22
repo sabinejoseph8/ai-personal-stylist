@@ -228,7 +228,16 @@ test.describe("the looks", () => {
     await expect.poll(() => sent(page, "say"), { timeout: 15_000 }).toContain(question);
     await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Wait for their answer");
     await expect(notebookOf(page).getByText(/high heels/i)).toHaveCount(1);
+    // While her question waits, nothing else is said: a looks update after a budget change waits until
+    // it's answered (found on Sabine's iPhone in 5c: she answered such a line with "Absolutely").
+    const changed = async () => (await sent(page, "sendPhrase")).filter((t) => t === "What changed in my looks?").length;
+    const before = await changed();
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Actually, make my budget $350", final: true, turnId: "b9" });
+    await expect(panels(page).first()).toContainText(/under your \$350 limit/, { timeout: 20_000 });
+    await page.waitForTimeout(7_000);
+    expect(await changed()).toBe(before);
     await card.getByRole("button", { name: "Allow for this session" }).click();
+    await expect.poll(changed, { timeout: 15_000 }).toBeGreaterThan(before);
     const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
     await expect(exceptions).toContainText("High heels allowed for this session. Your profile still says Never: high heels.");
     // What was asked for is jotted in ink, so the looks change to include it (fix plan 3, Q1).

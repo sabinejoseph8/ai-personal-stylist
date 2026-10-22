@@ -41,6 +41,7 @@ describe("exceptions in words", () => {
     const told = exceptionsForStylist([sleeves], heels);
     expect(told).toContain("This session only: the shopper allowed breaking their saved preference Must have: sleeves.");
     expect(told).toContain(`You've just asked the shopper: "${spokenQuestion(heels)}" Wait for their answer`);
+    expect(told).toContain('repeat the question exactly as it is, without starting with "certainly", "absolutely"');
     expect(exceptionsForStylist([], null)).toBe("");
   });
 });
