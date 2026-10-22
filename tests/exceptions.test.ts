@@ -83,6 +83,32 @@ describe("the notes reader and saved preferences (Q1 in 5c)", () => {
     expect(r?.changes.add.map((a) => a.text)).toEqual(["Gala"]);
   });
 
+  it("is told what's allowed for this session by its own code, and hears asking for it again as that (fix plan 5, Q1)", async () => {
+    const systemsSeen: string[] = [];
+    const ask: Ask = async ({ system }) => (systemsSeen.push(system), { data: { add: [{ k: "style", t: "High heels", d: [] }, { k: "occasion", t: "Gala", d: [] }], update: [], remove: [], q: { t: "", o: [] }, x: "a1" }, costUsd: 0 });
+    const r = await createNotesReader(ask).read({ stylistSaid: "", words: "I'd love some high heels for the gala", notes: [], saved: [sleeves], allowed: [heels] });
+    expect(systemsSeen[0]).toContain("- s1: Must have: sleeves");
+    expect(systemsSeen[0]).toContain("allowed these for this session only, though their saved preferences rule them out:\n- a1: Never: high heels");
+    expect(r?.wanted).toBe("pref-heels");
+    expect(r?.exception).toBeUndefined();
+    // The app jots it in ink, so Claude's own note of it is left out.
+    expect(r?.changes.add.map((a) => a.text)).toEqual(["Gala"]);
+    // Only allowed ones: the saved part is still there, without the "s" list.
+    const onlyAllowed = reading("a1");
+    expect((await onlyAllowed.reader.read({ stylistSaid: "", words: "Some high heels", notes: [], allowed: [heels] }))?.wanted).toBe("pref-heels");
+    expect(onlyAllowed.systems[0]).not.toContain("Their saved preferences rule some things out");
+  });
+
+  it("doesn't take a request for one already allowed as breaking another (fix plan 5, found on Sabine's iPhone in 5c, A.7)", async () => {
+    // Told "s1" for "high heels" with heels allowed: no card, it's a request for heels.
+    const wrong = await reading("s1").reader.read({ stylistSaid: "", words: "I'd love some high heels", notes: [], saved: [sleeves], allowed: [heels] });
+    expect(wrong?.exception).toBeUndefined();
+    expect(wrong?.wanted).toBe("pref-heels");
+    // A request that names the flagged one still asks, and so does one with no allowed one named.
+    expect((await reading("s1").reader.read({ stylistSaid: "", words: "A sleeveless dress, please", notes: [], saved: [sleeves], allowed: [heels] }))?.exception).toBe("pref-sleeves");
+    expect((await reading("s1").reader.read({ stylistSaid: "", words: "A strapless gown, please", notes: [], saved: [sleeves], allowed: [heels] }))?.exception).toBe("pref-sleeves");
+  });
+
   it("flags nothing for an empty or unknown code, and isn't asked without saved preferences", async () => {
     expect((await reading("").reader.read({ stylistSaid: "", words: "Something elegant", notes: [], saved: [heels] }))?.exception).toBeUndefined();
     expect((await reading("s9").reader.read({ stylistSaid: "", words: "Something elegant", notes: [], saved: [heels] }))?.exception).toBeUndefined();

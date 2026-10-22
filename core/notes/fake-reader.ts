@@ -25,11 +25,17 @@ function photoChange(text: string): ItemChange | undefined {
   return Object.keys(change).length ? change : undefined;
 }
 
-/** A request that breaks a saved Never (5c): "I'd love high heels" with Never: high heels. */
-function exceptionAsked(text: string, saved: FirmPreference[]): { exception?: string } {
-  const asks = /\b(i'd love|i want|i'd like|show me|can i have)\b/.test(text);
-  const broken = asks ? saved.find((p) => p.kind === "never" && text.includes(p.words.toLowerCase())) : undefined;
-  return broken ? { exception: broken.id } : {};
+/**
+ * A request that breaks a saved Never (5c): "I'd love high heels" with Never: high heels. Or one allowed
+ * for this session, asked for again (fix plan 5).
+ */
+function exceptionAsked(text: string, saved: FirmPreference[], allowed: FirmPreference[]): { exception?: string; wanted?: string } {
+  if (!/\b(i'd love|i want|i'd like|show me|can i have)\b/.test(text)) return {};
+  const named = (p: FirmPreference) => p.kind === "never" && text.includes(p.words.toLowerCase());
+  const broken = saved.find(named);
+  if (broken) return { exception: broken.id };
+  const again = allowed.find(named);
+  return again ? { wanted: again.id } : {};
 }
 
 /** A request to swap a piece (4c): "show me different shoes", "another bag for look 2". */
@@ -44,7 +50,7 @@ const MONTH = /\b(january|february|march|april|may|june|july|august|september|oc
 
 export function createFakeNotesReader(): NotesReader {
   return {
-    async read({ words, notes, item, looks = [], inView, saved = [], asking }) {
+    async read({ words, notes, item, looks = [], inView, saved = [], allowed = [], asking }) {
       const text = words.toLowerCase();
       const found: NewNote[] = [];
       const add = (kind: NewNote["kind"], note: string) => found.push({ kind, text: note, status: "to_confirm", details: [] });
@@ -95,8 +101,9 @@ export function createFakeNotesReader(): NotesReader {
         costUsd: 0,
         ...(item ? { photo: photoChange(text) } : {}),
         ...(looks.length ? { swap: swapRequest(text) } : {}),
-        // Asking for something a saved Never rules out (5c): "I'd love high heels" with Never: high heels.
-        ...exceptionAsked(text, saved),
+        // Asking for something a saved Never rules out (5c): "I'd love high heels" with Never: high heels,
+        // or for one allowed for this session (fix plan 5).
+        ...exceptionAsked(text, saved, allowed),
         // An answer to the stylist's question (5c): "yes, allow it" or "no, keep it".
         ...(asking && /\b(yes|allow|go ahead|sure)\b/.test(text) ? { answer: "allow" as const } : asking && /\b(no|keep)\b/.test(text) ? { answer: "keep" as const } : {}),
       };

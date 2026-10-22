@@ -145,7 +145,11 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     heard.final ? looksForReader(deps, guestId, sessionId) : [],
     firmPreferences(deps.db, guestId, sessionId),
   ]);
-  const saved = firm.filter((p) => !p.allowed).map((p): FirmPreference => ({ id: p.id, kind: p.kind, words: p.words }));
+  const plain = (p: (typeof firm)[number]): FirmPreference => ({ id: p.id, kind: p.kind, words: p.words });
+  const saved = firm.filter((p) => !p.allowed).map(plain);
+  // And the ones allowed for this session, so asking for one again is jotted, not taken for another
+  // (fix plan 5, found on Sabine's iPhone in 5c, A.7).
+  const allowed = firm.filter((p) => p.allowed).map(plain);
   const asking = heard.asking ? saved.find((p) => p.id === heard.asking) : undefined;
   const reading = await deps.reader.read({
     stylistSaid: heard.stylistSaid,
@@ -156,6 +160,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     inView: heard.look,
     looksOnScreen: Boolean(heard.looks),
     saved,
+    allowed,
     asking,
   });
   if (!reading) {
@@ -191,6 +196,14 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
       const jotted = await jotWanted(deps, guestId, sessionId, asking);
       if (jotted) done = { notes: (await loadNotes(deps.db, sessionId)).notes, version: jotted.version };
     }
+  }
+  // Asking again for one already allowed is jotted in ink straight away, as just after allowing it, so
+  // the looks change, with no card or question (fix plan 5, Sabine's answer to Q1). At the end of a turn
+  // only, like a request to break one.
+  const wanted = reading.wanted && heard.final && !answered ? allowed.find((p) => p.id === reading.wanted) : undefined;
+  if (wanted) {
+    const jotted = await jotWanted(deps, guestId, sessionId, wanted);
+    if (jotted) done = { notes: (await loadNotes(deps.db, sessionId)).notes, version: jotted.version };
   }
   let question = reading.question;
   if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);

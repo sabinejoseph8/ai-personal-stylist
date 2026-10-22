@@ -263,6 +263,30 @@ test.describe("the looks", () => {
     await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed");
   });
 
+  test("asking again for high heels once allowed: jotted in ink with no card, though its note was removed (fix plan 5)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await card.getByRole("button", { name: "Allow for this session" }).click({ timeout: 10_000 });
+    await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed");
+    // Remove on the note takes back the request, not the permission (Sabine's answer to Q2).
+    await note(page, "High heels").click();
+    await notebookOf(page).getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(note(page, "High heels")).toHaveCount(0, { timeout: 10_000 });
+    const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
+    await expect(exceptions).toContainText("High heels allowed for this session.");
+    // Asked for again, it's jotted in ink straight away, with no card or question (Q1). Found on Sabine's
+    // iPhone in 5c, A.7: it was taken for Must have: sleeves, and the card asked to go without sleeves.
+    const said = (await sent(page, "say")).length;
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h2" });
+    await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed", { timeout: 10_000 });
+    await page.waitForTimeout(7_000);
+    await expect(card).toHaveCount(0);
+    await expect(exceptions.getByRole("listitem")).toHaveCount(1);
+    expect(await sent(page, "say")).toHaveLength(said);
+  });
+
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {
     test.slow();
     await weddingLooks(page);

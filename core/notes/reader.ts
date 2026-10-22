@@ -174,7 +174,22 @@ export const SAVED_RULES = `
 
 Their saved preferences rule some things out for every look:
 {saved}
-When the shopper asks for something one of these rules out, such as high heels when it says Never: high heels, or something sleeveless when it says Must have: sleeves, don't jot it as a note or as feedback: give x as its code, such as "s1", so the stylist can ask whether to allow it for this session only. Otherwise give x as "". Asking for something that fits a preference isn't a conflict: long sleeves when it says Must have: sleeves, or flats when it says Never: high heels. Neither is talking about it without asking for it ("I usually avoid heels").`;
+When the shopper asks for something one of these rules out, such as high heels when it says Never: high heels, or something sleeveless when it says Must have: sleeves, don't jot it as a note or as feedback: give x as its code, such as "s1", so the stylist can ask whether to allow it for this session only. Asking for something that fits a preference isn't a conflict: long sleeves when it says Must have: sleeves, or flats when it says Never: high heels. Neither is talking about it without asking for it ("I usually avoid heels").`;
+
+/**
+ * Saved preferences the shopper allowed for this session (5c, fix plan 5): asking for one again is jotted
+ * in ink, as just after allowing it (Sabine's answer to Q1). Listed by code too, so a request is matched
+ * to the very preference it's about: told only of Must have: sleeves, the reader flagged "I'd love some
+ * high heels" as breaking it (found on Sabine's iPhone in 5c, A.7).
+ */
+export const ALLOWED_RULES = `
+
+The shopper has allowed these for this session only, though their saved preferences rule them out:
+{allowed}
+When the shopper asks for something one of these allows, such as high heels when Never: high heels is allowed, don't jot it as a note: give x as its code, such as "a1", and it's jotted for them.`;
+
+const CODE_RULE = `
+Give a code only for the preference the request is about, never for another one. Otherwise give x as "".`;
 
 /**
  * The question the stylist just asked (5c, Sabine's answer to Q1 of the A.3 fix): a spoken answer does
@@ -184,11 +199,25 @@ export const ASKING_RULES = `
 
 You (the stylist) just asked the shopper whether to {change} for this session only, or keep their saved preference {rule}. If their words answer it, give y as "allow" (yes, allow it, go ahead) or "keep" (no, keep it, keep my preference). Otherwise give y as "". An answer is never a note.`;
 
-/** The saved preferences for the instructions, each with a code ("s1"), and the codes back to their ids. */
-function savedForPrompt(saved: FirmPreference[]) {
-  const codes = new Map(saved.map((p, i) => [`s${i + 1}`, p.id]));
-  const lines = saved.map((p, i) => `- s${i + 1}: ${p.kind === "never" ? "Never" : "Must have"}: ${p.words}`);
-  return { text: SAVED_RULES.replace("{saved}", lines.join("\n")), codes };
+/**
+ * The saved preferences for the instructions, each with a code: "s1" for one that still applies, "a1" for
+ * one allowed for this session. And the codes back to their preferences.
+ */
+function savedForPrompt(saved: FirmPreference[], allowed: FirmPreference[]) {
+  const rule = (p: FirmPreference) => `${p.kind === "never" ? "Never" : "Must have"}: ${p.words}`;
+  const codes = new Map<string, FirmPreference>([...saved.map((p, i) => [`s${i + 1}`, p] as const), ...allowed.map((p, i) => [`a${i + 1}`, p] as const)]);
+  const lines = (list: FirmPreference[], code: string) => list.map((p, i) => `- ${code}${i + 1}: ${rule(p)}`).join("\n");
+  const text = (saved.length ? SAVED_RULES.replace("{saved}", lines(saved, "s")) : "") + (allowed.length ? ALLOWED_RULES.replace("{allowed}", lines(allowed, "a")) : "") + CODE_RULE;
+  return { text, codes };
+}
+
+/**
+ * Whether the words name a saved preference, by the last word of it, such as "heel" for high heels or
+ * "sleev" for sleeves.
+ */
+function names(words: string, p: FirmPreference) {
+  const last = p.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).at(-1);
+  return !!last && words.toLowerCase().includes(last.slice(0, Math.max(4, last.length - 2)));
 }
 
 /** The instructions and answer shape for this reading: the photo, looks and saved parts only when there are some. */
@@ -239,6 +268,8 @@ export type ReaderInput = {
   looksOnScreen?: boolean;
   /** The saved Must have and Never preferences not allowed for this session (5c), so a request breaking one is flagged. */
   saved?: FirmPreference[];
+  /** The ones allowed for this session (fix plan 5), so asking for one again is heard as that. */
+  allowed?: FirmPreference[];
   /** The saved preference the stylist just asked about (5c): the words may answer it. */
   asking?: FirmPreference;
 };
@@ -246,8 +277,11 @@ export type ReaderInput = {
 /** A spoken request to swap a piece (4c): `look` is 1 to 3, or 0 when the shopper didn't say which. */
 export type SwapRequest = { look: number; piece: Group };
 
-/** `exception` is the id of a saved preference the shopper asked to break (5c): the stylist asks first. */
-export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest; exception?: string; answer?: "allow" | "keep" };
+/**
+ * `exception` is the id of a saved preference the shopper asked to break (5c): the stylist asks first.
+ * `wanted` is the id of one allowed for this session that they asked for (fix plan 5): it's jotted in ink.
+ */
+export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest; exception?: string; wanted?: string; answer?: "allow" | "keep" };
 
 export interface NotesReader {
   read(input: ReaderInput): Promise<Reading | null>;
@@ -303,7 +337,7 @@ export function cleanQuestion(q: { text: string; options: string[] } | undefined
 
 export function createNotesReader(ask: Ask): NotesReader {
   return {
-    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false, saved = [], asking }) {
+    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false, saved = [], allowed = [], asking }) {
       const live = active(notes);
       // Short ids keep the prompt small and stop Claude inventing ids.
       const shortIds = new Map(live.map((n, i) => [`n${i + 1}`, n.id]));
@@ -330,7 +364,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         .join("\n\n");
 
       const forLooks = looks.length ? looksForPrompt(looks, inView) : null;
-      const forSaved = saved.length ? savedForPrompt(saved) : null;
+      const forSaved = saved.length || allowed.length ? savedForPrompt(saved, allowed) : null;
       const forAsking = asking
         ? ASKING_RULES.replace("{change}", asking.kind === "never" ? `allow ${asking.words}` : `go without ${asking.words}`).replace("{rule}", `${asking.kind === "never" ? "Never" : "Must have"}: ${asking.words}`)
         : null;
@@ -369,10 +403,18 @@ export function createNotesReader(ask: Ask): NotesReader {
         const info = feedbackOf({ kind: "feedback", details: feedbackDetails({ look: look.slot, items, act, scope }) })!;
         return { details: feedbackDetails(info, about), clear: sure && given.clear === "yes" };
       };
-      // A request flagged as breaking a saved preference (5c) isn't jotted, even if Claude jots it too
-      // (found by the notes eval: "Sleeveless" beside the flag): a note sharing its words is left out.
-      const flagged = forSaved && raw.x ? saved.find((p) => p.id === forSaved.codes.get(raw.x!.trim().toLowerCase())) : undefined;
-      const stems = flagged ? flagged.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5)) : [];
+      // A request flagged as breaking a saved preference (5c), or asking for one allowed for this session
+      // (fix plan 5), isn't jotted, even if Claude jots it too (found by the notes eval: "Sleeveless"
+      // beside the flag): a note sharing its words is left out.
+      const coded = forSaved && raw.x ? forSaved.codes.get(raw.x.trim().toLowerCase()) : undefined;
+      let flagged = coded && saved.includes(coded) ? coded : undefined;
+      let wanted = coded && allowed.includes(coded) ? coded : undefined;
+      // A safety check: words naming one already allowed ("heels") and nothing of the flagged one ask for
+      // the allowed one, with no card (fix plan 5, found on Sabine's iPhone in 5c, A.7).
+      const instead = flagged && !names(words, flagged) ? allowed.find((p) => names(words, p)) : undefined;
+      if (instead) [flagged, wanted] = [undefined, instead];
+      const about = flagged ?? wanted;
+      const stems = about ? about.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5)) : [];
       const breaksSaved = (a: Raw["add"][number]) => stems.some((stem) => a.t.toLowerCase().includes(stem));
       const adds = raw.add
         .filter((a) => a.k !== "budget" && !aboutPhoto(a) && !breaksSaved(a))
@@ -400,6 +442,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         ...(item ? { photo: photoChange(raw.p) } : {}),
         ...(forLooks ? { swap: swapRequest(raw.w, looks.length) } : {}),
         ...(flagged ? { exception: flagged.id } : {}),
+        ...(wanted ? { wanted: wanted.id } : {}),
         ...(forAsking && (raw.y === "allow" || raw.y === "keep") ? { answer: raw.y } : {}),
       };
     },
