@@ -128,6 +128,10 @@ export function StylingSession({
   // Set once the looks exist, further down.
   const resetLooks = useRef<(() => void) | null>(null);
   const swapBySpeech = useRef<((swap: SwapRequest) => void) | null>(null);
+  // A request that breaks a saved preference (5c). Set after every render, so it sees the call as it is
+  // now: set once, it saw the call before it started, and never asked the stylist to speak up (found on
+  // Sabine's iPhone in 5c, A.3).
+  const askException = useRef<((preference: FirmPreference) => void) | null>(null);
   // The look most on screen, sent with the words for feedback that doesn't name a look (5a).
   const inViewNow = useRef<number | null>(null);
   const looksShownNow = useRef(false);
@@ -179,7 +183,7 @@ export function StylingSession({
     (id, item) => photos.setItem(id, item),
     (swap) => swapBySpeech.current?.(swap),
     () => ({ any: looksShownNow.current, inView: inViewNow.current }),
-    (preference) => askException.current(preference),
+    (preference) => askException.current?.(preference),
   );
 
   // "This session only" exceptions (5c, R57): the card asks, as the stylist does, before a saved Must
@@ -188,13 +192,13 @@ export function StylingSession({
   const [asking, setAsking] = useState<FirmPreference | null>(null);
   const [savedPreferences, setSavedPreferences] = useState(preferences);
   const exceptionsNow = useRef<ShownException[]>([]);
-  const askException = useRef((preference: FirmPreference) => {
-    if (exceptionsNow.current.some((e) => e.id === preference.id)) return;
-    setAsking(preference);
-    if (call.flow === "live") queue({ kind: "exception", text: EXCEPTION_ASKED });
-  });
   useLayoutEffect(() => {
     exceptionsNow.current = exceptions;
+    askException.current = (preference) => {
+      if (exceptions.some((e) => e.id === preference.id)) return;
+      setAsking(preference);
+      if (call.flow === "live") queue({ kind: "exception", text: EXCEPTION_ASKED });
+    };
   });
   useEffect(() => {
     const id = call.sessionId;

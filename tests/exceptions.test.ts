@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { differences } from "@/core/looks/compare";
 import { conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, takeOffQuestion } from "@/core/looks/exceptions";
 import type { ShownItem } from "@/core/looks/shown";
+import { stylistContext } from "@/core/notes/context";
 import { createNotesReader, type Ask } from "@/core/notes/reader";
 
 // 5c: "This session only" exceptions (R57, S14) in words, the notes reader flagging a request that breaks
@@ -17,6 +18,12 @@ describe("exceptions in words", () => {
     expect(conflictQuestion(heels)).toBe("Your profile says Never: high heels. Allow high heels for this session?");
     expect(conflictQuestion(sleeves)).toBe("Your profile says Must have: sleeves. Go without sleeves for this session?");
     expect(takeOffQuestion(heels)).toBe('Take "Never: high heels" off your profile? Later sessions will allow it too.');
+  });
+
+  it("tell the stylist from the start to ask first, so her first answer already asks (found on Sabine's iPhone in 5c, A.3)", () => {
+    const told = stylistContext([], [{ kind: "never", words: "high heels" }, { kind: "likes", words: "earth tones" }], null);
+    expect(told).toContain("first ask whether to allow it for this session only or keep their preference");
+    expect(stylistContext([], [{ kind: "likes", words: "earth tones" }], null)).not.toContain("first ask whether to allow");
   });
 
   it("tell the stylist what's allowed, and to ask first about a new request", () => {

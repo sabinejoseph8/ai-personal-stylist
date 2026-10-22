@@ -27,6 +27,11 @@ export function stylistContext(
     `- To confirm: ${toConfirm.length ? toConfirm.join("; ") : "nothing"}`,
   ];
   if (preferences.length) lines.push(`- Saved preferences (firm, except Likes): ${preferences.map((p) => `${label[p.kind] ?? p.kind}: ${p.words}`).join("; ")}`);
+  // Told from the start, so her first answer already asks (5c, R57; found on Sabine's iPhone in 5c, A.3).
+  if (preferences.some((p) => p.kind === "never" || p.kind === "must_have"))
+    lines.push(
+      "If the shopper asks for something a saved Must have or Never rules out, such as high heels when it says Never: high heels, don't go ahead or ask about details yet: first ask whether to allow it for this session only or keep their preference. Their screen shows the same question. One already allowed for this session (below) needs no asking.",
+    );
   if (item) lines.push(itemForStylist(item));
   if (wardrobe.length)
     lines.push(

@@ -222,8 +222,10 @@ test.describe("the looks", () => {
     await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
     const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
     await expect(card).toContainText("Your profile says Never: high heels. Allow high heels for this session?", { timeout: 10_000 });
-    // The stylist is told to ask first, and the request isn't jotted as a note.
+    // The stylist is told to ask first, and asked to speak up (found on Sabine's iPhone in 5c, A.3), and
+    // the request isn't jotted as a note.
     await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Before anything else, ask");
+    await expect.poll(() => sent(page, "sendPhrase"), { timeout: 15_000 }).toContain("Does that go against my saved preferences?");
     await expect(notebookOf(page).getByText(/high heels/i)).toHaveCount(1);
     await card.getByRole("button", { name: "Allow for this session" }).click();
     const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
