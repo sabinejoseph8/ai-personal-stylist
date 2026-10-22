@@ -556,8 +556,12 @@ export function StylingSession({
     }
     // A photo replaced meanwhile isn't spoken about.
     while (speakUp.current.length) {
-      const [next, ...rest] = speakUp.current;
-      speakUp.current = rest;
+      // While her question waits for the shopper's answer, nothing else is said: a line said for the
+      // shopper, such as "Can you walk me through the looks…?" once the looks arrived, had her answer
+      // "Absolutely, should I allow it?" (found on Sabine's iPhone in 5c). The rest waits its turn.
+      const next = askingNow.current ? speakUp.current.find((l) => l.kind === "exception") : speakUp.current[0];
+      if (!next) return;
+      speakUp.current = speakUp.current.filter((l) => l !== next);
       if (next.photo && photos.active?.key !== next.photo) continue;
       // A question already answered isn't asked.
       if (next.kind === "exception" && !askingNow.current) continue;

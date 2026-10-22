@@ -56,7 +56,7 @@ export function exceptionsForStylist(allowed: FirmPreference[], asking: FirmPref
   for (const a of allowed) lines.push(`This session only: the shopper allowed breaking their saved preference ${label(a)}: ${a.words}. Looks may now include it; their profile is unchanged.`);
   if (asking)
     lines.push(
-      `You've just asked the shopper: "${spokenQuestion(asking)}" Wait for their answer, by voice or with the buttons on their screen. Don't allow or refuse it yourself, and don't suggest anything with it until they've answered.`,
+      `You've just asked the shopper: "${spokenQuestion(asking)}" Wait for their answer, by voice or with the buttons on their screen. Don't allow or refuse it yourself, and don't suggest anything with it until they've answered. If they stay quiet and you remind them, repeat the question exactly as it is, without starting with "certainly", "absolutely" or "of course", since they haven't said anything (found on Sabine's iPhone in 5c).`,
     );
   return lines.join("\n");
 }
