@@ -44,7 +44,7 @@ const MONTH = /\b(january|february|march|april|may|june|july|august|september|oc
 
 export function createFakeNotesReader(): NotesReader {
   return {
-    async read({ words, notes, item, looks = [], inView, saved = [] }) {
+    async read({ words, notes, item, looks = [], inView, saved = [], asking }) {
       const text = words.toLowerCase();
       const found: NewNote[] = [];
       const add = (kind: NewNote["kind"], note: string) => found.push({ kind, text: note, status: "to_confirm", details: [] });
@@ -97,6 +97,8 @@ export function createFakeNotesReader(): NotesReader {
         ...(looks.length ? { swap: swapRequest(text) } : {}),
         // Asking for something a saved Never rules out (5c): "I'd love high heels" with Never: high heels.
         ...exceptionAsked(text, saved),
+        // An answer to the stylist's question (5c): "yes, allow it" or "no, keep it".
+        ...(asking && /\b(yes|allow|go ahead|sure)\b/.test(text) ? { answer: "allow" as const } : asking && /\b(no|keep)\b/.test(text) ? { answer: "keep" as const } : {}),
       };
     },
   };

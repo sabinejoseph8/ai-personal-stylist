@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { differences } from "@/core/looks/compare";
-import { conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, takeOffQuestion } from "@/core/looks/exceptions";
+import { conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, spokenQuestion, takeOffQuestion } from "@/core/looks/exceptions";
 import type { ShownItem } from "@/core/looks/shown";
 import { stylistContext } from "@/core/notes/context";
 import { createNotesReader, type Ask } from "@/core/notes/reader";
@@ -18,18 +18,21 @@ describe("exceptions in words", () => {
     expect(conflictQuestion(heels)).toBe("Your profile says Never: high heels. Allow high heels for this session?");
     expect(conflictQuestion(sleeves)).toBe("Your profile says Must have: sleeves. Go without sleeves for this session?");
     expect(takeOffQuestion(heels)).toBe('Take "Never: high heels" off your profile? Later sessions will allow it too.');
+    // Said word for word by the stylist (found on Sabine's iPhone in 5c, A.3).
+    expect(spokenQuestion(heels)).toBe("Your profile says never high heels. Shall I allow high heels for this session only, or keep your preference?");
+    expect(spokenQuestion(sleeves)).toBe("Your profile says you must have sleeves. Shall I go without sleeves for this session only, or keep your preference?");
   });
 
   it("tell the stylist from the start to ask first, so her first answer already asks (found on Sabine's iPhone in 5c, A.3)", () => {
     const told = stylistContext([], [{ kind: "never", words: "high heels" }, { kind: "likes", words: "earth tones" }], null);
-    expect(told).toContain("first ask whether to allow it for this session only or keep their preference");
-    expect(stylistContext([], [{ kind: "likes", words: "earth tones" }], null)).not.toContain("first ask whether to allow");
+    expect(told).toContain('say only "Let me check that against your saved preferences." Don\'t say yes or no');
+    expect(stylistContext([], [{ kind: "likes", words: "earth tones" }], null)).not.toContain("Let me check that");
   });
 
   it("tell the stylist what's allowed, and to ask first about a new request", () => {
     const told = exceptionsForStylist([sleeves], heels);
     expect(told).toContain("This session only: the shopper allowed breaking their saved preference Must have: sleeves.");
-    expect(told).toContain("Never: high heels rules out. Before anything else, ask");
+    expect(told).toContain(`You've just asked the shopper: "${spokenQuestion(heels)}" Wait for their answer`);
     expect(exceptionsForStylist([], null)).toBe("");
   });
 });
@@ -47,6 +50,21 @@ describe("the notes reader and saved preferences (Q1 in 5c)", () => {
     const r = await reader.read({ stylistSaid: "", words: "I'd love some high heels", notes: [], saved: [sleeves, heels] });
     expect(systems[0]).toContain("- s1: Must have: sleeves\n- s2: Never: high heels");
     expect(r?.exception).toBe("pref-heels");
+  });
+
+  it("hears a spoken answer to the stylist's question, only while one is waiting (A.3 fix, Q1)", async () => {
+    const answering = (y: string) => {
+      const systems: string[] = [];
+      const ask: Ask = async ({ system }) => (systems.push(system), { data: { add: [], update: [], remove: [], q: { t: "", o: [] }, x: "", y }, costUsd: 0 });
+      return { reader: createNotesReader(ask), systems };
+    };
+    const yes = answering("allow");
+    expect((await yes.reader.read({ stylistSaid: "", words: "Yes, allow it", notes: [], saved: [heels], asking: heels }))?.answer).toBe("allow");
+    expect(yes.systems[0]).toContain("whether to allow high heels for this session only, or keep their saved preference Never: high heels");
+    expect((await answering("keep").reader.read({ stylistSaid: "", words: "No, keep it", notes: [], saved: [heels], asking: heels }))?.answer).toBe("keep");
+    const none = answering("allow");
+    expect((await none.reader.read({ stylistSaid: "", words: "Yes please", notes: [], saved: [heels] }))?.answer).toBeUndefined();
+    expect(none.systems[0]).not.toContain("You (the stylist) just asked");
   });
 
   it("leaves out a note about the very thing flagged, keeping the rest", async () => {

@@ -305,6 +305,11 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     dispatch({ type: "phrase-sent" });
   }
 
+  /** An exact line the stylist says, such as asking before a saved preference is broken (5c, R57). */
+  function say(line: string) {
+    engine.current?.say(line);
+  }
+
   async function end() {
     const current = live.current;
     const id = current?.sessionId ?? sessionId;
@@ -342,6 +347,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     toggleMute,
     sendPhrase,
     prompt,
+    say,
     explainMicrophone: (declined: boolean) => setFlow(declined ? "declined" : "explain"),
     turnOnSound: () =>
       audio.current?.play().then(

@@ -1,6 +1,6 @@
 import "server-only";
-import type { FirmPreference } from "@/core/looks/exceptions";
-import { firmPreferences } from "@/lib/exceptions-service";
+import type { FirmPreference, ShownException } from "@/core/looks/exceptions";
+import { allowException, firmPreferences } from "@/lib/exceptions-service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stylistContext } from "@/core/notes/context";
 import { feedbackOf, isFeedback, touchFeedback } from "@/core/notes/feedback";
@@ -41,6 +41,8 @@ export type NotesUpdate = {
   swap?: SwapRequest;
   /** A request that breaks a saved Must have or Never (5c, R57): the page shows the card, and the stylist asks. */
   exception?: FirmPreference;
+  /** A spoken answer to the stylist's question (5c): allowed, with the exceptions now, or kept. */
+  answered?: { preferenceId: string; allow: boolean; exceptions?: ShownException[] };
 };
 
 export type HeardWords = {
@@ -51,6 +53,8 @@ export type HeardWords = {
   look?: number | null;
   /** The page shows looks (5a): readings while the shopper talks leave reactions to them for the end. */
   looks?: boolean;
+  /** The saved preference the stylist just asked about (5c): the words may answer it. */
+  asking?: string | null;
   /**
    * The browser's label for the shopper's current turn. Claude sometimes leaves the question out of one
    * reading, so the session's question stays until a reading of a later turn replaces it (2c). It's
@@ -140,6 +144,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     firmPreferences(deps.db, guestId, sessionId),
   ]);
   const saved = firm.filter((p) => !p.allowed).map((p): FirmPreference => ({ id: p.id, kind: p.kind, words: p.words }));
+  const asking = heard.asking ? saved.find((p) => p.id === heard.asking) : undefined;
   const reading = await deps.reader.read({
     stylistSaid: heard.stylistSaid,
     words: heard.words,
@@ -149,6 +154,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     inView: heard.look,
     looksOnScreen: Boolean(heard.looks),
     saved,
+    asking,
   });
   if (!reading) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
@@ -172,6 +178,13 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     photo ? activePhoto(deps.db, sessionId) : null,
     stylingPicks(deps.db, guestId),
   ]);
+  // A spoken answer to the stylist's question does what the buttons do, at the end of the turn (5c).
+  let answered: NotesUpdate["answered"];
+  if (asking && reading.answer && heard.final) {
+    const allow = reading.answer === "allow";
+    const exceptions = allow ? await allowException(deps.db, guestId, sessionId, asking.id) : null;
+    answered = { preferenceId: asking.id, allow, ...(exceptions ? { exceptions } : {}) };
+  }
   let question = reading.question;
   if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);
   else if (heard.turn) {
@@ -187,7 +200,8 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
     ...(reading.swap ? { swap: reading.swap } : {}),
     // Only once the shopper finishes speaking, like a swap: half a sentence can sound like a request (5c).
-    ...(reading.exception && heard.final ? { exception: saved.find((p) => p.id === reading.exception) } : {}),
+    ...(reading.exception && heard.final && !answered ? { exception: saved.find((p) => p.id === reading.exception) } : {}),
+    ...(answered ? { answered } : {}),
   });
 }
 

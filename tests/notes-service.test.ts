@@ -2,7 +2,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createFakeNotesReader } from "@/core/notes/fake-reader";
 import type { NotesReader, Reading } from "@/core/notes/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
-import { allowException } from "@/lib/exceptions-service";
 import { hearWords, type NotesDeps, type NotesUpdate, touchSessionNote } from "@/lib/notes-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
 import { savePreferences } from "@/lib/profile-store";
@@ -71,7 +70,15 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
       const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
       const { last } = await hear("I'd love some high heels");
       expect(last.exception).toEqual({ id: heels.id, kind: "never", words: "high heels" });
-      await allowException(db, guest.id, sessionId, heels.id);
+      // A spoken no keeps the preference; a spoken yes allows it, as the buttons do (A.3 fix, Q1).
+      const answer = async (words: string) => {
+        const updates: NotesUpdate[] = [];
+        await hearWords(deps(), guest.id, sessionId, { words, stylistSaid: "", final: true, asking: heels.id }, (u) => updates.push(u));
+        return updates.at(-1)!;
+      };
+      expect((await answer("No, keep my preference")).answered).toEqual({ preferenceId: heels.id, allow: false });
+      const allowed = (await answer("Yes, allow it")).answered;
+      expect(allowed).toMatchObject({ preferenceId: heels.id, allow: true, exceptions: [{ id: heels.id, kind: "never", words: "high heels" }] });
       expect((await hear("I'd love some high heels")).last.exception).toBeUndefined();
     } finally {
       await savePreferences(guest.db, []);

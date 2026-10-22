@@ -176,6 +176,14 @@ Their saved preferences rule some things out for every look:
 {saved}
 When the shopper asks for something one of these rules out, such as high heels when it says Never: high heels, or something sleeveless when it says Must have: sleeves, don't jot it as a note or as feedback: give x as its code, such as "s1", so the stylist can ask whether to allow it for this session only. Otherwise give x as "". Asking for something that fits a preference isn't a conflict: long sleeves when it says Must have: sleeves, or flats when it says Never: high heels. Neither is talking about it without asking for it ("I usually avoid heels").`;
 
+/**
+ * The question the stylist just asked (5c, Sabine's answer to Q1 of the A.3 fix): a spoken answer does
+ * what the buttons do.
+ */
+export const ASKING_RULES = `
+
+You (the stylist) just asked the shopper whether to {change} for this session only, or keep their saved preference {rule}. If their words answer it, give y as "allow" (yes, allow it, go ahead) or "keep" (no, keep it, keep my preference). Otherwise give y as "". An answer is never a note.`;
+
 /** The saved preferences for the instructions, each with a code ("s1"), and the codes back to their ids. */
 function savedForPrompt(saved: FirmPreference[]) {
   const codes = new Map(saved.map((p, i) => [`s${i + 1}`, p.id]));
@@ -184,7 +192,7 @@ function savedForPrompt(saved: FirmPreference[]) {
 }
 
 /** The instructions and answer shape for this reading: the photo, looks and saved parts only when there are some. */
-function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false, savedText: string | null = null) {
+function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false, savedText: string | null = null, askingText: string | null = null) {
   const properties: Record<string, unknown> = { ...SCHEMA.properties };
   const required = [...SCHEMA.required];
   let system = SYSTEM;
@@ -207,6 +215,11 @@ function readingShape(item: boolean, looksText: string | null, looksWhileTalking
     properties.x = { type: "string" };
     required.push("x");
   }
+  if (askingText) {
+    system += askingText;
+    properties.y = { type: "string", enum: ["", "allow", "keep"] };
+    required.push("y");
+  }
   return { system, schema: { ...SCHEMA, properties, required }, maxTokens: 1200 + (item ? 100 : 0) + (looksText ? 300 : 0) };
 }
 
@@ -226,13 +239,15 @@ export type ReaderInput = {
   looksOnScreen?: boolean;
   /** The saved Must have and Never preferences not allowed for this session (5c), so a request breaking one is flagged. */
   saved?: FirmPreference[];
+  /** The saved preference the stylist just asked about (5c): the words may answer it. */
+  asking?: FirmPreference;
 };
 
 /** A spoken request to swap a piece (4c): `look` is 1 to 3, or 0 when the shopper didn't say which. */
 export type SwapRequest = { look: number; piece: Group };
 
 /** `exception` is the id of a saved preference the shopper asked to break (5c): the stylist asks first. */
-export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest; exception?: string };
+export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest; exception?: string; answer?: "allow" | "keep" };
 
 export interface NotesReader {
   read(input: ReaderInput): Promise<Reading | null>;
@@ -246,6 +261,7 @@ type Raw = {
   p?: { c: number; o: "" | "m" | "i"; d: string[]; k: string[] };
   w?: { l: number; p: "" | Group };
   x?: string;
+  y?: "" | "allow" | "keep";
 };
 
 /** The swap the shopper asked for, if any, with a look number that's on screen. */
@@ -287,7 +303,7 @@ export function cleanQuestion(q: { text: string; options: string[] } | undefined
 
 export function createNotesReader(ask: Ask): NotesReader {
   return {
-    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false, saved = [] }) {
+    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false, saved = [], asking }) {
       const live = active(notes);
       // Short ids keep the prompt small and stop Claude inventing ids.
       const shortIds = new Map(live.map((n, i) => [`n${i + 1}`, n.id]));
@@ -315,7 +331,10 @@ export function createNotesReader(ask: Ask): NotesReader {
 
       const forLooks = looks.length ? looksForPrompt(looks, inView) : null;
       const forSaved = saved.length ? savedForPrompt(saved) : null;
-      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen, forSaved?.text ?? null) });
+      const forAsking = asking
+        ? ASKING_RULES.replace("{change}", asking.kind === "never" ? `allow ${asking.words}` : `go without ${asking.words}`).replace("{rule}", `${asking.kind === "never" ? "Never" : "Must have"}: ${asking.words}`)
+        : null;
+      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen, forSaved?.text ?? null, forAsking) });
       if (!data) return null;
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
@@ -381,6 +400,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         ...(item ? { photo: photoChange(raw.p) } : {}),
         ...(forLooks ? { swap: swapRequest(raw.w, looks.length) } : {}),
         ...(flagged ? { exception: flagged.id } : {}),
+        ...(forAsking && (raw.y === "allow" || raw.y === "keep") ? { answer: raw.y } : {}),
       };
     },
   };
