@@ -73,12 +73,14 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
       // A spoken no keeps the preference; a spoken yes allows it, as the buttons do (A.3 fix, Q1).
       const answer = async (words: string) => {
         const updates: NotesUpdate[] = [];
-        await hearWords(deps(), guest.id, sessionId, { words, stylistSaid: "", final: true, asking: heels.id }, (u) => updates.push(u));
+        await hearWords(deps(), guest.id, sessionId, { words, stylistSaid: "", final: true, asking: heels.id, wanted: true }, (u) => updates.push(u));
         return updates.at(-1)!;
       };
       expect((await answer("No, keep my preference")).answered).toEqual({ preferenceId: heels.id, allow: false });
-      const allowed = (await answer("Yes, allow it")).answered;
-      expect(allowed).toMatchObject({ preferenceId: heels.id, allow: true, exceptions: [{ id: heels.id, kind: "never", words: "high heels" }] });
+      const yes = await answer("Yes, allow it");
+      expect(yes.answered).toMatchObject({ preferenceId: heels.id, allow: true, exceptions: [{ id: heels.id, kind: "never", words: "high heels" }] });
+      // What they asked for is jotted in ink, so the looks change to include it (fix plan 3, Q1).
+      expect(yes.notes.filter((n) => n.text === "High heels").map((n) => n.status)).toEqual(["confirmed"]);
       expect((await hear("I'd love some high heels")).last.exception).toBeUndefined();
     } finally {
       await savePreferences(guest.db, []);

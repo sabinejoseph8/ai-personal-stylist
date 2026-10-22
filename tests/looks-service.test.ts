@@ -6,7 +6,7 @@ import { createFakeJudge, type Judge } from "@/core/looks/judge";
 import { behindTheScenesFor } from "@/lib/behind-the-scenes";
 import { allowException, removeException, saveExceptionToProfile } from "@/lib/exceptions-service";
 import { lookRequirements } from "@/lib/looks-inputs";
-import { feedbackByTouch, takeBackFeedback } from "@/lib/notes-service";
+import { feedbackByTouch, jotWanted, takeBackFeedback } from "@/lib/notes-service";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { buildLooks, currentLooks, lookHistory, type LooksDeps, restoreLook, type ShownLook, swapPiece } from "@/lib/looks-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
@@ -590,6 +590,22 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect((await db.from("session_exceptions").select("id").eq("session_id", session)).data).toEqual([]);
     expect((await prefs()).data).toEqual(before);
   }, 60_000);
+
+  it("once high heels are asked for and allowed, the looks change to include them (fix plan 3, Q1)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const catalog = createSampleCatalog(db);
+    const heelsOn = async (looks: ShownLook[]) =>
+      Promise.all(looks.map(async (l) => (await catalog.getProduct(l.items.find((i) => i.group === "shoes")!.id))?.details.heelCm ?? 0));
+    const before = looksOf(await buildLooks(deps(), guest.id, session));
+    expect((await heelsOn(before)).every((h) => h <= 5)).toBe(true);
+    const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+    await allowException(db, guest.id, session, heels.id);
+    const jotted = await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
+    expect(jotted?.notes.find((n) => n.text === "High heels")?.status).toBe("confirmed");
+    const after = looksOf(await buildLooks(deps(), guest.id, session));
+    expect(after.length).toBeGreaterThan(0);
+    expect((await heelsOn(after)).every((h) => h > 5)).toBe(true);
+  }, 90_000);
 
   it("Save to my profile takes the preference off the profile, with its exception (5c, Q2)", async () => {
     try {

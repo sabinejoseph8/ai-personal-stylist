@@ -1,3 +1,4 @@
+import { type FirmPreference, spokenQuestion } from "../looks/exceptions";
 import { itemForStylist, type StyleItem } from "../photos/item";
 
 /** A wardrobe item chosen with Style with these (3d), in the words the stylist needs. */
@@ -27,10 +28,17 @@ export function stylistContext(
     `- To confirm: ${toConfirm.length ? toConfirm.join("; ") : "nothing"}`,
   ];
   if (preferences.length) lines.push(`- Saved preferences (firm, except Likes): ${preferences.map((p) => `${label[p.kind] ?? p.kind}: ${p.words}`).join("; ")}`);
-  // Told from the start, so her first answer already asks (5c, R57; found on Sabine's iPhone in 5c, A.3).
-  if (preferences.some((p) => p.kind === "never" || p.kind === "must_have"))
+  // Told from the start, with the exact question, so her own first answer asks it, once (5c, R57; found on
+  // Sabine's iPhone in 5c, A.3: left to her own words she allowed it herself, and a question from the app
+  // on top of her reply asked twice).
+  const firm = preferences.flatMap((p) => (p.kind === "never" || p.kind === "must_have" ? [{ id: "", kind: p.kind, words: p.words } as FirmPreference] : []));
+  if (firm.length)
     lines.push(
-      'If the shopper asks for something a saved Must have or Never rules out, such as high heels when it says Never: high heels, say only "Let me check that against your saved preferences." Don\'t say yes or no, and don\'t suggest anything with it: the app asks them the question in a moment. One already allowed for this session (below) needs no asking.',
+      [
+        "If the shopper asks for something a saved Must have or Never rules out, don't say yes or no, and don't suggest anything with it: reply only with the question, word for word:",
+        ...firm.map((p) => `- For ${p.kind === "never" ? p.words : `going without ${p.words}`}: "${spokenQuestion(p)}"`),
+        "Then wait for their answer. One already allowed for this session (below) needs no asking.",
+      ].join("\n"),
     );
   if (item) lines.push(itemForStylist(item));
   if (wardrobe.length)

@@ -22,7 +22,7 @@ import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { looksChanged, looksForStylist } from "@/core/looks/context";
-import { exceptionsForStylist, type FirmPreference, type ShownException, spokenQuestion } from "@/core/looks/exceptions";
+import { asksAboutIt, exceptionsForStylist, type FirmPreference, type ShownException, spokenQuestion } from "@/core/looks/exceptions";
 import { ALLOW_CHOICE } from "@/core/looks/no-match";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import type { SwapRequest } from "@/core/notes/reader";
@@ -58,6 +58,8 @@ const LOOKS_NEW = "Can you walk me through the looks you've put together?";
 const LOOKS_UPDATED = "What changed in my looks?";
 /** After a Keep or Change tap, the looks wait this long, so several taps make one revision (Q1 in 5b). */
 const TAP_WAIT_MS = 2000;
+/** How long to wait for the stylist's own reply before the app asks the question for her (fix plan 3). */
+const BACKUP_WAIT_MS = 6000;
 const tapWaitEnds = () => Date.now() + TAP_WAIT_MS;
 
 /** The gap between two lines she's asked to speak up about, when nobody has spoken in between. */
@@ -131,13 +133,25 @@ export function StylingSession({
   // now: set once, it saw the call before it started, and never asked the stylist to speak up (found on
   // Sabine's iPhone in 5c, A.3).
   const askException = useRef<((preference: FirmPreference) => void) | null>(null);
-  const askingNow = useRef<FirmPreference | null>(null);
+  const askingNow = useRef<(FirmPreference & { wanted?: boolean }) | null>(null);
+  // What the stylist has said since the shopper last finished speaking, and whether a back-up question
+  // is still waiting for her reply (fix plan 3: one question, never two in a row).
+  const stylistReplies = useRef<string[]>([]);
+  const backup = useRef<{ question: string; timer: ReturnType<typeof setTimeout> | null } | null>(null);
+  const settleBackup = useRef<((said: string | null) => void) | null>(null);
   // The look most on screen, sent with the words for feedback that doesn't name a look (5a).
   const inViewNow = useRef<number | null>(null);
   const looksShownNow = useRef(false);
   const call = useConversation(openSessionId, { video, audio }, {
     onEvent: (e) => {
       notes.onEvent(e);
+      if (e.type === "words" && e.final) {
+        if (e.speaker === "shopper") stylistReplies.current = [];
+        else {
+          stylistReplies.current.push(e.text);
+          settleBackup.current?.(e.text);
+        }
+      }
       // "Use this one" takes the still, heard by plain code while an item is on camera (Q1 in 3c).
       if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text, e.final)) heardCapture.current?.();
     },
@@ -166,6 +180,8 @@ export function StylingSession({
   // waiting to be named (Phase 4 code review). She takes them one quiet moment at a time.
   const speakUp = useRef<SpeakUp[]>([]);
   const queue = (line: SpeakUp) => (speakUp.current = [...speakUp.current.filter((l) => l.kind !== line.kind), line]);
+  // A render to look at the waiting lines again (a timer, or a line queued with nothing else changing).
+  const [, recheck] = useState(0);
 
   // The item to style around (3a), and what the photo reader makes of it (3b).
   const photos = usePhotos(call.sessionId, initialPhotos, {
@@ -186,6 +202,7 @@ export function StylingSession({
     (preference) => askException.current?.(preference),
     {
       now: () => askingNow.current?.id ?? null,
+      wanted: () => Boolean(askingNow.current?.wanted),
       // A spoken yes or no to her question does what the buttons do (5c).
       answered: (answer) => {
         if (answer.exceptions) setExceptions(answer.exceptions);
@@ -197,7 +214,8 @@ export function StylingSession({
   // "This session only" exceptions (5c, R57): the card asks, as the stylist does, before a saved Must
   // have or Never is broken. Allowed ones are jotted in the notebook and stop limiting this session's looks.
   const [exceptions, setExceptions] = useState<ShownException[]>([]);
-  const [asking, setAsking] = useState<FirmPreference | null>(null);
+  // `wanted`: the shopper asked for it, so allowing it jots it too (fix plan 3, Q1).
+  const [asking, setAsking] = useState<(FirmPreference & { wanted?: boolean }) | null>(null);
   const [savedPreferences, setSavedPreferences] = useState(preferences);
   const exceptionsNow = useRef<ShownException[]>([]);
   useLayoutEffect(() => {
@@ -205,9 +223,30 @@ export function StylingSession({
     askingNow.current = asking;
     askException.current = (preference) => {
       if (exceptions.some((e) => e.id === preference.id)) return;
-      setAsking(preference);
-      // She asks in these exact words once nobody is talking (found on Sabine's iPhone in 5c, A.3).
-      if (call.flow === "live") queue({ kind: "exception", text: spokenQuestion(preference), say: true });
+      askingNow.current = { ...preference, wanted: true };
+      setAsking(askingNow.current);
+      if (call.flow !== "live") return;
+      // She asks in her own reply, with the words she's given. The app says the question only if her
+      // reply doesn't ask, or she says nothing for 6 seconds (fix plan 3, found on Sabine's iPhone in 5c).
+      const question = spokenQuestion(preference);
+      if (backup.current?.timer) clearTimeout(backup.current.timer);
+      backup.current = { question, timer: null };
+      const replied = stylistReplies.current;
+      if (replied.some(asksAboutIt)) settleBackup.current?.(replied.find(asksAboutIt)!);
+      else if (replied.length) settleBackup.current?.(replied.at(-1)!);
+      else if (backup.current) backup.current.timer = setTimeout(() => settleBackup.current?.(null), BACKUP_WAIT_MS);
+    };
+    // Her reply arrived (or none did): only when it doesn't ask is the question said, once.
+    settleBackup.current = (said) => {
+      const waiting = backup.current;
+      if (!waiting) return;
+      if (waiting.timer) clearTimeout(waiting.timer);
+      backup.current = null;
+      if (said && asksAboutIt(said)) return;
+      if (!askingNow.current) return;
+      queue({ kind: "exception", text: waiting.question, say: true });
+      // Nothing on screen changed, so the line waiting to be said needs a nudge.
+      recheck((n) => n + 1);
     };
   });
   useEffect(() => {
@@ -224,16 +263,22 @@ export function StylingSession({
       current = false;
     };
   }, [call.sessionId]);
-  async function allowException(preference: FirmPreference) {
+  async function allowException(preference: FirmPreference & { wanted?: boolean }) {
     const id = call.sessionId;
     if (!id) return false;
-    const res = await fetch(`/api/sessions/${id}/exceptions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ preferenceId: preference.id }) }).catch(() => null);
-    const body = (await res?.json().catch(() => null)) as { exceptions?: ShownException[] } | null;
+    const res = await fetch(`/api/sessions/${id}/exceptions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preferenceId: preference.id, wanted: Boolean(preference.wanted) }),
+    }).catch(() => null);
+    const body = (await res?.json().catch(() => null)) as { exceptions?: ShownException[]; notes?: Parameters<typeof notes.receive>[0] } | null;
     if (!res?.ok || !body?.exceptions) {
       toast("That didn't save. Try again.");
       return false;
     }
     setExceptions(body.exceptions);
+    // What they asked for, now jotted, so the looks change to include it.
+    if (body.notes) notes.receive(body.notes);
     setAsking(null);
     return true;
   }
@@ -243,13 +288,15 @@ export function StylingSession({
     const res = await fetch(action === "remove" ? `/api/sessions/${id}/exceptions/${exception.id}` : `/api/sessions/${id}/exceptions/${exception.id}/save`, {
       method: action === "remove" ? "DELETE" : "POST",
     }).catch(() => null);
-    const body = (await res?.json().catch(() => null)) as { exceptions?: ShownException[]; preferences?: string[] } | null;
+    const body = (await res?.json().catch(() => null)) as { exceptions?: ShownException[]; preferences?: string[]; notes?: Parameters<typeof notes.receive>[0] } | null;
     if (!res?.ok || !body?.exceptions) {
       toast("That didn't save. Try again.");
       return false;
     }
     setExceptions(body.exceptions);
     if (body.preferences) setSavedPreferences(body.preferences);
+    // Remove takes back what was asked for with it (fix plan 3).
+    if (body.notes) notes.receive(body.notes);
     return true;
   }
 
@@ -496,7 +543,6 @@ export function StylingSession({
   // a few quiet seconds, so two lines never arrive together.
   const quiet = flow === "live" && !someoneSpeaking(stage);
   const spokeUpAt = useRef(0);
-  const [, recheck] = useState(0);
   useEffect(() => {
     if (!quiet) {
       spokeUpAt.current = 0;
@@ -513,6 +559,8 @@ export function StylingSession({
       const [next, ...rest] = speakUp.current;
       speakUp.current = rest;
       if (next.photo && photos.active?.key !== next.photo) continue;
+      // A question already answered isn't asked.
+      if (next.kind === "exception" && !askingNow.current) continue;
       spokeUpAt.current = Date.now();
       if (next.say) call.say(next.text);
       else call.prompt(next.text);

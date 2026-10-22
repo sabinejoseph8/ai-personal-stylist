@@ -38,6 +38,15 @@ export function spokenQuestion(p: FirmPreference): string {
   return `Your profile says ${rule}. Shall I ${change} for this session only, or keep your preference?`;
 }
 
+/**
+ * What the shopper asked for, jotted in ink once they allow it, so the looks change to include it
+ * (Sabine's answer to Q1 of fix plan 3): "High heels", or "Without sleeves".
+ */
+export const wantedNote = (p: FirmPreference) => (p.kind === "never" ? capital(p.words) : `Without ${p.words}`);
+
+/** Whether the stylist's words already ask the question (a back-up is said only when they don't). */
+export const asksAboutIt = (said: string) => /\bsession\b/i.test(said) && /\b(preference|allow)/i.test(said);
+
 /** Save to my profile's confirmation (Sabine's answer to Q2 in 5c). */
 export const takeOffQuestion = (p: FirmPreference) => `Take "${label(p)}: ${p.words}" off your profile? Later sessions will allow it too.`;
 
