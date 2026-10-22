@@ -18,6 +18,8 @@ const Body = z.object({
   look: z.number().int().min(1).max(3).nullable().default(null),
   /** The page shows looks: readings while the shopper talks leave reactions to them for the end (5a). */
   looks: z.boolean().default(false),
+  /** The saved preference the stylist just asked about (5c): the words may answer it. */
+  asking: z.uuid().nullable().default(null),
 });
 
 export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[id]/words">) {

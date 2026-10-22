@@ -22,7 +22,7 @@ import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { looksChanged, looksForStylist } from "@/core/looks/context";
-import { exceptionsForStylist, type FirmPreference, type ShownException } from "@/core/looks/exceptions";
+import { exceptionsForStylist, type FirmPreference, type ShownException, spokenQuestion } from "@/core/looks/exceptions";
 import { ALLOW_CHOICE } from "@/core/looks/no-match";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import type { SwapRequest } from "@/core/notes/reader";
@@ -64,9 +64,8 @@ const tapWaitEnds = () => Date.now() + TAP_WAIT_MS;
 const SPEAK_UP_GAP_MS = 5000;
 
 /** Something she speaks up about once nobody is talking. */
-type SpeakUp = { kind: "photo" | "camera" | "looks" | "exception"; text: string; photo?: string };
-/** Said for the shopper after they ask for something a saved preference rules out (5c), so the stylist asks first. */
-const EXCEPTION_ASKED = "Does that go against my saved preferences?";
+/** `say`: the stylist says `text` word for word, rather than answering it as the shopper's words (5c). */
+type SpeakUp = { kind: "photo" | "camera" | "looks" | "exception"; text: string; photo?: string; say?: boolean };
 
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
@@ -132,6 +131,7 @@ export function StylingSession({
   // now: set once, it saw the call before it started, and never asked the stylist to speak up (found on
   // Sabine's iPhone in 5c, A.3).
   const askException = useRef<((preference: FirmPreference) => void) | null>(null);
+  const askingNow = useRef<FirmPreference | null>(null);
   // The look most on screen, sent with the words for feedback that doesn't name a look (5a).
   const inViewNow = useRef<number | null>(null);
   const looksShownNow = useRef(false);
@@ -184,6 +184,14 @@ export function StylingSession({
     (swap) => swapBySpeech.current?.(swap),
     () => ({ any: looksShownNow.current, inView: inViewNow.current }),
     (preference) => askException.current?.(preference),
+    {
+      now: () => askingNow.current?.id ?? null,
+      // A spoken yes or no to her question does what the buttons do (5c).
+      answered: (answer) => {
+        if (answer.exceptions) setExceptions(answer.exceptions);
+        setAsking(null);
+      },
+    },
   );
 
   // "This session only" exceptions (5c, R57): the card asks, as the stylist does, before a saved Must
@@ -194,10 +202,12 @@ export function StylingSession({
   const exceptionsNow = useRef<ShownException[]>([]);
   useLayoutEffect(() => {
     exceptionsNow.current = exceptions;
+    askingNow.current = asking;
     askException.current = (preference) => {
       if (exceptions.some((e) => e.id === preference.id)) return;
       setAsking(preference);
-      if (call.flow === "live") queue({ kind: "exception", text: EXCEPTION_ASKED });
+      // She asks in these exact words once nobody is talking (found on Sabine's iPhone in 5c, A.3).
+      if (call.flow === "live") queue({ kind: "exception", text: spokenQuestion(preference), say: true });
     };
   });
   useEffect(() => {
@@ -504,7 +514,8 @@ export function StylingSession({
       speakUp.current = rest;
       if (next.photo && photos.active?.key !== next.photo) continue;
       spokeUpAt.current = Date.now();
-      call.prompt(next.text);
+      if (next.say) call.say(next.text);
+      else call.prompt(next.text);
       return;
     }
   });

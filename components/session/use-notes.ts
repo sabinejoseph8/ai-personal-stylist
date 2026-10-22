@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ConversationEvent } from "@/connectors/conversation/types";
 import type { NextQuestion, ShownNote } from "@/core/notes/types";
 import type { SwapRequest } from "@/core/notes/reader";
-import type { FirmPreference } from "@/core/looks/exceptions";
+import type { FirmPreference, ShownException } from "@/core/looks/exceptions";
 import type { StyleItem } from "@/core/photos/item";
 
 // The browser's side of My Styling Notes (2c, 2d): it sends the shopper's words about twice a second
@@ -42,7 +42,11 @@ type Update = {
   swap?: SwapRequest;
   /** A request that breaks a saved Must have or Never (5c): the stylist asks first. */
   exception?: FirmPreference;
+  /** A spoken answer to her question (5c): allowed, with the exceptions now, or kept. */
+  answered?: Answered;
 };
+
+export type Answered = { preferenceId: string; allow: boolean; exceptions?: ShownException[] };
 
 const SEND_EVERY_MS = 500;
 
@@ -76,6 +80,8 @@ export function useNotes(
   lookInView?: () => { any: boolean; inView: number | null },
   /** A request that breaks a saved preference (5c, R57). */
   onException?: (preference: FirmPreference) => void,
+  /** The saved preference the stylist is asking about, sent with the words so an answer is heard, and that answer (5c). */
+  asking?: { now: () => string | null; answered: (answer: Answered) => void },
 ) {
   const [notes, setNotes] = useState<ShownNote[]>(initial);
   const [question, setQuestion] = useState<NextQuestion>(null);
@@ -88,6 +94,7 @@ export function useNotes(
   const photo = useRef(onPhoto);
   const swapHook = useRef(onSwap);
   const exceptionHook = useRef(onException);
+  const askingHook = useRef(asking);
   const inView = useRef(lookInView);
   const session = useRef(sessionId);
   useLayoutEffect(() => {
@@ -95,6 +102,7 @@ export function useNotes(
     photo.current = onPhoto;
     swapHook.current = onSwap;
     exceptionHook.current = onException;
+    askingHook.current = asking;
     inView.current = lookInView;
     session.current = sessionId;
   });
@@ -112,6 +120,7 @@ export function useNotes(
       swapHook.current?.(u.swap);
     }
     if (u.exception) exceptionHook.current?.(u.exception);
+    if (u.answered) askingHook.current?.answered(u.answered);
     if (u.error || u.version === undefined) {
       if (u.paused) setPaused(true);
       return;
@@ -139,7 +148,7 @@ export function useNotes(
       const res = await fetch(`/api/sessions/${id}/words`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key, look: inView.current?.().inView ?? null, looks: inView.current?.().any ?? false }),
+        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key, look: inView.current?.().inView ?? null, looks: inView.current?.().any ?? false, asking: askingHook.current?.now() ?? null }),
       });
       if (res.status === 429) {
         // The end of a turn has no later send to carry its words, so it tries again shortly.

@@ -222,10 +222,11 @@ test.describe("the looks", () => {
     await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
     const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
     await expect(card).toContainText("Your profile says Never: high heels. Allow high heels for this session?", { timeout: 10_000 });
-    // The stylist is told to ask first, and asked to speak up (found on Sabine's iPhone in 5c, A.3), and
-    // the request isn't jotted as a note.
-    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Before anything else, ask");
-    await expect.poll(() => sent(page, "sendPhrase"), { timeout: 15_000 }).toContain("Does that go against my saved preferences?");
+    // The stylist says the question word for word, and is told to wait for the answer (found on Sabine's
+    // iPhone in 5c, A.3), and the request isn't jotted as a note.
+    const question = "Your profile says never high heels. Shall I allow high heels for this session only, or keep your preference?";
+    await expect.poll(() => sent(page, "say"), { timeout: 15_000 }).toContain(question);
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Wait for their answer");
     await expect(notebookOf(page).getByText(/high heels/i)).toHaveCount(1);
     await card.getByRole("button", { name: "Allow for this session" }).click();
     const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
@@ -236,6 +237,13 @@ test.describe("the looks", () => {
     await noSeriousA11yProblems(page);
     await exceptions.getByRole("button", { name: "Remove" }).click();
     await expect(exceptions).toHaveCount(0);
+
+    // Asked again, a spoken yes does what the button does (A.3 fix, Q1).
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h2" });
+    await expect(card).toBeVisible({ timeout: 10_000 });
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Yes, allow it", final: true, turnId: "h3" });
+    await expect(exceptions).toContainText("High heels allowed for this session.", { timeout: 10_000 });
+    await expect(card).toHaveCount(0);
   });
 
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {

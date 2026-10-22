@@ -27,6 +27,17 @@ export function conflictQuestion(p: FirmPreference): string {
   return `Your profile says ${label(p)}: ${p.words}. ${ask}`;
 }
 
+/**
+ * The question the stylist says word for word once a request is flagged (found on Sabine's iPhone in 5c,
+ * A.3: left to her own words, she allowed it herself): "Your profile says never high heels. Shall I
+ * allow high heels for this session only, or keep your preference?"
+ */
+export function spokenQuestion(p: FirmPreference): string {
+  const rule = p.kind === "never" ? `never ${p.words}` : `you must have ${p.words}`;
+  const change = p.kind === "never" ? `allow ${p.words}` : `go without ${p.words}`;
+  return `Your profile says ${rule}. Shall I ${change} for this session only, or keep your preference?`;
+}
+
 /** Save to my profile's confirmation (Sabine's answer to Q2 in 5c). */
 export const takeOffQuestion = (p: FirmPreference) => `Take "${label(p)}: ${p.words}" off your profile? Later sessions will allow it too.`;
 
@@ -36,7 +47,7 @@ export function exceptionsForStylist(allowed: FirmPreference[], asking: FirmPref
   for (const a of allowed) lines.push(`This session only: the shopper allowed breaking their saved preference ${label(a)}: ${a.words}. Looks may now include it; their profile is unchanged.`);
   if (asking)
     lines.push(
-      `The shopper asked for something their saved preference ${label(asking)}: ${asking.words} rules out. Before anything else, ask in a few words whether to allow it for this session only or keep their preference. Their screen shows the same question with two buttons.`,
+      `You've just asked the shopper: "${spokenQuestion(asking)}" Wait for their answer, by voice or with the buttons on their screen. Don't allow or refuse it yourself, and don't suggest anything with it until they've answered.`,
     );
   return lines.join("\n");
 }
