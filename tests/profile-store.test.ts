@@ -1,8 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Preferences } from "@/lib/profile";
 import { loadProfile, savePreferences } from "@/lib/profile-store";
 import { canRunDatabaseTests, createTestGuest, type TestGuest } from "./support/test-guests";
 
 // Saved preferences (R4, R24) are replaced in one step: a failed save keeps the old list (Phase 1 code review).
+// Loaded preferences carry their row's id, for "This session only" exceptions (5c): compared without it.
+const plain = (prefs: Preferences) => prefs.map((p) => ({ kind: p.kind, words: p.words, ...(p.rule ? { rule: p.rule } : {}) }));
+
 describe.skipIf(!canRunDatabaseTests)("saved preferences", () => {
   let guest: TestGuest;
 
@@ -22,10 +26,11 @@ describe.skipIf(!canRunDatabaseTests)("saved preferences", () => {
       { kind: "likes", words: "emerald" },
     ]);
     const profile = await loadProfile(guest.db, guest.id);
-    expect(profile.preferences).toEqual([
+    expect(plain(profile.preferences)).toEqual([
       { kind: "never", words: "high heels" },
       { kind: "likes", words: "emerald" },
     ]);
+    expect(profile.preferences.every((p) => typeof p.id === "string")).toBe(true);
   });
 
   it("keeps each Must have and Never's rule with it (4a)", async () => {
@@ -35,7 +40,7 @@ describe.skipIf(!canRunDatabaseTests)("saved preferences", () => {
       { kind: "never", words: "anything too flashy", rule: { type: "judged" } },
       { kind: "likes", words: "emerald" },
     ]);
-    expect((await loadProfile(guest.db, guest.id)).preferences).toEqual([
+    expect(plain((await loadProfile(guest.db, guest.id)).preferences)).toEqual([
       { kind: "never", words: "high heels", rule },
       { kind: "never", words: "anything too flashy", rule: { type: "judged" } },
       { kind: "likes", words: "emerald" },

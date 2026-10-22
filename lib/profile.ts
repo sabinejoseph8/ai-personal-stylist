@@ -67,7 +67,8 @@ export const RuleSchema: z.ZodType<Rule> = z.union([
 ]);
 
 export const PreferencesSchema = z.array(
-  z.object({ kind: z.enum(["must_have", "never", "likes"]), words: z.string().trim().min(1).max(80), rule: RuleSchema.optional() }),
+  // `id` is the saved row's, when loaded: a "This session only" exception names it (5c).
+  z.object({ id: z.string().optional(), kind: z.enum(["must_have", "never", "likes"]), words: z.string().trim().min(1).max(80), rule: RuleSchema.optional() }),
 ).max(30);
 export type Preferences = z.infer<typeof PreferencesSchema>;
 

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.16 (21 Oct 2026)
+**Status:** Agreed, version 1.17 (22 Oct 2026)
 **Last updated:** 21 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -274,7 +274,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Saved preferences and session exceptions**
 - Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a Saved preference chip and its bookmark icon. Tapping one opens it in Profile and privacy, from Phase 6. Until then they aren't tappable (your answer to Q1 in 2d).
-- This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**.
+- This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**. As built (5c), the lines sit after the notes, before the feedback, and Save to my profile first asks "Take "Never: high heels" off your profile? Later sessions will allow it too." with **Take it off** and **Cancel**.
 
 ### 4.3 Looks
 
@@ -309,6 +309,8 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **Error:** a red banner, "The looks couldn't be put together.", with Try again; anything already shown stays.
 - **Keep and Change (5a):** two toggles (chips) on each sample product's tile, above Swap, reading Keeping and Changing (with the check) when pressed; the shopper's own pieces have none.
 - **Revisions (5b):** a look being revised shows the Revising chip in place of its check status, with Swap, Keep and Change paused, and "Revising your look" with a spinner above the looks. The revised look's change summary sits above its items in an Emerald-wash box, and its new pieces carry the New chip. When no revision fits, a note in a Showroom box above the items says so, and the look stays. After a Keep or Change tap the looks wait 2 seconds, so several taps make one revision.
+- **Undo and compare (5c):** Undo feedback is a quiet button with the undo icon inside the change summary box; while the earlier look is checked, "Checking the earlier look against your preferences" with a spinner shows under it, and if it no longer fits, a note in a Showroom box says why. Compare is a secondary button under the look, for a look with an earlier version; it opens a sheet (wider on tablets and computers) with Current and Earlier side by side, or a Current and Earlier switch on phones, the differences as highlighter labels, Newer and Older, and Use this look.
+- **Conflict card (5c):** above the looks, in a highlighter box with the clock icon: the question, **Allow for this session** and **Keep my preference**. The no-match box's "Allow it for this session" opens it too.
 - Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
 
 **Preference check status**
@@ -582,6 +584,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.17 (22 Oct 2026):** 5c: Undo feedback, Compare, the conflict card and This session only as built (4.2, 4.3).
 - **1.16 (21 Oct 2026):** 5b: the Revising chip, the change summary box, New on revised pieces and the nothing-fits note (4.3).
 - **1.15 (21 Oct 2026):** 5a: Keep and Change on the tiles (4.3), and feedback under each look in the notebook (4.2).
 - **1.14 (21 Oct 2026):** Phase 4 code review: the no-match choices (your decision A, 4.3).

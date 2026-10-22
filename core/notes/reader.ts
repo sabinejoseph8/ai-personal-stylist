@@ -1,4 +1,5 @@
 import type { Ask } from "../ask";
+import type { FirmPreference } from "../looks/exceptions";
 import type { Group } from "../looks/look";
 import { SWAPPABLE } from "../looks/swap";
 import { chosenItem, DETAIL_NAMES, type DetailName, type ItemChange, itemForReader, type StyleItem } from "../photos/item";
@@ -165,8 +166,25 @@ export const LOOKS_WHILE_TALKING = `
 
 Looks are on the shopper's screen. Reactions to them (keeping, changing, liking or disliking a piece or a look, or asking for a different piece) are never notes: leave them out, they're read when the shopper finishes speaking.`;
 
-/** The instructions and answer shape for this reading: the photo and looks parts only when there are some. */
-function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false) {
+/**
+ * The shopper's saved Must have and Never preferences (5c, R57, Sabine's answer to Q1): a request one of
+ * them rules out isn't jotted; it's flagged, so the stylist asks whether to allow it for this session.
+ */
+export const SAVED_RULES = `
+
+Their saved preferences rule some things out for every look:
+{saved}
+When the shopper asks for something one of these rules out, such as high heels when it says Never: high heels, or something sleeveless when it says Must have: sleeves, don't jot it as a note or as feedback: give x as its code, such as "s1", so the stylist can ask whether to allow it for this session only. Otherwise give x as "". Asking for something that fits a preference isn't a conflict: long sleeves when it says Must have: sleeves, or flats when it says Never: high heels. Neither is talking about it without asking for it ("I usually avoid heels").`;
+
+/** The saved preferences for the instructions, each with a code ("s1"), and the codes back to their ids. */
+function savedForPrompt(saved: FirmPreference[]) {
+  const codes = new Map(saved.map((p, i) => [`s${i + 1}`, p.id]));
+  const lines = saved.map((p, i) => `- s${i + 1}: ${p.kind === "never" ? "Never" : "Must have"}: ${p.words}`);
+  return { text: SAVED_RULES.replace("{saved}", lines.join("\n")), codes };
+}
+
+/** The instructions and answer shape for this reading: the photo, looks and saved parts only when there are some. */
+function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false, savedText: string | null = null) {
   const properties: Record<string, unknown> = { ...SCHEMA.properties };
   const required = [...SCHEMA.required];
   let system = SYSTEM;
@@ -183,6 +201,11 @@ function readingShape(item: boolean, looksText: string | null, looksWhileTalking
     // Feedback lines can be added only here.
     const add = SCHEMA.properties.add;
     properties.add = { ...add, items: { ...add.items, properties: { ...add.items.properties, k: { type: "string", enum: KINDS } } } };
+  }
+  if (savedText) {
+    system += savedText;
+    properties.x = { type: "string" };
+    required.push("x");
   }
   return { system, schema: { ...SCHEMA, properties, required }, maxTokens: 1200 + (item ? 100 : 0) + (looksText ? 300 : 0) };
 }
@@ -201,12 +224,15 @@ export type ReaderInput = {
   inView?: number | null;
   /** Looks are on screen, though this reading isn't told what's in them (while the shopper talks, 5a). */
   looksOnScreen?: boolean;
+  /** The saved Must have and Never preferences not allowed for this session (5c), so a request breaking one is flagged. */
+  saved?: FirmPreference[];
 };
 
 /** A spoken request to swap a piece (4c): `look` is 1 to 3, or 0 when the shopper didn't say which. */
 export type SwapRequest = { look: number; piece: Group };
 
-export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest };
+/** `exception` is the id of a saved preference the shopper asked to break (5c): the stylist asks first. */
+export type Reading = { changes: NoteChanges; question: NextQuestion; costUsd: number; photo?: ItemChange; swap?: SwapRequest; exception?: string };
 
 export interface NotesReader {
   read(input: ReaderInput): Promise<Reading | null>;
@@ -219,6 +245,7 @@ type Raw = {
   q: { t: string; o: string[] };
   p?: { c: number; o: "" | "m" | "i"; d: string[]; k: string[] };
   w?: { l: number; p: "" | Group };
+  x?: string;
 };
 
 /** The swap the shopper asked for, if any, with a look number that's on screen. */
@@ -260,7 +287,7 @@ export function cleanQuestion(q: { text: string; options: string[] } | undefined
 
 export function createNotesReader(ask: Ask): NotesReader {
   return {
-    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false }) {
+    async read({ stylistSaid, words, notes, item, looks = [], inView, looksOnScreen = false, saved = [] }) {
       const live = active(notes);
       // Short ids keep the prompt small and stop Claude inventing ids.
       const shortIds = new Map(live.map((n, i) => [`n${i + 1}`, n.id]));
@@ -287,7 +314,8 @@ export function createNotesReader(ask: Ask): NotesReader {
         .join("\n\n");
 
       const forLooks = looks.length ? looksForPrompt(looks, inView) : null;
-      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen) });
+      const forSaved = saved.length ? savedForPrompt(saved) : null;
+      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen, forSaved?.text ?? null) });
       if (!data) return null;
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
@@ -322,8 +350,13 @@ export function createNotesReader(ask: Ask): NotesReader {
         const info = feedbackOf({ kind: "feedback", details: feedbackDetails({ look: look.slot, items, act, scope }) })!;
         return { details: feedbackDetails(info, about), clear: sure && given.clear === "yes" };
       };
+      // A request flagged as breaking a saved preference (5c) isn't jotted, even if Claude jots it too
+      // (found by the notes eval: "Sleeveless" beside the flag): a note sharing its words is left out.
+      const flagged = forSaved && raw.x ? saved.find((p) => p.id === forSaved.codes.get(raw.x!.trim().toLowerCase())) : undefined;
+      const stems = flagged ? flagged.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5)) : [];
+      const breaksSaved = (a: Raw["add"][number]) => stems.some((stem) => a.t.toLowerCase().includes(stem));
       const adds = raw.add
-        .filter((a) => a.k !== "budget" && !aboutPhoto(a))
+        .filter((a) => a.k !== "budget" && !aboutPhoto(a) && !breaksSaved(a))
         .flatMap((a): NewNote[] => {
           if (a.k !== "feedback") return [{ kind: a.k, text: a.t, status: "to_confirm", details: toDetails(a.d) }];
           const f = feedback(a.d);
@@ -347,6 +380,7 @@ export function createNotesReader(ask: Ask): NotesReader {
         costUsd,
         ...(item ? { photo: photoChange(raw.p) } : {}),
         ...(forLooks ? { swap: swapRequest(raw.w, looks.length) } : {}),
+        ...(flagged ? { exception: flagged.id } : {}),
       };
     },
   };

@@ -102,5 +102,9 @@ describe("the change summary (R50)", () => {
     expect(nothingFits(look, revisionPlan(look, lines, lines, () => null))).toBe("No other shoes fit everything you've asked for (closed toe), so these stay.");
     const bagLines = lookFeedback([line("Change the bag", "change", [bag.id])], 1);
     expect(nothingFits(look, revisionPlan(look, bagLines, bagLines, () => null))).toBe("No other bag fits everything you've asked for, so this one stays.");
+    // When the budget is the limit, or the checks couldn't run, it says so (Sabine's answer to Q4 in 5c).
+    const plan = revisionPlan(look, lines, lines, () => null);
+    expect(nothingFits(look, plan, { budget: "your $500 limit" })).toBe("No other shoes fit within your $500 limit with the rest of this look, so these stay.");
+    expect(nothingFits(look, plan, { unchecked: true })).toBe("The new shoes couldn't be checked just now, so these stay. Try again in a moment.");
   });
 });

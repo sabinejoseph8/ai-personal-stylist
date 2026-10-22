@@ -3,7 +3,10 @@
 import { useEffect, useRef } from "react";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
-import type { NoMatch } from "@/core/looks/no-match";
+import type { FirmPreference } from "@/core/looks/exceptions";
+import { ALLOW_CHOICE, type NoMatch } from "@/core/looks/no-match";
+import { CompareSheet } from "./compare-sheet";
+import { ConflictCard } from "./conflict-card";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import { LookPanel } from "./look-panel";
 import type { LooksPhase } from "./use-looks";
@@ -11,7 +14,8 @@ import type { LooksPhase } from "./use-looks";
 // The looks area of the session (design 4.3, 5.3 to 5.6; R39, R45, R59): what's still needed before
 // looks can be built, placeholders with "Putting looks together" and "Checking your preferences", the
 // look panels, Updating after a change, Try again when building fails (anything shown stays), and the
-// no-match explanation with its choices. It reports which look is most on screen, for spoken swaps.
+// no-match explanation with its choices. It reports which look is most on screen, for spoken swaps. The
+// conflict card (5c, R57) asks before a saved preference is broken.
 
 const STAGE_WORDS: Partial<Record<LooksPhase, string>> = {
   building: "Putting looks together",
@@ -36,6 +40,10 @@ function Placeholder({ words }: { words: string }) {
 
 export function LooksArea({
   className = "",
+  sessionId,
+  restoring,
+  restoreNote,
+  onRestore,
   started,
   looks,
   phase,
@@ -46,6 +54,9 @@ export function LooksArea({
   fresh,
   swapNote,
   revising,
+  asking,
+  onAllow,
+  onKeep,
   canTalk,
   imageFor,
   onSwap,
@@ -57,6 +68,12 @@ export function LooksArea({
 }: {
   /** Its place in the session page's grid. */
   className?: string;
+  sessionId: string | null;
+  /** The look an earlier version is coming back to, and why one couldn't (5c). */
+  restoring: string | null;
+  restoreNote: { lookId: string; text: string } | null;
+  /** Undo feedback or Use this look (5c, R51): true when it came back, or why not. */
+  onRestore: (lookId: string, target: { undo: true } | { versionId: string }) => Promise<true | string>;
   /** A session has started, so looks can be built. */
   started: boolean;
   looks: ShownLook[];
@@ -69,6 +86,10 @@ export function LooksArea({
   swapNote: { lookId: string; index: number; text: string } | null;
   /** The places of the looks being revised from feedback (5b). */
   revising: number[];
+  /** A saved preference the shopper asked to break: the card asks first (5c). */
+  asking: FirmPreference | null;
+  onAllow: () => Promise<boolean>;
+  onKeep: () => void;
   /** The call is live, so a no-match choice can be said to the stylist. */
   canTalk: boolean;
   imageFor: (item: ShownItem) => string | null;
@@ -116,6 +137,7 @@ export function LooksArea({
       <h2 id="looks-title" className="sr-only">
         Your looks
       </h2>
+      {asking && <ConflictCard preference={asking} onAllow={onAllow} onKeep={onKeep} />}
       {lead && (
         <div className="rounded-panel border border-dashed border-hairline p-4">
           <p className="type-body m-0 text-graphite">{lead}</p>
@@ -147,6 +169,21 @@ export function LooksArea({
           count={looks.length}
           updating={phase === "updating"}
           revising={revising.includes(look.slot)}
+          restoring={restoring === look.id}
+          restoreNote={restoreNote?.lookId === look.id ? restoreNote.text : null}
+          onUndo={() => void onRestore(look.id, { undo: true })}
+          compare={
+            look.earlier && sessionId ? (
+              <CompareSheet
+                sessionId={sessionId}
+                look={look}
+                number={i + 1}
+                disabled={busy || Boolean(swapping) || Boolean(restoring)}
+                imageFor={imageFor}
+                onUse={(versionId) => onRestore(look.id, { versionId })}
+              />
+            ) : null
+          }
           swappingIndex={swapping?.lookId === look.id ? swapping.index : null}
           newIndex={fresh[look.id] ?? null}
           note={swapNote?.lookId === look.id ? swapNote : null}
@@ -171,7 +208,7 @@ export function LooksArea({
                   Try again
                 </Button>
               ) : (
-                <Button key={choice} variant="secondary" disabled={!canTalk} onClick={() => onChoice(choice)}>
+                <Button key={choice} variant="secondary" disabled={!canTalk && choice !== ALLOW_CHOICE} onClick={() => onChoice(choice)}>
                   {choice}
                 </Button>
               ),
@@ -184,7 +221,7 @@ export function LooksArea({
           <p className="m-0">{noMatch.message}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {noMatch.choices.map((choice) => (
-              <Button key={choice} variant="secondary" disabled={choice !== "Try again" && !canTalk} onClick={() => (choice === "Try again" ? onTryAgain() : onChoice(choice))}>
+              <Button key={choice} variant="secondary" disabled={choice !== "Try again" && choice !== ALLOW_CHOICE && !canTalk} onClick={() => (choice === "Try again" ? onTryAgain() : onChoice(choice))}>
                 {choice}
               </Button>
             ))}

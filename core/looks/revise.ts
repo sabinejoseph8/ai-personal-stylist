@@ -170,13 +170,22 @@ export function changeSummary(before: ResolvedItem[], after: ResolvedItem[], tot
   return parts.join(" ");
 }
 
-/** "No other shoes fit everything you've asked for (lower heel), so these stay." when no revision passes. */
-export function nothingFits(items: ResolvedItem[], plan: RevisionPlan): string {
-  if (plan.whole || !plan.change.length) return "No other look fits everything you've asked for, so this one stays.";
+/**
+ * Why no revision passed, so the look stays (R48, R49; Sabine's answer to Q4 in 5c): "No other shoes fit
+ * everything you've asked for (lower heel), so these stay." With `budget` (in words, such as "your $500
+ * limit"), the budget is what limits it, so it says so and the stylist can ask what to change. With
+ * `unchecked`, the checks couldn't run, which isn't a "no".
+ */
+export function nothingFits(items: ResolvedItem[], plan: RevisionPlan, why: { budget?: string; unchecked?: boolean } = {}): string {
+  if (plan.whole || !plan.change.length)
+    return why.unchecked ? "The new look couldn't be checked just now, so this one stays. Try again in a moment." : "No other look fits everything you've asked for, so this one stays.";
   const groups = [...new Set(plan.change.map((i) => groupOf(items[i])))];
   const WORDS: Partial<Record<Group, string>> = { outer: "jacket", bottom: "trousers or skirt", other: "piece" };
   const what = groups.length === 1 ? (WORDS[groups[0]] ?? groups[0]) : "pieces";
   const plural = what === "shoes" || what === "pieces" || what === "trousers or skirt";
+  const stay = plural ? "these stay" : "this one stays";
+  if (why.unchecked) return `The new ${what} couldn't be checked just now, so ${stay}. Try again in a moment.`;
+  if (why.budget) return `No other ${what} ${plural ? "fit" : "fits"} within ${why.budget} with the rest of this look, so ${stay}.`;
   const asked = plan.asked.length ? ` (${list(plan.asked.map((a) => a.toLowerCase()), "and")})` : "";
-  return `No other ${what} ${plural ? "fit" : "fits"} everything you've asked for${asked}, so ${plural ? "these stay" : "this one stays"}.`;
+  return `No other ${what} ${plural ? "fit" : "fits"} everything you've asked for${asked}, so ${stay}.`;
 }

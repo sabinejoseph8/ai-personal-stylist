@@ -1,4 +1,5 @@
 import type { ItemChange } from "../photos/item";
+import type { FirmPreference } from "../looks/exceptions";
 import type { Group } from "../looks/look";
 import { feedbackDetails } from "./feedback";
 import type { NotesReader, SwapRequest } from "./reader";
@@ -24,6 +25,13 @@ function photoChange(text: string): ItemChange | undefined {
   return Object.keys(change).length ? change : undefined;
 }
 
+/** A request that breaks a saved Never (5c): "I'd love high heels" with Never: high heels. */
+function exceptionAsked(text: string, saved: FirmPreference[]): { exception?: string } {
+  const asks = /\b(i'd love|i want|i'd like|show me|can i have)\b/.test(text);
+  const broken = asks ? saved.find((p) => p.kind === "never" && text.includes(p.words.toLowerCase())) : undefined;
+  return broken ? { exception: broken.id } : {};
+}
+
 /** A request to swap a piece (4c): "show me different shoes", "another bag for look 2". */
 const PIECES: Record<string, Group> = { shoes: "shoes", bag: "bag", dress: "dress", top: "top", jacket: "outer", trousers: "bottom", skirt: "bottom", earrings: "accessory" };
 function swapRequest(text: string): SwapRequest | undefined {
@@ -36,7 +44,7 @@ const MONTH = /\b(january|february|march|april|may|june|july|august|september|oc
 
 export function createFakeNotesReader(): NotesReader {
   return {
-    async read({ words, notes, item, looks = [], inView }) {
+    async read({ words, notes, item, looks = [], inView, saved = [] }) {
       const text = words.toLowerCase();
       const found: NewNote[] = [];
       const add = (kind: NewNote["kind"], note: string) => found.push({ kind, text: note, status: "to_confirm", details: [] });
@@ -87,6 +95,8 @@ export function createFakeNotesReader(): NotesReader {
         costUsd: 0,
         ...(item ? { photo: photoChange(text) } : {}),
         ...(looks.length ? { swap: swapRequest(text) } : {}),
+        // Asking for something a saved Never rules out (5c): "I'd love high heels" with Never: high heels.
+        ...exceptionAsked(text, saved),
       };
     },
   };

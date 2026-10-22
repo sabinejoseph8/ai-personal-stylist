@@ -23,7 +23,7 @@ function budgetFromRow(row: ProfileRow): Budget {
 export async function loadProfile(db: SupabaseClient, userId: string): Promise<Profile> {
   const [profile, prefs] = await Promise.all([
     db.from("profiles").select("departments, style_words, sizes, budget_amount_cents, budget_meaning, budget_max_cents").eq("user_id", userId).maybeSingle<ProfileRow>(),
-    db.from("saved_preferences").select("kind, words, rule").eq("user_id", userId).order("created_at"),
+    db.from("saved_preferences").select("id, kind, words, rule").eq("user_id", userId).order("created_at"),
   ]);
   const row = profile.data;
   return {
@@ -32,7 +32,7 @@ export async function loadProfile(db: SupabaseClient, userId: string): Promise<P
     sizes: row?.sizes ?? {},
     budget: row ? budgetFromRow(row) : null,
     // A rule is left out until it's been made (4a): setup makes the missing ones.
-    preferences: (prefs.data ?? []).map((p) => ({ kind: p.kind, words: p.words, ...(p.rule ? { rule: p.rule } : {}) })) as Preferences,
+    preferences: (prefs.data ?? []).map((p) => ({ id: p.id, kind: p.kind, words: p.words, ...(p.rule ? { rule: p.rule } : {}) })) as Preferences,
   };
 }
 

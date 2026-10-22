@@ -1,7 +1,9 @@
 import "server-only";
+import type { FirmPreference } from "@/core/looks/exceptions";
+import { firmPreferences } from "@/lib/exceptions-service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stylistContext } from "@/core/notes/context";
-import { feedbackOf, touchFeedback } from "@/core/notes/feedback";
+import { feedbackOf, isFeedback, touchFeedback } from "@/core/notes/feedback";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
 import { plainChanges } from "@/core/notes/plain";
 import { createSampleCatalog } from "@/connectors/catalog/sample";
@@ -37,6 +39,8 @@ export type NotesUpdate = {
   photo?: { id: string; item: StyleItem };
   /** A spoken request to swap a piece (4c), from the reading at the end of a turn only. */
   swap?: SwapRequest;
+  /** A request that breaks a saved Must have or Never (5c, R57): the page shows the card, and the stylist asks. */
+  exception?: FirmPreference;
 };
 
 export type HeardWords = {
@@ -128,7 +132,14 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
   // The photo to style around, so what the shopper says about it reaches it (3b), and at the end of a
   // turn the looks on screen, so a request to swap a piece is heard (4c). Only then: readings while the
   // shopper talks stay as short and quick as before (Phase 4 code review, R17).
-  const [photo, looks] = await Promise.all([activePhoto(deps.db, sessionId), heard.final ? looksForReader(deps, guestId, sessionId) : []]);
+  // And every reading hears the saved Must have and Never preferences not allowed for this session, so a
+  // request breaking one is flagged rather than jotted (5c, Sabine's answer to Q1).
+  const [photo, looks, firm] = await Promise.all([
+    activePhoto(deps.db, sessionId),
+    heard.final ? looksForReader(deps, guestId, sessionId) : [],
+    firmPreferences(deps.db, guestId, sessionId),
+  ]);
+  const saved = firm.filter((p) => !p.allowed).map((p): FirmPreference => ({ id: p.id, kind: p.kind, words: p.words }));
   const reading = await deps.reader.read({
     stylistSaid: heard.stylistSaid,
     words: heard.words,
@@ -137,6 +148,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     looks,
     inView: heard.look,
     looksOnScreen: Boolean(heard.looks),
+    saved,
   });
   if (!reading) {
     emit({ version: quick.version, notes: shown(quick.notes), paused: true });
@@ -174,6 +186,8 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     context: stylistContext(done.notes, preferences, question, latest?.item ?? null, wardrobe),
     ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
     ...(reading.swap ? { swap: reading.swap } : {}),
+    // Only once the shopper finishes speaking, like a swap: half a sentence can sound like a request (5c).
+    ...(reading.exception && heard.final ? { exception: saved.find((p) => p.id === reading.exception) } : {}),
   });
 }
 
@@ -185,6 +199,38 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
     const { notes, wordsSeq } = await loadNotes(deps.db, sessionId);
     if (!notes.some((n) => n.id === noteId)) return null;
     done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
+  } catch (e) {
+    if (e instanceof SessionEndedError) return null; // ended meanwhile
+    throw e;
+  }
+  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  return {
+    version: done.version,
+    notes: shown(done.notes),
+    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+  } satisfies NotesUpdate;
+}
+
+/**
+ * Undo feedback (5c, R51): the feedback lines the undone revision answered are taken back, as if removed
+ * by touch, so they don't revise the look again. Null when the session isn't the guest's.
+ */
+export async function takeBackFeedback(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, noteIds: string[]) {
+  if (!(await ownSession(deps.db, guestId, sessionId))) return null;
+  let done: Awaited<ReturnType<typeof apply>>;
+  try {
+    const { wordsSeq } = await loadNotes(deps.db, sessionId);
+    done = await apply(deps.db, sessionId, (current) => {
+      let notes = current;
+      const changed = new Map<string, Note>();
+      for (const id of noteIds) {
+        if (!notes.some((n) => n.id === id && !n.removed && isFeedback(n))) continue;
+        const merged = touchNote(notes, id, "remove", wordsSeq);
+        notes = merged.notes;
+        for (const n of merged.changed) changed.set(n.id, n);
+      }
+      return { notes, changed: [...changed.values()] };
+    });
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
