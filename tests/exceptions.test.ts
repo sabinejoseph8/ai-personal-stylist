@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { differences } from "@/core/looks/compare";
-import { conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, spokenQuestion, takeOffQuestion } from "@/core/looks/exceptions";
+import { asksAboutIt, conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, spokenQuestion, takeOffQuestion, wantedNote } from "@/core/looks/exceptions";
 import type { ShownItem } from "@/core/looks/shown";
 import { stylistContext } from "@/core/notes/context";
 import { createNotesReader, type Ask } from "@/core/notes/reader";
@@ -25,8 +25,16 @@ describe("exceptions in words", () => {
 
   it("tell the stylist from the start to ask first, so her first answer already asks (found on Sabine's iPhone in 5c, A.3)", () => {
     const told = stylistContext([], [{ kind: "never", words: "high heels" }, { kind: "likes", words: "earth tones" }], null);
-    expect(told).toContain('say only "Let me check that against your saved preferences." Don\'t say yes or no');
-    expect(stylistContext([], [{ kind: "likes", words: "earth tones" }], null)).not.toContain("Let me check that");
+    // With the exact question, so her own reply asks it, once (fix plan 3).
+    expect(told).toContain(`- For high heels: "${spokenQuestion(heels)}"`);
+    expect(told).toContain("don't say yes or no");
+    expect(stylistContext([], [{ kind: "likes", words: "earth tones" }], null)).not.toContain("word for word");
+    // Whether her reply already asked, and what's jotted once it's allowed.
+    expect(asksAboutIt(spokenQuestion(heels))).toBe(true);
+    expect(asksAboutIt("Certainly, do you want to allow high heels for this session?")).toBe(true);
+    expect(asksAboutIt("Let me check that against your saved preferences.")).toBe(false);
+    expect(wantedNote(heels)).toBe("High heels");
+    expect(wantedNote(sleeves)).toBe("Without sleeves");
   });
 
   it("tell the stylist what's allowed, and to ask first about a new request", () => {

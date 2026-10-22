@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 22 Oct 2026 | Fix plan 3, Q1: once the shopper allows what they asked for, it's jotted in ink so the looks change to include it (the other option: allowing only permits it) | Sabine | tech spec 1.30 |
 | 22 Oct 2026 | A.3 fix plan: the stylist says the exact question, and a spoken answer works as well as the buttons (Q1, the other option was buttons only) | Sabine | tech spec 1.30 |
 | 22 Oct 2026 | 5c plan, the recommended answers. Q1: the notes reader is told the saved Must have and Never, and flags a request that breaks one (the other option: only from the no-match box). Q2: Save to my profile takes the preference off the profile, after a confirmation (the other: wait for Phase 6). Q3: Compare on phones is a Current and Earlier switch (the other: a list). Q4: the nothing-fits note names the budget and says when a check couldn't run (the other: leave it) | Sabine | tech spec 1.30, design 1.17 |
 | 21 Oct 2026 | 5b iPhone check: A, C and D passed. B.1 failed while the Claude credit was out; Sabine added credit and chose not to redo it | Sabine | progress.md |

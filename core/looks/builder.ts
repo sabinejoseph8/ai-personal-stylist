@@ -142,7 +142,10 @@ export function createFakeLooksBuilder(): LooksBuilder {
     async build(input) {
       const by = (g: Group) => input.products.filter((p) => productGroup(p.category) === g);
       const ownedGroups = input.owned.filter((o) => input.mustUse.some((m) => JSON.stringify(m) === JSON.stringify(o.ref))).map((o) => groupOf({ ref: o.ref, owned: o }));
-      const [dresses, tops, bottoms, shoes, bags] = [by("dress"), by("top"), by("bottom"), by("shoes"), by("bag")];
+      const [dresses, tops, bottoms, all, bags] = [by("dress"), by("top"), by("bottom"), by("shoes"), by("bag")];
+      // Shoes the notes ask for first: "High heels", once allowed for the session (5c).
+      const heels = input.notes.some((n) => /^high heels$/i.test(n)) ? all.filter((p) => (p.details.heelCm ?? 0) > 5) : [];
+      const shoes = heels.length ? heels : all;
       const looks: BuiltLook[] = [];
       // Each look named in `avoid` moves the picks along, so a later round tries other products.
       for (let n = 0; n < 5; n++) {

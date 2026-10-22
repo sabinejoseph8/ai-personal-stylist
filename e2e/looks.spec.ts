@@ -231,19 +231,27 @@ test.describe("the looks", () => {
     await card.getByRole("button", { name: "Allow for this session" }).click();
     const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
     await expect(exceptions).toContainText("High heels allowed for this session. Your profile still says Never: high heels.");
+    // What was asked for is jotted in ink, so the looks change to include it (fix plan 3, Q1).
+    await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed");
     await expect(card).toHaveCount(0);
     // The profile still says Never: high heels (S14).
     await expect(notebookOf(page).getByRole("list", { name: "Saved preferences" })).toContainText("Never: high heels");
     await noSeriousA11yProblems(page);
     await exceptions.getByRole("button", { name: "Remove" }).click();
     await expect(exceptions).toHaveCount(0);
+    await expect(note(page, "High heels")).toHaveCount(0);
 
-    // Asked again, a spoken yes does what the button does (A.3 fix, Q1).
+    // Asked again, she asks in her own reply this time, so the app doesn't ask on top of her (fix plan 3).
     await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h2" });
+    await playInCall(page, { type: "words", speaker: "stylist", text: question, final: true, turnId: "s2" });
     await expect(card).toBeVisible({ timeout: 10_000 });
+    await page.waitForTimeout(7_000);
+    expect((await sent(page, "say")).filter((line) => line === question)).toHaveLength(1);
+    // A spoken yes does what the button does (A.3 fix, Q1).
     await playInCall(page, { type: "words", speaker: "shopper", text: "Yes, allow it", final: true, turnId: "h3" });
     await expect(exceptions).toContainText("High heels allowed for this session.", { timeout: 10_000 });
     await expect(card).toHaveCount(0);
+    await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed");
   });
 
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {

@@ -136,6 +136,9 @@ export function createFakeJudge(): Judge {
       const flashy = judged.some((j) => /flashy/i.test(j)) && items.some((i) => "product" in i && /sequin|metallic/i.test(`${i.product.details.material} ${i.product.details.pattern}`));
       const noHeels = notes.find((n) => /no high heels/i.test(n));
       const heels = noHeels && items.some((i) => "product" in i && (i.product.details.heelCm ?? 0) > 5);
+      // "High heels", jotted once allowed for the session (5c): flat shoes don't meet it.
+      const wantsHeels = notes.some((n) => /^high heels$/i.test(n)) && items.some((i) => "product" in i && i.product.category === "shoes" && (i.product.details.heelCm ?? 0) <= 5);
+      if (wantsHeels) return { verdict: "conflict", reasons: [{ about: "High heels", ok: false, why: "The shoes aren't high heels" }], costUsd: 0 };
       if (flashy) return { verdict: "conflict", reasons: [{ about: judged.find((j) => /flashy/i.test(j))!, ok: false, why: "Sequins are flashy" }], costUsd: 0 };
       if (heels) return { verdict: "conflict", reasons: [{ about: noHeels, ok: false, why: "The shoes have high heels" }], costUsd: 0 };
       return { verdict: "pass", reasons: [{ about: "The occasion", ok: true, why: "Suits it" }], costUsd: 0, ...(withReason ? { reason: "A fake reason for a swapped look." } : {}) };

@@ -81,7 +81,7 @@ export function useNotes(
   /** A request that breaks a saved preference (5c, R57). */
   onException?: (preference: FirmPreference) => void,
   /** The saved preference the stylist is asking about, sent with the words so an answer is heard, and that answer (5c). */
-  asking?: { now: () => string | null; answered: (answer: Answered) => void },
+  asking?: { now: () => string | null; wanted: () => boolean; answered: (answer: Answered) => void },
 ) {
   const [notes, setNotes] = useState<ShownNote[]>(initial);
   const [question, setQuestion] = useState<NextQuestion>(null);
@@ -148,7 +148,7 @@ export function useNotes(
       const res = await fetch(`/api/sessions/${id}/words`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key, look: inView.current?.().inView ?? null, looks: inView.current?.().any ?? false, asking: askingHook.current?.now() ?? null }),
+        body: JSON.stringify({ words, stylistSaid: stylistSaid.current, final, turn: key, look: inView.current?.().inView ?? null, looks: inView.current?.().any ?? false, asking: askingHook.current?.now() ?? null, wanted: askingHook.current?.wanted() ?? false }),
       });
       if (res.status === 429) {
         // The end of a turn has no later send to carry its words, so it tries again shortly.

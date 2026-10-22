@@ -1,5 +1,5 @@
 import "server-only";
-import type { FirmPreference, ShownException } from "@/core/looks/exceptions";
+import { type FirmPreference, type ShownException, wantedNote } from "@/core/looks/exceptions";
 import { allowException, firmPreferences } from "@/lib/exceptions-service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stylistContext } from "@/core/notes/context";
@@ -55,6 +55,8 @@ export type HeardWords = {
   looks?: boolean;
   /** The saved preference the stylist just asked about (5c): the words may answer it. */
   asking?: string | null;
+  /** The shopper asked for it, so allowing it jots it too (fix plan 3, Q1). */
+  wanted?: boolean;
   /**
    * The browser's label for the shopper's current turn. Claude sometimes leaves the question out of one
    * reading, so the session's question stays until a reading of a later turn replaces it (2c). It's
@@ -165,7 +167,7 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
   // Readings overlap (each send while the shopper talks starts one), so the merge is told which notes
   // this one saw.
   const seen = new Set(active(quick.notes).map((n) => n.id));
-  const done = await apply(deps.db, sessionId, (notes) => {
+  let done = await apply(deps.db, sessionId, (notes) => {
     // Claude's changes first; then plain code once more, so a month lands on a note Claude just jotted.
     const merged = mergeNotes(notes, reading.changes, seq, undefined, undefined, seen);
     const after = mergeNotes(merged.notes, plainChanges(merged.notes, heard.words), seq);
@@ -184,6 +186,11 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     const allow = reading.answer === "allow";
     const exceptions = allow ? await allowException(deps.db, guestId, sessionId, asking.id) : null;
     answered = { preferenceId: asking.id, allow, ...(exceptions ? { exceptions } : {}) };
+    // What they asked for is jotted, so the looks change to include it (fix plan 3, Q1).
+    if (allow && heard.wanted) {
+      const jotted = await jotWanted(deps, guestId, sessionId, asking);
+      if (jotted) done = { notes: (await loadNotes(deps.db, sessionId)).notes, version: jotted.version };
+    }
   }
   let question = reading.question;
   if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);
@@ -213,6 +220,37 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
     const { notes, wordsSeq } = await loadNotes(deps.db, sessionId);
     if (!notes.some((n) => n.id === noteId)) return null;
     done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
+  } catch (e) {
+    if (e instanceof SessionEndedError) return null; // ended meanwhile
+    throw e;
+  }
+  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  return {
+    version: done.version,
+    notes: shown(done.notes),
+    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+  } satisfies NotesUpdate;
+}
+
+/**
+ * Once the shopper allows what they asked for (5c, Sabine's answer to Q1 of fix plan 3), it's jotted in
+ * ink ("High heels"), so the looks are checked again and change to include it. `on: false` (Remove on
+ * the exception) takes it back, since the preference applies again. Stamped like a touch, so a late
+ * reading can't undo it. Null when the session isn't the guest's.
+ */
+export async function jotWanted(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, preference: FirmPreference, on = true) {
+  if (!(await ownSession(deps.db, guestId, sessionId))) return null;
+  const text = wantedNote(preference);
+  let done: Awaited<ReturnType<typeof apply>>;
+  try {
+    const { wordsSeq } = await loadNotes(deps.db, sessionId);
+    done = await apply(deps.db, sessionId, (current) => {
+      const same = active(current).find((n) => n.text.toLowerCase() === text.toLowerCase());
+      if (!on) return same ? touchNote(current, same.id, "remove", wordsSeq) : { notes: current, changed: [] };
+      if (same?.status === "confirmed") return { notes: current, changed: [] };
+      const note: Note = { id: crypto.randomUUID(), kind: "style", text, status: "confirmed", details: [], source: "touch", changedSeq: wordsSeq, version: 1, removed: false };
+      return { notes: [...current, note], changed: [note] };
+    });
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
