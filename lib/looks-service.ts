@@ -166,6 +166,7 @@ function shown(id: string, slot: number, look: { name: string; reason: string },
     change: revision?.summary ?? null,
     changed: revision?.changed ?? [],
     note: revision?.none ?? null,
+    noteFor: revision?.none ? [...(revision.seen ?? []), ...(revision.wanted ?? [])].join(",") : null,
     // The shopper's own pieces get their photos in the browser, which has their links (4c).
     items: items.map((i) =>
       "product" in i
@@ -556,7 +557,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     const add = g.wants.filter((w) => !answered.includes(wantKey(w)));
     const drop = droppedWants(g.notes, g.allowed, g.wants, answered);
     const items = pending.length || add.length || drop.length ? resolve(row.items, products, g.owned) : null;
-    return items ? [{ row, items, lines, plan: wantsPlan(revisionPlan(items, lines, pending, (id) => products.get(id) ?? null), items, add, drop) }] : [];
+    return items ? [{ row, items, lines, plan: wantsPlan(revisionPlan(items, lines, pending, (id) => products.get(id) ?? null), items, add, drop, g.wants) }] : [];
   });
   const revising = ({ row, items, lines, plan }: (typeof due)[number]) =>
     revise(deps, guestId, sessionId, g, row, items, lines, plan, { seen: seenOf(lines), wanted: g.wants.map(wantKey) }, { catalog, products, mustUse, emit });

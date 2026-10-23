@@ -69,7 +69,9 @@ export function looksChanged(before: ShownLook[], after: ShownLook[]): string | 
   after.forEach((look, i) => {
     const was = before.find((b) => b.slot === look.slot);
     if (look.change && was && was.id !== look.id) revised.push(`Look ${i + 1} is revised from the shopper's feedback. ${look.change} Say what changed in a few words.`);
-    else if (look.note && was?.id === look.id && was.note !== look.note)
+    // Every time a change couldn't be made, even in the same words as before: told nothing, she heard
+    // "every look still meets everything" and said the shoes were updated (found on Sabine's iPhone in 5c, B.1).
+    else if (look.note && was?.id === look.id && (was.note !== look.note || was.noteFor !== look.noteFor))
       revised.push(`Look ${i + 1} couldn't be revised as they asked: ${look.note} Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.`);
   });
   if (revised.length) return revised.join(" ");

@@ -9,7 +9,9 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Unit tests (5 minutes), the browser install (1 to 3.5) and the browser tests (about 10, more with a
+    # retry) had outgrown 20 minutes by 5c: a slow install and one retry ran out of time (23 Oct 2026).
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

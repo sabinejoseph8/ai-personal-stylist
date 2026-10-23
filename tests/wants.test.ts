@@ -76,6 +76,25 @@ describe("what the shopper asked for once allowed (5c fix 6)", () => {
     expect(back.wishes[0].test!(stilettos)).toBe(false);
   });
 
+  it("still holds for a later change of its kind of piece, once answered: Change under heels brings other heels (fix plan 9)", () => {
+    const [want] = wantsFrom([note("a", "High heels")], [heels]);
+    const heeled = [product(sleevedDress), product(stilettos), product(bag)];
+    // Change under the shoes (from the look's feedback), with "High heels" already answered.
+    const base = { ...revisionPlan(heeled, [], [], () => null), change: [1] };
+    const plan = wantsPlan(base, heeled, [], [], [want]);
+    expect(plan.change).toEqual([1]);
+    expect(plan.wishes.map((w) => [w.group, w.test!(stilettos), w.test!(flats)])).toEqual([["shoes", true, false]]);
+    expect(plan.asked).toEqual(["high heels"]);
+    // A change to the bag isn't about shoes: no wish.
+    expect(wantsPlan({ ...base, change: [2] }, heeled, [], [], [want]).wishes).toEqual([]);
+    // Still asked when it's new to the look but its shoes are already heels, and only once when it's added too.
+    expect(wantsPlan(base, heeled, [want], [], [want]).wishes).toHaveLength(1);
+    const flat = [product(sleevedDress), product(flats), product(bag)];
+    expect(wantsPlan({ ...revisionPlan(flat, [], [], () => null), change: [1] }, flat, [want], [], [want]).wishes).toHaveLength(1);
+    // Not while it's being taken back.
+    expect(wantsPlan(base, heeled, [], [want], [want]).wishes.every((w) => !w.test!(stilettos))).toBe(true);
+  });
+
   it("is taken back when its note is removed while still allowed; once the preference applies again, the check does it", () => {
     const asked = note("a", "High heels");
     const answered = [wantKey({ noteId: "a", version: 1 })];

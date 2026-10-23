@@ -367,6 +367,23 @@ test.describe("the looks", () => {
     }).toPass({ timeout: 30_000 });
   });
 
+  test("Change under the shoes once high heels are asked for brings other high heels (fix plan 9)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await card.getByRole("button", { name: "Allow for this session" }).click({ timeout: 10_000 });
+    const first = panels(page).first();
+    await expect(first).toContainText("(you asked for high heels)", { timeout: 30_000 });
+    const tiles = first.getByRole("listitem");
+    const read = () => tiles.evaluateAll((els) => els.map((el) => [...el.querySelectorAll("p")].slice(0, 2).map((p) => p.textContent ?? "")));
+    const before = await read();
+    const shoes = before.find(([, kind]) => kind === "Shoes")![0];
+    // Found on Sabine's iPhone in 5c, B.1: Change brought white sneakers, and in her session the look stayed.
+    await first.getByRole("button", { name: `Change ${shoes}` }).click();
+    await expect(first).toContainText(new RegExp(`Changed: ${shoes} to .+ \\(you asked for high heels\\)`), { timeout: 30_000 });
+  });
+
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {
     test.slow();
     await weddingLooks(page);
