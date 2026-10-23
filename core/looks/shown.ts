@@ -33,6 +33,8 @@ export type ShownLook = {
   changed?: number[];
   /** Why the last revision couldn't be made, so the look stayed: "No other shoes fit everything …". */
   note?: string | null;
+  /** What that note answered (the look's feedback and wants), so a new attempt that fails the same way is told too (fix plan 9). */
+  noteFor?: string | null;
   /** It has an earlier version in its place to compare with (5c, R51). */
   earlier?: boolean;
   /** It's a revision, so Undo feedback can bring back the look before it (5c, R51). */

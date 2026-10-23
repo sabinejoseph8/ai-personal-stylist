@@ -1,7 +1,7 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.33
-**Last updated:** 22 Oct 2026
+**Status:** Living document, version 1.34
+**Last updated:** 23 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 23 Oct 2026 | Fix plan 9 approved: what was asked once allowed still holds for every later change of that kind of piece, and the stylist is told every time a change couldn't be made (no options to choose). Sabine: don't suggest expanding the catalog as a fix, it isn't a full fix | Sabine | tech spec 1.36 |
 | 22 Oct 2026 | Fix plan 8 approved: notes and their version are read in one request, so two readings can't both add the same note; allowing confirms a pencil note; removing one of two notes keeps what's asked. The browser tests' app gets monthly limits real spending can't reach (no options to choose) | Sabine | tech spec 1.35 |
 | 22 Oct 2026 | The live site's monthly Claude stop raised from $12 to $40 (the Vercel setting BUDGET_MONTHLY_CLAUDE_USD), with Anthropic's own monthly limit set above $40 so the app's stop trips first. Claude may now cost up to $40 a month, above the plan's original $18 for all AI | Sabine | tech spec 1.34 |
 | 22 Oct 2026 | Fix plan 7 approved: the stylist is told outright when a permission is taken back, and only a question counts as her asking (no options to choose) | Sabine | tech spec 1.33 |
@@ -410,6 +411,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.34 (23 Oct 2026):** Fix plan 9 approved, from the 5c iPhone check (A passed).
 - **1.33 (22 Oct 2026):** Fix plan 8 approved, from the 5c iPhone check.
 - **1.32 (22 Oct 2026):** The monthly Claude stop raised to $40, and risk 4 updated.
 - **1.31 (22 Oct 2026):** Fix plan 7 approved, from the 5c iPhone check.
