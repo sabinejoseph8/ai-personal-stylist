@@ -287,6 +287,34 @@ test.describe("the looks", () => {
     expect(await sent(page, "say")).toHaveLength(said);
   });
 
+  test("once heels are allowed, each look's shoes change in place, and her looks line waits for the answer to her question (fix plan 6)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    const names = async () => Promise.all((await panels(page).all()).map((p) => p.getByRole("listitem").evaluateAll((els) => els.map((el) => el.querySelector("p")?.textContent ?? ""))));
+    const before = await names();
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    const changed = async () => (await sent(page, "sendPhrase")).filter((t) => t === "What changed in my looks?").length;
+    const lines = await changed();
+    await card.getByRole("button", { name: "Allow for this session" }).click({ timeout: 10_000 });
+    // She asks the shopper something just as the looks change (found on Sabine's iPhone in 5c, A.5).
+    await playInCall(page, { type: "words", speaker: "stylist", text: "Lovely! What heel height would you like?", final: true, turnId: "s1" });
+    const asked = Date.now();
+    // Only the shoes change, in place (Sabine's answer to Q1).
+    await expect(async () => {
+      const all = await panels(page).all();
+      expect(all).toHaveLength(3);
+      for (const panel of all) await expect(panel).toContainText("(you asked for high heels)");
+    }).toPass({ timeout: 30_000 });
+    const after = await names();
+    for (const [i, look] of after.entries()) expect(look.filter((name) => !before[i].includes(name))).toHaveLength(1);
+    // Her looks line waits for the shopper's answer.
+    await page.waitForTimeout(Math.max(0, 9_000 - (Date.now() - asked)));
+    expect(await changed()).toBe(lines);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Something not too high", final: true, turnId: "h2" });
+    await expect.poll(changed, { timeout: 15_000 }).toBeGreaterThan(lines);
+  });
+
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {
     test.slow();
     await weddingLooks(page);

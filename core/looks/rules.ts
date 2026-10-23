@@ -118,6 +118,18 @@ export function checkRule(kind: FirmKind, rule: Rule, p: Checkable): RuleVerdict
   return allowed ? { ok: true } : { ok: false, why: "breaks" };
 }
 
+/**
+ * Whether a product is the very thing a firm rule rules out, for a shopper who allowed it for the session
+ * and asked for it (5c fix 6): high heels for Never: high heels, a sleeveless top for Must have: sleeves.
+ * Null when the rule doesn't cover the product's kind, is judged, or the catalog doesn't record the detail.
+ */
+export function ruledOut(kind: FirmKind, rule: Rule, p: Checkable): boolean | null {
+  if (rule.type === "judged" || !scopeOf(rule).includes(p.category as Category)) return null;
+  const verdict = checkRule(kind, rule, p);
+  if (verdict.ok) return false;
+  return verdict.why === "breaks" ? true : null;
+}
+
 // The read-back (Sabine's answer to Q1 in 4a): made by code from the rule itself, so what the shopper
 // confirms is exactly what's checked.
 

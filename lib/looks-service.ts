@@ -9,18 +9,21 @@ import type { Judge, Verdict } from "@/core/looks/judge";
 import { canMakeAnother, groupOf, type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, productGroup, REPEATS_SHOWN, type ResolvedItem } from "@/core/looks/look";
 import { differences } from "@/core/looks/compare";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
-import { changeSummary, feedbackKey, type LookFeedback, lookFeedback, meetsWishes, nothingFits, pendingFeedback, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
+import { changeSummary, feedbackKey, type LookFeedback, lookFeedback, meetsWishes, nothingFits, pendingFeedback, type RevisionPlan, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
+import type { Rule } from "@/core/looks/rules";
 import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
 import { looksReadiness } from "@/core/looks/readiness";
+import { droppedWants, type RuledPreference, type Want, wantKey, wantsFrom, wantsPlan } from "@/core/looks/wants";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import { lookTotal } from "@/core/looks/totals";
 import { feedbackOf } from "@/core/notes/feedback";
 import { active, type Note } from "@/core/notes/types";
 import { chosenItem } from "@/core/photos/item";
 import type { BudgetGuard } from "@/lib/budget-guard";
-import { lookRequirements } from "@/lib/looks-inputs";
+import { lookRequirements, sessionExceptions } from "@/lib/looks-inputs";
 import { loadNotes, SessionEndedError } from "@/lib/notes-store";
 import { activePhoto } from "@/lib/photos-service";
+import { RuleSchema } from "@/lib/profile";
 import { loadProfile } from "@/lib/profile-store";
 import { categoryOf } from "@/lib/wardrobe";
 
@@ -59,16 +62,26 @@ function stable(value: unknown): string {
 
 /** Everything a session's looks must meet, read fresh, with its fingerprint. */
 async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
-  const [requirements, profile, { notes }, photo, picks] = await Promise.all([
+  const [requirements, profile, { notes }, photo, picks, excepted] = await Promise.all([
     lookRequirements(db, guestId, sessionId),
     loadProfile(db, guestId),
     loadNotes(db, sessionId),
     activePhoto(db, sessionId),
     db.from("wardrobe_items").select("id, name, category, details").eq("user_id", guestId).eq("styling", true).eq("draft", false).order("created_at").throwOnError(),
+    sessionExceptions(db, sessionId),
   ]);
+  // What the shopper asked for once allowed ("High heels", 5c fix 6) changes only the pieces it's about,
+  // so it isn't a requirement every look is checked against again either.
+  const allowed = profile.preferences.flatMap((p): RuledPreference[] =>
+    p.id && p.kind !== "likes" && excepted.has(p.id) ? [{ id: p.id, kind: p.kind, words: p.words, rule: RuleSchema.safeParse(p.rule).data ?? JUDGED }] : [],
+  );
+  const wants = wantsFrom(notes, allowed);
+  const wanted = new Set(wants.map((w) => w.noteId));
   // Feedback on a look (5a) revises that look (5b), so it isn't a requirement every look must meet, except
   // feedback for every look ("no high heels in any look", R48), which is.
-  const confirmed = active(notes).filter((n) => n.status === "confirmed" && n.kind !== "budget" && (n.kind !== "feedback" || feedbackOf(n)?.scope === "session"));
+  const confirmed = active(notes).filter(
+    (n) => n.status === "confirmed" && n.kind !== "budget" && (n.kind !== "feedback" || feedbackOf(n)?.scope === "session") && !wanted.has(n.id),
+  );
   const owned: OwnedPiece[] = [];
   let anchor: Anchor | null = null;
   let inspiration: string | null = null;
@@ -101,8 +114,15 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
       }),
     )
     .digest("hex");
-  return { requirements, notes, noteWords, owned, anchor, inspiration, likes, preferredColors, judged, key };
+  // The looks builder is told what was asked, so new looks include it.
+  const builderNotes = [...noteWords, ...wants.map((w) => w.words)];
+  return { requirements, notes, noteWords, builderNotes, owned, anchor, inspiration, likes, preferredColors, judged, key, allowed, wants };
 }
+
+const JUDGED: Rule = { type: "judged" };
+
+/** The wants, as "id:version", so a revision answering old ones is dropped (R52). */
+const wantsKey = (wants: Want[]) => wants.map(wantKey).sort().join(",");
 
 type Gathered = Awaited<ReturnType<typeof gather>>;
 
@@ -210,6 +230,8 @@ type Revision = {
   changed?: number[];
   /** Why the last revision couldn't be made: the look stayed as it was. */
   none?: string;
+  /** The wants it answers, as "id:version" (5c fix 6): a new one, or one taken back, changes it. */
+  wanted?: string[];
 };
 type LookRow = { id: string; name: string | null; reason: string | null; items: LookItem[]; requirements_key: string | null; input_versions: Versions; status: string; created_at: string; revision_of: string | null };
 const LOOK_COLUMNS = "id, name, reason, items, requirements_key, input_versions, status, created_at, revision_of";
@@ -327,7 +349,12 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   // fills the empty places anyway.
   const settled = !stale.length && (rows.length >= LOOKS_WANTED || (!options.force && (rows.length > 0 || session.looks_built_for === g.key)));
   // Feedback a look on screen hasn't been revised for (5b): a revision is due even with nothing else changed.
-  const revisable = rows.some((r) => isCurrent(r) && pendingFeedback(lookFeedback(g.notes, r.slot), r.input_versions.revision?.seen ?? []).length > 0);
+  // And what the shopper asked for once allowed, or took back, that a look hasn't been changed for (5c fix 6).
+  const wantsDue = (r: OnScreen) => {
+    const answered = r.input_versions.revision?.wanted ?? [];
+    return g.wants.some((w) => !answered.includes(wantKey(w))) || droppedWants(g.notes, g.allowed, g.wants, answered).length > 0;
+  };
+  const revisable = rows.some((r) => isCurrent(r) && (pendingFeedback(lookFeedback(g.notes, r.slot), r.input_versions.revision?.seen ?? []).length > 0 || wantsDue(r)));
   const unchanged = settled && !revisable;
   if (unchanged && rows.length >= LOOKS_WANTED) {
     // Three looks: only their own products are needed, not the whole catalog.
@@ -353,6 +380,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   });
   const excluded = new Set<string>();
   const avoid: string[] = [];
+  const mustUse = g.owned.filter((o) => o.ref.kind === "photo").map((o) => o.ref);
 
   // 1. Check the looks on screen again. Meanwhile they're marked Needs a new check, and stay on screen.
   if (stale.length) {
@@ -378,6 +406,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     );
     // Newest wins (R52): changed again meanwhile, so the next request checks them on the newest.
     if ((await gather(db, guestId, sessionId)).key !== g.key) return { stale: true };
+    const swaps: { row: OnScreen; items: ResolvedItem[]; failed: number[] }[] = [];
     for (const c of rechecked) {
       if (c.verdict === "pass" && c.items) {
         const { data: ok } = await db.rpc("publish_look", { look: c.row.id, current_requirements: g.key }).throwOnError();
@@ -386,10 +415,33 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
           continue;
         }
       }
+      // A look that fails only on pieces a rule now rules out (Never: high heels again, once its exception
+      // is removed) has just those pieces changed, like Change, rather than a whole new look (5c fix 6).
+      const failed = c.items ? c.items.flatMap((it, i) => ("product" in it && c.failedProducts.includes(it.product.id) ? [i] : [])) : [];
+      if (c.items && failed.length && failed.length === new Set(c.failedProducts).size) {
+        swaps.push({ row: c.row, items: c.items, failed });
+        continue;
+      }
       // A look that fails is never shown (R55): its place is filled by a new one.
       await db.from("looks").update({ status: "held" }).eq("id", c.row.id).eq("status", "needs_check").eq("requirements_key", g.key).throwOnError();
       for (const id of c.failedProducts) excluded.add(id);
       if (c.items) avoid.push(`${c.items.map(nameOf).join(" + ")}: ${failedWhy(c)}`);
+    }
+    for (const { row, items, failed } of swaps) {
+      const lines = lookFeedback(g.notes, row.slot);
+      const plan: RevisionPlan = { ...revisionPlan(items, lines, [], (id) => products.get(id) ?? null), change: failed };
+      // It answers the same feedback and wants as before, so those still due are done next (step 3).
+      const before = row.input_versions.revision;
+      const answers = { seen: before?.seen ?? [], wanted: (before?.wanted ?? []).filter((k) => g.wants.some((w) => wantKey(w) === k)) };
+      const revised = await revise(deps, guestId, sessionId, g, row, items, lines, plan, answers, { catalog, products, mustUse, emit });
+      if (revised.done === "stale") return { stale: true };
+      if (revised.done === "published") {
+        kept.push({ slot: row.slot, items: revised.items });
+        continue;
+      }
+      await db.from("looks").update({ status: "held" }).eq("id", row.id).in("status", ["needs_check", "published"]).throwOnError();
+      for (const i of failed) excluded.add(refId(items[i].ref));
+      avoid.push(`${items.map(nameOf).join(" + ")}: breaks the shopper's preferences`);
     }
   }
 
@@ -402,8 +454,6 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   const build = randomUUID();
   let placed = 0;
 
-  const mustUse = g.owned.filter((o) => o.ref.kind === "photo").map((o) => o.ref);
-
   for (let round = 1; !settled && round <= ROUNDS && placed < empty.length; round++) {
     filtered = filterCandidates(
       catalog.filter((p) => !excluded.has(p.id)),
@@ -412,6 +462,9 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     // Nothing new can be made from what still fits (only two dresses fit, and both are shown): stop
     // here, with the explanation, rather than build looks that can't be shown (looks speed plan).
     if (!filtered.kept.length || !canMakeAnother(filtered.kept, g.owned, mustUse, shownMains, g.requirements.budget)) break;
+    // Ended meanwhile: no more building, and nothing saved after its data was deleted (5c fix 6: a build
+    // went on for 30 seconds after Sabine ended, and saved 3 looks).
+    if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
     emit("building");
     const money = await deps.guard.checkAi(guestId, "claude");
     if (!money.ok) break;
@@ -420,7 +473,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
       owned: g.owned,
       mustUse,
       inspiration: g.inspiration,
-      notes: g.noteWords,
+      notes: g.builderNotes,
       budget: budgetText(g.requirements),
       preferredColors: g.preferredColors,
       likes: g.likes,
@@ -428,6 +481,8 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
       avoid,
     });
     if (built.costUsd > 0) await deps.guard.recordAi(guestId, "claude", built.costUsd);
+    // A build takes 20 to 30 seconds: the session may have ended meanwhile.
+    if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
 
     emit("checking");
     const checked = await Promise.all(
@@ -491,14 +546,21 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   // Built for these requirements: until they change, asking again doesn't build again.
   await db.from("sessions").update({ looks_built_for: g.key }).eq("id", sessionId).throwOnError();
 
-  // 3. Revise the looks that have feedback they haven't been revised for (5b), one at a time.
+  // 3. Revise the looks that have feedback they haven't been revised for (5b), or what the shopper asked
+  // for once allowed, or took back, that they haven't been changed for (5c fix 6), one at a time.
   for (const row of await onScreen(db, guestId, sessionId)) {
     if (!isCurrent(row)) continue;
     const lines = lookFeedback(g.notes, row.slot);
     const pending = pendingFeedback(lines, row.input_versions.revision?.seen ?? []);
-    if (!pending.length) continue;
-    const revised = await revise(deps, guestId, sessionId, g, row, lines, pending, { catalog, products, mustUse, emit });
-    if (revised === "stale") return { stale: true };
+    const answered = row.input_versions.revision?.wanted ?? [];
+    const add = g.wants.filter((w) => !answered.includes(wantKey(w)));
+    const drop = droppedWants(g.notes, g.allowed, g.wants, answered);
+    if (!pending.length && !add.length && !drop.length) continue;
+    const items = resolve(row.items, products, g.owned);
+    if (!items) continue;
+    const plan = wantsPlan(revisionPlan(items, lines, pending, (id) => products.get(id) ?? null), items, add, drop);
+    const revised = await revise(deps, guestId, sessionId, g, row, items, lines, plan, { seen: seenOf(lines), wanted: g.wants.map(wantKey) }, { catalog, products, mustUse, emit });
+    if (revised.done === "stale") return { stale: true };
   }
   const looks = await looksNow();
   return { looks, noMatch: explain(looks.length) };
@@ -512,8 +574,10 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
  * is also told what the shopper asked of this look. A change to the whole look asks the looks builder for
  * a new one in its place, with the kept pieces. The first that passes takes the look's place through the
  * publishing gate, with its change summary (R50); if none does, the look stays, with a note saying so.
- * Newest wins (R52): if the requirements or this look's feedback changed meanwhile, nothing is published
- * and the page asks again.
+ * Newest wins (R52): if the requirements, this look's feedback or the wants changed meanwhile, nothing is
+ * published and the page asks again. The caller makes the plan: from the look's feedback, what was asked
+ * once allowed (5c fix 6), or the pieces a rule now rules out. `answers` is what the look will have
+ * answered: its feedback lines and wants.
  */
 async function revise(
   deps: LooksDeps,
@@ -521,28 +585,27 @@ async function revise(
   sessionId: string,
   g: Gathered,
   row: OnScreen,
+  items: ResolvedItem[],
   lines: LookFeedback[],
-  pending: LookFeedback[],
+  plan: RevisionPlan,
+  answers: { seen: string[]; wanted: string[] },
   ctx: { catalog: Product[]; products: Map<string, Product>; mustUse: LookItem[]; emit: Emit },
-): Promise<"done" | "stale"> {
+): Promise<{ done: "published"; items: ResolvedItem[] } | { done: "kept" | "stale" }> {
   const { db } = deps;
-  const seen = seenOf(lines);
+  const { seen, wanted } = answers;
   // Answered without a new look: this feedback isn't revised again until it changes, unless the checks
   // couldn't run (`retry`), when the next request tries again (Sabine's answer to Q4 in 5c).
   const answered = (extra: Partial<Revision> = {}, retry = false) =>
     db
       .from("looks")
-      .update({ input_versions: { ...row.input_versions, revision: { ...row.input_versions.revision, seen: retry ? (row.input_versions.revision?.seen ?? []) : seen, none: undefined, ...extra } } })
+      .update({ input_versions: { ...row.input_versions, revision: { ...row.input_versions.revision, ...(retry ? {} : { seen, wanted }), none: undefined, ...extra } } })
       .eq("id", row.id)
       .throwOnError();
   const hold = (ids: string[]) => db.from("looks").update({ status: "held" }).in("id", ids).throwOnError();
-  const items = resolve(row.items, ctx.products, g.owned);
-  if (!items) return "done";
-  const plan = revisionPlan(items, lines, pending, (id) => ctx.products.get(id) ?? null);
-  // The feedback is about pieces no longer in this look: nothing to change.
+  // Nothing to change: the feedback is about pieces no longer in this look, or it already has what was asked.
   if (!plan.whole && !plan.change.length) {
     await answered();
-    return "done";
+    return { done: "kept" };
   }
   ctx.emit("revising", [row.slot]);
   const fits = filterCandidates(
@@ -564,7 +627,7 @@ async function revise(
     const money = await deps.guard.checkAi(guestId, "claude");
     if (!money.ok) {
       await answered({ none: "This look couldn't be revised: today's AI allowance is used up." });
-      return "done";
+      return { done: "kept" };
     }
     const kept = row.items.filter((ref) => plan.keep.has(refId(ref)));
     const built = await deps.builder.build({
@@ -572,7 +635,7 @@ async function revise(
       owned: g.owned,
       mustUse: [...ctx.mustUse, ...kept.filter((ref) => ref.kind !== "photo")],
       inspiration: g.inspiration,
-      notes: [...g.noteWords, ...plan.notes],
+      notes: [...g.builderNotes, ...plan.notes],
       budget: budgetText(g.requirements),
       preferredColors: g.preferredColors,
       likes: g.likes,
@@ -617,6 +680,8 @@ async function revise(
   const before = feedbackKey(lines);
   const tried: { unchecked: boolean }[] = [];
   for (const batch of batches) {
+    // Ended meanwhile: nothing more is checked or saved (5c fix 6).
+    if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
     const checked = await Promise.all(
       batch.map(async (c) => {
         const same = others.find((o) => o.main === mainPieces(c.items));
@@ -625,7 +690,7 @@ async function revise(
           : await check(deps, guestId, g, c.items, true, plan.notes);
         const total = totalOf(c.items, g.requirements);
         const changed = c.items.flatMap((it, i) => (items.some((o) => JSON.stringify(o.ref) === JSON.stringify(it.ref)) ? [] : [i]));
-        const revision: Revision = { seen, summary: changeSummary(items, c.items, total, plan.asked), changed };
+        const revision: Revision = { seen, wanted, summary: changeSummary(items, c.items, total, plan.asked), changed };
         const { data: inserted } = await db
           .from("looks")
           .insert({
@@ -646,7 +711,7 @@ async function revise(
         await db.rpc("record_check", { look: inserted!.id, verdict: result.verdict, reasons: result.reasons, requirements_key: g.key }).throwOnError();
         // A check that couldn't run (the judgment step failed or the day's AI is used up) isn't a "no".
         const unchecked = result.verdict === "needs_clarification" && result.reasons.some((r) => r.about === "Judgment" && !r.ok);
-        return { id: inserted!.id as string, verdict: result.verdict, unchecked };
+        return { id: inserted!.id as string, verdict: result.verdict, unchecked, items: c.items };
       }),
     );
     tried.push(...checked);
@@ -656,20 +721,20 @@ async function revise(
     // Newest wins (R52): a change to the requirements or to this look's feedback meanwhile means this
     // revision answered old information.
     const now = await gather(db, guestId, sessionId);
-    if (now.key !== g.key || feedbackKey(lookFeedback(now.notes, row.slot)) !== before) {
+    if (now.key !== g.key || feedbackKey(lookFeedback(now.notes, row.slot)) !== before || wantsKey(now.wants) !== wantsKey(g.wants)) {
       if (winner) await hold([winner.id]);
-      return "stale";
+      return { done: "stale" };
     }
     if (winner) {
       const { data: ok } = await db.rpc("publish_look", { look: winner.id, current_requirements: g.key, replaces: row.id }).throwOnError();
-      if (ok) return "done";
+      if (ok) return { done: "published", items: winner.items };
       await hold([winner.id]);
-      return "stale";
+      return { done: "stale" };
     }
   }
   if (tried.length && tried.every((t) => t.unchecked)) {
     await answered({ none: nothingFits(items, plan, { unchecked: true }) }, true);
-    return "done";
+    return { done: "kept" };
   }
   // The budget is the limit when every replacement within it was tried, and without it there would have
   // been more of the same kind (found in Sabine's 5b check: $83 left for shoes, and one pair under it).
@@ -679,7 +744,7 @@ async function revise(
     budget !== null &&
     plan.change.some((i, n) => (pooled[n] ?? 0) < SWAP_BATCH * 3 && swapCandidates(fits, items, i, plan.turnedDown, null).filter((p) => meetsWishes(p, productGroup(p.category), plan.wishes)).length > (pooled[n] ?? 0));
   await answered({ none: nothingFits(items, plan, byBudget && budget ? { budget: budgetWords(budget) } : {}) });
-  return "done";
+  return { done: "kept" };
 }
 
 /** The looks on screen for a session (GET /api/sessions/:id/looks), each marked whether it's still current. */
@@ -801,8 +866,9 @@ async function restoreNow(deps: LooksDeps, guestId: string, sessionId: string, l
       name: earlier.name,
       revision_of: row.id,
       requirements_key: g.key,
-      // It has answered the feedback on this place, so none of it revises it again.
-      input_versions: { slot: row.slot, revision: { seen: seenOf(lines) } },
+      // It has answered the feedback on this place and the wants, so none of it changes it again: the
+      // shopper chose it as it is.
+      input_versions: { slot: row.slot, revision: { seen: seenOf(lines), wanted: g.wants.map(wantKey) } },
       status: "checking",
     })
     .select("id")
