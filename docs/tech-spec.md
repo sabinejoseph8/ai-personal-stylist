@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.33 (22 Oct 2026)
+**Status:** Agreed, version 1.34 (22 Oct 2026)
 **Last updated:** 22 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -405,8 +405,8 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 ### Cost limits
 - Per guest per day: 10 minutes of conversation, all with video when it is available (R13), and $1 of AI (a full demo uses about $0.45).
 - Tavus: each call is created with **max_call_duration** set to the guest's remaining conversation time, and **participant_left_timeout** of 30 seconds, so an abandoned call stops at once. The Tavus plan's own minute cap is the final backstop.
-- Per month, for the whole demo: 165 minutes of video (your Tavus plan has 175 a month since you upgraded it on 21 Oct 2026, after Starter's 120 ran out; 10 are kept for testing; 110 before), $12 of Claude and $4 of OpenAI, each below its console limit ($15 and $5), so the app stops politely before a provider refuses.
-- Days and months are counted in UTC (8 pm in New York). Each limit is a Vercel setting: **BUDGET_DAILY_CONVERSATION_MINUTES**, **BUDGET_DAILY_AI_USD**, **BUDGET_MONTHLY_VIDEO_MINUTES**, **BUDGET_MONTHLY_CLAUDE_USD** and **BUDGET_MONTHLY_OPENAI_USD**, with the values above as defaults (your decision, 20 Oct 2026).
+- Per month, for the whole demo: 165 minutes of video (your Tavus plan has 175 a month since you upgraded it on 21 Oct 2026, after Starter's 120 ran out; 10 are kept for testing; 110 before), $12 of Claude (by default; $40 on the live site since 22 Oct 2026, see below) and $4 of OpenAI, each below its console limit ($15 and $5 at first), so the app stops politely before a provider refuses.
+- Days and months are counted in UTC (8 pm in New York). Each limit is a Vercel setting: **BUDGET_DAILY_CONVERSATION_MINUTES**, **BUDGET_DAILY_AI_USD**, **BUDGET_MONTHLY_VIDEO_MINUTES**, **BUDGET_MONTHLY_CLAUDE_USD** and **BUDGET_MONTHLY_OPENAI_USD**, with the values above as defaults (your decision, 20 Oct 2026). On 22 Oct 2026 the month's Claude spending reached $12.02 during your 5c iPhone check, and the notes paused. You set **BUDGET_MONTHLY_CLAUDE_USD** to 40 in Vercel and raised Anthropic's monthly limit above $40, so the app's stop still trips first. Real-Claude evals and reports count toward it too.
 - OpenAI and Anthropic: spending limits set in their consoles as the final backstop.
 - The AI money check and the cost record are separate steps, so AI calls at the same moment can run a few cents over a limit. Accepted (your decision, Phase 1 code review): the monthly ceilings sit $3 (Claude) and $1 (OpenAI) below the console limits, so a provider never cuts in.
 - When the monthly allowance runs out, the conversation ends for now (R13). If AI is used up too, the welcome screen says the demo is resting until the 1st of next month (TQ4).
@@ -546,6 +546,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.34 (22 Oct 2026):** The live site's monthly Claude stop is $40 (a Vercel setting), with Anthropic's limit above it, your decision after the $12 stop paused the notes.
 - **1.33 (22 Oct 2026):** 5c fix 7: the stylist is told when a permission is taken back, and only a question counts as her asking.
 - **1.32 (22 Oct 2026):** 5c fix 6: wants change only the pieces they're about, a look failing only on pieces a rule now rules out has just those replaced, her looks line waits after she asks something, and a build stops when its session ends, with your answers to Q1 and Q2.
 - **1.31 (22 Oct 2026):** 5c fix 5: the notes reader is told the preferences allowed in the session, asking again for one is jotted in ink with no card, and a safety check stops a request for an allowed one being flagged as another, with your answers to Q1 and Q2.

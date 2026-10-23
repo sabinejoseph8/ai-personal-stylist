@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.31
+**Status:** Living document, version 1.32
 **Last updated:** 22 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -87,7 +87,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 1 | The video stylist feels slow or out of sync | Phase 0 gate | Passed in Phase 0 (0g) |
 | 2 | Live notes miss the 2 second target | Phase 0 (0d), then Phase 2 (2c) | Met in the 2c eval with your option 3: 97 to 99% of notes within 2 seconds, 96 to 99% right, target unchanged. The eval leaves out the phone's connection and the database; on Sabine's iPhone the notes felt quick (2c check, 20 Oct 2026). Closed |
 | 3 | Tavus allows one call at a time and a fixed number of minutes | Phase 0 test, Phase 6 fallback | Behavior understood in 0c (an immediate 400 error). Fallback built in Phase 6. On 21 Oct 2026 the Starter minutes ran out before the app's own 110-minute stop (Tavus answers 402 "out of conversational credits"; it also counts test calls the app doesn't), and the app showed "try again in a moment". Sabine upgraded the plan. Open: the app's stop and message for this case |
-| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for. In 4d, a second looks build started while one was running (which doubled the cost) is prevented: one build at a time per session. In 4e, a build that found no look is never repeated on unchanged requirements. On 21 Oct 2026 the $10 prepaid Claude credit ran out before the app's own $12 monthly stop: real-Claude measurement runs (about $6 that day) share the live app's account. Sabine added credit; real-Claude runs now start with a check that Claude answers and a cost estimate |
+| 4 | A public link runs up costs | Phase 1 (1b, 1f) | Guarded in 1f: Turnstile, per-guest daily limits, the budget guard's monthly ceilings below each provider's limit, and the provider console limits as a backstop. Each paid feature must call the guard as it's built (Phase 2 on). Since the Phase 3 review, failed AI readings count too, as they're still paid for. In 4d, a second looks build started while one was running (which doubled the cost) is prevented: one build at a time per session. In 4e, a build that found no look is never repeated on unchanged requirements. On 21 Oct 2026 the $10 prepaid Claude credit ran out before the app's own $12 monthly stop: real-Claude measurement runs (about $6 that day) share the live app's account. Sabine added credit; real-Claude runs now start with a check that Claude answers and a cost estimate. On 22 Oct 2026 the app's own $12 monthly stop was reached (evals count toward it too) and the notes paused mid-check; Sabine raised it to $40 in Vercel, with Anthropic's limit above $40 |
 | 5 | Late updates overwrite newer choices | Phase 2 (2c), then Phases 3 to 5 | Handled for notes in 2c: words sequence numbers, merge rules and out-of-order tests. Handled for the item to style around in 3a: every photo has a version, and the database refuses a late result for a replaced one (tested). Feedback and looks follow the same pattern as they're built |
 | 6 | The preference check lets a breaking look through | Phase 4 (4a, 4b, 4c) | Closed with Phase 4 (21 Oct 2026). Handled in 4a to 4c. Phase 4's end-to-end swap test passes in 4c: no high heels across 10 swaps, on phone and desktop sizes. Swaps and looks checked again after a change go through the same checker and gate. Firm preferences are rules checked in plain code on the catalog's details, and a missing detail fails. Every look is checked by those rules again, then judged one at a time, and is published only by a database step that needs a passing check of that exact look on current requirements. The checker eval caught all 16 rule breaks and judged all 21 looks right, including the color cases from Sabine's review |
 | 7 | GPT-Live doesn't send the live words notes need | Phase 0 (0e) | Closed: live words arrive (0e) |
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 22 Oct 2026 | The live site's monthly Claude stop raised from $12 to $40 (the Vercel setting BUDGET_MONTHLY_CLAUDE_USD), with Anthropic's own monthly limit set above $40 so the app's stop trips first. Claude may now cost up to $40 a month, above the plan's original $18 for all AI | Sabine | tech spec 1.34 |
 | 22 Oct 2026 | Fix plan 7 approved: the stylist is told outright when a permission is taken back, and only a question counts as her asking (no options to choose) | Sabine | tech spec 1.33 |
 | 22 Oct 2026 | Fix plan 6, the recommended answers. Q1: once allowed, what the shopper asked for changes only the pieces it's about in each look, like Change, in about 10 to 30 seconds (the other option: whole new looks as before, 1 to 2 minutes, with the old ones kept on screen meanwhile). Q2: delete the 3 looks saved after a session ended; the 10-minute cleanup had already removed them | Sabine | tech spec 1.32 |
 | 22 Oct 2026 | Fix plan 5, the recommended answers. Q1: asking again for a saved preference already allowed in the session is jotted in ink straight away, with no card, so the looks change (the other option: jotted in pencil, confirmed first). Q2: Remove on the jotted note takes back the request but keeps the permission; Remove on the "This session only" line takes back both (the other option: removing the note also takes the permission back) | Sabine | tech spec 1.31 |
@@ -408,6 +409,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.32 (22 Oct 2026):** The monthly Claude stop raised to $40, and risk 4 updated.
 - **1.31 (22 Oct 2026):** Fix plan 7 approved, from the 5c iPhone check.
 - **1.30 (22 Oct 2026):** Fix plan 6 decisions (Q1, Q2) from the 5c iPhone check.
 - **1.29 (22 Oct 2026):** Fix plan 5 decisions (Q1, Q2) from the 5c iPhone check.
