@@ -336,6 +336,37 @@ test.describe("the looks", () => {
     await expect.poll(asked, { timeout: 15_000 }).toBe(before + 1);
   });
 
+  test("a spoken yes read twice jots High heels once, so removing it and asking again brings the heels back (fix plan 8)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await expect(card).toBeVisible({ timeout: 10_000 });
+    // The end of the turn read twice at once (found on Sabine's iPhone in 5c, A.7: "High heels" was jotted twice).
+    await Promise.all([
+      playInCall(page, { type: "words", speaker: "shopper", text: "Yes, allow it", final: true, turnId: "h2" }),
+      playInCall(page, { type: "words", speaker: "shopper", text: "Yes, allow it", final: true, turnId: "h2" }),
+    ]);
+    await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed", { timeout: 10_000 });
+    await expect(async () => {
+      for (const panel of await panels(page).all()) await expect(panel).toContainText("(you asked for high heels)");
+    }).toPass({ timeout: 30_000 });
+    await page.waitForTimeout(3_000);
+    await expect(note(page, "High heels")).toHaveCount(1);
+    await note(page, "High heels").click();
+    await notebookOf(page).getByRole("list", { name: "Notes" }).getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(note(page, "High heels")).toHaveCount(0, { timeout: 10_000 });
+    await expect(async () => {
+      for (const panel of await panels(page).all()) await expect(panel).not.toContainText("(you asked for high heels)");
+    }).toPass({ timeout: 30_000 });
+    // Asked for again: jotted, and the heels come back.
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h3" });
+    await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed", { timeout: 10_000 });
+    await expect(async () => {
+      for (const panel of await panels(page).all()) await expect(panel).toContainText("(you asked for high heels)");
+    }).toPass({ timeout: 30_000 });
+  });
+
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {
     test.slow();
     await weddingLooks(page);

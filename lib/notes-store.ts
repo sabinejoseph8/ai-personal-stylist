@@ -30,18 +30,19 @@ const toNote = (r: Row): Note => ({
 
 /** Every note in the session, removed ones included, in the order they were jotted, and the notebook's version. */
 export async function loadNotes(db: SupabaseClient, sessionId: string): Promise<{ notes: Note[]; version: number; wordsSeq: number }> {
-  const [session, rows] = await Promise.all([
-    db.from("sessions").select("notes_version, words_seq").eq("id", sessionId).maybeSingle().throwOnError(),
-    db
-      .from("session_notes")
-      .select("id, kind, note_text, status, hidden_details, source, changed_seq, version, removed")
-      .eq("session_id", sessionId)
-      .order("created_at")
-      .throwOnError(),
-  ]);
+  // The notes and their version in one request, so they always match: read apart, a reading could get the
+  // notes from before another's save and the version from after it, and its save passed the version
+  // check, so "High heels" was jotted twice (found on Sabine's iPhone in 5c, A.7).
+  const { data } = await db
+    .from("sessions")
+    .select("notes_version, words_seq, session_notes(id, kind, note_text, status, hidden_details, source, changed_seq, version, removed, created_at)")
+    .eq("id", sessionId)
+    .order("created_at", { referencedTable: "session_notes" })
+    .maybeSingle<{ notes_version: number; words_seq: number; session_notes: Row[] }>()
+    .throwOnError();
   // Deleted while words were being read (a guest deleted, or a test tidying up): the same as ended.
-  if (!session.data) throw new SessionEndedError();
-  return { notes: (rows.data as Row[]).map(toNote), version: session.data.notes_version, wordsSeq: Number(session.data.words_seq) };
+  if (!data) throw new SessionEndedError();
+  return { notes: data.session_notes.map(toNote), version: data.notes_version, wordsSeq: Number(data.words_seq) };
 }
 
 /** Saves the changed notes if nobody saved since `expected`. Returns the new version, or null to merge again. */

@@ -21,6 +21,18 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     // Conversations, notes, photo readings, camera frames, preference rules and looks in browser tests use fakes: free, and the same every time.
-    env: { CONVERSATION_ENGINE: "fake", NOTES_READER: "fake", PHOTO_READER: "fake", CAMERA_READER: "fake", RULE_MAKER: "fake", LOOKS_BUILDER: "fake" },
+    // They cost nothing, but the month's totals are shared with the live site, so its spending mustn't stop
+    // them: once real Claude spending passed $12, the tests' notes paused too (22 Oct 2026).
+    env: {
+      CONVERSATION_ENGINE: "fake",
+      NOTES_READER: "fake",
+      PHOTO_READER: "fake",
+      CAMERA_READER: "fake",
+      RULE_MAKER: "fake",
+      LOOKS_BUILDER: "fake",
+      BUDGET_MONTHLY_CLAUDE_USD: "1000000",
+      BUDGET_MONTHLY_OPENAI_USD: "1000000",
+      BUDGET_MONTHLY_VIDEO_MINUTES: "1000000",
+    },
   },
 });

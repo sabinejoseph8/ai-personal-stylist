@@ -3,7 +3,7 @@ import { createFakeNotesReader } from "@/core/notes/fake-reader";
 import type { NotesReader, Reading, ReaderInput } from "@/core/notes/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { allowException } from "@/lib/exceptions-service";
-import { hearWords, type NotesDeps, type NotesUpdate, touchSessionNote } from "@/lib/notes-service";
+import { hearWords, jotWanted, type NotesDeps, type NotesUpdate, touchSessionNote } from "@/lib/notes-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
 import { savePreferences } from "@/lib/profile-store";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
@@ -110,6 +110,27 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
       await touchSessionNote({ db }, guest.id, sessionId, jotted!.id, "remove");
       const again = await hear("I'd love some high heels");
       expect(again.last.notes.filter((n) => n.text === "High heels").map((n) => n.status)).toEqual(["confirmed"]);
+    } finally {
+      await savePreferences(guest.db, []);
+    }
+  });
+
+  it("jots what was asked for once, however many readings answer at once, and confirms a pencil note rather than adding one (fix plan 8)", async () => {
+    await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    try {
+      const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+      const pref = { id: heels.id, kind: "never" as const, words: "high heels" };
+      const highHeels = async () => (await db.from("session_notes").select("id, status").eq("session_id", sessionId).eq("note_text", "High heels").eq("removed", false)).data ?? [];
+      // Five at once (found on Sabine's iPhone in 5c, A.7: a "yes" read twice jotted it twice).
+      await Promise.all(Array.from({ length: 5 }, () => jotWanted({ db }, guest.id, sessionId, pref)));
+      expect(await highHeels()).toHaveLength(1);
+      // Taken back, every note asking for it goes.
+      await jotWanted({ db }, guest.id, sessionId, pref, false);
+      expect(await highHeels()).toHaveLength(0);
+      // Already in pencil: confirmed, not added again.
+      await db.from("session_notes").insert({ user_id: guest.id, session_id: sessionId, kind: "style", note_text: "High heels", status: "to_confirm", source: "voice" }).throwOnError();
+      await jotWanted({ db }, guest.id, sessionId, pref);
+      expect((await highHeels()).map((n) => n.status)).toEqual(["confirmed"]);
     } finally {
       await savePreferences(guest.db, []);
     }

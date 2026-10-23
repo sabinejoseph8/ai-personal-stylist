@@ -47,7 +47,9 @@ export function droppedWants(notes: Note[], allowed: RuledPreference[], wants: W
     const id = key.slice(0, key.lastIndexOf(":"));
     const n = now.has(id) ? undefined : notes.find((x) => x.id === id);
     const p = n ? allowed.find((a) => asking(a, n)) : undefined;
-    return n && p ? [want(n, p)] : [];
+    // Another note still asks for the same thing: nothing to take back (fix plan 8, found on Sabine's
+    // iPhone in 5c, A.7, when "High heels" was jotted twice and one was removed).
+    return n && p && !wants.some((w) => w.words === wantedNote(p)) ? [want(n, p)] : [];
   });
 }
 

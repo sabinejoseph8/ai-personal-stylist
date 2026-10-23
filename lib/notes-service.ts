@@ -258,9 +258,19 @@ export async function jotWanted(deps: Pick<NotesDeps, "db">, guestId: string, se
   try {
     const { wordsSeq } = await loadNotes(deps.db, sessionId);
     done = await apply(deps.db, sessionId, (current) => {
-      const same = active(current).find((n) => n.text.toLowerCase() === text.toLowerCase());
-      if (!on) return same ? touchNote(current, same.id, "remove", wordsSeq) : { notes: current, changed: [] };
-      if (same?.status === "confirmed") return { notes: current, changed: [] };
+      const same = active(current).filter((n) => n.text.toLowerCase() === text.toLowerCase());
+      // Taken back: every note asking for it goes.
+      if (!on)
+        return same.reduce(
+          (acc, n) => {
+            const next = touchNote(acc.notes, n.id, "remove", wordsSeq);
+            return { notes: next.notes, changed: [...acc.changed, ...next.changed] };
+          },
+          { notes: current, changed: [] as Note[] },
+        );
+      if (same.some((n) => n.status === "confirmed")) return { notes: current, changed: [] };
+      // Already jotted in pencil: that note is confirmed, rather than a second one added (fix plan 8).
+      if (same.length) return touchNote(current, same[0].id, "confirm", wordsSeq);
       const note: Note = { id: crypto.randomUUID(), kind: "style", text, status: "confirmed", details: [], source: "touch", changedSeq: wordsSeq, version: 1, removed: false };
       return { notes: [...current, note], changed: [note] };
     });
