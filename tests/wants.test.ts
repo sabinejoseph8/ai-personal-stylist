@@ -84,5 +84,8 @@ describe("what the shopper asked for once allowed (5c fix 6)", () => {
     const removed = { ...asked, removed: true, version: 2 };
     expect(droppedWants([removed], [heels], [], answered).map((w) => w.words)).toEqual(["High heels"]);
     expect(droppedWants([removed], [], [], answered)).toEqual([]);
+    // Another note still asks for the same thing (two "High heels" notes, one removed): nothing to take back.
+    const twin = note("b", "High heels");
+    expect(droppedWants([removed, twin], [heels], wantsFrom([twin], [heels]), answered)).toEqual([]);
   });
 });
