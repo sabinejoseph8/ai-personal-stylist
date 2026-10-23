@@ -33,6 +33,8 @@ describe("exceptions in words", () => {
     expect(asksAboutIt(spokenQuestion(heels))).toBe(true);
     expect(asksAboutIt("Certainly, do you want to allow high heels for this session?")).toBe(true);
     expect(asksAboutIt("Let me check that against your saved preferences.")).toBe(false);
+    // Only a question counts: this statement left the question unasked (found on Sabine's iPhone in 5c, A.9).
+    expect(asksAboutIt("High heels are allowed for this session.")).toBe(false);
     expect(wantedNote(heels)).toBe("High heels");
     expect(wantedNote(sleeves)).toBe("Without sleeves");
   });
@@ -43,6 +45,15 @@ describe("exceptions in words", () => {
     expect(told).toContain(`You've just asked the shopper: "${spokenQuestion(heels)}" Wait for their answer`);
     expect(told).toContain('repeat the question exactly as it is, without starting with "certainly", "absolutely"');
     expect(exceptionsForStylist([], null)).toBe("");
+  });
+
+  it("tell the stylist outright when a permission is taken back, until it's allowed again (fix plan 7)", () => {
+    const back = exceptionsForStylist([], null, [heels, sleeves]);
+    expect(back).toContain("Taken back: the shopper took back allowing high heels. Their saved preference Never: high heels applies again, whatever was said earlier, so if they ask for it, ask the question again, word for word.");
+    expect(back).toContain("took back allowing going without sleeves. Their saved preference Must have: sleeves applies again");
+    const again = exceptionsForStylist([heels], null, [heels]);
+    expect(again).toContain("This session only: the shopper allowed breaking their saved preference Never: high heels.");
+    expect(again).not.toContain("Taken back");
   });
 });
 

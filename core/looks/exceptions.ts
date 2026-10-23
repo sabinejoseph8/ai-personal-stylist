@@ -44,16 +44,28 @@ export function spokenQuestion(p: FirmPreference): string {
  */
 export const wantedNote = (p: FirmPreference) => (p.kind === "never" ? capital(p.words) : `Without ${p.words}`);
 
-/** Whether the stylist's words already ask the question (a back-up is said only when they don't). */
-export const asksAboutIt = (said: string) => /\bsession\b/i.test(said) && /\b(preference|allow)/i.test(said);
+/**
+ * Whether the stylist's words already ask the question (a back-up is said only when they don't). Only a
+ * question counts: "High heels are allowed for this session" named the session and allowing, and the
+ * question went unasked (found on Sabine's iPhone in 5c, A.9).
+ */
+export const asksAboutIt = (said: string) => said.includes("?") && /\bsession\b/i.test(said) && /\b(preference|allow)/i.test(said);
 
 /** Save to my profile's confirmation (Sabine's answer to Q2 in 5c). */
 export const takeOffQuestion = (p: FirmPreference) => `Take "${label(p)}: ${p.words}" off your profile? Later sessions will allow it too.`;
 
-/** What the stylist is told: the exceptions allowed, and a request she should ask about now. */
-export function exceptionsForStylist(allowed: FirmPreference[], asking: FirmPreference | null): string {
+/**
+ * What the stylist is told: the exceptions allowed, those taken back (Remove), and a request she should ask
+ * about now. A permission taken back is said outright: with its line just gone, she went by her own earlier
+ * words and told the shopper it was still allowed (found on Sabine's iPhone in 5c, A.9).
+ */
+export function exceptionsForStylist(allowed: FirmPreference[], asking: FirmPreference | null, takenBack: FirmPreference[] = []): string {
   const lines: string[] = [];
   for (const a of allowed) lines.push(`This session only: the shopper allowed breaking their saved preference ${label(a)}: ${a.words}. Looks may now include it; their profile is unchanged.`);
+  for (const t of takenBack.filter((t) => !allowed.some((a) => a.id === t.id)))
+    lines.push(
+      `Taken back: the shopper took back allowing ${t.kind === "never" ? t.words : `going without ${t.words}`}. Their saved preference ${label(t)}: ${t.words} applies again, whatever was said earlier, so if they ask for it, ask the question again, word for word.`,
+    );
   if (asking)
     lines.push(
       `You've just asked the shopper: "${spokenQuestion(asking)}" Wait for their answer, by voice or with the buttons on their screen. Don't allow or refuse it yourself, and don't suggest anything with it until they've answered. If they stay quiet and you remind them, repeat the question exactly as it is, without starting with "certainly", "absolutely" or "of course", since they haven't said anything (found on Sabine's iPhone in 5c).`,
