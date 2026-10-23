@@ -226,6 +226,8 @@ export function StylingSession({
   // `wanted`: the shopper asked for it, so allowing it jots it too (fix plan 3, Q1).
   const [asking, setAsking] = useState<(FirmPreference & { wanted?: boolean }) | null>(null);
   const [savedPreferences, setSavedPreferences] = useState(preferences);
+  // Permissions taken back with Remove, so she's told they no longer hold (fix plan 7).
+  const [takenBack, setTakenBack] = useState<FirmPreference[]>([]);
   const exceptionsNow = useRef<ShownException[]>([]);
   useLayoutEffect(() => {
     exceptionsNow.current = exceptions;
@@ -265,7 +267,10 @@ export function StylingSession({
     fetch(`/api/sessions/${id}/exceptions`)
       .then((res) => (res.ok ? res.json() : null))
       .then((body: { exceptions?: ShownException[] } | null) => {
-        if (current) setExceptions(body?.exceptions ?? []);
+        if (!current) return;
+        setExceptions(body?.exceptions ?? []);
+        // A new session starts with nothing taken back.
+        setTakenBack([]);
       })
       .catch(() => null);
     return () => {
@@ -303,6 +308,7 @@ export function StylingSession({
       return false;
     }
     setExceptions(body.exceptions);
+    if (action === "remove") setTakenBack((t) => [...t.filter((p) => p.id !== exception.id), { id: exception.id, kind: exception.kind, words: exception.words }]);
     if (body.preferences) setSavedPreferences(body.preferences);
     // Remove takes back what was asked for with it (fix plan 3).
     if (body.notes) notes.receive(body.notes);
@@ -533,11 +539,11 @@ export function StylingSession({
 
   // She's told the exceptions allowed, and a request to ask about, whenever they change (5c).
   useEffect(() => {
-    exceptionsTold.current = exceptionsForStylist(exceptions, asking);
+    exceptionsTold.current = exceptionsForStylist(exceptions, asking, takenBack);
     if (flow === "live") call.updateContext(withCamera());
     // withCamera and call only read refs; this runs when the exceptions change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exceptions, asking, flow]);
+  }, [exceptions, asking, takenBack, flow]);
 
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {

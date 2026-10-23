@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.30
+**Status:** Living document, version 1.31
 **Last updated:** 22 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -155,6 +155,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 22 Oct 2026 | Fix plan 7 approved: the stylist is told outright when a permission is taken back, and only a question counts as her asking (no options to choose) | Sabine | tech spec 1.33 |
 | 22 Oct 2026 | Fix plan 6, the recommended answers. Q1: once allowed, what the shopper asked for changes only the pieces it's about in each look, like Change, in about 10 to 30 seconds (the other option: whole new looks as before, 1 to 2 minutes, with the old ones kept on screen meanwhile). Q2: delete the 3 looks saved after a session ended; the 10-minute cleanup had already removed them | Sabine | tech spec 1.32 |
 | 22 Oct 2026 | Fix plan 5, the recommended answers. Q1: asking again for a saved preference already allowed in the session is jotted in ink straight away, with no card, so the looks change (the other option: jotted in pencil, confirmed first). Q2: Remove on the jotted note takes back the request but keeps the permission; Remove on the "This session only" line takes back both (the other option: removing the note also takes the permission back) | Sabine | tech spec 1.31 |
 | 22 Oct 2026 | Fix plan 3, Q1: once the shopper allows what they asked for, it's jotted in ink so the looks change to include it (the other option: allowing only permits it) | Sabine | tech spec 1.30 |
@@ -407,6 +408,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.31 (22 Oct 2026):** Fix plan 7 approved, from the 5c iPhone check.
 - **1.30 (22 Oct 2026):** Fix plan 6 decisions (Q1, Q2) from the 5c iPhone check.
 - **1.29 (22 Oct 2026):** Fix plan 5 decisions (Q1, Q2) from the 5c iPhone check.
 - **1.28 (22 Oct 2026):** 5c decisions (Q1 to Q4).

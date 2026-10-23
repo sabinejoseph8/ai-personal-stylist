@@ -315,6 +315,27 @@ test.describe("the looks", () => {
     await expect.poll(changed, { timeout: 15_000 }).toBeGreaterThan(lines);
   });
 
+  test("after Remove, she's told heels were taken back, and saying they're allowed doesn't stop the question (fix plan 7)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await card.getByRole("button", { name: "Allow for this session" }).click({ timeout: 10_000 });
+    const exceptions = notebookOf(page).getByRole("list", { name: "This session only" });
+    await exceptions.getByRole("button", { name: "Remove" }).click({ timeout: 10_000 });
+    await expect(exceptions).toHaveCount(0);
+    // Found on Sabine's iPhone in 5c, A.9: with the permission's line just gone, she said heels were allowed.
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Taken back: the shopper took back allowing high heels.");
+    const question = "Your profile says never high heels. Shall I allow high heels for this session only, or keep your preference?";
+    const asked = async () => (await sent(page, "say")).filter((line) => line === question).length;
+    const before = await asked();
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h2" });
+    await expect(card).toBeVisible({ timeout: 10_000 });
+    // Her reply says it's allowed rather than asking: the app asks, word for word.
+    await playInCall(page, { type: "words", speaker: "stylist", text: "High heels are allowed for this session.", final: true, turnId: "s2" });
+    await expect.poll(asked, { timeout: 15_000 }).toBe(before + 1);
+  });
+
   test("Undo feedback brings back the look before the revision, and Compare can bring the revision back (5c, R51)", async ({ page }) => {
     test.slow();
     await weddingLooks(page);
