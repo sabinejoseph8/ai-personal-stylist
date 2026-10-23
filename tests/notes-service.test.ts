@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createFakeNotesReader } from "@/core/notes/fake-reader";
-import type { NotesReader, Reading } from "@/core/notes/reader";
+import type { NotesReader, Reading, ReaderInput } from "@/core/notes/reader";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
+import { allowException } from "@/lib/exceptions-service";
 import { hearWords, type NotesDeps, type NotesUpdate, touchSessionNote } from "@/lib/notes-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
 import { savePreferences } from "@/lib/profile-store";
@@ -82,6 +83,33 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
       // What they asked for is jotted in ink, so the looks change to include it (fix plan 3, Q1).
       expect(yes.notes.filter((n) => n.text === "High heels").map((n) => n.status)).toEqual(["confirmed"]);
       expect((await hear("I'd love some high heels")).last.exception).toBeUndefined();
+    } finally {
+      await savePreferences(guest.db, []);
+    }
+  });
+
+  it("jots a request for one already allowed in ink at the end of a turn, with no card, even after its note was removed (fix plan 5)", async () => {
+    await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    try {
+      const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+      await allowException(db, guest.id, sessionId, heels.id);
+      // The reader is told what's allowed apart from what still applies (found on Sabine's iPhone in 5c, A.7).
+      const told: ReaderInput[] = [];
+      const spy = createFakeNotesReader();
+      const reader: NotesReader = { read: (input) => (told.push(input), spy.read(input)) };
+      const talking: NotesUpdate[] = [];
+      await hearWords(deps({ reader }), guest.id, sessionId, { words: "I'd love some high heels", stylistSaid: "", final: false }, (u) => talking.push(u));
+      expect(told[0].allowed?.map((p) => p.words)).toEqual(["high heels"]);
+      expect(told[0].saved?.map((p) => p.words)).toEqual(["sleeves"]);
+      expect(texts(talking.at(-1)!)).not.toContain("High heels");
+      const { last } = await hear("I'd love some high heels");
+      expect(last.exception).toBeUndefined();
+      const jotted = last.notes.find((n) => n.text === "High heels");
+      expect(jotted?.status).toBe("confirmed");
+      // Removed by touch, and asked for again: jotted again.
+      await touchSessionNote({ db }, guest.id, sessionId, jotted!.id, "remove");
+      const again = await hear("I'd love some high heels");
+      expect(again.last.notes.filter((n) => n.text === "High heels").map((n) => n.status)).toEqual(["confirmed"]);
     } finally {
       await savePreferences(guest.db, []);
     }
