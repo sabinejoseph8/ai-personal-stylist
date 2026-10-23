@@ -65,6 +65,8 @@ it("heels timing", async () => {
     const jotted = await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
     const on = await run(real);
     const onHeels = await Promise.all(on.looks.map(heel));
+    // High heels, or the look stays with a note saying why, such as the budget (fix plan 6).
+    const answered = on.looks.map((l, i) => onHeels[i] > 5 || Boolean(l.note));
     await touchSessionNote({ db }, guest.id, session, jotted!.notes.find((n) => n.text === "High heels")!.id, "remove");
     const off = await run(real);
     const offHeels = await Promise.all(off.looks.map(heel));
@@ -82,7 +84,7 @@ it("heels timing", async () => {
       "",
       `## Never: high heels allowed, "High heels" jotted`,
       "",
-      `${Math.round(on.seconds)} seconds, $${on.cost.toFixed(2)} of Claude. Stages: ${[...new Set(on.stages)].join(", ")}. High heels in every look: ${onHeels.every((h) => h > 5) ? "yes" : "NO"}. Other pieces kept: ${rest(on.looks) === rest(start.looks) ? "yes" : "NO"}.`,
+      `${Math.round(on.seconds)} seconds, $${on.cost.toFixed(2)} of Claude. Stages: ${[...new Set(on.stages)].join(", ")}. High heels in ${onHeels.filter((h) => h > 5).length} of 3 looks; every other one says why: ${answered.every(Boolean) ? "yes" : "NO"}. Other pieces kept: ${rest(on.looks) === rest(start.looks) ? "yes" : "NO"}.`,
       "",
       await describe(on.looks),
       "",
@@ -95,7 +97,8 @@ it("heels timing", async () => {
     ];
     mkdirSync("tests/evals/results", { recursive: true });
     writeFileSync(OUT, out.join("\n"));
-    expect(onHeels.every((h) => h > 5)).toBe(true);
+    expect(answered.every(Boolean)).toBe(true);
+    expect(onHeels.some((h) => h > 5)).toBe(true);
     expect(offHeels.every((h) => h <= 5)).toBe(true);
   } finally {
     await guest.remove();

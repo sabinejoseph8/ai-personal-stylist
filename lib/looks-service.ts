@@ -547,21 +547,25 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   await db.from("sessions").update({ looks_built_for: g.key }).eq("id", sessionId).throwOnError();
 
   // 3. Revise the looks that have feedback they haven't been revised for (5b), or what the shopper asked
-  // for once allowed, or took back, that they haven't been changed for (5c fix 6), one at a time.
-  for (const row of await onScreen(db, guestId, sessionId)) {
-    if (!isCurrent(row)) continue;
+  // for once allowed, or took back, that they haven't been changed for (5c fix 6).
+  const due = (await onScreen(db, guestId, sessionId)).flatMap((row) => {
+    if (!isCurrent(row)) return [];
     const lines = lookFeedback(g.notes, row.slot);
     const pending = pendingFeedback(lines, row.input_versions.revision?.seen ?? []);
     const answered = row.input_versions.revision?.wanted ?? [];
     const add = g.wants.filter((w) => !answered.includes(wantKey(w)));
     const drop = droppedWants(g.notes, g.allowed, g.wants, answered);
-    if (!pending.length && !add.length && !drop.length) continue;
-    const items = resolve(row.items, products, g.owned);
-    if (!items) continue;
-    const plan = wantsPlan(revisionPlan(items, lines, pending, (id) => products.get(id) ?? null), items, add, drop);
-    const revised = await revise(deps, guestId, sessionId, g, row, items, lines, plan, { seen: seenOf(lines), wanted: g.wants.map(wantKey) }, { catalog, products, mustUse, emit });
-    if (revised.done === "stale") return { stale: true };
-  }
+    const items = pending.length || add.length || drop.length ? resolve(row.items, products, g.owned) : null;
+    return items ? [{ row, items, lines, plan: wantsPlan(revisionPlan(items, lines, pending, (id) => products.get(id) ?? null), items, add, drop) }] : [];
+  });
+  const revising = ({ row, items, lines, plan }: (typeof due)[number]) =>
+    revise(deps, guestId, sessionId, g, row, items, lines, plan, { seen: seenOf(lines), wanted: g.wants.map(wantKey) }, { catalog, products, mustUse, emit });
+  // Changes to pieces, such as each look's shoes once heels are allowed, run side by side: one after
+  // another took 42 seconds for three looks (the heels timing). A whole new look waits its turn, so two
+  // new looks can't come out the same.
+  const side = await Promise.all(due.filter((d) => !d.plan.whole).map(revising));
+  if (side.some((r) => r.done === "stale")) return { stale: true };
+  for (const d of due.filter((d) => d.plan.whole)) if ((await revising(d)).done === "stale") return { stale: true };
   const looks = await looksNow();
   return { looks, noMatch: explain(looks.length) };
 }
