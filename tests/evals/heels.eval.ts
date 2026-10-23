@@ -2,8 +2,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { claudeAsk, LOOKS_MODEL } from "@/connectors/ai/claude";
 import { createSampleCatalog } from "@/connectors/catalog/sample";
-import { createFakeLooksBuilder } from "@/core/looks/builder";
-import { createFakeJudge, createJudge } from "@/core/looks/judge";
+import { createLooksBuilder } from "@/core/looks/builder";
+import { createJudge } from "@/core/looks/judge";
 import type { ShownLook } from "@/core/looks/shown";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { allowException } from "@/lib/exceptions-service";
@@ -13,11 +13,12 @@ import { SAMPLE_PROFILE } from "@/lib/profile";
 import { saveBudget, savePreferences, saveShopping } from "@/lib/profile-store";
 import { createTestGuest, serverDb, setting } from "../support/test-guests";
 
-// The heels timing (5c fix 6): Sabine's 5c check, A.5. With the sample profile's Never: high heels allowed
-// for the session and "High heels" jotted, how long until each look's shoes are high heels, and what it
-// costs, with the real preference checker. Then the note taken back, and the shoes changing back. The
-// starting looks come from the fake builder and judge, which cost nothing; only the changes are timed.
-// About 15 cents. Run: npm run eval:heels.
+// The heels timing (5c fix 6): Sabine's 5c check, A.3 to A.6, with the real looks builder and preference
+// checker. Her wedding looks are built with the sample profile; then Never: high heels is allowed for the
+// session and "High heels" jotted: how long until each look's shoes are high heels, and what it costs.
+// Then the note taken back, and the shoes changing back. The starting looks must come from the real
+// builder: the real checker turned down the fake builder's casual looks for an elegant wedding, and
+// nothing was left to time (the first run). About 45 cents. Run: npm run eval:heels.
 
 const OUT = "tests/evals/results/heels-report.md";
 const db = serverDb();
@@ -42,14 +43,15 @@ it("heels timing", async () => {
       .throwOnError();
     const catalog = createSampleCatalog(db);
     const guard = createBudgetGuard(db, { ...readBudgetLimits({}), dailyAiUsd: 5 });
-    const free: LooksDeps = { db, catalog, guard, builder: createFakeLooksBuilder(), judge: createFakeJudge() };
-    const real: LooksDeps = { ...free, judge: createJudge(ask) };
+    const real: LooksDeps = { db, catalog, guard, builder: createLooksBuilder(ask), judge: createJudge(ask) };
     const spent = async () => ((await db.from("usage").select("claude_microdollars").eq("user_id", guest.id).throwOnError()).data ?? []).reduce((s, u) => s + Number(u.claude_microdollars), 0) / 1e6;
     const run = async (deps: LooksDeps) => {
       const [cost, started] = [await spent(), performance.now()];
       const stages: string[] = [];
       const result = (await buildLooks(deps, guest.id, session, (s) => stages.push(s))) as BuildResult;
       if (!result || !("looks" in result)) throw new Error(JSON.stringify(result));
+      // Three looks every time, or there's nothing to time (the first run).
+      expect(result.looks).toHaveLength(3);
       return { looks: result.looks, stages, seconds: (performance.now() - started) / 1000, cost: (await spent()) - cost };
     };
     const heel = async (l: ShownLook) => (await catalog.getProduct(l.items.find((i) => i.group === "shoes")!.id))?.details.heelCm ?? 0;
@@ -57,7 +59,7 @@ it("heels timing", async () => {
       (await Promise.all(looks.map(async (l) => `- Look ${l.slot}: ${l.items.map((i) => i.name).join(", ")} (heel ${await heel(l)} cm). ${l.change ?? l.note ?? ""}`))).join("\n");
     const rest = (looks: ShownLook[]) => JSON.stringify(looks.map((l) => l.items.filter((i) => i.group !== "shoes").map((i) => i.id)));
 
-    const start = await run(free);
+    const start = await run(real);
     const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
     await allowException(db, guest.id, session, heels.id);
     const jotted = await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
@@ -70,9 +72,11 @@ it("heels timing", async () => {
     const out = [
       "# Heels timing (5c fix 6)",
       "",
-      `Run on ${new Date().toISOString().slice(0, 10)} with the real preference checker (${LOOKS_MODEL}, medium), on Sabine's 5a wedding with the sample profile. The starting looks came from the fake builder.`,
+      `Run on ${new Date().toISOString().slice(0, 10)} with the real looks builder and preference checker (${LOOKS_MODEL}, medium), on Sabine's 5a wedding with the sample profile.`,
       "",
       "## Starting looks",
+      "",
+      `${Math.round(start.seconds)} seconds, $${start.cost.toFixed(2)} of Claude.`,
       "",
       await describe(start.looks),
       "",
