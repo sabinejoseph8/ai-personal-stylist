@@ -61,9 +61,13 @@ const TAP_WAIT_MS = 2000;
 /** How long to wait for the stylist's own reply before the app asks the question for her (fix plan 3). */
 const BACKUP_WAIT_MS = 6000;
 const tapWaitEnds = () => Date.now() + TAP_WAIT_MS;
+/** Now, from event handlers (outside the component, for the purity rule). */
+const timeNow = () => Date.now();
 
 /** The gap between two lines she's asked to speak up about, when nobody has spoken in between. */
 const SPEAK_UP_GAP_MS = 5000;
+/** After she asks the shopper something, how long their answer is waited for before she speaks up (5c fix 6). */
+const ANSWER_WAIT_MS = 12_000;
 
 /** Something she speaks up about once nobody is talking. */
 /** `say`: the stylist says `text` word for word, rather than answering it as the shopper's words (5c). */
@@ -137,6 +141,8 @@ export function StylingSession({
   // What the stylist has said since the shopper last finished speaking, and whether a back-up question
   // is still waiting for her reply (fix plan 3: one question, never two in a row).
   const stylistReplies = useRef<string[]>([]);
+  // When she last asked the shopper something they haven't answered yet, or 0 (5c fix 6).
+  const askedAt = useRef(0);
   const backup = useRef<{ question: string; timer: ReturnType<typeof setTimeout> | null } | null>(null);
   const settleBackup = useRef<((said: string | null) => void) | null>(null);
   // The look most on screen, sent with the words for feedback that doesn't name a look (5a).
@@ -146,9 +152,12 @@ export function StylingSession({
     onEvent: (e) => {
       notes.onEvent(e);
       if (e.type === "words" && e.final) {
-        if (e.speaker === "shopper") stylistReplies.current = [];
-        else {
+        if (e.speaker === "shopper") {
+          stylistReplies.current = [];
+          askedAt.current = 0;
+        } else {
           stylistReplies.current.push(e.text);
+          if (e.text.includes("?")) askedAt.current = timeNow();
           settleBackup.current?.(e.text);
         }
       }
@@ -554,13 +563,22 @@ export function StylingSession({
       const timer = setTimeout(() => recheck((n) => n + 1), wait);
       return () => clearTimeout(timer);
     }
+    // After she asks the shopper something, her looks line waits for the answer: sent at the first pause, it
+    // had her talk straight on (found on Sabine's iPhone in 5c: "What heel height?", then on to the looks).
+    // A photo or the camera is the shopper's own doing, so she speaks about it at once.
+    const answerWait = askedAt.current ? askedAt.current + ANSWER_WAIT_MS - Date.now() : 0;
+    const ready = (l: SpeakUp) => l.kind !== "looks" || answerWait <= 0;
     // A photo replaced meanwhile isn't spoken about.
     while (speakUp.current.length) {
       // While her question waits for the shopper's answer, nothing else is said: a line said for the
       // shopper, such as "Can you walk me through the looks…?" once the looks arrived, had her answer
       // "Absolutely, should I allow it?" (found on Sabine's iPhone in 5c). The rest waits its turn.
-      const next = askingNow.current ? speakUp.current.find((l) => l.kind === "exception") : speakUp.current[0];
-      if (!next) return;
+      const next = askingNow.current ? speakUp.current.find((l) => l.kind === "exception") : speakUp.current.find(ready);
+      if (!next) {
+        if (answerWait <= 0 || askingNow.current) return;
+        const timer = setTimeout(() => recheck((n) => n + 1), answerWait);
+        return () => clearTimeout(timer);
+      }
       speakUp.current = speakUp.current.filter((l) => l !== next);
       if (next.photo && photos.active?.key !== next.photo) continue;
       // A question already answered isn't asked.

@@ -6,7 +6,8 @@ import { createFakeJudge, type Judge } from "@/core/looks/judge";
 import { behindTheScenesFor } from "@/lib/behind-the-scenes";
 import { allowException, removeException, saveExceptionToProfile } from "@/lib/exceptions-service";
 import { lookRequirements } from "@/lib/looks-inputs";
-import { feedbackByTouch, jotWanted, takeBackFeedback } from "@/lib/notes-service";
+import { feedbackByTouch, jotWanted, takeBackFeedback, touchSessionNote } from "@/lib/notes-service";
+import { SessionEndedError } from "@/lib/notes-store";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { buildLooks, currentLooks, lookHistory, type LooksDeps, restoreLook, type ShownLook, swapPiece } from "@/lib/looks-service";
 import { SAMPLE_PROFILE } from "@/lib/profile";
@@ -591,21 +592,73 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect((await prefs()).data).toEqual(before);
   }, 60_000);
 
-  it("once high heels are asked for and allowed, the looks change to include them (fix plan 3, Q1)", async () => {
+  it("once high heels are asked for and allowed, only each look's shoes change to heels; taken back, they change back (fix plan 3 Q1, fix plan 6 Q1)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     const catalog = createSampleCatalog(db);
     const heelsOn = async (looks: ShownLook[]) =>
       Promise.all(looks.map(async (l) => (await catalog.getProduct(l.items.find((i) => i.group === "shoes")!.id))?.details.heelCm ?? 0));
-    const before = looksOf(await buildLooks(deps(), guest.id, session));
+    // The pieces other than the shoes, by place: they stay as they were.
+    const rest = (looks: ShownLook[]) => looks.map((l) => [l.slot, l.items.filter((i) => i.group !== "shoes").map((i) => i.id)]);
+    const build = async () => {
+      const stages: string[] = [];
+      const looks = looksOf(await buildLooks(deps(), guest.id, session, (stage) => stages.push(stage)));
+      return { looks, stages };
+    };
+    const before = (await build()).looks;
+    expect(before).toHaveLength(3);
     expect((await heelsOn(before)).every((h) => h <= 5)).toBe(true);
-    const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+    const heels = (await db.from("saved_preferences").select("id, kind, words").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+    const pref = { id: heels.id, kind: "never" as const, words: "high heels" };
     await allowException(db, guest.id, session, heels.id);
-    const jotted = await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
-    expect(jotted?.notes.find((n) => n.text === "High heels")?.status).toBe("confirmed");
-    const after = looksOf(await buildLooks(deps(), guest.id, session));
-    expect(after.length).toBeGreaterThan(0);
-    expect((await heelsOn(after)).every((h) => h > 5)).toBe(true);
-  }, 90_000);
+    const jotted = await jotWanted({ db }, guest.id, session, pref);
+    const asked = jotted!.notes.find((n) => n.text === "High heels")!;
+    expect(asked.status).toBe("confirmed");
+
+    // Each look keeps its other pieces and gets high heels, like Change, with no whole new look built
+    // (found on Sabine's iPhone in 5c, A.5: three new looks took 1 to 2 minutes).
+    const after = await build();
+    expect(after.stages).not.toContain("building");
+    expect(after.stages).toContain("revising");
+    expect((await heelsOn(after.looks)).every((h) => h > 5)).toBe(true);
+    expect(rest(after.looks)).toEqual(rest(before));
+    expect(after.looks.every((l) => l.change?.includes("(you asked for high heels)"))).toBe(true);
+    // Asking again changes nothing more.
+    const again = await build();
+    expect(again.looks.map((l) => l.id)).toEqual(after.looks.map((l) => l.id));
+
+    // The note removed (Sabine's answer to Q2 of fix plan 5): heels stay allowed, and the shoes change back.
+    await touchSessionNote({ db }, guest.id, session, asked.id, "remove");
+    const back = await build();
+    expect(back.stages).not.toContain("building");
+    expect((await heelsOn(back.looks)).every((h) => h <= 5)).toBe(true);
+    expect(rest(back.looks)).toEqual(rest(before));
+
+    // Asked and allowed again, then Remove on the "This session only" line, which takes the note back too:
+    // Never: high heels applies again, and only the shoes change.
+    await jotWanted({ db }, guest.id, session, pref);
+    expect((await heelsOn((await build()).looks)).every((h) => h > 5)).toBe(true);
+    await removeException(db, guest.id, session, heels.id);
+    await jotWanted({ db }, guest.id, session, pref, false);
+    const removed = await build();
+    expect(removed.stages).not.toContain("building");
+    expect((await heelsOn(removed.looks)).every((h) => h <= 5)).toBe(true);
+    expect(rest(removed.looks)).toEqual(rest(before));
+  }, 120_000);
+
+  it("a build stops once the session ends, and saves nothing more (5c fix 6)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    // The session ends while the looks builder is working (Sabine ended one during a 30-second build).
+    const fake = createFakeLooksBuilder();
+    const ending: LooksBuilder = {
+      build: async (input) => {
+        await db.from("sessions").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", session).throwOnError();
+        return fake.build(input);
+      },
+    };
+    await expect(buildLooks(deps(ending), guest.id, session)).rejects.toBeInstanceOf(SessionEndedError);
+    const { data } = await db.from("looks").select("id").eq("session_id", session).throwOnError();
+    expect(data).toEqual([]);
+  });
 
   it("Save to my profile takes the preference off the profile, with its exception (5c, Q2)", async () => {
     try {

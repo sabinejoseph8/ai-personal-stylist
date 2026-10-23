@@ -19,7 +19,8 @@
     "eval:rules": "vitest run --config vitest.evals.config.mts tests/evals/rules.eval.ts",
     "eval:checker": "vitest run --config vitest.evals.config.mts tests/evals/checker.eval.ts",
     "looks:report": "vitest run --config vitest.evals.config.mts tests/evals/looks-report.eval.ts",
-    "eval:revisions": "vitest run --config vitest.evals.config.mts tests/evals/revisions.eval.ts"
+    "eval:revisions": "vitest run --config vitest.evals.config.mts tests/evals/revisions.eval.ts",
+    "eval:heels": "vitest run --config vitest.evals.config.mts tests/evals/heels.eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

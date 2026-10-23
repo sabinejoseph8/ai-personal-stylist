@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.18 (22 Oct 2026)
+**Status:** Agreed, version 1.19 (22 Oct 2026)
 **Last updated:** 22 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -274,7 +274,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Saved preferences and session exceptions**
 - Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a Saved preference chip and its bookmark icon. Tapping one opens it in Profile and privacy, from Phase 6. Until then they aren't tappable (your answer to Q1 in 2d).
-- This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**. As built (5c), the lines sit after the notes, before the feedback, and Save to my profile first asks "Take "Never: high heels" off your profile? Later sessions will allow it too." with **Take it off** and **Cancel**. What the shopper asked for with it is jotted as its own note ("High heels", Confirmed). Removing that note takes back the request and keeps the permission; **Remove** on the line takes back both (5c fix 5, Q2). Asking again for something already allowed needs no card: it's jotted straight away (Q1).
+- This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**. As built (5c), the lines sit after the notes, before the feedback, and Save to my profile first asks "Take "Never: high heels" off your profile? Later sessions will allow it too." with **Take it off** and **Cancel**. What the shopper asked for with it is jotted as its own note ("High heels", Confirmed). Removing that note takes back the request and keeps the permission; **Remove** on the line takes back both (5c fix 5, Q2). Asking again for something already allowed needs no card: it's jotted straight away (Q1). Once jotted, each look shows Revising while only its pieces of that kind change (its shoes), with "Changed: … (you asked for high heels)" above it (5c fix 6).
 
 ### 4.3 Looks
 
@@ -584,6 +584,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.19 (22 Oct 2026):** 5c fix 6: once what was asked is jotted, only its pieces change in each look, with Revising and a change summary (4.2, 4.3).
 - **1.18 (22 Oct 2026):** 5c fix 5: the jotted request and the This session only line are removed separately (Q2), and asking again for something allowed needs no card (Q1) (4.2).
 - **1.17 (22 Oct 2026):** 5c: Undo feedback, Compare, the conflict card and This session only as built (4.2, 4.3).
 - **1.16 (21 Oct 2026):** 5b: the Revising chip, the change summary box, New on revised pieces and the nothing-fits note (4.3).
