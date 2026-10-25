@@ -221,8 +221,9 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(ended).toEqual([]);
     const { data } = await db.from("sessions").select("stale_call_id").eq("id", started.sessionId).single().throwOnError();
     expect(data!.stale_call_id).toBe(started.call.callId);
-    expect(await retryStaleCalls(deps({ provider: flaky }))).toBe(1);
-    expect(ended).toEqual([started.call.callId]);
+    // The shared database may hold other stale calls (an earlier run's), so count at least this one.
+    expect(await retryStaleCalls(deps({ provider: flaky }))).toBeGreaterThanOrEqual(1);
+    expect(ended).toContain(started.call.callId);
     expect((await row(started.sessionId)).stale_call_id).toBeNull();
     expect(await retryStaleCalls(deps({ provider: flaky }))).toBe(0);
   });
