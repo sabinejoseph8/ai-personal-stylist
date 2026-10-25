@@ -4,12 +4,13 @@ import { claudeAsk, RULE_MODEL } from "@/connectors/ai/claude";
 import { createRuleMaker } from "@/core/looks/rule-maker";
 import { describeRule, type FirmKind, type Rule } from "@/core/looks/rules";
 import { setting } from "../support/test-guests";
+import { countedAsk } from "../support/eval-spend";
 
 // The rule maker eval (4a, a default in the plan Sabine approved): 16 ways a shopper might word a Must
 // have or Never, each with the rule it should become, read back the way setup shows it. Pass mark: at
 // least 90% right. It runs the real rule maker (Opus 5.5, low effort), about 15 cents. Run: npm run eval:rules.
 
-const maker = createRuleMaker(claudeAsk(RULE_MODEL, "low", setting("ANTHROPIC_API_KEY")));
+const maker = createRuleMaker(countedAsk(claudeAsk(RULE_MODEL, "low", setting("ANTHROPIC_API_KEY"))));
 const OUT = "tests/evals/results/rules-latest.json";
 
 type Detail = Extract<Rule, { type: "detail" }>;

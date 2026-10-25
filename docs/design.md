@@ -1,7 +1,7 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.19 (22 Oct 2026)
-**Last updated:** 22 Oct 2026
+**Status:** Agreed, version 1.20 (24 Oct 2026)
+**Last updated:** 24 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
 
@@ -249,7 +249,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Controls: **Enlarge**, **Replace**, **Remove**. Tapping the photo also enlarges it.
 - Adding one: **Add a photo**, a secondary button in My Styling Notes, where Style around this item appears (after the saved preferences, before the notes). It shows once the conversation has started, because a photo belongs to a session, and opens the phone's own choice of Photo Library, Take Photo or Choose File. With a photo, it reads **Add another photo**, up to 5 photos (your answers to Q2 and Q3 in 3a).
 - Before the photo reader has named it, the label reads "Your item". While it reads the photo, the label says **Analyzing**. Ownership shows once an item is chosen.
-- Several photos: a row of thumbnails, with the active one outlined in Ink and labeled "Active".
+- Several photos: a row of thumbnails, with the active one outlined in Ink and labeled "Active". A new photo becomes Active once it's checked and kept, not while it uploads, so until then the earlier photo stays Active, on the page and for the looks; a thumbnail still uploading can't be tapped to make it Active. Replace keeps the earlier photo in place until the new one is kept, and a replacement that's turned away leaves it as it was (full code review, batch 1).
 - States: loading (a preview from the shopper's device straight away, with "Uploading" and a thin Emerald progress line; "Preparing preview" where the browser can't show a HEIC photo), analyzing, recognized, details to confirm, several items found, recognition failed ("Couldn't recognize this item. Describe it instead."), upload failed (with **Try again**), removed.
 - Collapsed notebook: a 40 px thumbnail with the label.
 - Enlarge shows the full photo, untilted, with its description.
@@ -584,6 +584,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.20 (24 Oct 2026):** Full code review, batch 1: a photo is Active only once kept, and Replace keeps the earlier photo until the new one is kept (4.2).
 - **1.19 (22 Oct 2026):** 5c fix 6: once what was asked is jotted, only its pieces change in each look, with Revising and a change summary (4.2, 4.3).
 - **1.18 (22 Oct 2026):** 5c fix 5: the jotted request and the This session only line are removed separately (Q2), and asking again for something allowed needs no card (Q1) (4.2).
 - **1.17 (22 Oct 2026):** 5c: Undo feedback, Compare, the conflict card and This session only as built (4.2, 4.3).

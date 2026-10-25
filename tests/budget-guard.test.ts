@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { type BudgetLimits, createBudgetGuard, endsBecause, readBudgetLimits } from "@/lib/budget-guard";
-import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
+import { canRunDatabaseTests, createTestGuest, recordEvalSpend, serverDb, type TestGuest } from "./support/test-guests";
 
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
 
@@ -111,5 +111,32 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
     for (const r of [reserve, record, status, tidy, expired]) expect(r.error).not.toBeNull();
     const write = await guest.db.from("usage").insert({ user_id: guest.id, video_seconds: -600 });
     expect(write.error).not.toBeNull();
+  });
+});
+
+describe.skipIf(!canRunDatabaseTests)("measurement runs count against the month (review batch 1, E1)", () => {
+  const db = serverDb();
+  const today = new Date().toISOString().slice(0, 10);
+  const kept = async (microdollars: number) =>
+    (await db.from("usage").select("id, claude_microdollars").is("user_id", null).eq("day", today).eq("claude_microdollars", microdollars)).data ?? [];
+
+  it("a test guest's real Claude spending stays in the month's totals when asked, with no guest attached", async () => {
+    const guest = await createTestGuest();
+    const guard = createBudgetGuard(db, readBudgetLimits({}));
+    // An odd amount, so the row can be found and removed again afterwards.
+    await guard.recordAi(guest.id, "claude", 0.012347);
+    await guest.remove({ keepAiSpend: true });
+    const rows = await kept(12347);
+    expect(rows).toHaveLength(1);
+    await db.from("usage").delete().eq("id", rows[0].id);
+  }, 30_000);
+
+  it("spending made outside the guard is recorded the same way", async () => {
+    await recordEvalSpend(0.012349);
+    const rows = await kept(12349);
+    expect(rows).toHaveLength(1);
+    await db.from("usage").delete().eq("id", rows[0].id);
+    await recordEvalSpend(0);
+    expect(await kept(0)).toEqual([]);
   });
 });

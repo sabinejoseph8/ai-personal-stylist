@@ -78,6 +78,6 @@ it("revisions report", async () => {
     writeFileSync(OUT, out.join("\n"));
     expect(holds).toBe(true);
   } finally {
-    await guest.remove();
+    await guest.remove({ keepAiSpend: true });
   }
 }, 600_000);

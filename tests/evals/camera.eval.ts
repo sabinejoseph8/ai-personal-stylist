@@ -4,6 +4,7 @@ import { expect, it } from "vitest";
 import { claudeAsk, type Effort, LIVE_MODEL } from "@/connectors/ai/claude";
 import { createCameraReader, type Sighting } from "@/core/camera/reader";
 import { setting } from "../support/test-guests";
+import { countedAsk } from "../support/eval-spend";
 import { colorOk, PAIRS, pairPhoto, photoOf, pickSingles, typeOk } from "./catalog-answers";
 
 // The camera reader check (3c): the photo eval's 20 catalog photos and 4 two-item photos, shrunk to a
@@ -14,7 +15,7 @@ import { colorOk, PAIRS, pairPhoto, photoOf, pickSingles, typeOk } from "./catal
 
 const EFFORT = (process.env.CAMERA_EVAL_EFFORT ?? "low") as Effort;
 const OUT = process.env.CAMERA_EVAL_OUT ?? "tests/evals/results/camera-latest.json";
-const reader = createCameraReader(claudeAsk(LIVE_MODEL, EFFORT, setting("ANTHROPIC_API_KEY")));
+const reader = createCameraReader(countedAsk(claudeAsk(LIVE_MODEL, EFFORT, setting("ANTHROPIC_API_KEY"))));
 const AT_ONCE = 4;
 
 const frameOf = async (image: Buffer) => (await sharp(image).resize(640, 640, { fit: "inside" }).jpeg({ quality: 70 }).toBuffer()).toString("base64");

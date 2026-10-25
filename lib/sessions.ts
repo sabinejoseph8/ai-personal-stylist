@@ -81,7 +81,8 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
   const { data: claimed } = await claim.select("id").throwOnError();
 
   if (claimed?.length && s.call_id) {
-    await deps.provider.end(s.call_id).catch((e) => console.error(`ending a call failed: ${e instanceof Error ? e.message : e}`));
+    // Ending or hard-deleting at Tavus can fail; the id is kept so the daily job tries again (review batch 1).
+    await endAtProvider(deps, s.id, s.call_id);
     if (s.reserved_seconds !== null && s.reserved_day) {
       const ran = s.call_started_at ? (usedUntil - Date.parse(s.call_started_at)) / 1000 : 0;
       await deps.guard.settleTime(
@@ -99,6 +100,38 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
     await deleteSessionPhotos(deps.db, s.id).catch((e) => console.error(`deleting a session's photos failed: ${e instanceof Error ? e.message : e}`));
     await deps.db.rpc("delete_session_data", { session: s.id }).throwOnError();
   }
+}
+
+/** Ends and hard-deletes a call at the provider; a failure is remembered on the session for retryStaleCalls. */
+async function endAtProvider(deps: SessionDeps, sessionId: string, callId: string) {
+  try {
+    await deps.provider.end(callId);
+    return true;
+  } catch (e) {
+    console.error(`ending a call failed: ${e instanceof Error ? e.message : e}`);
+    await deps.db.from("sessions").update({ stale_call_id: callId }).eq("id", sessionId).throwOnError();
+    return false;
+  }
+}
+
+/**
+ * Calls whose end or hard-delete at Tavus failed (stale_call_id): tried again, in the daily job, so a
+ * conversation never stays at Tavus for want of a retry (the 18 Oct 2026 hard-delete decision).
+ * Returns how many it ended.
+ */
+export async function retryStaleCalls(deps: SessionDeps, limit = 50) {
+  const { data } = await deps.db.from("sessions").select("id, stale_call_id").not("stale_call_id", "is", null).limit(limit).throwOnError();
+  let ended = 0;
+  for (const s of data ?? []) {
+    try {
+      await deps.provider.end(s.stale_call_id as string);
+      await deps.db.from("sessions").update({ stale_call_id: null }).eq("id", s.id).eq("stale_call_id", s.stale_call_id).throwOnError();
+      ended++;
+    } catch (e) {
+      console.error(`retrying a call's end failed: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+  return ended;
 }
 
 /**
@@ -153,32 +186,52 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
     session = created.data ?? (await openSession(deps, guestId));
     if (!session) throw new Error(`opening a session failed: ${created.error?.message}`);
   }
-  // One call at a time: a call still running in another tab ends first.
-  if (session.call_id) await finishCall(deps, session, "paused");
+  // One call at a time: a call still running in another tab ends first. It counts until the shopper's
+  // last activity plus Tavus's 30 seconds, as a left-behind call does: a phone that dropped the call
+  // and resumed later was charged for the whole time away (review batch 1, A2).
+  if (session.call_id) await finishCall(deps, session, "paused", lastUse(session));
 
   const reserved = await deps.guard.reserveTime(guestId, "video");
   if (!reserved.ok) return { ok: false, reason: reserved.reason };
-  const call = await deps.provider.start({ sessionId: session.id, maxSeconds: reserved.reservation.seconds });
-  if (!call.ok) {
+  const giveBack = async () => {
     await deps.guard.settleTime(guestId, reserved.reservation, 0);
     if (!resumed) await deps.db.from("sessions").delete().eq("id", session.id).throwOnError();
+  };
+  // A start that throws (Tavus unreachable, a reply that isn't JSON) gives the time back too: left
+  // reserved, it cost the shopper their day and the month 10 minutes with no call made (review batch 1, A1).
+  let call: Awaited<ReturnType<CallProvider["start"]>>;
+  try {
+    call = await deps.provider.start({ sessionId: session.id, maxSeconds: reserved.reservation.seconds });
+  } catch (e) {
+    console.error(`starting a call failed: ${e instanceof Error ? e.message : e}`);
+    call = { ok: false, reason: "unavailable" };
+  }
+  if (!call.ok) {
+    await giveBack();
     return { ok: false, reason: call.reason === "busy" ? "video_busy" : "video_unavailable" };
   }
 
   const now = new Date().toISOString();
-  await deps.db
-    .from("sessions")
-    .update({
-      status: "active",
-      engine: deps.provider.engine,
-      call_id: call.callId,
-      call_started_at: now,
-      reserved_seconds: reserved.reservation.seconds,
-      reserved_day: reserved.reservation.day,
-      last_activity_at: now,
-    })
-    .eq("id", session.id)
-    .throwOnError();
+  try {
+    await deps.db
+      .from("sessions")
+      .update({
+        status: "active",
+        engine: deps.provider.engine,
+        call_id: call.callId,
+        call_started_at: now,
+        reserved_seconds: reserved.reservation.seconds,
+        reserved_day: reserved.reservation.day,
+        last_activity_at: now,
+      })
+      .eq("id", session.id)
+      .throwOnError();
+  } catch (e) {
+    // The call exists but nothing records it: end it, and give the time back.
+    await endAtProvider(deps, session.id, call.callId).catch(() => null);
+    await giveBack().catch((inner) => console.error(`giving back a failed start's time failed: ${inner instanceof Error ? inner.message : inner}`));
+    throw e;
+  }
   return {
     ok: true,
     sessionId: session.id,
@@ -190,10 +243,12 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
 }
 
 /**
- * End (R12), or a call that stopped by itself (keep: true, so the session can be resumed).
+ * End (R12), or a call that stopped by itself (keep: true, so the session can be resumed). A stopped
+ * call names itself (callId): one that stopped before a reconnect can arrive late, after the new call
+ * is recorded, and must not end that one (review batch 1, A3). End by the button ends whatever runs.
  * Returns null when the session isn't the guest's.
  */
-export async function endConversation(deps: SessionDeps, guestId: string, sessionId: string, keep = false) {
+export async function endConversation(deps: SessionDeps, guestId: string, sessionId: string, keep = false, callId?: string) {
   const { data } = await deps.db
     .from("sessions")
     .select(COLUMNS)
@@ -203,6 +258,7 @@ export async function endConversation(deps: SessionDeps, guestId: string, sessio
     .throwOnError();
   if (!data) return null;
   if (data.status === "ended") return { status: "ended" as const };
+  if (keep && callId && data.call_id !== callId) return { status: data.status === "paused" ? ("paused" as const) : ("active" as const) };
   const status = keep ? "paused" : "ended";
   await finishCall(deps, data, status);
   return { status };

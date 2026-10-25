@@ -4,7 +4,7 @@ import { createFakeProvider } from "@/connectors/conversation/fake";
 import type { CallProvider } from "@/connectors/conversation/types";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { addPhoto, finishPhoto } from "@/lib/photos-service";
-import { endConversation, endLeftBehindCalls, openSession, type SessionDeps, startConversation } from "@/lib/sessions";
+import { endConversation, endLeftBehindCalls, openSession, retryStaleCalls, type SessionDeps, startConversation } from "@/lib/sessions";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // 2a and 2e: sessions (R12) with the fake engine, against the real database: start, resume, End, the
@@ -160,12 +160,72 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(second).toMatchObject({ ok: true, sessionId: first.sessionId, resumed: true });
   });
 
-  it("a new start ends a call still running in another tab first", async () => {
+  it("a new start ends a call still running in another tab first, counting it until the last activity plus 30 seconds (review batch 1, A2)", async () => {
     const first = await startConversation(deps(), guest.id);
+    if (!first.ok) throw new Error(first.reason);
+    // The phone dropped the call after 2 minutes; the shopper resumes 20 minutes later.
+    const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+    await db.from("sessions").update({ call_started_at: minutesAgo(20), last_activity_at: minutesAgo(18) }).eq("id", first.sessionId).throwOnError();
     const second = await startConversation(deps(), guest.id);
-    if (!first.ok || !second.ok) throw new Error("expected two starts");
+    if (!second.ok) throw new Error("expected two starts");
     expect(second.sessionId).toBe(first.sessionId);
     expect(ended).toEqual([first.call.callId]);
+    await endConversation(deps(), guest.id, second.sessionId, true, second.call.callId);
+    const used = await usedToday(); // 2 minutes of use plus Tavus's 30 seconds, not the whole 20 minutes
+    expect(used).toBeGreaterThanOrEqual(145);
+    expect(used).toBeLessThanOrEqual(160);
+  });
+
+  it("a start that throws gives the time back and leaves no empty session (review batch 1, A1)", async () => {
+    const down: CallProvider = {
+      engine: "video",
+      start: async () => {
+        throw new Error("tavus: unreachable");
+      },
+      end: async () => {},
+    };
+    expect(await startConversation(deps({ provider: down }), guest.id)).toEqual({ ok: false, reason: "video_unavailable" });
+    expect(await usedToday()).toBe(0);
+    const { data } = await db.from("sessions").select("id").eq("user_id", guest.id);
+    expect(data).toEqual([]);
+    // The day's time is still there for the next try.
+    const next = await startConversation(deps(), guest.id);
+    expect(next.ok).toBe(true);
+  });
+
+  it("a stopped call that names an old call leaves the new call alone (review batch 1, A3)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    // A late "the call stopped" message from before a reconnect.
+    expect(await endConversation(deps(), guest.id, started.sessionId, true, "fake-old-call")).toEqual({ status: "active" });
+    expect(ended).toEqual([]);
+    expect(await row(started.sessionId)).toMatchObject({ status: "active", call_id: started.call.callId });
+    // The right call's message pauses the session; End by the button needs no call id.
+    expect(await endConversation(deps(), guest.id, started.sessionId, true, started.call.callId)).toEqual({ status: "paused" });
+    expect(ended).toEqual([started.call.callId]);
+    expect(await endConversation(deps(), guest.id, started.sessionId)).toEqual({ status: "ended" });
+  });
+
+  it("a call whose end fails at the provider is remembered, and the daily job's retry ends it (review batch 1, E5)", async () => {
+    let failures = 1;
+    const flaky: CallProvider = {
+      ...recording(),
+      end: async (id) => {
+        if (failures-- > 0) throw new Error("tavus: ending a call failed (500)");
+        ended.push(id);
+      },
+    };
+    const started = await startConversation(deps({ provider: flaky }), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    expect(await endConversation(deps({ provider: flaky }), guest.id, started.sessionId)).toEqual({ status: "ended" });
+    expect(ended).toEqual([]);
+    const { data } = await db.from("sessions").select("stale_call_id").eq("id", started.sessionId).single().throwOnError();
+    expect(data!.stale_call_id).toBe(started.call.callId);
+    // The shared database may hold other stale calls (an earlier run's), so count at least this one.
+    expect(await retryStaleCalls(deps({ provider: flaky }))).toBeGreaterThanOrEqual(1);
+    expect(ended).toContain(started.call.callId);
+    expect((await row(started.sessionId)).stale_call_id).toBeNull();
+    expect(await retryStaleCalls(deps({ provider: flaky }))).toBe(0);
   });
 
   it("a session left 30 minutes without activity ends, and the next start opens a new one (R12)", async () => {

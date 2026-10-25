@@ -20,7 +20,30 @@ const secret = setting("SUPABASE_SECRET_KEY");
 
 export const canRunDatabaseTests = Boolean(secret);
 
-export type TestGuest = { db: SupabaseClient; id: string; remove: () => Promise<void> };
+/**
+ * `remove({ keepAiSpend: true })` keeps the guest's real Claude and OpenAI spending in the month's totals,
+ * with no guest attached, so a measurement run counts against the app's monthly stop as the tech spec
+ * says (review batch 1): the rows used to go with the guest, so the app thought it had room that the
+ * Anthropic account didn't.
+ */
+export type TestGuest = { db: SupabaseClient; id: string; remove: (options?: { keepAiSpend?: boolean }) => Promise<void> };
+
+/** Today in UTC, as the usage table counts days. */
+const today = () => new Date().toISOString().slice(0, 10);
+
+/** Keeps a guest's AI spending in the month's totals before their usage rows go. */
+async function keepAiSpend(server: SupabaseClient, id: string) {
+  const { data } = await server.from("usage").select("day, claude_microdollars, openai_microdollars").eq("user_id", id);
+  const rows = (data ?? []).filter((u) => Number(u.claude_microdollars) > 0 || Number(u.openai_microdollars) > 0);
+  if (rows.length) await server.from("usage").insert(rows.map((u) => ({ user_id: null, day: u.day, claude_microdollars: u.claude_microdollars, openai_microdollars: u.openai_microdollars })));
+}
+
+/** Records real Claude spending made outside the budget guard (an eval calling Claude directly), with no guest attached. */
+export async function recordEvalSpend(claudeUsd: number) {
+  const microdollars = Math.round(claudeUsd * 1e6);
+  if (microdollars <= 0) return;
+  await serverDb().from("usage").insert({ user_id: null, day: today(), claude_microdollars: microdollars });
+}
 
 /** Supabase with the server key, to set up test guests and check what the database really holds. */
 export function serverDb() {
@@ -154,8 +177,9 @@ export async function createTestGuest(options: { fresh?: boolean } = {}): Promis
       id,
       // The full reset happens when the guest is next taken. Usage is cleared now, because it counts
       // toward the month's totals, which the live site shares.
-      remove: async () => {
+      remove: async (options = {}) => {
         try {
+          if (options.keepAiSpend) await keepAiSpend(serverDb(), id);
           await serverDb().from("usage").delete().eq("user_id", id);
           await save();
         } finally {

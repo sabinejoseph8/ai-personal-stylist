@@ -5,6 +5,7 @@ import { claudeAsk, PHOTO_MODEL } from "@/connectors/ai/claude";
 import type { PhotoItem } from "@/core/photos/item";
 import { createPhotoReader } from "@/core/photos/reader";
 import { setting } from "../support/test-guests";
+import { countedAsk } from "../support/eval-spend";
 import { colorOk, PAIRS, pairPhoto, patternOk, photoOf, pickSingles, type Product, styleOk, typeOk } from "./catalog-answers";
 
 // The photo eval (Phase 3, Sabine's answer to Q2 in 3b): 20 sample catalog photos, one of each kind
@@ -14,7 +15,7 @@ import { colorOk, PAIRS, pairPhoto, patternOk, photoOf, pickSingles, type Produc
 // (Opus 5.5, low effort) the way the app does, so it costs about 35 cents. Run: npm run eval:photos.
 // Catalog photos are cleaner than phone photos, so Sabine's iPhone check covers real ones.
 
-const reader = createPhotoReader(claudeAsk(PHOTO_MODEL, "low", setting("ANTHROPIC_API_KEY")));
+const reader = createPhotoReader(countedAsk(claudeAsk(PHOTO_MODEL, "low", setting("ANTHROPIC_API_KEY"))));
 const OUT = "tests/evals/results/photos-latest.json";
 const AT_ONCE = 4;
 

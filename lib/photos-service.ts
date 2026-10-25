@@ -32,14 +32,18 @@ type Row = {
   recognized_details: unknown;
   ownership: Ownership;
   details_seq: number;
+  /** A replacement on its way (review batch 1): the original stays until this version is kept. */
+  pending_version: number | null;
 };
-const COLUMNS = "id, user_id, version, status, source, active, photo_path, thumbnail_path, recognized_details, ownership, details_seq";
+const COLUMNS = "id, user_id, version, status, source, active, photo_path, thumbnail_path, recognized_details, ownership, details_seq, pending_version";
 
 const itemOf = (r: Row): StyleItem => ({ reading: savedReading(r.recognized_details), ownership: r.ownership });
 
 /** Where the browser sends a photo before it's checked. */
 const incomingPath = (owner: string, id: string, version: number) => `${owner}/incoming/${id}-v${version}`;
-const allPaths = (r: Row) => [r.photo_path, r.thumbnail_path, incomingPath(r.user_id, r.id, r.version)];
+/** Where a version's kept files live, as the database's session_asset_path puts them. */
+const keptPath = (owner: string, session: string, id: string, version: number, thumbnail: boolean) => `${owner}/${session}/${id}-v${version}${thumbnail ? "-thumb" : ""}.jpg`;
+const allPaths = (r: Row) => [r.photo_path, r.thumbnail_path, incomingPath(r.user_id, r.id, r.version), ...(r.pending_version ? [incomingPath(r.user_id, r.id, r.pending_version)] : [])];
 
 export async function removeFiles(db: SupabaseClient, paths: string[]) {
   for (let i = 0; i < paths.length; i += 100) {
@@ -98,7 +102,7 @@ export async function listPhotos(db: SupabaseClient, guestId: string, sessionId:
 }
 
 export type AddRefusal = "session" | "full" | "photo";
-type Added = { id: string; version: number; replaced_paths: string[] } | { refused: AddRefusal };
+type Added = { id: string; version: number } | { refused: AddRefusal };
 
 /**
  * Add a photo, or Replace one with a new version of it (R26, R31). Returns the photo's id and
@@ -111,8 +115,8 @@ export async function addPhoto(db: SupabaseClient, guestId: string, sessionId: s
     .throwOnError();
   const added = data as Added;
   if ("refused" in added) return { ok: false as const, reason: added.refused };
-  // The replaced version's files go straight away.
-  if (replaces) await removeFiles(db, [...added.replaced_paths, incomingPath(guestId, added.id, added.version - 1)]).catch(logFailure("deleting a replaced photo"));
+  // A replacement is pending until it's kept: the original, its reading and its files stay meanwhile
+  // (review batch 1; they went at once, so a failed replacement lost the original).
   const link = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, added.id, added.version)));
   if (link.error) throw new Error(`making an upload link failed: ${link.error.message}`);
   return { ok: true as const, id: added.id, version: added.version, uploadUrl: link.data.signedUrl };
@@ -149,9 +153,12 @@ export async function keepUpload(db: SupabaseClient, original: string, paths: { 
 
 /**
  * The browser has sent the photo: check it, clean it, and keep the clean copy (FR-27). The original
- * is deleted either way. A photo turned away is removed. Returns null when the photo has been
- * replaced or removed since, its session has ended, or it was already kept: a photo is only ever
- * checked and read once, so a repeated request can't pay for more readings (Phase 3 code review).
+ * is deleted either way. A new photo turned away is removed; a replacement turned away leaves the
+ * original as it was (review batch 1). A new photo becomes the active one only now, once kept: active
+ * from the moment its link was issued, a failed upload left the session with no item to style around.
+ * Returns null when the photo has been replaced or removed since, its session has ended, or it was
+ * already kept: a photo is only ever checked and read once, so a repeated request can't pay for more
+ * readings (Phase 3 code review).
  */
 export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId: string, photoId: string, version: number) {
   const { data: row } = await db
@@ -163,25 +170,36 @@ export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId
     .maybeSingle<Row>()
     .throwOnError();
   const original = incomingPath(guestId, photoId, version);
-  if (!row || row.version !== version || row.status !== "uploading") {
+  const replacing = row?.pending_version === version;
+  if (!row || !(replacing || (row.status === "uploading" && row.version === version))) {
     await removeFiles(db, [original]).catch(logFailure("deleting an outdated upload"));
     return null;
   }
 
-  const cleaned = await keepUpload(db, original, { photo: row.photo_path, thumbnail: row.thumbnail_path });
+  const paths = { photo: keptPath(guestId, sessionId, photoId, version, false), thumbnail: keptPath(guestId, sessionId, photoId, version, true) };
+  const cleaned = await keepUpload(db, original, paths);
   if (!cleaned.ok) {
-    if (cleaned.reason !== "missing") await removePhoto(db, guestId, sessionId, photoId);
+    if (cleaned.reason !== "missing") {
+      // Turned away: a replacement is dropped and the original stays; a new photo goes.
+      if (replacing && row.status === "ready") await db.from("session_assets").update({ pending_version: null }).eq("id", photoId).eq("pending_version", version).throwOnError();
+      else await removePhoto(db, guestId, sessionId, photoId);
+    }
     return cleaned;
   }
-  const { data: kept } = await db.rpc("finish_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
-  if (!kept) {
-    await removeFiles(db, [row.photo_path, row.thumbnail_path]).catch(logFailure("deleting an outdated photo"));
+  const { data } = await db.rpc("finish_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
+  const finished = data as { kept: boolean; old_paths?: string[] };
+  if (!finished.kept) {
+    await removeFiles(db, [paths.photo, paths.thumbnail]).catch(logFailure("deleting an outdated photo"));
     return null;
   }
+  // The replaced version's files go only now that the new one is kept.
+  if (replacing) await removeFiles(db, [...(finished.old_paths ?? []), incomingPath(guestId, photoId, row.version)]).catch(logFailure("deleting a replaced photo"));
   // The photo reader starts on it next (3b): until it answers, the photo shows Analyzing.
   const analyzing = { ...ANALYZING, since: new Date().toISOString() };
   await db.rpc("save_asset_details", { asset: photoId, expected_version: version, details: analyzing }).throwOnError();
-  const [photo] = await shownPhotos(db, [{ ...row, recognized_details: analyzing, ownership: null }]);
+  // As kept: a new photo is the active one now.
+  const { data: kept } = await db.from("session_assets").select(COLUMNS).eq("id", photoId).single<Row>().throwOnError();
+  const [photo] = await shownPhotos(db, [{ ...kept, recognized_details: analyzing, ownership: null }]);
   if (!photo) throw new Error("making photo links failed");
   return { ok: true as const, photo, jpeg: cleaned.jpeg };
 }
@@ -270,9 +288,10 @@ export async function choosePhoto(db: SupabaseClient, guestId: string, sessionId
 /** Remove (R31): the photo and its files. False when there's no such photo. */
 export async function removePhoto(db: SupabaseClient, guestId: string, sessionId: string, photoId: string) {
   const { data } = await db.rpc("remove_session_asset", { owner: guestId, session: sessionId, asset: photoId }).throwOnError();
-  const removed = data as { version: number; paths: string[] } | null;
+  const removed = data as { version: number; pending_version: number | null; paths: string[] } | null;
   if (!removed) return false;
-  await removeFiles(db, [...removed.paths, incomingPath(guestId, photoId, removed.version)]).catch(logFailure("deleting a removed photo"));
+  const incoming = [removed.version, ...(removed.pending_version ? [removed.pending_version] : [])].map((v) => incomingPath(guestId, photoId, v));
+  await removeFiles(db, [...removed.paths, ...incoming]).catch(logFailure("deleting a removed photo"));
   return true;
 }
 

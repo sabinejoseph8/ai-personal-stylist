@@ -9,6 +9,7 @@ import type { OwnedPiece, ResolvedItem } from "@/core/looks/look";
 import { SAMPLE_PROFILE } from "@/lib/profile";
 import { catalogProducts } from "../support/catalog-products";
 import { setting } from "../support/test-guests";
+import { countedAsk } from "../support/eval-spend";
 
 // The checker eval (4b; Phase 4 automated test, tech spec 8): about 30 looks made from the real sample
 // catalog, each with the outcome it should get. Rule breaks, such as high heels with "Never: high heels",
@@ -20,7 +21,7 @@ import { setting } from "../support/test-guests";
 // the sample looks in 4b, it also checks that the main pieces are in her preferred or liked colors, and
 // that a coat she didn't ask for is never "missing".
 
-const judge = createJudge(claudeAsk(LOOKS_MODEL, "medium", setting("ANTHROPIC_API_KEY")));
+const judge = createJudge(countedAsk(claudeAsk(LOOKS_MODEL, "medium", setting("ANTHROPIC_API_KEY"))));
 const OUT = "tests/evals/results/checker-latest.json";
 
 const bySlug = (slug: string) => {

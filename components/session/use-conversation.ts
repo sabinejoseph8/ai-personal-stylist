@@ -52,10 +52,14 @@ function waitUntilOnline(ms: number) {
 /** How starting a call went. `final` means trying again won't help (a refusal or the microphone). */
 type Outcome = { ok: true } | { ok: false; final: boolean; message?: string; reason?: string };
 
-/** Tells the server the call is over: End closes the session, keep pauses it so it can be resumed. */
-function endOnServer(sessionId: string, keep: boolean, beacon = false) {
+/**
+ * Tells the server the call is over: End closes the session, keep pauses it so it can be resumed. A
+ * stopped call names itself, so a message delayed by a bad connection can't end the call that
+ * replaced it after a reconnect (review batch 1).
+ */
+function endOnServer(sessionId: string, keep: boolean, beacon = false, callId?: string) {
   const url = `/api/sessions/${sessionId}/end`;
-  const body = JSON.stringify({ keep });
+  const body = JSON.stringify({ keep, callId });
   if (beacon && navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" }))) return Promise.resolve();
   return fetch(url, {
     method: "POST",
@@ -93,7 +97,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const [problem, setProblem] = useState<string | null>(null);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const engine = useRef<ConversationEngine | null>(null);
-  const live = useRef<{ sessionId: string; ending: boolean } | null>(null);
+  const live = useRef<{ sessionId: string; callId: string; ending: boolean } | null>(null);
   const shown = useRef(false);
   // R13: when the call's time runs out, and which limit ends it. R14: each Start, End or Try again
   // starts a new attempt, so a dropped call's retries stop when the shopper does something else.
@@ -106,7 +110,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   useLayoutEffect(() => {
     shown.current = true;
     const onPageHide = () => {
-      if (live.current) void endOnServer(live.current.sessionId, true, true);
+      if (live.current) void endOnServer(live.current.sessionId, true, true, live.current.callId);
     };
     window.addEventListener("pagehide", onPageHide);
     return () => {
@@ -116,7 +120,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       if (current) {
         current.ending = true;
         void engine.current?.leave();
-        void endOnServer(current.sessionId, true);
+        void endOnServer(current.sessionId, true, false, current.callId);
       }
       live.current = null;
       engine.current = null;
@@ -150,7 +154,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     engine.current = null;
     callEnds.current = null;
     void e?.leave();
-    void endOnServer(current.sessionId, true);
+    void endOnServer(current.sessionId, true, false, current.callId);
     return true;
   }
 
@@ -255,7 +259,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : "day" };
     const e = await engineFor(data.call.joinUrl);
     engine.current = e;
-    live.current = { sessionId: data.sessionId, ending: false };
+    live.current = { sessionId: data.sessionId, callId: data.call.callId, ending: false };
     const stopListening = e.on(onEvent);
     e.attach({ video: video.current, audio: audio.current });
     try {

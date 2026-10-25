@@ -50,12 +50,13 @@ export function createTavusProvider(options: { apiKey?: string; palId?: string; 
       return { ok: true, callId: data.conversation_id, joinUrl: data.conversation_url };
     },
 
+    // A failure throws, so the caller can remember the call and try again later (review batch 1).
     async end(callId) {
       const id = encodeURIComponent(callId);
       const ended = await tavus("POST", `/conversations/${id}/end`);
       const deleted = await tavus("DELETE", `/conversations/${id}?hard=true`);
-      if (!ended.ok && ended.status !== 404) console.error(`tavus: ending a call failed (${ended.status})`);
-      if (!deleted.ok && deleted.status !== 404) console.error(`tavus: deleting a call failed (${deleted.status})`);
+      if (!ended.ok && ended.status !== 404) throw new Error(`tavus: ending a call failed (${ended.status})`);
+      if (!deleted.ok && deleted.status !== 404) throw new Error(`tavus: deleting a call failed (${deleted.status})`);
     },
   };
 }

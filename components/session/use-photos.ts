@@ -101,8 +101,9 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       const gone = list.find((p) => p.key === key);
       if (gone?.photoUrl.startsWith("blob:")) URL.revokeObjectURL(gone.photoUrl);
       const rest = list.filter((p) => p.key !== key);
-      // The newest photo left becomes the one to style around, as on the server.
-      return gone?.active && rest.length ? rest.map((p, i) => ({ ...p, active: i === rest.length - 1 })) : rest;
+      // The newest kept photo left becomes the one to style around, as on the server.
+      const newest = rest.findLast((p) => p.state === "ready")?.key;
+      return gone?.active && newest ? rest.map((p) => ({ ...p, active: p.key === newest })) : rest;
     });
   };
 
@@ -121,10 +122,12 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     tickets.current.set(key, ticket);
     const preview = URL.createObjectURL(file);
     const shown: Partial<PagePhoto> = { state: "uploading", progress: 0, photoUrl: preview, thumbnailUrl: preview, file, source, item: null, inWardrobe: false };
+    // A new photo becomes the one to style around only once it's kept, as on the server (review batch
+    // 1): the earlier photo stays in use while this one uploads, and if the upload fails.
     setPhotos((list) => {
       if (photo) return list.map((p) => (p.key === key ? { ...p, ...shown } : p));
-      const added: PagePhoto = { key, id: null, version: 0, active: true, ...(shown as Omit<PagePhoto, "key" | "id" | "version" | "active">) };
-      return [...list.map((p) => ({ ...p, active: false })), added];
+      const added: PagePhoto = { key, id: null, version: 0, active: false, ...(shown as Omit<PagePhoto, "key" | "id" | "version" | "active">) };
+      return [...list, added];
     });
     if (photo?.photoUrl.startsWith("blob:")) URL.revokeObjectURL(photo.photoUrl);
 
@@ -178,6 +181,8 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
                   URL.revokeObjectURL(preview);
               });
               update(key, ticket, { item: p.item });
+              // Kept: it's the one to style around now.
+              if (p.active) setPhotos((list) => list.map((q) => ({ ...q, active: q.key === key })));
             } else if (line.item && update(key, ticket, { item: line.item })) {
               read = true;
               if (line.context) said.current.onContext(line.context);
@@ -195,8 +200,11 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       const result = (await done.json().catch(() => ({}))) as ReadyLine;
       if (tickets.current.get(key) !== ticket) return;
       if (result.reason === "type" || result.reason === "size" || result.reason === "unreadable" || result.reason === "photo") {
-        // The server turned the file away, and removed it.
-        drop(key);
+        // The server turned the file away. A replacement leaves the original as it was; a new photo goes.
+        if (photo?.state === "ready" && result.reason !== "photo") {
+          URL.revokeObjectURL(preview);
+          update(key, ticket, { state: "ready", progress: 1, photoUrl: photo.photoUrl, thumbnailUrl: photo.thumbnailUrl, version: photo.version, file: undefined, source: photo.source, item: photo.item, inWardrobe: photo.inWardrobe });
+        } else drop(key);
         setProblem(result.error ?? PHOTO_MESSAGES.type);
       } else failed();
     } catch {
@@ -207,7 +215,8 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
   /** Switch the active photo (R31): it shows at once, and goes back if the server says no. */
   async function choose(photo: PagePhoto) {
     const id = session.current;
-    if (!id || !photo.id || photo.active) return;
+    // Only a kept photo can be the item to style around (review batch 1).
+    if (!id || !photo.id || photo.active || photo.state !== "ready") return;
     const before = photos;
     setPhotos((list) => list.map((p) => ({ ...p, active: p.key === photo.key })));
     const res = await fetch(`/api/sessions/${id}/assets/${photo.id}`, {
