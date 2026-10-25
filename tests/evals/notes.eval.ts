@@ -9,6 +9,7 @@ import { createNotesReader, type LookForReader } from "@/core/notes/reader";
 import { active, type NextQuestion, type Note, NOTE_CAP } from "@/core/notes/types";
 import { changeItem, chosenItem, type DetailName, itemForReader, type StyleItem } from "@/core/photos/item";
 import { setting } from "../support/test-guests";
+import { countedAsk } from "../support/eval-spend";
 
 // The notes evaluation (tech spec 8, Phase 2): about 30 sentences against the real Claude, replayed the
 // way Phase 0 measured them: words arrive at 2.5 a second and are sent twice a second, money and dates
@@ -85,7 +86,7 @@ const EFFORT = (process.env.NOTES_EVAL_EFFORT ?? "off") as Effort;
 const OVERLAP = process.env.NOTES_EVAL_OVERLAP !== "0";
 const SEND_EVERY_MS = Number(process.env.NOTES_EVAL_SEND_MS ?? 500);
 const OUT = process.env.NOTES_EVAL_OUT ?? "tests/evals/results/notes-latest.json";
-const reader = createNotesReader(claudeAsk(LIVE_MODEL, EFFORT, setting("ANTHROPIC_API_KEY")));
+const reader = createNotesReader(countedAsk(claudeAsk(LIVE_MODEL, EFFORT, setting("ANTHROPIC_API_KEY"))));
 const WORDS_PER_SECOND = 2.5;
 const AT_ONCE = 3;
 const lower = (s: string) => s.toLowerCase();

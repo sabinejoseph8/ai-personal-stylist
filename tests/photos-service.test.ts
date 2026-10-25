@@ -93,20 +93,60 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     const second = await addPhoto(db, a.id, session, "upload", first.id);
     if (!second.ok) throw new Error(second.reason);
     expect(second).toMatchObject({ id: first.id, version: 2 });
-    // The replaced version's files go at once.
-    expect(await files(`${a.id}/${session}`)).toEqual([]);
+    // The original stays, files and all, until the new version is kept (review batch 1).
+    expect(await files(`${a.id}/${session}`)).toHaveLength(2);
+    expect(await rows()).toMatchObject([{ version: 1, pending_version: 2, status: "ready", active: true }]);
 
+    expect((await put(second.uploadUrl, await jpeg("#b42318"))).ok).toBe(true);
+    // A slow finish for the old version doesn't bring it back.
+    expect(await finishPhoto(db, a.id, session, first.id, 1)).toBeNull();
+    const kept = await finishPhoto(db, a.id, session, second.id, 2);
+    expect(kept).toMatchObject({ ok: true, photo: { version: 2, active: true } });
     // The photo reader's answer for version 1 arrives late (3b): refused.
     const late = await db.rpc("save_asset_details", { asset: first.id, expected_version: 1, details: { name: "Navy blazer" } });
     expect(late.data).toBe(false);
-    expect((await put(second.uploadUrl, await jpeg("#b42318"))).ok).toBe(true);
-    // A slow finish for the old version doesn't bring it back either.
-    expect(await finishPhoto(db, a.id, session, first.id, 1)).toBeNull();
-    const kept = await finishPhoto(db, a.id, session, second.id, 2);
-    expect(kept).toMatchObject({ ok: true, photo: { version: 2 } });
     const now = await db.rpc("save_asset_details", { asset: first.id, expected_version: 2, details: { name: "Red dress" } });
     expect(now.data).toBe(true);
-    expect(await rows()).toMatchObject([{ version: 2, status: "ready", recognized_details: { name: "Red dress" } }]);
+    expect(await rows()).toMatchObject([{ version: 2, pending_version: null, status: "ready", recognized_details: { name: "Red dress" } }]);
+    // Only the new version's files are left.
+    expect((await files(`${a.id}/${session}`)).every((f) => f.startsWith(`${first.id}-v2`))).toBe(true);
+    expect(await files(`${a.id}/${session}`)).toHaveLength(2);
+  });
+
+  it("a photo becomes the item to style around only once it's kept, so a failed upload leaves the earlier one in use (review batch 1, D1)", async () => {
+    const first = await upload(a, await jpeg("#1f2a44"));
+    const second = await addPhoto(db, a.id, session, "upload");
+    if (!second.ok) throw new Error(second.reason);
+    // Nothing uploaded yet: the first photo is still the active one, for the looks and the stylist.
+    expect((await rows()).map((r) => [r.id === first.id, r.status, r.active])).toEqual([[true, "ready", true], [false, "uploading", false]]);
+    expect((await listPhotos(db, a.id, session)).map((p) => p.id)).toEqual([first.id]);
+    expect(await choosePhoto(db, a.id, session, second.id)).toBe(false);
+    // The upload never arrives: still the first.
+    expect(await finishPhoto(db, a.id, session, second.id, second.version)).toEqual({ ok: false, reason: "missing" });
+    expect((await rows()).filter((r) => r.active).map((r) => r.id)).toEqual([first.id]);
+    // Once it arrives and is kept, it takes over.
+    expect((await put(second.uploadUrl, await jpeg("#b42318"))).ok).toBe(true);
+    expect(await finishPhoto(db, a.id, session, second.id, second.version)).toMatchObject({ ok: true, photo: { active: true } });
+    expect((await rows()).filter((r) => r.active).map((r) => r.id)).toEqual([second.id]);
+    // Removing it hands active back to a kept photo, never to one still uploading.
+    const third = await addPhoto(db, a.id, session, "upload");
+    if (!third.ok) throw new Error(third.reason);
+    expect(await removePhoto(db, a.id, session, second.id)).toBe(true);
+    expect((await rows()).filter((r) => r.active).map((r) => r.id)).toEqual([first.id]);
+  });
+
+  it("a replacement turned away leaves the original as it was, reading and all (review batch 1, D2)", async () => {
+    const first = await upload(a, await jpeg("#1f2a44"));
+    expect((await db.rpc("save_asset_details", { asset: first.id, expected_version: 1, details: { name: "Navy blazer" } })).data).toBe(true);
+    const replacing = await addPhoto(db, a.id, session, "upload", first.id);
+    if (!replacing.ok) throw new Error(replacing.reason);
+    // A text file renamed as a photo: the store takes it, the check turns it away.
+    expect((await put(replacing.uploadUrl, Buffer.from("not a photo"))).ok).toBe(true);
+    expect(await finishPhoto(db, a.id, session, first.id, replacing.version)).toEqual({ ok: false, reason: "type" });
+    expect(await rows()).toMatchObject([{ version: 1, pending_version: null, status: "ready", active: true, recognized_details: { name: "Navy blazer" } }]);
+    expect(await files(`${a.id}/${session}`)).toHaveLength(2);
+    expect(await files(`${a.id}/incoming`)).toEqual([]);
+    expect((await listPhotos(db, a.id, session)).map((p) => p.id)).toEqual([first.id]);
   });
 
   it("guest B can't open, list, finish or change guest A's photo", async () => {
@@ -157,7 +197,8 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     }
     const [, removed] = await Promise.all([addPhoto(db, a.id, session, "upload"), removePhoto(db, a.id, session, first)]);
     expect(removed).toBe(true);
-    expect((await rows()).filter((r) => r.active)).toHaveLength(1);
+    // The only kept photo is gone; the ones still uploading can't be active (review batch 1).
+    expect((await rows()).filter((r) => r.active)).toHaveLength(0);
   }, 30_000);
 
   it("the stylist's context for a session deleted meanwhile is nothing, quietly (Phase 3 code review)", async () => {
@@ -230,8 +271,15 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     const first = await kept();
     const second = await addPhoto(db, a.id, session, "upload", first.id);
     if (!second.ok) throw new Error(second.reason);
+    // Until the replacement is kept, the original is still the photo in use, so its reading lands (review batch 1).
+    expect(await readPhoto({ db, guard: guard(), reader: standIn([blazer]) }, a.id, first.id, first.version, first.finished.jpeg)).not.toBeNull();
+    expect((await rows())[0]).toMatchObject({ version: 1, pending_version: 2 });
+    expect((await rows())[0].recognized_details).not.toEqual({});
+    // Once the new version is kept, the old version's reading is dropped and the new one starts clean.
+    expect((await put(second.uploadUrl, await jpeg("#b42318"))).ok).toBe(true);
+    expect(await finishPhoto(db, a.id, session, first.id, second.version)).toMatchObject({ ok: true, photo: { version: 2 } });
     expect(await readPhoto({ db, guard: guard(), reader: standIn([blazer]) }, a.id, first.id, first.version, first.finished.jpeg)).toBeNull();
-    expect((await rows())[0]).toMatchObject({ version: 2, recognized_details: {} });
+    expect((await rows())[0]).toMatchObject({ version: 2, pending_version: null, recognized_details: {} });
   });
 
   it("a failed reading, or the day's AI used up, leaves the photo with Describe it instead (R32)", async () => {

@@ -495,6 +495,8 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
           : shownMains.has(mainPieces(items))
             ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: REPEATS_SHOWN }], failedProducts: [] }
             : await check(deps, guestId, g, items);
+        // Judged for several seconds: ended meanwhile, nothing is saved (review batch 1).
+        if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
         const { data: row } = await db
           .from("looks")
           .insert({
@@ -693,6 +695,7 @@ async function revise(
         const result: Checked = same
           ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.slot}` }], failedProducts: [] }
           : await check(deps, guestId, g, c.items, true, plan.notes);
+        if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
         const total = totalOf(c.items, g.requirements);
         const changed = c.items.flatMap((it, i) => (items.some((o) => JSON.stringify(o.ref) === JSON.stringify(it.ref)) ? [] : [i]));
         const revision: Revision = { seen, wanted, summary: changeSummary(items, c.items, total, plan.asked), changed };
@@ -859,6 +862,7 @@ async function restoreNow(deps: LooksDeps, guestId: string, sessionId: string, l
   const before = new Set(earlier.input_versions.revision?.seen ?? []);
   const takeBack = undo ? [...new Set((row.input_versions.revision?.seen ?? []).filter((s) => !before.has(s)).map((s) => s.split(":")[0]))] : [];
   const result = await check(deps, guestId, g, items);
+  if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
   const total = totalOf(items, g.requirements);
   const { data: inserted } = await db
     .from("looks")
@@ -985,6 +989,7 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
         const result: Checked = same
           ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.slot}` }], failedProducts: [] }
           : await check(deps, guestId, g, swapped, true);
+        if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
         const { data: inserted } = await db
           .from("looks")
           .insert({

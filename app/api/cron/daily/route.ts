@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { deleteGuest } from "@/lib/guest-cleanup";
 import { deleteEndedSessionPhotos } from "@/lib/photos-service";
 import { sessionDeps } from "@/lib/session-deps";
-import { endLeftBehindCalls } from "@/lib/sessions";
+import { endLeftBehindCalls, retryStaleCalls } from "@/lib/sessions";
 import { serverKeyDb } from "@/lib/supabase/admin";
 
 // The daily clean-up job (1f). Vercel's scheduler calls it once a day (vercel.json) with
@@ -35,6 +35,11 @@ export async function GET(request: Request) {
     console.error(`daily job: ending left-behind calls failed: ${e instanceof Error ? e.message : e}`);
     return 0;
   });
+  // Calls whose end or hard-delete at Tavus failed are tried again (review batch 1).
+  const callsRetried = await retryStaleCalls(sessionDeps()).catch((e) => {
+    console.error(`daily job: retrying stale calls failed: ${e instanceof Error ? e.message : e}`);
+    return 0;
+  });
   // Photos of sessions that ended from being idle: the database timer can't delete files (3a, Q4).
   const photosDeleted = await deleteEndedSessionPhotos(db).catch((e) => {
     console.error(`daily job: deleting ended sessions' photos failed: ${e instanceof Error ? e.message : e}`);
@@ -60,7 +65,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const summary = { ...tidy.data, calls_ended: callsEnded, photos_deleted: photosDeleted, guests_deleted: deleted, guests_failed: failures.length };
+  const summary = { ...tidy.data, calls_ended: callsEnded, calls_retried: callsRetried, photos_deleted: photosDeleted, guests_deleted: deleted, guests_failed: failures.length };
   console.log(`daily job: ${JSON.stringify(summary)}${failures.length ? `; first failure: ${failures[0]}` : ""}`);
   return Response.json(summary, { status: failures.length ? 500 : 200 });
 }

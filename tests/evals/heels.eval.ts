@@ -101,6 +101,6 @@ it("heels timing", async () => {
     expect(onHeels.some((h) => h > 5)).toBe(true);
     expect(offHeels.every((h) => h <= 5)).toBe(true);
   } finally {
-    await guest.remove();
+    await guest.remove({ keepAiSpend: true });
   }
 }, 600_000);

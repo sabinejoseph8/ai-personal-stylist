@@ -278,7 +278,7 @@ export function StyleAroundThisItem({
                     aria-pressed={p.active}
                     aria-label={`Photo ${i + 1} of ${photos.length}`}
                     onClick={() => onChoose(p)}
-                    disabled={!p.id}
+                    disabled={!p.id || p.state !== "ready"}
                     className={`focus-ring size-14 rounded-print bg-page p-0.5 shadow-photo ${p.active ? "outline-2 outline-offset-1 outline-ink" : ""}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element -- a short-lived private link or a local preview */}

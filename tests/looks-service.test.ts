@@ -660,6 +660,20 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(data).toEqual([]);
   });
 
+  it("a build stopped while its candidates are being judged saves nothing either (review batch 1, C8)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const fake = createFakeJudge();
+    const ending: Judge = {
+      judge: async (input) => {
+        await db.from("sessions").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", session).throwOnError();
+        return fake.judge(input);
+      },
+    };
+    await expect(buildLooks({ ...deps(), judge: ending }, guest.id, session)).rejects.toBeInstanceOf(SessionEndedError);
+    const { data } = await db.from("looks").select("id").eq("session_id", session).throwOnError();
+    expect(data).toEqual([]);
+  });
+
   it("Save to my profile takes the preference off the profile, with its exception (5c, Q2)", async () => {
     try {
       const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;

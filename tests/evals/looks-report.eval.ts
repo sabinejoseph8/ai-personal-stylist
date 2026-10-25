@@ -125,6 +125,6 @@ it("sample looks report", async () => {
     console.log(report);
     for (const r of runs) expect(r.result && "looks" in r.result).toBe(true);
   } finally {
-    await Promise.all(guests.map((g) => g.remove()));
+    await Promise.all(guests.map((g) => g.remove({ keepAiSpend: true })));
   }
 });
