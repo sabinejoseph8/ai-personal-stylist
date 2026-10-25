@@ -30,27 +30,28 @@ export async function GET(request: Request) {
   const db = serverKeyDb();
   const tidy = await db.rpc("daily_tidy");
   if (tidy.error) return Response.json({ error: `tidy failed: ${tidy.error.message}` }, { status: 500 });
-  // A failure here mustn't stop the guest deletions below (R3, Phase 2 review).
-  const callsEnded = await endLeftBehindCalls(sessionDeps()).catch((e) => {
-    console.error(`daily job: ending left-behind calls failed: ${e instanceof Error ? e.message : e}`);
-    return 0;
-  });
-  // Calls whose end or hard-delete at Tavus failed are tried again (review batch 1).
-  const callsRetried = await retryStaleCalls(sessionDeps()).catch((e) => {
-    console.error(`daily job: retrying stale calls failed: ${e instanceof Error ? e.message : e}`);
-    return 0;
-  });
-  // Photos of sessions that ended from being idle: the database timer can't delete files (3a, Q4).
-  const photosDeleted = await deleteEndedSessionPhotos(db).catch((e) => {
-    console.error(`daily job: deleting ended sessions' photos failed: ${e instanceof Error ? e.message : e}`);
-    return 0;
-  });
-
-  // Raw uploads that never finished, older than an hour (review batch 5, E4).
-  const incomingSwept = await sweepIncoming(db).catch((e) => {
-    console.error(`daily job: sweeping raw uploads failed: ${e instanceof Error ? e.message : e}`);
-    return 0;
-  });
+  // A failure in any of these mustn't stop the guest deletions below (R3, Phase 2 review). The Tavus steps
+  // and the storage steps don't depend on each other, so they run side by side (5d review): a slow Tavus
+  // must not use up the job's minute before the deletions.
+  const deps = sessionDeps();
+  const quietly = (what: string, work: () => Promise<number>) =>
+    work().catch((e) => {
+      console.error(`daily job: ${what} failed: ${e instanceof Error ? e.message : e}`);
+      return 0;
+    });
+  const [[callsEnded, callsRetried], [photosDeleted, incomingSwept]] = await Promise.all([
+    (async () => [
+      await quietly("ending left-behind calls", () => endLeftBehindCalls(deps)),
+      // Calls whose end or hard-delete at Tavus failed are tried again (review batch 1).
+      await quietly("retrying stale calls", () => retryStaleCalls(deps)),
+    ])(),
+    (async () => [
+      // Photos of sessions that ended from being idle: the database timer can't delete files (3a, Q4).
+      await quietly("deleting ended sessions' photos", () => deleteEndedSessionPhotos(db)),
+      // Raw uploads that never finished, older than an hour (review batch 5, E4).
+      await quietly("sweeping raw uploads", () => sweepIncoming(db)),
+    ])(),
+  ]);
 
   const expired = await db.rpc("expired_guests", {
     idle_days: IDLE_DAYS,
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
   const failures: string[] = [];
   for (let i = 0; i < ids.length; i += AT_ONCE) {
     // Their left-behind calls are ended first: deleted with them, a call's record would never reach Tavus (review batch 5, E6).
-    const results = await Promise.allSettled(ids.slice(i, i + AT_ONCE).map((id) => endLeftBehindCalls(sessionDeps(), id).then(() => deleteGuest(db, id))));
+    const results = await Promise.allSettled(ids.slice(i, i + AT_ONCE).map((id) => endLeftBehindCalls(deps, id).then(() => deleteGuest(db, id))));
     for (const r of results) {
       if (r.status === "fulfilled") deleted++;
       else failures.push(r.reason instanceof Error ? r.reason.message : String(r.reason));

@@ -33,9 +33,12 @@ const want = (n: Pick<Note, "id" | "version">, p: RuledPreference): Want => ({ n
  */
 export type WantMark = { id: string; kind: FirmPreference["kind"]; rule: Rule };
 export const wantMark = (p: RuledPreference): Detail => ({ name: WANT_DETAIL, value: JSON.stringify({ id: p.id, kind: p.kind, rule: p.rule } satisfies WantMark) });
-const isRule = (r: unknown): r is Rule => typeof r === "object" && r !== null && ((r as Rule).type === "judged" || ((r as Rule).type === "detail" && Array.isArray((r as DetailRule).categories) && typeof (r as DetailRule).test === "object"));
-/** A saved preference's rule as stored, or judged when it isn't one code can read. */
-export const ruleOf = (r: unknown): Rule => (isRule(r) ? r : { type: "judged" });
+const isRule = (r: unknown): r is Rule => {
+  if (typeof r !== "object" || r === null) return false;
+  if ((r as Rule).type === "judged") return true;
+  const d = r as DetailRule;
+  return d.type === "detail" && Array.isArray(d.categories) && typeof d.test === "object" && d.test !== null && typeof d.test.op === "string" && typeof d.test.detail === "string";
+};
 export function markOf(n: Pick<Note, "details">): WantMark | null {
   const d = n.details.find((x) => x.name === WANT_DETAIL);
   if (!d) return null;

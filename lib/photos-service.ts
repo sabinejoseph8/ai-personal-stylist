@@ -117,6 +117,9 @@ export async function addPhoto(db: SupabaseClient, guestId: string, sessionId: s
   if ("refused" in added) return { ok: false as const, reason: added.refused };
   // A replacement is pending until it's kept: the original, its reading and its files stay meanwhile
   // (review batch 1; they went at once, so a failed replacement lost the original).
+  // A retried replacement uses its version's upload path again: a file left there by a lost ready request
+  // would refuse the new upload (5d review).
+  await removeFiles(db, [incomingPath(guestId, added.id, added.version)]).catch(logFailure("clearing an old upload"));
   const link = await stored(() => db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(incomingPath(guestId, added.id, added.version)));
   if (link.error) throw new Error(`making an upload link failed: ${link.error.message}`);
   return { ok: true as const, id: added.id, version: added.version, uploadUrl: link.data.signedUrl };
@@ -182,7 +185,14 @@ export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId
   const { data: claimed } = await db.rpc("claim_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
   if (!claimed) return null;
   const paths = { photo: keptPath(guestId, sessionId, photoId, version, false), thumbnail: keptPath(guestId, sessionId, photoId, version, true) };
-  const cleaned = await keepUpload(db, original, paths);
+  let cleaned: Awaited<ReturnType<typeof keepUpload>>;
+  try {
+    cleaned = await keepUpload(db, original, paths);
+  } catch (e) {
+    // Let go of the claim, so a retry can claim the version again (5d review).
+    await db.rpc("unclaim_session_asset", { owner: guestId, asset: photoId, expected_version: version }).then(() => undefined, () => undefined);
+    throw e;
+  }
   if (!cleaned.ok) {
     await db.rpc("unclaim_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
     if (cleaned.reason !== "missing") {

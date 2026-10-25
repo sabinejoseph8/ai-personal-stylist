@@ -202,6 +202,23 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
       const { data } = await db.from("session_notes").select("hidden_details").eq("session_id", sessionId).eq("note_text", "High heels").single().throwOnError();
       const mark = (data!.hidden_details as { name: string; value: string }[]).find((d) => d.name === "want");
       expect(JSON.parse(mark!.value)).toMatchObject({ id: heels.id, kind: "never", rule: { type: "detail" } });
+      // The evicted note went as a reading's removal, not a tap's, so it may be jotted again (5d review).
+      const { data: gone } = await db.from("session_notes").select("source").eq("session_id", sessionId).eq("removed", true).throwOnError();
+      expect(gone!.map((n) => n.source)).toEqual(["voice"]);
+    } finally {
+      await db.from("saved_preferences").delete().eq("user_id", guest.id).throwOnError();
+    }
+  });
+
+  it("a want jotted by confirming a pencil lookalike gets the mark too (5d review)", async () => {
+    await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    try {
+      const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+      await db.from("session_notes").insert({ user_id: guest.id, session_id: sessionId, kind: "style", note_text: "High heels", status: "to_confirm", source: "voice", hidden_details: [] }).throwOnError();
+      const jotted = await jotWanted({ db }, guest.id, sessionId, { id: heels.id, kind: "never", words: "high heels" });
+      expect(jotted!.notes.filter((n) => n.text === "High heels").map((n) => n.status)).toEqual(["confirmed"]);
+      const { data } = await db.from("session_notes").select("hidden_details").eq("session_id", sessionId).eq("note_text", "High heels").single().throwOnError();
+      expect((data!.hidden_details as { name: string }[]).some((d) => d.name === "want")).toBe(true);
     } finally {
       await db.from("saved_preferences").delete().eq("user_id", guest.id).throwOnError();
     }

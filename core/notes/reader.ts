@@ -431,7 +431,11 @@ export function createNotesReader(ask: Ask): NotesReader {
       // "High neckline" survives high heels (B5), and for a Must have the add must say the thing is to go
       // without ("Sleeveless", "without sleeves"), so "Long sleeves" survives sleeves.
       const stemsOf = (p: FirmPreference) => p.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5));
-      const namesAll = (text: string, p: FirmPreference) => stemsOf(p).every((stem) => new RegExp(`\\b${stem}`, "i").test(text));
+      // A preference with no word of four letters names nothing: every() on no stems was true, and dropped every add (5d review).
+      const namesAll = (text: string, p: FirmPreference) => {
+        const stems = stemsOf(p);
+        return stems.length > 0 && stems.every((stem) => new RegExp(`\\b${stem}`, "i").test(text));
+      };
       const without = (text: string) => /\b(no|not|without|none)\b|[a-z]less\b/i.test(text);
       const breaksSaved = (a: Raw["add"][number]) => [flagged, wanted].some((p) => p && namesAll(a.t, p) && (p.kind === "never" || without(a.t)));
       const adds = raw.add

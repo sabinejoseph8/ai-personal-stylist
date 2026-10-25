@@ -85,11 +85,16 @@ export function mergeNotes(
     if (!n) continue;
     // Reworded into another note's words: one note stays, and never a confirmed one goes (full code review, B14).
     const text = u.text.trim();
-    const dup = text ? active([...byId.values()]).find((o) => o.id !== n.id && isFeedback(o) === isFeedback(n) && norm(o.text) === norm(text)) : undefined;
+    // Feedback lines are duplicates only on the same look: "Keep the dress" under Look 1 and Look 2 are two lines (5d review).
+    const dup = text
+      ? active([...byId.values()]).find((o) => o.id !== n.id && isFeedback(o) === isFeedback(n) && (!isFeedback(n) || feedbackOf(o)?.look === feedbackOf(n)?.look) && norm(o.text) === norm(text))
+      : undefined;
     if (dup && !n.removed && fresh(n)) {
       if (n.status !== "confirmed") {
         n.removed = true;
         mark(n);
+        // A spoken confirmation of the reworded note lands on the one that stays (5d review).
+        if (u.status === "confirmed" && dup.status !== "confirmed") update(dup, dup.text, "confirmed", u.details);
         continue;
       }
       if (dup.status === "confirmed" || !fresh(dup)) continue;

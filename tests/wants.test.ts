@@ -122,7 +122,9 @@ describe("a want by its mark (full code review, batch 3: B3, B4, C9)", () => {
     expect(wantsFrom([note("n3", "High heels")], [heels])).toHaveLength(1);
     // A want taken back is found by its mark too.
     expect(droppedWants([{ ...marked, removed: true }], [heels], [], ["n1:1"]).map((w) => w.noteId)).toEqual(["n1"]);
-    // A mark that isn't one is ignored.
+    // A mark that isn't one is ignored, and so is one whose rule has no test (5d review).
     expect(wantsFrom([note("n4", "High heels", { details: [{ name: "want", value: "not json" }] })], [])).toEqual([]);
+    const broken = JSON.stringify({ id: "pref-heels", kind: "never", rule: { type: "detail", categories: [], test: null } });
+    expect(wantsFrom([note("n5", "High heels", { details: [{ name: "want", value: broken }] })], [], new Set())).toEqual([]);
   });
 });

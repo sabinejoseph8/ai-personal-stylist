@@ -18,7 +18,6 @@ import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import { lookTotal } from "@/core/looks/totals";
 import { feedbackOf } from "@/core/notes/feedback";
 import { active, type Note } from "@/core/notes/types";
-import { limitCents } from "@/core/looks/budget";
 import { chosenItem, itemValues } from "@/core/photos/item";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { lookRequirements, sessionExceptions } from "@/lib/looks-inputs";
@@ -601,7 +600,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   // another took 42 seconds for three looks (the heels timing). A whole new look, or a change to a main
   // piece (the dress, or the top or bottom), waits its turn, so two looks can't come out with the same
   // dress: side by side, each only saw the others' old main pieces (full code review, C4).
-  const touchesMain = (d: (typeof due)[number]) => d.plan.whole || d.plan.change.some((i) => ["dress", "suit", "top", "bottom"].includes(groupOf(d.items[i])));
+  const touchesMain = (d: (typeof due)[number]) => d.plan.whole || d.plan.change.some((i) => mainPieces([d.items[i]]) !== "");
   const side = await Promise.all(due.filter((d) => !touchesMain(d)).map(revising));
   if (side.some((r) => r.done === "stale")) return { stale: true };
   for (const d of due.filter(touchesMain)) if ((await revising(d)).done === "stale") return { stale: true };
@@ -714,8 +713,7 @@ async function revise(
       // The best replacements first. Several pieces at once are paired every way and kept within the
       // budget as a whole: each pool alone assumed the other pieces stayed (review batch 4, C5).
       const withPicks = (picks: Product[]) => items.map((it, i): ResolvedItem => (plan.change.includes(i) ? { ref: { kind: "product", productId: picks[plan.change.indexOf(i)].id }, product: picks[plan.change.indexOf(i)] } : it));
-      const budget = g.requirements.budget;
-      const fits = (picks: Product[]) => budget === null || totalOf(withPicks(picks), g.requirements).totalCents <= limitCents(budget);
+      const fits = (picks: Product[]) => totalOf(withPicks(picks), g.requirements).fits;
       const combos: Candidate[] = pairedPicks(pools, fits, SWAP_BATCH * 3).map((picks) => {
         const its = withPicks(picks);
         return { refs: its.map((it) => it.ref), items: its, name: row.name ?? "Look", reason: null };
@@ -729,6 +727,9 @@ async function revise(
   for (const batch of batches) {
     // Ended meanwhile: nothing more is checked or saved (5c fix 6).
     if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
+    // The allowance is asked before the batch's rows are inserted: refused inside it, a candidate that skipped
+    // the judge was left in "checking" (5d review).
+    await g.beforeAi?.();
     const checked = await Promise.all(
       batch.map(async (c) => {
         const same = others.find((o) => o.main === mainPieces(c.items));
@@ -1033,6 +1034,7 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
   for (let batch = 0; batch < 3 && pool.length; batch++) {
     const picks = pool.splice(0, SWAP_BATCH);
     for (const p of picks) tried.add(p.id);
+    await g.beforeAi?.();
     const checked = await Promise.all(
       picks.map(async (product) => {
         const refs = row.items.map((r, i): LookItem => (i === index ? { kind: "product", productId: product.id } : r));

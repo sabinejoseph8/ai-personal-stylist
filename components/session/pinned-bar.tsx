@@ -34,7 +34,8 @@ export function PinnedBar({
   useEffect(() => {
     const main = stylistVideo.current;
     const copy = () => {
-      if (circle.current) circle.current.srcObject = main?.srcObject ?? null;
+      const stream = main?.srcObject ?? null;
+      if (circle.current && circle.current.srcObject !== stream) circle.current.srcObject = stream;
     };
     copy();
     main?.addEventListener("loadedmetadata", copy);

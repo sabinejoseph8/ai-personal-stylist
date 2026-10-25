@@ -109,10 +109,20 @@ async function endAtProvider(deps: SessionDeps, sessionId: string, callId: strin
     return true;
   } catch (e) {
     console.error(`ending a call failed: ${e instanceof Error ? e.message : e}`);
-    await deps.db.from("sessions").update({ stale_call_id: callId }).eq("id", sessionId).throwOnError();
+    // Remembered beside any earlier one, and a failed write mustn't stop the end: the time is still given back (5d review).
+    try {
+      const { data } = await deps.db.from("sessions").select("stale_call_id").eq("id", sessionId).maybeSingle().throwOnError();
+      const ids = new Set([...staleIds(data?.stale_call_id as string | null), callId]);
+      await deps.db.from("sessions").update({ stale_call_id: [...ids].join(",") }).eq("id", sessionId).throwOnError();
+    } catch (inner) {
+      console.error(`remembering a call to end failed: ${inner instanceof Error ? inner.message : inner}`);
+    }
     return false;
   }
 }
+
+/** The calls a session still has to end at Tavus, as remembered: one or more ids, comma-separated. */
+const staleIds = (stored: string | null | undefined) => (stored ?? "").split(",").filter(Boolean);
 
 /**
  * Calls whose end or hard-delete at Tavus failed (stale_call_id): tried again, in the daily job, so a
@@ -123,12 +133,20 @@ export async function retryStaleCalls(deps: SessionDeps, limit = 50) {
   const { data } = await deps.db.from("sessions").select("id, stale_call_id").not("stale_call_id", "is", null).limit(limit).throwOnError();
   let ended = 0;
   for (const s of data ?? []) {
+    const left: string[] = [];
+    for (const id of staleIds(s.stale_call_id as string)) {
+      try {
+        await deps.provider.end(id);
+        ended++;
+      } catch (e) {
+        console.error(`retrying a call's end failed: ${e instanceof Error ? e.message : e}`);
+        left.push(id);
+      }
+    }
     try {
-      await deps.provider.end(s.stale_call_id as string);
-      await deps.db.from("sessions").update({ stale_call_id: null }).eq("id", s.id).eq("stale_call_id", s.stale_call_id).throwOnError();
-      ended++;
+      await deps.db.from("sessions").update({ stale_call_id: left.length ? left.join(",") : null }).eq("id", s.id).eq("stale_call_id", s.stale_call_id).throwOnError();
     } catch (e) {
-      console.error(`retrying a call's end failed: ${e instanceof Error ? e.message : e}`);
+      console.error(`forgetting ended calls failed: ${e instanceof Error ? e.message : e}`);
     }
   }
   return ended;
@@ -227,9 +245,14 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
       .eq("id", session.id)
       .throwOnError();
   } catch (e) {
-    // The call exists but nothing records it: end it, and give the time back.
-    await endAtProvider(deps, session.id, call.callId).catch(() => null);
-    await giveBack().catch((inner) => console.error(`giving back a failed start's time failed: ${inner instanceof Error ? inner.message : inner}`));
+    // The call exists but nothing records it: end it, and give the time back. Unless the update did land and
+    // only its answer was lost: then the next end gives the time back, once (5d review).
+    const { data: landed } = await deps.db.from("sessions").select("call_id").eq("id", session.id).maybeSingle();
+    if (landed?.call_id === call.callId) throw e;
+    const ended = await endAtProvider(deps, session.id, call.callId).catch(() => false);
+    await deps.guard.settleTime(guestId, reserved.reservation, 0).catch((inner) => console.error(`giving back a failed start's time failed: ${inner instanceof Error ? inner.message : inner}`));
+    // A new session goes, unless it remembers a call the daily job still has to end.
+    if (!resumed && ended) await deps.db.from("sessions").delete().eq("id", session.id).then(() => undefined, (inner) => console.error(`removing a failed start's session failed: ${inner instanceof Error ? inner.message : inner}`));
     throw e;
   }
   return {
