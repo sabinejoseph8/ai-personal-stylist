@@ -1,4 +1,4 @@
-import { sweepIncoming } from "@/lib/guest-cleanup";
+import { INCOMING_MAX_AGE_MS, sweepIncoming } from "@/lib/guest-cleanup";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET } from "@/app/api/cron/daily/route";
 import { canRunDatabaseTests, createTestGuest, serverDb, setting, type TestGuest } from "./support/test-guests";
@@ -73,12 +73,13 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
     const path = `${active.id}/incoming/wardrobe-abandoned`;
     const upload = await db.storage.from("guest-photos").upload(path, new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" }));
     if (upload.error) throw upload.error;
-    // Sweeping only what's older than an hour leaves it; sweeping everything takes it.
-    await sweepIncoming(db);
+    // Sweeping only what's older than an hour leaves it; sweeping everything takes it. This guest's folder
+    // alone: every guest active this week on the shared database took GitHub past the test's time.
+    await sweepIncoming(db, INCOMING_MAX_AGE_MS, [active.id]);
     expect(((await db.storage.from("guest-photos").list(`${active.id}/incoming`)).data ?? []).map((f) => f.name)).toContain("wardrobe-abandoned");
-    expect(await sweepIncoming(db, 0)).toBeGreaterThanOrEqual(1);
+    expect(await sweepIncoming(db, 0, [active.id])).toBe(1);
     expect(((await db.storage.from("guest-photos").list(`${active.id}/incoming`)).data ?? []).map((f) => f.name)).not.toContain("wardrobe-abandoned");
-  });
+  }, 60_000);
 
   it("deletes a guest unused for 7 days, with their photos and rows", async () => {
     expect(summary.guests_deleted).toBeGreaterThanOrEqual(1);

@@ -44,13 +44,14 @@ export const INCOMING_MAX_AGE_MS = 60 * 60 * 1000;
  * photo removed while its file was still landing, stayed until the guest was deleted (full code review,
  * E4 and D5). Returns how many files went.
  */
-export async function sweepIncoming(db: SupabaseClient, olderThanMs = INCOMING_MAX_AGE_MS, maxGuests = 200) {
+export async function sweepIncoming(db: SupabaseClient, olderThanMs = INCOMING_MAX_AGE_MS, only?: string[], maxGuests = 100) {
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: guests } = await db.from("profiles").select("user_id").gte("last_active_at", since).limit(maxGuests).throwOnError();
+  // `only`: these guests' folders alone (tests), rather than every guest active this week.
+  const guests = only ?? ((await db.from("profiles").select("user_id").gte("last_active_at", since).limit(maxGuests).throwOnError()).data ?? []).map((g) => g.user_id as string);
   const cutoff = Date.now() - olderThanMs;
   let swept = 0;
-  for (const g of guests ?? []) {
-    const folder = `${g.user_id}/incoming`;
+  for (const guest of guests) {
+    const folder = `${guest}/incoming`;
     const { data: files, error } = await stored(() => db.storage.from(BUCKET).list(folder, { limit: 100 }));
     if (error || !files?.length) continue;
     const old = files.filter((f) => f.name && Date.parse(f.created_at ?? f.updated_at ?? "") < cutoff).map((f) => `${folder}/${f.name}`);
