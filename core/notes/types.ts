@@ -48,3 +48,14 @@ export const active = (notes: Note[]) => notes.filter((n) => !n.removed);
 
 export const sameDetails = (a: Detail[], b: Detail[]) =>
   a.length === b.length && a.every((d) => b.some((e) => e.name === d.name && e.value === d.value));
+
+/**
+ * A hidden detail marking a note as a want: what the shopper asked for once a saved preference was
+ * allowed (5c fix 6). Its value names the preference, its kind and its rule, so the want survives a
+ * reading rewording the note, Save to my profile deleting the preference, and a repeat (full code
+ * review, batch 3: B3, B4, C9). Matched by text before, which any of those broke.
+ */
+export const WANT_DETAIL = "want";
+export const isMark = (d: Detail) => d.name === WANT_DETAIL;
+/** New details for a note, keeping its marks: a reading's rewording mustn't turn a want back into a plain note. */
+export const withMarks = (next: Detail[], prev: Detail[]) => [...next.filter((d) => !isMark(d)), ...prev.filter(isMark)];

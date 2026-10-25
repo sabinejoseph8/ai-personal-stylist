@@ -186,6 +186,33 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     expect(touched?.context).toContain("Ask next, when it fits: Dress or pantsuit?");
   });
 
+  it("a jotted want carries its mark, and at the cap makes room by dropping the oldest pencil note (review batch 3: B3, B12)", async () => {
+    await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    try {
+      const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+      const pref = { id: heels.id, kind: "never" as const, words: "high heels" };
+      // Eleven pencil notes fill the notebook (one place is kept for the budget).
+      const rows = Array.from({ length: 11 }, (_, i) => ({ user_id: guest.id, session_id: sessionId, kind: "style", note_text: `Note ${i + 1}`, status: "to_confirm", source: "voice", hidden_details: [] }));
+      await db.from("session_notes").insert(rows).throwOnError();
+      const jotted = await jotWanted({ db }, guest.id, sessionId, pref);
+      expect(jotted!.notes.find((n) => n.text === "High heels")?.status).toBe("confirmed");
+      // One pencil note made room (inserted in the same instant, they have no first one).
+      expect(jotted!.notes.filter((n) => n.text.startsWith("Note "))).toHaveLength(10);
+      expect(jotted!.notes).toHaveLength(11);
+      const { data } = await db.from("session_notes").select("hidden_details").eq("session_id", sessionId).eq("note_text", "High heels").single().throwOnError();
+      const mark = (data!.hidden_details as { name: string; value: string }[]).find((d) => d.name === "want");
+      expect(JSON.parse(mark!.value)).toMatchObject({ id: heels.id, kind: "never", rule: { type: "detail" } });
+    } finally {
+      await db.from("saved_preferences").delete().eq("user_id", guest.id).throwOnError();
+    }
+  });
+
+  it("a reading says outright that notes aren't paused, so the page changes that only on the server's word (review batch 3, B13)", async () => {
+    const { updates, last } = await hear("something elegant");
+    expect(updates[0].paused).toBeUndefined();
+    expect(last.paused).toBe(false);
+  });
+
   it("two overlapping readings of a growing sentence jot one note", async () => {
     const updates: NotesUpdate[] = [];
     const heard = (words: string) => ({ words, stylistSaid: "", final: false, turn: "t" });

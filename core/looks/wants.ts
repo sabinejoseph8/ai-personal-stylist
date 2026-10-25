@@ -1,5 +1,5 @@
 import type { Product } from "../../connectors/catalog/types";
-import { active, type Note } from "../notes/types";
+import { active, type Detail, type Note, WANT_DETAIL } from "../notes/types";
 import { type FirmPreference, wantedNote } from "./exceptions";
 import { type Group, groupOf, type ResolvedItem } from "./look";
 import type { RevisionPlan } from "./revise";
@@ -26,13 +26,49 @@ const asking = (p: RuledPreference, n: Note) => p.rule.type === "detail" && want
 const want = (n: Pick<Note, "id" | "version">, p: RuledPreference): Want => ({ noteId: n.id, version: n.version, words: wantedNote(p), kind: p.kind, rule: p.rule as DetailRule });
 
 /**
+ * The mark a jotted want carries in its hidden details: the preference, its kind and its rule (full code
+ * review, batch 3: B3, B4, C9). Matched by its exact words before, the want was lost when a reading
+ * reworded the note ("Black high heels"), and became a plain requirement, rebuilding every look, once
+ * Save to my profile deleted the preference.
+ */
+export type WantMark = { id: string; kind: FirmPreference["kind"]; rule: Rule };
+export const wantMark = (p: RuledPreference): Detail => ({ name: WANT_DETAIL, value: JSON.stringify({ id: p.id, kind: p.kind, rule: p.rule } satisfies WantMark) });
+const isRule = (r: unknown): r is Rule => typeof r === "object" && r !== null && ((r as Rule).type === "judged" || ((r as Rule).type === "detail" && Array.isArray((r as DetailRule).categories) && typeof (r as DetailRule).test === "object"));
+/** A saved preference's rule as stored, or judged when it isn't one code can read. */
+export const ruleOf = (r: unknown): Rule => (isRule(r) ? r : { type: "judged" });
+export function markOf(n: Pick<Note, "details">): WantMark | null {
+  const d = n.details.find((x) => x.name === WANT_DETAIL);
+  if (!d) return null;
+  try {
+    const m = JSON.parse(d.value) as Partial<WantMark>;
+    return typeof m.id === "string" && (m.kind === "never" || m.kind === "must_have") && isRule(m.rule) ? { id: m.id, kind: m.kind, rule: m.rule } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The want a confirmed note is, if any: by its mark, or for a note without one by its words. Once Save to
+ * my profile has deleted the preference (`saved` lists the profile's firm preferences left), what was
+ * asked still holds, from the note's own mark, rather than turning into a requirement for every look.
+ */
+function wantOf(n: Note, allowed: RuledPreference[], saved?: ReadonlySet<string>): Want | null {
+  if (n.status !== "confirmed") return null;
+  const mark = markOf(n);
+  const p = mark ? allowed.find((a) => a.id === mark.id) : allowed.find((a) => asking(a, n));
+  if (p) return p.rule.type === "detail" ? want(n, p) : null;
+  if (mark && saved && !saved.has(mark.id) && mark.rule.type === "detail") return { noteId: n.id, version: n.version, words: n.text.trim(), kind: mark.kind, rule: mark.rule };
+  return null;
+}
+
+/**
  * The wants: confirmed notes asking for a preference allowed for this session ("High heels"), only for
  * rules code can test. One whose rule is judged stays an ordinary note.
  */
-export function wantsFrom(notes: Note[], allowed: RuledPreference[]): Want[] {
+export function wantsFrom(notes: Note[], allowed: RuledPreference[], saved?: ReadonlySet<string>): Want[] {
   return active(notes).flatMap((n) => {
-    const p = n.status === "confirmed" ? allowed.find((a) => asking(a, n)) : undefined;
-    return p ? [want(n, p)] : [];
+    const w = wantOf(n, allowed, saved);
+    return w ? [w] : [];
   });
 }
 
@@ -41,15 +77,16 @@ export function wantsFrom(notes: Note[], allowed: RuledPreference[]): Want[] {
  * pieces change back. Once the preference applies again (Remove on its line), the check takes the
  * pieces that break it out instead.
  */
-export function droppedWants(notes: Note[], allowed: RuledPreference[], wants: Want[], answered: string[]): Want[] {
+export function droppedWants(notes: Note[], allowed: RuledPreference[], wants: Want[], answered: string[], saved?: ReadonlySet<string>): Want[] {
   const now = new Set(wants.map((w) => w.noteId));
   return answered.flatMap((key) => {
     const id = key.slice(0, key.lastIndexOf(":"));
     const n = now.has(id) ? undefined : notes.find((x) => x.id === id);
-    const p = n ? allowed.find((a) => asking(a, n)) : undefined;
+    // The note as it was, removed or not, is still that want.
+    const w = n ? wantOf({ ...n, status: "confirmed" }, allowed, saved) : null;
     // Another note still asks for the same thing: nothing to take back (fix plan 8, found on Sabine's
     // iPhone in 5c, A.7, when "High heels" was jotted twice and one was removed).
-    return n && p && !wants.some((w) => w.words === wantedNote(p)) ? [want(n, p)] : [];
+    return n && w && !wants.some((x) => x.words.toLowerCase() === w.words.toLowerCase()) ? [w] : [];
   });
 }
 

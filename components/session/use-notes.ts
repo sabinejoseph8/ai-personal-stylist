@@ -132,7 +132,9 @@ export function useNotes(
       questionSeq.current = u.seq ?? 0;
       setQuestion(u.question);
     }
-    setPaused(Boolean(u.paused));
+    // Only when the server says: the quick update before a reading says nothing about it, so with the
+    // allowance used up "Notes paused" flickered twice a second (review batch 3, B13).
+    if (u.paused !== undefined) setPaused(u.paused);
     if (u.photo) photo.current?.(u.photo.id, u.photo.item);
     if (u.context) context.current(u.context);
   }

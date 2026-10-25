@@ -110,5 +110,25 @@
   {"id": "Allowed: asks for heels again (5c, A.7)", "saved": true, "allowed": ["high heels"], "turns": [{"shopper": "I'd love some high heels"}], "expect": [], "forbid": ["heel", "sleeve"], "exception": null, "wanted": "high heels"},
   {"id": "Allowed: heels after all", "saved": true, "allowed": ["high heels"], "turns": [{"shopper": "For the garden party in May, can you put me in heels after all?"}], "expect": [{"after": "May", "has": ["garden party"]}], "forbid": ["heel"], "exception": null, "wanted": "high heels"},
   {"id": "Allowed: sleeves allowed, asks for heels", "saved": true, "allowed": ["sleeves"], "turns": [{"shopper": "And I'd love to wear some high heels"}], "expect": [], "forbid": ["heel"], "exception": "high heels", "wanted": null},
-  {"id": "Allowed: heels allowed, asks for something sleeveless", "saved": true, "allowed": ["high heels"], "turns": [{"shopper": "Could you show me a sleeveless dress for the gala?"}], "expect": [{"after": "gala", "has": ["gala"]}], "forbid": ["sleeveless"], "exception": "sleeves", "wanted": null}
+  {"id": "Allowed: heels allowed, asks for something sleeveless", "saved": true, "allowed": ["high heels"], "turns": [{"shopper": "Could you show me a sleeveless dress for the gala?"}], "expect": [{"after": "gala", "has": ["gala"]}], "forbid": ["sleeveless"], "exception": "sleeves", "wanted": null},
+  {
+    "id": "Saved and allowed: a strapless dress, keeping the heels (review batch 3, B2)",
+    "saved": true,
+    "allowed": ["high heels"],
+    "turns": [{ "shopper": "I'd like a strapless dress, and I'll keep my heels" }],
+    "expect": [],
+    "forbid": ["sleeve", "heel"],
+    "exception": "sleeves",
+    "wanted": "high heels"
+  },
+  {
+    "id": "Saved and allowed: a sleeveless dress with high heels (review batch 3, B11)",
+    "saved": true,
+    "allowed": ["high heels"],
+    "turns": [{ "shopper": "A sleeveless dress with high heels, please" }],
+    "expect": [],
+    "forbid": ["sleeve", "heel"],
+    "exception": "sleeves",
+    "wanted": "high heels"
+  }
 ]

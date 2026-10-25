@@ -10,10 +10,10 @@ import { canMakeAnother, groupOf, type LookItem, mainPieces, nameOf, type OwnedP
 import { differences } from "@/core/looks/compare";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
 import { changeSummary, feedbackKey, type LookFeedback, lookFeedback, meetsWishes, nothingFits, pendingFeedback, type RevisionPlan, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
-import type { Rule } from "@/core/looks/rules";
+import { type Rule, ruledOut } from "@/core/looks/rules";
 import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
 import { looksReadiness } from "@/core/looks/readiness";
-import { droppedWants, type RuledPreference, type Want, wantKey, wantsFrom, wantsPlan } from "@/core/looks/wants";
+import { droppedWants, type RuledPreference, type Want, wantKey, wantPieces, wantsFrom, wantsPlan } from "@/core/looks/wants";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import { lookTotal } from "@/core/looks/totals";
 import { feedbackOf } from "@/core/notes/feedback";
@@ -75,7 +75,10 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
   const allowed = profile.preferences.flatMap((p): RuledPreference[] =>
     p.id && p.kind !== "likes" && excepted.has(p.id) ? [{ id: p.id, kind: p.kind, words: p.words, rule: RuleSchema.safeParse(p.rule).data ?? JUDGED }] : [],
   );
-  const wants = wantsFrom(notes, allowed);
+  // The firm preferences still on the profile: a want whose preference Save to my profile deleted holds
+  // from its own mark (review batch 3: B4, C9), rather than becoming a requirement for every look.
+  const saved = new Set(profile.preferences.flatMap((p) => (p.id && p.kind !== "likes" ? [p.id] : [])));
+  const wants = wantsFrom(notes, allowed, saved);
   const wanted = new Set(wants.map((w) => w.noteId));
   // Feedback on a look (5a) revises that look (5b), so it isn't a requirement every look must meet, except
   // feedback for every look ("no high heels in any look", R48), which is.
@@ -116,15 +119,36 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
     .digest("hex");
   // The looks builder is told what was asked, so new looks include it.
   const builderNotes = [...noteWords, ...wants.map((w) => w.words)];
-  return { requirements, notes, noteWords, builderNotes, owned, anchor, inspiration, likes, preferredColors, judged, key, allowed, wants };
+  return { requirements, notes, noteWords, builderNotes, owned, anchor, inspiration, likes, preferredColors, judged, key, allowed, saved, wants };
 }
 
 const JUDGED: Rule = { type: "judged" };
 
+/** Thrown at the first AI call when the hourly allowance says no; the entry points answer { limited: true }. */
+class LimitedError extends Error {}
+/**
+ * The 20-builds-an-hour allowance is spent at the first AI call of a request, not before it: a request
+ * that turns out to need none (a swap already answering what was asked, feedback about pieces that have
+ * left the look) costs nothing (full code review, C10). Asked once per request.
+ */
+function aiGate(allowAi?: () => Promise<boolean>) {
+  let asked: Promise<boolean> | undefined;
+  return async () => {
+    if (!allowAi) return;
+    asked ??= allowAi();
+    if (!(await asked)) throw new LimitedError("the hourly allowance is used up");
+  };
+}
+const limited = (e: unknown) => {
+  if (e instanceof LimitedError) return { limited: true as const };
+  throw e;
+};
+
 /** The wants, as "id:version", so a revision answering old ones is dropped (R52). */
 const wantsKey = (wants: Want[]) => wants.map(wantKey).sort().join(",");
 
-type Gathered = Awaited<ReturnType<typeof gather>>;
+/** `beforeAi`: asked before each AI call, so the hourly allowance goes at the first one (C10). */
+type Gathered = Awaited<ReturnType<typeof gather>> & { beforeAi?: () => Promise<void> };
 
 const budgetText = (r: Requirements) => {
   const b = r.budget;
@@ -196,6 +220,7 @@ async function check(deps: LooksDeps, guestId: string, g: Gathered, items: Resol
   if (!code.ok) return { verdict: "conflict", reasons: code.reasons, failedProducts: code.failedProducts };
   const money = await deps.guard.checkAi(guestId, "claude");
   if (!money.ok) return { verdict: "needs_clarification", reasons: [...code.reasons, { about: "Judgment", ok: false, why: "Today's AI allowance is used up" }], failedProducts: [] };
+  await g.beforeAi?.();
   const judged = await deps.judge.judge({ items, notes: [...g.noteWords, ...extraNotes], judged: g.judged, likes: g.likes, inspiration: g.inspiration, withReason });
   if (judged.costUsd > 0) await deps.guard.recordAi(guestId, "claude", judged.costUsd);
   return { verdict: judged.verdict, reasons: [...code.reasons, ...judged.reasons], failedProducts: [], reason: judged.reason };
@@ -297,7 +322,7 @@ export type BuildOptions = {
  */
 export async function buildLooks(deps: LooksDeps, guestId: string, sessionId: string, emit: Emit = () => {}, options: BuildOptions = {}): Promise<BuildResult | null> {
   if (!(await sessionOpen(deps.db, guestId, sessionId))) return null;
-  return inTurn(deps.db, sessionId, () => emit("building"), () => buildNow(deps, guestId, sessionId, emit, options));
+  return inTurn(deps.db, sessionId, () => emit("building"), () => buildNow(deps, guestId, sessionId, emit, options).catch(limited));
 }
 
 export type Emit = (state: BuildStage, slots?: number[]) => void;
@@ -327,7 +352,7 @@ async function inTurn<T>(db: SupabaseClient, sessionId: string, onWait: () => vo
 
 async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emit: Emit, options: BuildOptions): Promise<BuildResult> {
   const { db } = deps;
-  const g = await gather(db, guestId, sessionId);
+  const g: Gathered = { ...(await gather(db, guestId, sessionId)), beforeAi: aiGate(options.allowAi) };
   const ready = looksReadiness(g.notes);
   if (!ready.ready) return { needs: ready.needs };
 
@@ -353,7 +378,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   // And what the shopper asked for once allowed, or took back, that a look hasn't been changed for (5c fix 6).
   const wantsDue = (r: OnScreen) => {
     const answered = r.input_versions.revision?.wanted ?? [];
-    return g.wants.some((w) => !answered.includes(wantKey(w))) || droppedWants(g.notes, g.allowed, g.wants, answered).length > 0;
+    return g.wants.some((w) => !answered.includes(wantKey(w))) || droppedWants(g.notes, g.allowed, g.wants, answered, g.saved).length > 0;
   };
   const revisable = rows.some((r) => isCurrent(r) && (pendingFeedback(lookFeedback(g.notes, r.slot), r.input_versions.revision?.seen ?? []).length > 0 || wantsDue(r)));
   const unchanged = settled && !revisable;
@@ -373,8 +398,6 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     const looks = shownFrom(rows, products);
     return { looks, noMatch: explain(looks.length) };
   }
-  if (options.allowAi && !(await options.allowAi())) return { limited: true };
-
   const kept: { slot: number; items: ResolvedItem[] }[] = rows.flatMap((r) => {
     const items = isCurrent(r) ? resolve(r.items, products, g.owned) : null;
     return items ? [{ slot: r.slot, items }] : [];
@@ -430,7 +453,9 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     }
     for (const { row, items, failed } of swaps) {
       const lines = lookFeedback(g.notes, row.slot);
-      const plan: RevisionPlan = { ...revisionPlan(items, lines, [], (id) => products.get(id) ?? null), change: failed };
+      // What the shopper asked for holds for the pieces changing here too, and the judge is told (full code
+      // review, C1): black heels failing "no black" went for flats, and the heels never came back.
+      const plan: RevisionPlan = wantsPlan({ ...revisionPlan(items, lines, [], (id) => products.get(id) ?? null), change: failed }, items, [], [], g.wants);
       // It answers the same feedback and wants as before, so those still due are done next (step 3).
       const before = row.input_versions.revision;
       const answers = { seen: before?.seen ?? [], wanted: (before?.wanted ?? []).filter((k) => g.wants.some((w) => wantKey(w) === k)) };
@@ -469,6 +494,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     emit("building");
     const money = await deps.guard.checkAi(guestId, "claude");
     if (!money.ok) break;
+    await g.beforeAi?.();
     const built = await deps.builder.build({
       products: filtered.kept,
       owned: g.owned,
@@ -557,7 +583,7 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
     const pending = pendingFeedback(lines, row.input_versions.revision?.seen ?? []);
     const answered = row.input_versions.revision?.wanted ?? [];
     const add = g.wants.filter((w) => !answered.includes(wantKey(w)));
-    const drop = droppedWants(g.notes, g.allowed, g.wants, answered);
+    const drop = droppedWants(g.notes, g.allowed, g.wants, answered, g.saved);
     const items = pending.length || add.length || drop.length ? resolve(row.items, products, g.owned) : null;
     return items ? [{ row, items, lines, plan: wantsPlan(revisionPlan(items, lines, pending, (id) => products.get(id) ?? null), items, add, drop, g.wants) }] : [];
   });
@@ -639,6 +665,7 @@ async function revise(
       return { done: "kept" };
     }
     const kept = row.items.filter((ref) => plan.keep.has(refId(ref)));
+    await g.beforeAi?.();
     const built = await deps.builder.build({
       products: fits,
       owned: g.owned,
@@ -833,12 +860,12 @@ export async function restoreLook(
   options: Pick<BuildOptions, "allowAi"> = {},
 ): Promise<RestoreResult | null> {
   if (!(await sessionOpen(deps.db, guestId, sessionId))) return null;
-  return inTurn(deps.db, sessionId, () => {}, () => restoreNow(deps, guestId, sessionId, lookId, target, options));
+  return inTurn(deps.db, sessionId, () => {}, () => restoreNow(deps, guestId, sessionId, lookId, target, options).catch(limited));
 }
 
 async function restoreNow(deps: LooksDeps, guestId: string, sessionId: string, lookId: string, target: { undo: true } | { versionId: string }, options: Pick<BuildOptions, "allowAi">): Promise<RestoreResult | null> {
   const { db } = deps;
-  const g = await gather(db, guestId, sessionId);
+  const g: Gathered = { ...(await gather(db, guestId, sessionId)), beforeAi: aiGate(options.allowAi) };
   const rows = await onScreen(db, guestId, sessionId);
   const row = rows.find((r) => r.id === lookId);
   if (!row) {
@@ -857,7 +884,6 @@ async function restoreNow(deps: LooksDeps, guestId: string, sessionId: string, l
   // A restore mustn't make two looks the same.
   const same = rows.find((r) => r.id !== row.id && mainPieces(resolve(r.items, products, g.owned) ?? []) === mainPieces(items));
   if (same) return { none: `That earlier look has the same main pieces as Look ${rows.indexOf(same) + 1}, so this one stays.` };
-  if (options.allowAi && !(await options.allowAi())) return { limited: true };
 
   const lines = lookFeedback(g.notes, row.slot);
   // Undo takes back the lines the last revision answered for the first time.
@@ -928,12 +954,12 @@ const carried = (v: Versions): Versions => ({ ...v, revision: v.revision ? { see
  */
 export async function swapPiece(deps: LooksDeps, guestId: string, sessionId: string, lookId: string, index: number, options: Pick<BuildOptions, "allowAi"> = {}): Promise<SwapResult | null> {
   if (!(await sessionOpen(deps.db, guestId, sessionId))) return null;
-  return inTurn(deps.db, sessionId, () => {}, () => swapNow(deps, guestId, sessionId, lookId, index, options));
+  return inTurn(deps.db, sessionId, () => {}, () => swapNow(deps, guestId, sessionId, lookId, index, options).catch(limited));
 }
 
 async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, lookId: string, index: number, options: Pick<BuildOptions, "allowAi">): Promise<SwapResult | null> {
   const { db } = deps;
-  const g = await gather(db, guestId, sessionId);
+  const g: Gathered = { ...(await gather(db, guestId, sessionId)), beforeAi: aiGate(options.allowAi) };
   const rows = await onScreen(db, guestId, sessionId);
   const row = rows.find((r) => r.id === lookId);
   if (!row) {
@@ -970,15 +996,19 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
       .update({ input_versions: { ...versions, failed: { key: g.key, pieces: { ...(othersStill ? known : {}), [index]: [...failed] } } } })
       .eq("id", look)
       .throwOnError();
+  // What the shopper asked for once allowed holds for a swap too (full code review, C2): Swap on the heels
+  // brings other heels, never flats the next update would swap back. A piece whose detail isn't recorded fits.
+  const meetsWants = (p: Product) => g.wants.every((w) => ruledOut(w.kind, w.rule, p) !== false);
+  const wantNotes = g.wants.map((w) => `For this look, the shopper asked for ${w.words.toLowerCase()}, allowed for this session`);
+  const candidates = (exclude: Set<string>) => swapCandidates(filtered.kept, items, index, exclude, g.requirements.budget).filter(meetsWants);
   let tried = new Set([...(row.input_versions.tried ?? []), ref.productId]);
-  let pool = swapCandidates(filtered.kept, items, index, new Set([...tried, ...failed, ...turned]), g.requirements.budget);
+  let pool = candidates(new Set([...tried, ...failed, ...turned]));
   // Every one that passes has been shown here already: start again, leaving out the piece in the look now.
   if (!pool.length && tried.size > 1) {
     tried = new Set([ref.productId]);
-    pool = swapCandidates(filtered.kept, items, index, new Set([...tried, ...failed, ...turned]), g.requirements.budget);
+    pool = candidates(new Set([...tried, ...failed, ...turned]));
   }
   if (!pool.length) return { none: noOtherPiece(items[index]) };
-  if (options.allowAi && !(await options.allowAi())) return { limited: true };
 
   for (let batch = 0; batch < 3 && pool.length; batch++) {
     const picks = pool.splice(0, SWAP_BATCH);
@@ -990,7 +1020,7 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
         const same = others.find((o) => o.main === mainPieces(swapped));
         const result: Checked = same
           ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.number}` }], failedProducts: [] }
-          : await check(deps, guestId, g, swapped, true);
+          : await check(deps, guestId, g, swapped, true, wantNotes);
         if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
         const { data: inserted } = await db
           .from("looks")
@@ -1024,7 +1054,9 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
     }
     if (winner) {
       // The other pieces are the same, so what failed here still fails with the new piece in.
-      await remember(winner.id, { ...carried(row.input_versions), swap: { from: ref.productId, to: winner.product }, tried: [...tried] }, false);
+      // The swapped look records the wants it now answers, so the next update leaves it alone (C2).
+      const answered = g.wants.filter((w) => !wantPieces(winner.swapped, w, new Set()).length).map(wantKey);
+      await remember(winner.id, { ...carried(row.input_versions), revision: { seen: row.input_versions.revision?.seen ?? [], wanted: answered }, swap: { from: ref.productId, to: winner.product }, tried: [...tried] }, false);
       const { data: ok } = await db.rpc("publish_look", { look: winner.id, current_requirements: g.key, replaces: row.id }).throwOnError();
       if (!ok) {
         await db.from("looks").update({ status: "held" }).eq("id", winner.id).throwOnError();

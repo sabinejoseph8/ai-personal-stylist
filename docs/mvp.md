@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.36
+**Status:** Living document, version 1.37
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -153,7 +153,7 @@ Your final iPhone check then found two more problems, both fixed: "use this one"
 
 After the run of bugs her iPhone checks found in 5c (nine fixes in one task group), Sabine asked for a complete review of everything built so far, ahead of 5d. Five reviewers (the conversation and session page; notes; looks; photos, camera and wardrobe; database, security and money) read all of the code, about 14,700 lines plus the database rules, and I checked each finding against the code. 58 findings: 2 serious (a call that failed to start lost the guest's reserved 10 minutes for the day and the month; a failed photo upload silently dropped the item to style around while the page still showed it), 21 a shopper would notice, and 35 small. None was a security hole: every server route checks the guest and the session, guests can't write app-owned records, photos are only readable by their owner, and no secrets are in the code or its history. The bugs were of the same family as the ones from the phone: two things happening at once, state that isn't passed on, and background work that doesn't notice the world changed.
 
-The fixes go in five pull requests, each with tests for every bug it fixes (Q1): 1 money and data (done 24 Oct 2026), 2 the stylist's behaviour (done 25 Oct 2026), 3 notes and wants, 4 the looks engine, 5 hardening. Sabine's iPhone check (5c's A again, with B, C and D) comes after batch 3, and 5d becomes a short review of the fixes. Her answers to Q1 to Q4 are in the log below.
+The fixes go in five pull requests, each with tests for every bug it fixes (Q1): 1 money and data (done 24 Oct 2026), 2 the stylist's behaviour (done 25 Oct 2026), 3 notes and wants (done 25 Oct 2026), 4 the looks engine, 5 hardening. Sabine's iPhone check (5c's A again, with B, C and D) comes after batch 3, and 5d becomes a short review of the fixes. Her answers to Q1 to Q4 are in the log below.
 
 ## 7. Decisions log
 
@@ -161,6 +161,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 25 Oct 2026 | Full code review, batch 3 plan approved as recommended. Q1: the notes eval runs with real Claude after the reader's two-field change, up to two runs (about 20 cents each, counted against the $40 stop); the other option was the fake reader's unit tests only | Sabine | tech spec 1.39 |
 | 25 Oct 2026 | Full code review, batch 2 plan approved as recommended. Q1: the app's monthly video stop is raised to 260 in Vercel for the rest of October (the other option: leave it, and wait for 1 Nov), because the app's October count (159.6 of its 165) includes the minutes before the 21 Oct Tavus upgrade and the probe and test calls of 20 to 23 Oct, which Tavus's restarted count (70.2 of 175) doesn't, so the app would have refused Sabine's next phone check with about 105 Tavus minutes left; on 1 Nov the setting is lowered to what Tavus shows as left, and batch 5 is to make the app count from the 21st as Tavus does | Sabine | tech spec 1.38 |
 | 24 Oct 2026 | Full code review fix plan approved, the recommended answers. Q1: fix all 58 findings in five batches, in order: batches 1 to 3, then Sabine's iPhone check, then 4 and 5 (the other option: only batches 1 to 3 now, with 4 and 5 left for Phase 7). Q2: when a sentence could both break a saved preference and ask for something already allowed, the notes reader reports both, in two separate fields, and the fix 5 safety check stays only for codes that don't exist (the other option: keep assuming the allowed item, which can miss a real conflict). Q3: real-Claude measurement runs count against the app's $40 monthly stop, recorded with no guest attached, so the stop and Anthropic's bill agree (the other option: uncounted, tracked by hand). Q4: the Tavus end-of-call webhook isn't built now; call time is capped at the shopper's last activity and the webhook is marked Phase 7 in the tech spec (the other option: build it in batch 1) | Sabine | tech spec 1.37, progress.md (5d) |
 | 23 Oct 2026 | Fix plan 9 approved: what was asked once allowed still holds for every later change of that kind of piece, and the stylist is told every time a change couldn't be made (no options to choose). Sabine: don't suggest expanding the catalog as a fix, it isn't a full fix | Sabine | tech spec 1.36 |
