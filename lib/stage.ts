@@ -117,6 +117,22 @@ export const showSamplePhrases = (stage: Stage) =>
 /** Someone is talking, so screen reader updates wait (R68: never over the conversation). */
 export const someoneSpeaking = (stage: Stage) => stage.stylistSpeaking || stage.shopperSpeaking;
 
+/** How long a line for the stylist waits while she's thinking, at most. */
+export const THINKING_WAIT_MS = 4000;
+
+/**
+ * How long before the page may speak to her (0: now). Not while someone is talking (Infinity), and not
+ * while she's thinking of her reply: a line sent in the gap between the shopper's question and her
+ * answer had her answer the app instead of them (full code review, A5). Thinking counts for at most
+ * THINKING_WAIT_MS from `thinkingSince`, so a reply that never comes (the pretend stylist in the
+ * browser tests) can't hold the queue.
+ */
+export function holdFor(stage: Stage, thinkingSince: number, now: number): number {
+  if (someoneSpeaking(stage)) return Infinity;
+  if (!stage.awaitingReply || !thinkingSince) return 0;
+  return Math.max(0, thinkingSince + THINKING_WAIT_MS - now);
+}
+
 /** Time left, shown in the last 2 minutes (R13): "2 minutes left", then "1 minute left". */
 export function timeLeftLabel(secondsLeft: number): string | null {
   if (secondsLeft > 120 || secondsLeft <= 0) return null;

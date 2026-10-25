@@ -619,11 +619,13 @@ async function revise(
     ctx.catalog.filter((p) => !plan.turnedDown.has(p.id)),
     g.requirements,
   ).kept;
-  const others = (await onScreen(db, guestId, sessionId))
+  // Named by their place on screen (Look 2 of 2), as the page names them, not by slot (review batch 2, C13).
+  const screen = await onScreen(db, guestId, sessionId);
+  const others = screen
     .filter((r) => r.id !== row.id)
     .flatMap((r) => {
       const its = resolve(r.items, ctx.products, g.owned);
-      return its ? [{ slot: r.slot, main: mainPieces(its), names: its.map(nameOf).join(" + ") }] : [];
+      return its ? [{ number: screen.indexOf(r) + 1, main: mainPieces(its), names: its.map(nameOf).join(" + ") }] : [];
     });
 
   type Candidate = { refs: LookItem[]; items: ResolvedItem[]; name: string; reason: string | null };
@@ -693,7 +695,7 @@ async function revise(
       batch.map(async (c) => {
         const same = others.find((o) => o.main === mainPieces(c.items));
         const result: Checked = same
-          ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.slot}` }], failedProducts: [] }
+          ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.number}` }], failedProducts: [] }
           : await check(deps, guestId, g, c.items, true, plan.notes);
         if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
         const total = totalOf(c.items, g.requirements);
@@ -951,7 +953,7 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
   // The other looks' main pieces: a swap mustn't make two looks the same.
   const others = rows.filter((r) => r.id !== row.id).flatMap((r) => {
     const its = resolve(r.items, products, g.owned);
-    return its ? [{ slot: r.slot, main: mainPieces(its) }] : [];
+    return its ? [{ number: rows.indexOf(r) + 1, main: mainPieces(its) }] : [];
   });
 
   // Replacements that already failed here, on these requirements, aren't checked again: a second Swap
@@ -987,7 +989,7 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
         const swapped = items.map((it, i): ResolvedItem => (i === index ? { ref: refs[i], product } : it));
         const same = others.find((o) => o.main === mainPieces(swapped));
         const result: Checked = same
-          ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.slot}` }], failedProducts: [] }
+          ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.number}` }], failedProducts: [] }
           : await check(deps, guestId, g, swapped, true);
         if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
         const { data: inserted } = await db

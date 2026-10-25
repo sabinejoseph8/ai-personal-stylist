@@ -21,7 +21,8 @@ export type CheckRecord = {
   at: string;
   verdict: "pass" | "conflict" | "needs_clarification";
   reasons: CheckReason[];
-  look: { name: string; slot: number | null; shown: boolean; swap: { from: string; to: string } | null; revision?: string | null };
+  /** `number`: the look's place on screen now (Look 2 of 2), as the page names it; the slot otherwise (review batch 2, C13). */
+  look: { name: string; slot: number | null; number?: number | null; shown: boolean; swap: { from: string; to: string } | null; revision?: string | null };
   /** This look had been checked before: this one is a check again after a change. */
   again: boolean;
 };
@@ -78,23 +79,24 @@ const failed = (reasons: CheckReason[]) =>
     .join("; ") || "it couldn't be checked";
 
 export function checkEntry(c: CheckRecord): Entry | null {
-  const look = c.look.slot ? `Look ${c.look.slot}, ${c.look.name}` : c.look.name;
+  const number = c.look.number ?? c.look.slot;
+  const look = number ? `Look ${number}, ${c.look.name}` : c.look.name;
   const pass = c.verdict === "pass";
   if (c.again)
     return pass
       ? { at: c.at, kind: "recheck", text: `Checked again after your change: ${look} still meets everything.` }
       : { at: c.at, kind: "recheck", text: `Checked again after your change: ${look} no longer fits: ${failed(c.reasons)}. A new look takes its place.` };
   if (c.look.revision) {
-    if (pass && c.look.shown) return { at: c.at, kind: "revision", text: `Revised Look ${c.look.slot} from your feedback, and checked: ${c.look.revision}` };
+    if (pass && c.look.shown) return { at: c.at, kind: "revision", text: `Revised Look ${number} from your feedback, and checked: ${c.look.revision}` };
     if (pass) return null;
   }
   if (c.look.swap) {
     const { from, to } = c.look.swap;
     return pass
       ? c.look.shown
-        ? { at: c.at, kind: "swap", text: `Swap in Look ${c.look.slot}: ${to} replaced ${from}, and passed the check.` }
+        ? { at: c.at, kind: "swap", text: `Swap in Look ${number}: ${to} replaced ${from}, and passed the check.` }
         : null // checked at the same moment as the one that went in, and not needed
-      : { at: c.at, kind: "swap", text: `Swap in Look ${c.look.slot}: ${to} was checked and blocked: ${failed(c.reasons)}.` };
+      : { at: c.at, kind: "swap", text: `Swap in Look ${number}: ${to} was checked and blocked: ${failed(c.reasons)}.` };
   }
   // A repeat of a look already shown was never judged, so it isn't news either.
   if (!pass && c.reasons.every((r) => r.ok || r.why === REPEATS_SHOWN)) return null;

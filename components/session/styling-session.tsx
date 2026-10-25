@@ -22,13 +22,13 @@ import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
 import { asksToCapture, CAPTURE_GRACE_MS, type CameraNote, cameraForStylist, whenToCapture } from "@/core/camera/sightings";
 import { looksChanged, looksForStylist } from "@/core/looks/context";
-import { asksAboutIt, exceptionsForStylist, type FirmPreference, type ShownException, spokenQuestion } from "@/core/looks/exceptions";
+import { askingHint, asksAboutIt, exceptionsForStylist, type FirmPreference, type ShownException, spokenQuestion } from "@/core/looks/exceptions";
 import { ALLOW_CHOICE } from "@/core/looks/no-match";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import type { SwapRequest } from "@/core/notes/reader";
 import { notesSummary } from "@/lib/notebook";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
-import { type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/lib/stage";
+import { holdFor, type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/lib/stage";
 
 // The styling session (design 4.1, 4.2, 5.3 and 5.6). The stylist stage (R6 to R8, R70): the video
 // stylist with her state in words, Mute and End, the microphone card, and tap-to-try phrases, with no
@@ -71,7 +71,8 @@ const ANSWER_WAIT_MS = 12_000;
 
 /** Something she speaks up about once nobody is talking. */
 /** `say`: the stylist says `text` word for word, rather than answering it as the shopper's words (5c). */
-type SpeakUp = { kind: "photo" | "camera" | "looks" | "exception"; text: string; photo?: string; say?: boolean };
+/** `preference`: the saved preference an "exception" line asks about, so it's never said for another (review batch 2, A7). */
+type SpeakUp = { kind: "photo" | "camera" | "looks" | "exception"; text: string; photo?: string; say?: boolean; preference?: string };
 
 /** A 48 px round voice control with its label underneath (design 4.1). It passes everything else to the
  *  button, so a dialog can use it as its trigger. */
@@ -137,6 +138,8 @@ export function StylingSession({
   // now: set once, it saw the call before it started, and never asked the stylist to speak up (found on
   // Sabine's iPhone in 5c, A.3).
   const askException = useRef<((preference: FirmPreference) => void) | null>(null);
+  // What End clears besides the notes, photos and looks: set after every render, like askException below.
+  const clearForNextCall = useRef<(() => void) | null>(null);
   const askingNow = useRef<(FirmPreference & { wanted?: boolean }) | null>(null);
   // What the stylist has said since the shopper last finished speaking, and whether a back-up question
   // is still waiting for her reply (fix plan 3: one question, never two in a row).
@@ -145,9 +148,16 @@ export function StylingSession({
   const askedAt = useRef(0);
   const backup = useRef<{ question: string; timer: ReturnType<typeof setTimeout> | null } | null>(null);
   const settleBackup = useRef<((said: string | null) => void) | null>(null);
+  // The last question she asked: the notes reader is told she just asked about a preference only while
+  // that's her latest question (review batch 2, B10).
+  const herLastQuestion = useRef<string | null>(null);
+  // Her "what changed" line has been said, so the shopper's next turn clears it from her context (review batch 2, A12).
+  const changeSaid = useRef(false);
   // The look most on screen, sent with the words for feedback that doesn't name a look (5a).
   const inViewNow = useRef<number | null>(null);
   const looksShownNow = useRef(false);
+  // What changed in the looks, for her context until she has said it (4c; cleared on the shopper's next turn, review batch 2, A12).
+  const [looksChange, setLooksChange] = useState<string | null>(null);
   const call = useConversation(openSessionId, { video, audio }, {
     onEvent: (e) => {
       notes.onEvent(e);
@@ -155,20 +165,34 @@ export function StylingSession({
         if (e.speaker === "shopper") {
           stylistReplies.current = [];
           askedAt.current = 0;
+          if (changeSaid.current) {
+            changeSaid.current = false;
+            setLooksChange(null);
+          }
         } else {
           stylistReplies.current.push(e.text);
-          if (e.text.includes("?")) askedAt.current = timeNow();
+          if (e.text.includes("?")) {
+            askedAt.current = timeNow();
+            herLastQuestion.current = e.text;
+          }
           settleBackup.current?.(e.text);
         }
       }
       // "Use this one" takes the still, heard by plain code while an item is on camera (Q1 in 3c).
       if (e.type === "words" && e.speaker === "shopper" && asksToCapture(e.text, e.final)) heardCapture.current?.();
     },
-    onPhrase: (text) => notes.say(text),
+    // A tapped phrase or quick reply is the shopper's turn, as spoken words are: her reply from before the
+    // tap mustn't count as her answer to what the tap raises (review batch 2, A6).
+    onPhrase: (text) => {
+      stylistReplies.current = [];
+      askedAt.current = 0;
+      notes.say(text);
+    },
     onEnd: () => {
       notes.reset();
       photos.reset();
       resetLooks.current?.();
+      clearForNextCall.current?.();
     },
   });
   // What the stylist is told: the server's latest context, plus the looks on screen (4c) and what's on
@@ -210,11 +234,13 @@ export function StylingSession({
     () => ({ any: looksShownNow.current, inView: inViewNow.current }),
     (preference) => askException.current?.(preference),
     {
-      now: () => askingNow.current?.id ?? null,
+      now: () => askingHint(askingNow.current?.id ?? null, herLastQuestion.current),
       wanted: () => Boolean(askingNow.current?.wanted),
       // A spoken yes or no to her question does what the buttons do (5c).
       answered: (answer) => {
         if (answer.exceptions) setExceptions(answer.exceptions);
+        // A spoken no is Keep my preference: she's told so (review batch 2, A8).
+        if (!answer.allow && askingNow.current?.id === answer.preferenceId) keepPreference(askingNow.current);
         setAsking(null);
       },
     },
@@ -228,6 +254,10 @@ export function StylingSession({
   const [savedPreferences, setSavedPreferences] = useState(preferences);
   // Permissions taken back with Remove, so she's told they no longer hold (fix plan 7).
   const [takenBack, setTakenBack] = useState<FirmPreference[]>([]);
+  // Preferences kept when she asked (Keep my preference, or a spoken no), so she's told the answer was no
+  // rather than left waiting for it (review batch 2, A8).
+  const [kept, setKept] = useState<FirmPreference[]>([]);
+  const keepPreference = (p: FirmPreference) => setKept((k) => [...k.filter((x) => x.id !== p.id), { id: p.id, kind: p.kind, words: p.words }]);
   const exceptionsNow = useRef<ShownException[]>([]);
   useLayoutEffect(() => {
     exceptionsNow.current = exceptions;
@@ -243,9 +273,31 @@ export function StylingSession({
       if (backup.current?.timer) clearTimeout(backup.current.timer);
       backup.current = { question, timer: null };
       const replied = stylistReplies.current;
+      herLastQuestion.current = replied.filter((l) => l.includes("?")).at(-1) ?? null;
       if (replied.some(asksAboutIt)) settleBackup.current?.(replied.find(asksAboutIt)!);
       else if (replied.length) settleBackup.current?.(replied.at(-1)!);
       else if (backup.current) backup.current.timer = setTimeout(() => settleBackup.current?.(null), BACKUP_WAIT_MS);
+    };
+    // End clears everything else the page holds for the call, so nothing carries into the next session: the
+    // conflict card, the back-up question, queued lines, her replies and what she's been told (review batch 2, A4).
+    clearForNextCall.current = () => {
+      if (backup.current?.timer) clearTimeout(backup.current.timer);
+      backup.current = null;
+      speakUp.current = [];
+      stylistReplies.current = [];
+      askedAt.current = 0;
+      herLastQuestion.current = null;
+      changeSaid.current = false;
+      told.current = "";
+      looksTold.current = "";
+      exceptionsTold.current = "";
+      cameraNote.current = null;
+      askingNow.current = null;
+      setAsking(null);
+      setKept([]);
+      setExceptions([]);
+      setTakenBack([]);
+      setLooksChange(null);
     };
     // Her reply arrived (or none did): only when it doesn't ask is the question said, once.
     settleBackup.current = (said) => {
@@ -255,7 +307,7 @@ export function StylingSession({
       backup.current = null;
       if (said && asksAboutIt(said)) return;
       if (!askingNow.current) return;
-      queue({ kind: "exception", text: waiting.question, say: true });
+      queue({ kind: "exception", text: waiting.question, say: true, preference: askingNow.current.id });
       // Nothing on screen changed, so the line waiting to be said needs a nudge.
       recheck((n) => n + 1);
     };
@@ -291,6 +343,7 @@ export function StylingSession({
       return false;
     }
     setExceptions(body.exceptions);
+    setKept((k) => k.filter((p) => p.id !== preference.id));
     // What they asked for, now jotted, so the looks change to include it.
     if (body.notes) notes.receive(body.notes);
     setAsking(null);
@@ -328,7 +381,6 @@ export function StylingSession({
       ]),
     [notes.notes, photos.active, wardrobe, exceptions],
   );
-  const [looksChange, setLooksChange] = useState<string | null>(null);
   // When the looks may ask again after a Keep or Change tap (TAP_WAIT_MS).
   const tapHold = useRef(0);
   const looks = useLooks(
@@ -539,11 +591,11 @@ export function StylingSession({
 
   // She's told the exceptions allowed, and a request to ask about, whenever they change (5c).
   useEffect(() => {
-    exceptionsTold.current = exceptionsForStylist(exceptions, asking, takenBack);
+    exceptionsTold.current = exceptionsForStylist(exceptions, asking, takenBack, kept);
     if (flow === "live") call.updateContext(withCamera());
     // withCamera and call only read refs; this runs when the exceptions change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exceptions, asking, takenBack, flow]);
+  }, [exceptions, asking, takenBack, kept, flow]);
 
   // She's told what's on camera whenever it changes, before she's asked to speak about it.
   useEffect(() => {
@@ -556,15 +608,21 @@ export function StylingSession({
 
   // She speaks up once nobody is talking, one line at a time: the next once someone has spoken, or after
   // a few quiet seconds, so two lines never arrive together.
-  const quiet = flow === "live" && !someoneSpeaking(stage);
+  const talking = flow !== "live" || someoneSpeaking(stage);
   const spokeUpAt = useRef(0);
+  // When she started thinking of her reply to the shopper, so a line waits for it (review batch 2, A5).
+  const thinkingSince = useRef(0);
   useEffect(() => {
-    if (!quiet) {
+    thinkingSince.current = stage.awaitingReply ? thinkingSince.current || Date.now() : 0;
+  }, [stage.awaitingReply]);
+  useEffect(() => {
+    if (talking) {
       spokeUpAt.current = 0;
       return;
     }
     if (!speakUp.current.length) return;
-    const wait = spokeUpAt.current + SPEAK_UP_GAP_MS - Date.now();
+    // Not in the gap between the shopper's question and her reply, or she answers the app instead of them.
+    const wait = Math.max(holdFor(stage, thinkingSince.current, Date.now()), spokeUpAt.current + SPEAK_UP_GAP_MS - Date.now());
     if (wait > 0) {
       const timer = setTimeout(() => recheck((n) => n + 1), wait);
       return () => clearTimeout(timer);
@@ -587,9 +645,11 @@ export function StylingSession({
       }
       speakUp.current = speakUp.current.filter((l) => l !== next);
       if (next.photo && photos.active?.key !== next.photo) continue;
-      // A question already answered isn't asked.
-      if (next.kind === "exception" && !askingNow.current) continue;
+      // A question already answered isn't asked, nor one about a preference other than the one being asked
+      // about now (review batch 2, A7).
+      if (next.kind === "exception" && (!askingNow.current || (next.preference && next.preference !== askingNow.current.id))) continue;
       spokeUpAt.current = Date.now();
+      if (next.kind === "looks") changeSaid.current = true;
       if (next.say) call.say(next.text);
       else call.prompt(next.text);
       return;
@@ -873,7 +933,10 @@ export function StylingSession({
         revising={looks.revising}
         asking={asking}
         onAllow={() => (asking ? allowException(asking) : Promise.resolve(false))}
-        onKeep={() => setAsking(null)}
+        onKeep={() => {
+          if (asking) keepPreference(asking);
+          setAsking(null);
+        }}
         canTalk={flow === "live"}
         imageFor={imageFor}
         onSwap={(lookId, index) => void looks.swap(lookId, index)}

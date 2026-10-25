@@ -1,7 +1,7 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.20 (24 Oct 2026)
-**Last updated:** 24 Oct 2026
+**Status:** Agreed, version 1.21 (25 Oct 2026)
+**Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
 
@@ -310,7 +310,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **Keep and Change (5a):** two toggles (chips) on each sample product's tile, above Swap, reading Keeping and Changing (with the check) when pressed; the shopper's own pieces have none.
 - **Revisions (5b):** a look being revised shows the Revising chip in place of its check status, with Swap, Keep and Change paused, and "Revising your look" with a spinner above the looks. The revised look's change summary sits above its items in an Emerald-wash box, and its new pieces carry the New chip. When no revision fits, a note in a Showroom box above the items says so, and the look stays. After a Keep or Change tap the looks wait 2 seconds, so several taps make one revision.
 - **Undo and compare (5c):** Undo feedback is a quiet button with the undo icon inside the change summary box; while the earlier look is checked, "Checking the earlier look against your preferences" with a spinner shows under it, and if it no longer fits, a note in a Showroom box says why. Compare is a secondary button under the look, for a look with an earlier version; it opens a sheet (wider on tablets and computers) with Current and Earlier side by side, or a Current and Earlier switch on phones, the differences as highlighter labels, Newer and Older, and Use this look.
-- **Conflict card (5c):** above the looks, in a highlighter box with the clock icon: the question, **Allow for this session** and **Keep my preference**. The no-match box's "Allow it for this session" opens it too.
+- **Conflict card (5c):** above the looks, in a highlighter box with the clock icon: the question, **Allow for this session** and **Keep my preference**. The no-match box's "Allow it for this session" opens it too. End closes it with the session, so it never shows in the next one (full code review, batch 2).
 - Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
 
 **Preference check status**
@@ -584,6 +584,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.21 (25 Oct 2026):** Full code review, batch 2: the conflict card closes with End (4.3).
 - **1.20 (24 Oct 2026):** Full code review, batch 1: a photo is Active only once kept, and Replace keeps the earlier photo until the new one is kept (4.2).
 - **1.19 (22 Oct 2026):** 5c fix 6: once what was asked is jotted, only its pieces change in each look, with Revising and a change summary (4.2, 4.3).
 - **1.18 (22 Oct 2026):** 5c fix 5: the jotted request and the This session only line are removed separately (Q2), and asking again for something allowed needs no card (Q1) (4.2).

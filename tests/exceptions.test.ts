@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { differences } from "@/core/looks/compare";
-import { asksAboutIt, conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, spokenQuestion, takeOffQuestion, wantedNote } from "@/core/looks/exceptions";
+import { askingHint, asksAboutIt, conflictQuestion, exceptionsForStylist, exceptionText, type FirmPreference, spokenQuestion, takeOffQuestion, wantedNote } from "@/core/looks/exceptions";
 import type { ShownItem } from "@/core/looks/shown";
 import { stylistContext } from "@/core/notes/context";
 import { createNotesReader, type Ask } from "@/core/notes/reader";
@@ -142,5 +142,24 @@ describe("Compare's differences (R51)", () => {
     expect(differences(now, [item("dress", "dress"), item("heels", "shoes"), item("clutch", "bag")])).toEqual(["Different shoes"]);
     expect(differences(now, [item("dress", "dress"), item("flats", "shoes"), item("blazer", "outer")])).toEqual(["With a jacket", "Without the bag"]);
     expect(differences(now, now)).toEqual(["The same pieces"]);
+  });
+});
+
+describe("Keep my preference and the asking hint (full code review, batch 2)", () => {
+  it("tells her outright when the shopper kept their preference, until it's allowed (A8)", () => {
+    const told = exceptionsForStylist([], null, [], [heels]);
+    expect(told).toContain("Kept: asked whether to allow high heels for this session, the shopper said no.");
+    expect(told).toContain("Never: high heels stands");
+    expect(told).not.toContain("Wait for their answer");
+    expect(exceptionsForStylist([], null, [], [sleeves])).toContain("whether to go without sleeves");
+    // Allowed after all: the kept line goes.
+    expect(exceptionsForStylist([heels], null, [], [heels])).not.toContain("Kept:");
+  });
+
+  it("the notes reader is told she just asked only while that's her latest question (B10)", () => {
+    expect(askingHint("pref-heels", null)).toBe("pref-heels");
+    expect(askingHint("pref-heels", spokenQuestion(heels))).toBe("pref-heels");
+    expect(askingHint("pref-heels", "Shall I show you the looks?")).toBeNull();
+    expect(askingHint(null, spokenQuestion(heels))).toBeNull();
   });
 });

@@ -77,7 +77,14 @@ export class SessionEndedError extends Error {
  * turn is the browser's label for the shopper's turn: the question stays while the turn does.
  */
 export async function saveQuestion(db: SupabaseClient, sessionId: string, seq: number, turn: string, question: NonNullable<NextQuestion>) {
-  await db.from("sessions").update({ question, question_turn: turn, question_seq: seq }).eq("id", sessionId).lt("question_seq", seq).throwOnError();
+  const { data } = await db.from("sessions").update({ question, question_turn: turn, question_seq: seq }).eq("id", sessionId).lt("question_seq", seq).select("id").throwOnError();
+  // False when newer words have moved on: a reading finishing late mustn't bring its question back (review batch 2, B6).
+  return (data?.length ?? 0) > 0;
+}
+
+/** A reading of a later turn with no question: the kept one is moot, so a late reading of the earlier turn can't bring it back (review batch 2, B6). */
+export async function clearQuestion(db: SupabaseClient, sessionId: string, seq: number, turn: string) {
+  await db.from("sessions").update({ question: null, question_turn: turn, question_seq: seq }).eq("id", sessionId).lt("question_seq", seq).throwOnError();
 }
 
 /** The session's kept question and the turn it belongs to. */

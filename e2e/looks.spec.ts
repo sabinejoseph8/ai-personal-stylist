@@ -263,6 +263,53 @@ test.describe("the looks", () => {
     await expect(note(page, "High heels")).toHaveAccessibleName("High heels Confirmed");
   });
 
+  test("End clears the question and everything else the page held, so nothing carries into the next session (full code review, A4)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await expect(card).toBeVisible({ timeout: 10_000 });
+    const question = "Your profile says never high heels. Shall I allow high heels for this session only, or keep your preference?";
+    await expect.poll(() => sent(page, "say"), { timeout: 15_000 }).toContain(question);
+    await page.getByRole("button", { name: "End", exact: true }).click();
+    await page.getByRole("button", { name: "End session" }).click();
+    await expect(page.getByRole("button", { name: "Start conversation" })).toBeVisible();
+    await expect(card).toHaveCount(0);
+    // The next session starts clean: no card, her question isn't said again, and nothing she's told
+    // carries the old question or the old notes. (The fake call's log starts afresh with the new call.)
+    await page.getByRole("button", { name: "Start conversation" }).click();
+    await expect(page.getByRole("button", { name: "End", exact: true })).toBeEnabled();
+    await expect.poll(() => scriptDone(page)).toBe(true);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "Hello again", final: true, turnId: "h9" });
+    await expect.poll(async () => (await sent(page, "updateContext")).length, { timeout: 10_000 }).toBeGreaterThan(0);
+    await page.waitForTimeout(7_000);
+    await expect(card).toHaveCount(0);
+    expect((await sent(page, "say")).filter((line) => line === question)).toHaveLength(0);
+    const told = await sent(page, "updateContext");
+    for (const context of told) {
+      expect(context).not.toContain("Wait for their answer");
+      expect(context).not.toContain("Outdoor wedding");
+    }
+  });
+
+  test("Keep my preference tells her the answer was no, so she neither waits nor asks again (full code review, A8)", async ({ page }) => {
+    test.slow();
+    await weddingLooks(page);
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h1" });
+    const card = looksOf(page).getByRole("group", { name: "Allow for this session?" });
+    await expect(card).toBeVisible({ timeout: 10_000 });
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Wait for their answer");
+    await card.getByRole("button", { name: "Keep my preference" }).click();
+    await expect(card).toHaveCount(0);
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("Kept: asked whether to allow high heels for this session, the shopper said no.");
+    expect((await sent(page, "updateContext")).at(-1)).not.toContain("Wait for their answer");
+    // Allowed after all: the kept line goes.
+    await playInCall(page, { type: "words", speaker: "shopper", text: "I'd love some high heels", final: true, turnId: "h2" });
+    await card.getByRole("button", { name: "Allow for this session" }).click({ timeout: 10_000 });
+    await expect.poll(async () => (await sent(page, "updateContext")).at(-1) ?? "").toContain("This session only: the shopper allowed");
+    expect((await sent(page, "updateContext")).at(-1)).not.toContain("Kept:");
+  });
+
   test("asking again for high heels once allowed: jotted in ink with no card, though its note was removed (fix plan 5)", async ({ page }) => {
     test.slow();
     await weddingLooks(page);
