@@ -2,7 +2,7 @@ import type { Product } from "../../connectors/catalog/types";
 import { feedbackOf } from "../notes/feedback";
 import { active, type Note } from "../notes/types";
 import { dollars } from "./budget";
-import { type Group, groupOf, type LookItem, nameOf, type ResolvedItem } from "./look";
+import { type Group, groupOf, type LookItem, nameOf, productGroup, type ResolvedItem } from "./look";
 import { list } from "./rules";
 import type { LookTotal } from "./totals";
 
@@ -115,7 +115,16 @@ export function revisionPlan(items: ResolvedItem[], lines: LookFeedback[], pendi
   let whole = false;
   for (const l of pending) {
     const named = l.items.filter((id) => ids.includes(id) && !keep.has(id));
-    if (l.scope === "look" || (!named.length && l.about && !l.items.some((id) => keep.has(id)))) whole = true;
+    if (l.scope === "look") whole = true;
+    else if (!named.length && l.about && !l.items.some((id) => keep.has(id))) {
+      // The piece it names has left the look (swapped meanwhile): the request applies to the piece of its
+      // kind now, rather than asking the builder for a whole new look (full code review, C7).
+      const gone = l.items.map(product).find(Boolean) ?? null;
+      const group = gone ? productGroup(gone.category) : null;
+      const at = group ? items.findIndex((i) => groupOf(i) === group && !keep.has(refId(i.ref))) : -1;
+      if (at >= 0) change.add(at);
+      else whole = true;
+    }
     for (const id of named) change.add(ids.indexOf(id));
   }
   const wishes: Wish[] = [];

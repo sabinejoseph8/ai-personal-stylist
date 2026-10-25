@@ -716,6 +716,36 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     }
   }, 120_000);
 
+  it("the build lock is released only by its holder, so a build that ran past its claim can't free a newer one (review batch 4, C11)", async () => {
+    const claim = async () => (await db.rpc("claim_looks_build", { session }).throwOnError()).data as string | null;
+    const first = await claim();
+    expect(first).toBeTruthy();
+    expect(await claim()).toBeNull();
+    // The first claim runs out and a second request takes the lock.
+    await db.from("sessions").update({ looks_busy_until: new Date(Date.now() - 1000).toISOString() }).eq("id", session).throwOnError();
+    const second = await claim();
+    expect(second).toBeTruthy();
+    // The first request finishing doesn't free it; the second does.
+    await db.rpc("release_looks_build", { session, token: first }).throwOnError();
+    expect(await claim()).toBeNull();
+    await db.rpc("release_looks_build", { session, token: second }).throwOnError();
+    expect(await claim()).toBeTruthy();
+  });
+
+  it("changing the main piece of every look at once never gives two looks the same dress (review batch 4, C4)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const before = looksOf(await buildLooks(deps(), guest.id, session));
+    const sleeves = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "must_have").single().throwOnError()).data!;
+    await allowException(db, guest.id, session, sleeves.id);
+    await jotWanted({ db }, guest.id, session, { id: sleeves.id, kind: "must_have", words: "sleeves" });
+    const stages: string[] = [];
+    const after = looksOf(await buildLooks(deps(), guest.id, session, (stage) => stages.push(stage)));
+    const mains = (looks: ShownLook[]) => looks.map((l) => l.items.filter((i) => ["dress", "suit", "top", "bottom"].includes(i.group)).map((i) => i.id).sort().join("|"));
+    expect(after).toHaveLength(before.length);
+    expect(new Set(mains(after)).size).toBe(after.length);
+    expect(stages).toContain("revising");
+  }, 180_000);
+
   it("a build stops once the session ends, and saves nothing more (5c fix 6)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     // The session ends while the looks builder is working (Sabine ended one during a 30-second build).

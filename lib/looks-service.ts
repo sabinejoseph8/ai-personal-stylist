@@ -11,14 +11,15 @@ import { differences } from "@/core/looks/compare";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
 import { changeSummary, feedbackKey, type LookFeedback, lookFeedback, meetsWishes, nothingFits, pendingFeedback, type RevisionPlan, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
 import { type Rule, ruledOut } from "@/core/looks/rules";
-import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
+import { noOtherPiece, pairedPicks, swapCandidates } from "@/core/looks/swap";
 import { looksReadiness } from "@/core/looks/readiness";
 import { droppedWants, type RuledPreference, type Want, wantKey, wantPieces, wantsFrom, wantsPlan } from "@/core/looks/wants";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import { lookTotal } from "@/core/looks/totals";
 import { feedbackOf } from "@/core/notes/feedback";
 import { active, type Note } from "@/core/notes/types";
-import { chosenItem } from "@/core/photos/item";
+import { limitCents } from "@/core/looks/budget";
+import { chosenItem, itemValues } from "@/core/photos/item";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { lookRequirements, sessionExceptions } from "@/lib/looks-inputs";
 import { loadNotes, SessionEndedError } from "@/lib/notes-store";
@@ -110,8 +111,10 @@ async function gather(db: SupabaseClient, guestId: string, sessionId: string) {
       stable({
         requirements,
         notes: confirmed.map((n: Note) => ({ kind: n.kind, text: n.text, details: n.details })),
-        anchor,
-        item: anchor ? item : null,
+        // What the checks read of the item to style around: never the photo's version or a detail's pencil
+        // or ink status, which left every look needing a new check after a Confirm tap (review batch 4, C6).
+        anchor: anchor ? { photoId: anchor.photoId, name: anchor.name, owned: anchor.owned } : null,
+        item: anchor && item ? itemValues(item) : null,
         owned: owned.map((o) => ({ ref: o.ref, name: o.name, words: o.words })),
         likes,
       }),
@@ -336,9 +339,13 @@ const BUILD_WAIT_SECONDS = 300;
  * and a build can't both fill the same place.
  */
 async function inTurn<T>(db: SupabaseClient, sessionId: string, onWait: () => void, work: () => Promise<T>): Promise<T | { stale: true }> {
+  let token: string;
   for (let waited = 0; ; waited++) {
     const { data: claimed } = await db.rpc("claim_looks_build", { session: sessionId }).throwOnError();
-    if (claimed) break;
+    if (claimed) {
+      token = claimed as string;
+      break;
+    }
     if (waited === 0) onWait();
     if (waited >= BUILD_WAIT_SECONDS) return { stale: true };
     await new Promise((r) => setTimeout(r, 1000));
@@ -346,7 +353,8 @@ async function inTurn<T>(db: SupabaseClient, sessionId: string, onWait: () => vo
   try {
     return await work();
   } finally {
-    await db.rpc("release_looks_build", { session: sessionId });
+    // Released only by its holder: a build that ran past its claim mustn't free a newer one (review batch 4, C11).
+    await db.rpc("release_looks_build", { session: sessionId, token });
   }
 }
 
@@ -590,11 +598,13 @@ async function buildNow(deps: LooksDeps, guestId: string, sessionId: string, emi
   const revising = ({ row, items, lines, plan }: (typeof due)[number]) =>
     revise(deps, guestId, sessionId, g, row, items, lines, plan, { seen: seenOf(lines), wanted: g.wants.map(wantKey) }, { catalog, products, mustUse, emit });
   // Changes to pieces, such as each look's shoes once heels are allowed, run side by side: one after
-  // another took 42 seconds for three looks (the heels timing). A whole new look waits its turn, so two
-  // new looks can't come out the same.
-  const side = await Promise.all(due.filter((d) => !d.plan.whole).map(revising));
+  // another took 42 seconds for three looks (the heels timing). A whole new look, or a change to a main
+  // piece (the dress, or the top or bottom), waits its turn, so two looks can't come out with the same
+  // dress: side by side, each only saw the others' old main pieces (full code review, C4).
+  const touchesMain = (d: (typeof due)[number]) => d.plan.whole || d.plan.change.some((i) => ["dress", "suit", "top", "bottom"].includes(groupOf(d.items[i])));
+  const side = await Promise.all(due.filter((d) => !touchesMain(d)).map(revising));
   if (side.some((r) => r.done === "stale")) return { stale: true };
-  for (const d of due.filter((d) => d.plan.whole)) if ((await revising(d)).done === "stale") return { stale: true };
+  for (const d of due.filter(touchesMain)) if ((await revising(d)).done === "stale") return { stale: true };
   const looks = await looksNow();
   return { looks, noMatch: explain(looks.length) };
 }
@@ -701,14 +711,15 @@ async function revise(
     const pools = plan.change.map((i) => swapCandidates(fits, items, i, plan.turnedDown, g.requirements.budget).filter((p) => meetsWishes(p, productGroup(p.category), plan.wishes)));
     pooled = pools.map((p) => p.length);
     if (pools.every((pool) => pool.length)) {
-      // The best replacement for each piece first, then the next best, and so on.
-      const combos: Candidate[] = [];
-      for (let k = 0; k < Math.min(Math.max(...pools.map((p) => p.length)), SWAP_BATCH * 3); k++) {
-        const picks = pools.map((pool) => pool[Math.min(k, pool.length - 1)]);
-        const refs = row.items.map((r, i): LookItem => (plan.change.includes(i) ? { kind: "product", productId: picks[plan.change.indexOf(i)].id } : r));
-        const its = items.map((it, i): ResolvedItem => (plan.change.includes(i) ? { ref: refs[i], product: picks[plan.change.indexOf(i)] } : it));
-        if (!combos.some((c) => JSON.stringify(c.refs) === JSON.stringify(refs))) combos.push({ refs, items: its, name: row.name ?? "Look", reason: null });
-      }
+      // The best replacements first. Several pieces at once are paired every way and kept within the
+      // budget as a whole: each pool alone assumed the other pieces stayed (review batch 4, C5).
+      const withPicks = (picks: Product[]) => items.map((it, i): ResolvedItem => (plan.change.includes(i) ? { ref: { kind: "product", productId: picks[plan.change.indexOf(i)].id }, product: picks[plan.change.indexOf(i)] } : it));
+      const budget = g.requirements.budget;
+      const fits = (picks: Product[]) => budget === null || totalOf(withPicks(picks), g.requirements).totalCents <= limitCents(budget);
+      const combos: Candidate[] = pairedPicks(pools, fits, SWAP_BATCH * 3).map((picks) => {
+        const its = withPicks(picks);
+        return { refs: its.map((it) => it.ref), items: its, name: row.name ?? "Look", reason: null };
+      });
       for (let b = 0; b < combos.length; b += SWAP_BATCH) batches.push(combos.slice(b, b + SWAP_BATCH));
     }
   }
@@ -752,7 +763,16 @@ async function revise(
       }),
     );
     tried.push(...checked);
-    const winner = checked.find((c) => c.verdict === "pass");
+    // The other looks as they are now: one revised side by side may have taken these main pieces (C4).
+    const mainsNow = new Set(
+      (await onScreen(db, guestId, sessionId))
+        .filter((r) => r.id !== row.id)
+        .flatMap((r) => {
+          const its = resolve(r.items, ctx.products, g.owned);
+          return its ? [mainPieces(its)] : [];
+        }),
+    );
+    const winner = checked.find((c) => c.verdict === "pass" && !mainsNow.has(mainPieces(c.items)));
     const losers = checked.filter((c) => c !== winner).map((c) => c.id);
     if (losers.length) await hold(losers);
     // Newest wins (R52): a change to the requirements or to this look's feedback meanwhile means this

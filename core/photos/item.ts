@@ -113,3 +113,10 @@ export function itemForStylist(item: StyleItem): string {
   const ask = item.ownership ? "" : " Ask whether it's theirs or an inspiration.";
   return `Style around this item, from the shopper's photo: ${chosen.name} (${detailWords(chosen)}). Ownership: ${ownershipWords(item.ownership)}.${ask}`;
 }
+
+/**
+ * What the looks' checks read of a photo's item: its name and detail values, never whether each detail
+ * is in pencil or ink. Confirming a detail by tap left every look needing a new check for nothing when
+ * the statuses were part of the fingerprint (full code review, C6).
+ */
+export const itemValues = (item: PhotoItem) => ({ name: item.name, details: Object.fromEntries(Object.entries(item.details).map(([name, d]) => [name, d.value])) });

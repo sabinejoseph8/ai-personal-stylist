@@ -108,3 +108,22 @@ describe("the change summary (R50)", () => {
     expect(nothingFits(look, plan, { unchecked: true })).toBe("The new shoes couldn't be checked just now, so these stay. Try again in a moment.");
   });
 });
+
+describe("feedback on a piece that has left the look (full code review, batch 4, C7)", () => {
+  it("changes the piece of that kind now in the look, not the whole look", () => {
+    // The shopper swapped the stilettos for flats, and in the same breath asked for lower heels of the stilettos.
+    const now = [product(dress), product(flats), product(bag)];
+    const byId = (id: string) => catalogProducts.find((p) => p.id === id) ?? null;
+    const lower = line("Lower heels", "change", [stilettos.id], { about: "lower heel" });
+    const lines = lookFeedback([lower], 1);
+    const plan = revisionPlan(now, lines, lines, byId);
+    expect(plan.whole).toBe(false);
+    expect(plan.change).toEqual([1]);
+    expect(plan.wishes.map((w) => w.group)).toEqual(["shoes"]);
+    // With the piece of that kind kept, there's nothing of its kind to change: the builder makes a whole new look.
+    const withKeep = lookFeedback([line("Keep the flats", "keep", [flats.id]), lower], 1);
+    const kept = revisionPlan(now, withKeep, withKeep.filter((l) => l.act === "change"), byId);
+    expect(kept.change).toEqual([]);
+    expect(kept.whole).toBe(true);
+  });
+});
