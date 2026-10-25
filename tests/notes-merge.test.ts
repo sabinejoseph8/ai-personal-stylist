@@ -189,3 +189,38 @@ describe("money and dates in plain code", () => {
     ]);
   });
 });
+
+describe("twins and duplicates (full code review, batch 3)", () => {
+  it("two notes that share one word are two notes, and most words shared is still one idea (B1)", () => {
+    const seen = new Set<string>(); // the readings started on an empty notebook
+    let notes = mergeNotes([], add("owned_item", "Owns a camel coat"), 1, 12, newId, seen).notes;
+    const both: NoteChanges = { ...NO_CHANGES, add: [...add("owned_item", "Owns a camel coat").add, ...add("owned_item", "Owns a camel scarf").add] };
+    notes = mergeNotes(notes, both, 2, 12, newId, seen).notes;
+    expect(texts(notes).sort()).toEqual(["Owns a camel coat", "Owns a camel scarf"]);
+    notes = mergeNotes([], add("owned_item", "Navy blazer"), 1, 12, newId, seen).notes;
+    notes = mergeNotes(notes, add("owned_item", "Navy trousers"), 2, 12, newId, seen).notes;
+    expect(texts(notes).sort()).toEqual(["Navy blazer", "Navy trousers"]);
+    notes = mergeNotes([], add("occasion", "Outdoor wedding, November"), 1, 12, newId, seen).notes;
+    notes = mergeNotes(notes, add("occasion", "Outdoor reception"), 2, 12, newId, seen).notes;
+    expect(texts(notes)).toHaveLength(2);
+    // Two or more words shared: the same idea in other words, kept in the newer words.
+    notes = mergeNotes([], add("colors", "Emerald green, preferred"), 1, 12, newId, seen).notes;
+    notes = mergeNotes(notes, add("colors", "Emerald green dress"), 2, 12, newId, seen).notes;
+    expect(texts(notes)).toEqual(["Emerald green dress"]);
+  });
+
+  it("an update that rewords a note into another's words leaves one note, never dropping a confirmed one (B14)", () => {
+    const start = mergeNotes([], { ...NO_CHANGES, add: [...add("style", "Elegant").add, ...add("style", "Elegant, understated").add] }, 1, 12, newId).notes;
+    expect(active(start)).toHaveLength(2);
+    const [a, b] = active(start);
+    // The reading rewords the first into the second's words: the first goes.
+    let notes = mergeNotes(start, { ...NO_CHANGES, update: [{ id: a.id, text: b.text, status: "to_confirm", details: [] }] }, 2, 12, newId).notes;
+    expect(texts(notes)).toEqual([b.text]);
+    expect(find(notes, b.text).id).toBe(b.id);
+    // A confirmed one stays, in the new words, and the pencil duplicate goes instead.
+    const confirmed = start.map((n) => (n.id === a.id ? { ...n, status: "confirmed" as const } : n));
+    notes = mergeNotes(confirmed, { ...NO_CHANGES, update: [{ id: a.id, text: b.text, status: "confirmed", details: [] }] }, 2, 12, newId).notes;
+    expect(texts(notes)).toEqual([b.text]);
+    expect(active(notes)[0].id).toBe(a.id);
+  });
+});

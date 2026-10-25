@@ -3,7 +3,7 @@ import type { Product } from "@/connectors/catalog/types";
 import type { ResolvedItem } from "@/core/looks/look";
 import { revisionPlan } from "@/core/looks/revise";
 import { ruledOut } from "@/core/looks/rules";
-import { droppedWants, type RuledPreference, wantKey, wantPieces, wantsFrom, wantsPlan } from "@/core/looks/wants";
+import { droppedWants, type RuledPreference, wantKey, wantMark, wantPieces, wantsFrom, wantsPlan } from "@/core/looks/wants";
 import type { Note } from "@/core/notes/types";
 import { catalogProducts } from "./support/catalog-products";
 
@@ -106,5 +106,23 @@ describe("what the shopper asked for once allowed (5c fix 6)", () => {
     // Another note still asks for the same thing (two "High heels" notes, one removed): nothing to take back.
     const twin = note("b", "High heels");
     expect(droppedWants([removed, twin], [heels], wantsFrom([twin], [heels]), answered)).toEqual([]);
+  });
+});
+
+describe("a want by its mark (full code review, batch 3: B3, B4, C9)", () => {
+  it("is recognised by its mark whatever its words, survives Save to my profile, and ends with Remove on its line", () => {
+    const marked = note("n1", "Black high heels", { details: [wantMark(heels)] });
+    expect(wantsFrom([marked], [heels])).toEqual([{ noteId: "n1", version: 1, words: "High heels", kind: "never", rule: heels.rule }]);
+    // The preference deleted by Save to my profile: still a want, from the note's own mark.
+    expect(wantsFrom([marked], [], new Set(["pref-sleeves"]))).toEqual([{ noteId: "n1", version: 1, words: "Black high heels", kind: "never", rule: heels.rule }]);
+    // The preference still saved but no longer allowed (Remove on its line): not a want.
+    expect(wantsFrom([marked], [], new Set(["pref-heels", "pref-sleeves"]))).toEqual([]);
+    // A pencil note isn't one; a note without a mark is matched by its words, as before.
+    expect(wantsFrom([note("n2", "Black high heels", { status: "to_confirm", details: [wantMark(heels)] })], [heels])).toEqual([]);
+    expect(wantsFrom([note("n3", "High heels")], [heels])).toHaveLength(1);
+    // A want taken back is found by its mark too.
+    expect(droppedWants([{ ...marked, removed: true }], [heels], [], ["n1:1"]).map((w) => w.noteId)).toEqual(["n1"]);
+    // A mark that isn't one is ignored.
+    expect(wantsFrom([note("n4", "High heels", { details: [{ name: "want", value: "not json" }] })], [])).toEqual([]);
   });
 });

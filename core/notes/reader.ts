@@ -174,7 +174,7 @@ export const SAVED_RULES = `
 
 Their saved preferences rule some things out for every look:
 {saved}
-When the shopper asks for something one of these rules out, such as high heels when it says Never: high heels, or something sleeveless when it says Must have: sleeves, don't jot it as a note or as feedback: give x as its code, such as "s1", so the stylist can ask whether to allow it for this session only. Asking for something that fits a preference isn't a conflict: long sleeves when it says Must have: sleeves, or flats when it says Never: high heels. Neither is talking about it without asking for it ("I usually avoid heels").`;
+When the shopper asks for something one of these rules out, such as high heels when it says Never: high heels, or something sleeveless when it says Must have: sleeves, don't jot it as a note or as feedback: give x as that preference's code, so the stylist can ask whether to allow it for this session only. Only a preference the request really goes against: a request for something the allowed list below covers gets a, never x. Asking for something that fits a preference isn't a conflict: long sleeves when it says Must have: sleeves, or flats when it says Never: high heels. Neither is talking about it without asking for it ("I usually avoid heels").`;
 
 /**
  * Saved preferences the shopper allowed for this session (5c, fix plan 5): asking for one again is jotted
@@ -186,10 +186,10 @@ export const ALLOWED_RULES = `
 
 The shopper has allowed these for this session only, though their saved preferences rule them out:
 {allowed}
-When the shopper asks for something one of these allows, such as high heels when Never: high heels is allowed, don't jot it as a note: give x as its "a" code, such as "a1", and it's jotted for them. These have only "a" codes, never an "s" code.`;
+When the shopper asks for something one of these allows, such as high heels when Never: high heels is allowed, don't jot it as a note: give a as that preference's code, and it's jotted for them. These have only "a" codes, never an "s" code. One sentence can both break a saved preference and ask for an allowed one ("a strapless dress, and I'll keep my heels", or "a strapless dress with high heels" in one breath): then give x for the one it breaks and a for the one it asks for, both in the same answer.`;
 
 const CODE_RULE = `
-Give a code only for the preference the request is about, never for another one. Otherwise give x as "".`;
+Give a code only for the preference the request is about, never for another one. Otherwise give x (and a) as "".`;
 
 /**
  * The question the stylist just asked (5c, Sabine's answer to Q1 of the A.3 fix): a spoken answer does
@@ -221,7 +221,7 @@ function names(words: string, p: FirmPreference) {
 }
 
 /** The instructions and answer shape for this reading: the photo, looks and saved parts only when there are some. */
-function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false, savedText: string | null = null, askingText: string | null = null) {
+function readingShape(item: boolean, looksText: string | null, looksWhileTalking = false, savedText: string | null = null, askingText: string | null = null, allowedField = false) {
   const properties: Record<string, unknown> = { ...SCHEMA.properties };
   const required = [...SCHEMA.required];
   let system = SYSTEM;
@@ -243,6 +243,12 @@ function readingShape(item: boolean, looksText: string | null, looksWhileTalking
     system += savedText;
     properties.x = { type: "string" };
     required.push("x");
+  }
+  // The allowed ones get their own field, so one sentence can both break a saved preference and ask for
+  // an allowed one (full code review, B2 and B11; Sabine's answer to Q2 of the review).
+  if (allowedField) {
+    properties.a = { type: "string" };
+    required.push("a");
   }
   if (askingText) {
     system += askingText;
@@ -295,6 +301,7 @@ type Raw = {
   p?: { c: number; o: "" | "m" | "i"; d: string[]; k: string[] };
   w?: { l: number; p: "" | Group };
   x?: string;
+  a?: string;
   y?: "" | "allow" | "keep";
 };
 
@@ -368,7 +375,7 @@ export function createNotesReader(ask: Ask): NotesReader {
       const forAsking = asking
         ? ASKING_RULES.replace("{change}", asking.kind === "never" ? `allow ${asking.words}` : `go without ${asking.words}`).replace("{rule}", `${asking.kind === "never" ? "Never" : "Must have"}: ${asking.words}`)
         : null;
-      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen, forSaved?.text ?? null, forAsking) });
+      const { data, costUsd } = await ask({ user, ...readingShape(Boolean(item), forLooks?.text ?? null, looksOnScreen, forSaved?.text ?? null, forAsking, allowed.length > 0) });
       if (!data) return null;
       const raw = data as Raw;
       const real = (id: string) => shortIds.get(id);
@@ -406,17 +413,27 @@ export function createNotesReader(ask: Ask): NotesReader {
       // A request flagged as breaking a saved preference (5c), or asking for one allowed for this session
       // (fix plan 5), isn't jotted, even if Claude jots it too (found by the notes eval: "Sleeveless"
       // beside the flag): a note sharing its words is left out.
-      const coded = forSaved && raw.x ? forSaved.codes.get(raw.x.trim().toLowerCase()) : undefined;
-      let flagged = coded && saved.includes(coded) ? coded : undefined;
-      let wanted = coded && allowed.includes(coded) ? coded : undefined;
-      // A safety check: a code that isn't one allowed, with words naming one allowed ("heels") and nothing
-      // of the flagged one, asks for the allowed one, with no card (fix plan 5, found on Sabine's iPhone in
-      // 5c, A.7). That includes a made-up code: the notes eval caught "s2" for high heels once allowed.
-      const instead = raw.x?.trim() && !wanted && !(flagged && names(words, flagged)) ? allowed.find((p) => names(words, p)) : undefined;
-      if (instead) [flagged, wanted] = [undefined, instead];
-      const about = flagged ?? wanted;
-      const stems = about ? about.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5)) : [];
-      const breaksSaved = (a: Raw["add"][number]) => stems.some((stem) => a.t.toLowerCase().includes(stem));
+      // Two fields (B2, B11): x for a saved preference the request breaks, a for an allowed one asked for
+      // again, so one sentence can carry both. An "a" code still given in x counts as the allowed one.
+      const code = (given: string | undefined) => (forSaved && given?.trim() ? forSaved.codes.get(given.trim().toLowerCase()) : undefined);
+      const codedX = code(raw.x);
+      const codedA = code(raw.a);
+      const flagged = codedX && saved.includes(codedX) ? codedX : undefined;
+      let wanted = codedA && allowed.includes(codedA) ? codedA : codedX && allowed.includes(codedX) ? codedX : undefined;
+      // A safety check, only for a code that doesn't exist (Sabine's answer to Q2 of the review): the notes
+      // eval caught "s2" for high heels once allowed, copying the rules' own example. Words naming an
+      // allowed one ("heels") then ask for it, with no card (fix plan 5, found on Sabine's iPhone in 5c, A.7).
+      // A real code is taken at its word: "a strapless dress, and I'll keep my heels" with x = sleeves
+      // used to lose the sleeves conflict to the heels.
+      if (raw.x?.trim() && !codedX && !wanted) wanted = allowed.find((p) => names(words, p));
+      // A request flagged or asked for isn't jotted as a note too (the eval found "Sleeveless" beside the
+      // flag): an add that names it by every one of its words is left out. Whole words, all of them, so
+      // "High neckline" survives high heels (B5), and for a Must have the add must say the thing is to go
+      // without ("Sleeveless", "without sleeves"), so "Long sleeves" survives sleeves.
+      const stemsOf = (p: FirmPreference) => p.words.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 5));
+      const namesAll = (text: string, p: FirmPreference) => stemsOf(p).every((stem) => new RegExp(`\\b${stem}`, "i").test(text));
+      const without = (text: string) => /\b(no|not|without|none)\b|[a-z]less\b/i.test(text);
+      const breaksSaved = (a: Raw["add"][number]) => [flagged, wanted].some((p) => p && namesAll(a.t, p) && (p.kind === "never" || without(a.t)));
       const adds = raw.add
         .filter((a) => a.k !== "budget" && !aboutPhoto(a) && !breaksSaved(a))
         .flatMap((a): NewNote[] => {

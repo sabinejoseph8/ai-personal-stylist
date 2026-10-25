@@ -645,6 +645,77 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(rest(removed.looks)).toEqual(rest(before));
   }, 120_000);
 
+  it("Swap on the heels brings other heels once they're asked for, and the next update leaves the swap alone (review batch 3, C2)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    looksOf(await buildLooks(deps(), guest.id, session));
+    const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+    await allowException(db, guest.id, session, heels.id);
+    await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
+    const looks = looksOf(await buildLooks(deps(), guest.id, session));
+    const look = looks.find((l) => l.change?.includes("(you asked for high heels)"))!;
+    const index = look.items.findIndex((i) => i.group === "shoes");
+    const result = await swapPiece(deps(), guest.id, session, look.id, index);
+    if (!result || !("look" in result)) throw new Error(JSON.stringify(result));
+    expect((await createSampleCatalog(db).getProduct(result.look.items[index].id))!.details.heelCm).toBeGreaterThan(5);
+    const stages: string[] = [];
+    const after = looksOf(await buildLooks(deps(), guest.id, session, (stage) => stages.push(stage)));
+    expect(after.find((l) => l.slot === look.slot)!.id).toBe(result.look.id);
+    expect(stages).not.toContain("revising");
+  }, 120_000);
+
+  it("a re-check that changes only the failing shoes keeps the heels that were asked for (review batch 3, C1)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    looksOf(await buildLooks(deps(), guest.id, session));
+    const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+    await allowException(db, guest.id, session, heels.id);
+    await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
+    const looks = looksOf(await buildLooks(deps(), guest.id, session));
+    const catalog = createSampleCatalog(db);
+    const products = new Map(await Promise.all(looks.flatMap((l) => l.items.map(async (i) => [i.id, (await catalog.getProduct(i.id))!] as const))));
+    // A look whose shoes have a colour none of its other pieces share: "Not <that colour>" fails only the shoes.
+    const pick = looks.flatMap((l) => {
+      const shoes = l.items.find((i) => i.group === "shoes")!;
+      const colour = products.get(shoes.id)!.colors[0];
+      const shared = l.items.some((i) => i.id !== shoes.id && products.get(i.id)!.colors.includes(colour));
+      return shared ? [] : [{ look: l, colour }];
+    })[0];
+    if (!pick) throw new Error("no look with shoes of their own colour");
+    const others = pick.look.items.filter((i) => i.group !== "shoes").map((i) => i.id);
+    await db.from("session_notes").insert(note("colors", `Not ${pick.colour}`, "confirmed", [["avoid", pick.colour]])).throwOnError();
+    const stages: string[] = [];
+    const after = looksOf(await buildLooks(deps(), guest.id, session, (stage) => stages.push(stage)));
+    const same = after.find((l) => l.items.filter((i) => i.group !== "shoes").map((i) => i.id).join() === others.join());
+    expect(same).toBeDefined();
+    const shoes = (await catalog.getProduct(same!.items.find((i) => i.group === "shoes")!.id))!;
+    expect(shoes.colors).not.toContain(pick.colour);
+    expect(shoes.details.heelCm).toBeGreaterThan(5);
+  }, 120_000);
+
+  it("Save to my profile keeps what was asked for as a want, not a requirement the judge is told (review batch 3: B4, C9)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const seen: string[][] = [];
+    const fake = createFakeJudge();
+    const judge: Judge = { judge: (input) => (seen.push(input.notes), fake.judge(input)) };
+    const d = (): LooksDeps => ({ ...deps(), judge });
+    looksOf(await buildLooks(d(), guest.id, session));
+    const heels = (await db.from("saved_preferences").select("id").eq("user_id", guest.id).eq("kind", "never").single().throwOnError()).data!;
+    await allowException(db, guest.id, session, heels.id);
+    await jotWanted({ db }, guest.id, session, { id: heels.id, kind: "never", words: "high heels" });
+    const on = looksOf(await buildLooks(d(), guest.id, session));
+    try {
+      await saveExceptionToProfile(db, guest.id, session, heels.id);
+      seen.length = 0;
+      const stages: string[] = [];
+      const after = looksOf(await buildLooks(d(), guest.id, session, (stage) => stages.push(stage)));
+      expect(stages).not.toContain("building");
+      expect(after.map((l) => [l.slot, l.items.map((i) => i.id)])).toEqual(on.map((l) => [l.slot, l.items.map((i) => i.id)]));
+      // Still a want: never a plain note the judge is told, which turned Look 3's flats into a whole new look.
+      expect(seen.every((notes) => !notes.includes("High heels"))).toBe(true);
+    } finally {
+      await savePreferences(guest.db, SAMPLE_PROFILE.preferences);
+    }
+  }, 120_000);
+
   it("a build stops once the session ends, and saves nothing more (5c fix 6)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     // The session ends while the looks builder is working (Sabine ended one during a 30-second build).

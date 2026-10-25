@@ -111,11 +111,12 @@ describe("the notes reader and saved preferences (Q1 in 5c)", () => {
   });
 
   it("doesn't take a request for one already allowed as breaking another (fix plan 5, found on Sabine's iPhone in 5c, A.7)", async () => {
-    // Told "s1" for "high heels" with heels allowed: no card, it's a request for heels.
-    const wrong = await reading("s1").reader.read({ stylistSaid: "", words: "I'd love some high heels", notes: [], saved: [sleeves], allowed: [heels] });
-    expect(wrong?.exception).toBeUndefined();
-    expect(wrong?.wanted).toBe("pref-heels");
-    // Or a made-up code: the notes eval caught "s2" for high heels once allowed.
+    // A real code is taken at its word (Sabine's answer to Q2 of the full review): "s1" is a card about
+    // sleeves, which Keep dismisses, rather than a guess that heels were meant.
+    const real = await reading("s1").reader.read({ stylistSaid: "", words: "I'd love some high heels", notes: [], saved: [sleeves], allowed: [heels] });
+    expect(real?.exception).toBe("pref-sleeves");
+    expect(real?.wanted).toBeUndefined();
+    // A made-up code with words naming an allowed one asks for it: the notes eval caught "s2" for high heels once allowed.
     expect((await reading("s2").reader.read({ stylistSaid: "", words: "I'd love to wear some high heels", notes: [], saved: [sleeves], allowed: [heels] }))?.wanted).toBe("pref-heels");
     // No code at all is no request: "I usually avoid heels" stays as it is.
     expect((await reading("").reader.read({ stylistSaid: "", words: "I usually avoid heels", notes: [], saved: [sleeves], allowed: [heels] }))?.wanted).toBeUndefined();
@@ -161,5 +162,43 @@ describe("Keep my preference and the asking hint (full code review, batch 2)", (
     expect(askingHint("pref-heels", spokenQuestion(heels))).toBe("pref-heels");
     expect(askingHint("pref-heels", "Shall I show you the looks?")).toBeNull();
     expect(askingHint(null, spokenQuestion(heels))).toBeNull();
+  });
+});
+
+describe("the notes reader's two fields and word filter (full code review, batch 3)", () => {
+  const both = (x: string, a: string, adds: { k: string; t: string }[] = []) => {
+    const systems: string[] = [];
+    const schemas: unknown[] = [];
+    const ask: Ask = async ({ system, schema }) => (systems.push(system), schemas.push(schema), { data: { add: adds.map((n) => ({ ...n, d: [] })), update: [], remove: [], q: { t: "", o: [] }, x, a }, costUsd: 0 });
+    return { reader: createNotesReader(ask), systems, schemas };
+  };
+
+  it("reports a conflict and an allowed request in one sentence, in two fields (B2, B11; Sabine's Q2)", async () => {
+    const r = both("s1", "a1", [{ k: "outfit", t: "Strapless dress" }, { k: "style", t: "High heels" }]);
+    const read = await r.reader.read({ stylistSaid: "", words: "I'd like a strapless dress, and I'll keep my heels", notes: [], saved: [sleeves], allowed: [heels] });
+    expect(read?.exception).toBe("pref-sleeves");
+    expect(read?.wanted).toBe("pref-heels");
+    expect(r.systems[0]).toContain("give x for the one it breaks and a for the one it asks for");
+    expect(JSON.stringify(r.schemas[0])).toContain('"a":{"type":"string"}');
+    // What's asked for isn't jotted as a note too; the rest stays.
+    expect(read?.changes.add.map((n) => n.text)).toEqual(["Strapless dress"]);
+    // An "a" code still given in x counts as the allowed one.
+    expect((await both("a1", "").reader.read({ stylistSaid: "", words: "Some high heels", notes: [], saved: [sleeves], allowed: [heels] }))?.wanted).toBe("pref-heels");
+    // No allowed ones: no a field.
+    const none = both("", "");
+    await none.reader.read({ stylistSaid: "", words: "Something elegant", notes: [], saved: [sleeves] });
+    expect(JSON.stringify(none.schemas[0])).not.toContain('"a":{"type":"string"}');
+  });
+
+  it("drops only a note of the very thing asked, by whole words (B5)", async () => {
+    const adds = async (x: string, texts: string[], words: string, saved: FirmPreference[], allowed: FirmPreference[] = []) =>
+      (await both(x, "", texts.map((t) => ({ k: "style", t }))).reader.read({ stylistSaid: "", words, notes: [], saved, allowed }))?.changes.add.map((n) => n.text);
+    expect(await adds("s2", ["High heels", "High neckline", "High-waisted trousers", "Gala"], "high heels and a high neckline for the gala", [sleeves, heels])).toEqual([
+      "High neckline",
+      "High-waisted trousers",
+      "Gala",
+    ]);
+    // For a Must have, the note must say the thing is to go without: "Long sleeves" fits the preference.
+    expect(await adds("s1", ["Sleeveless dress", "Without sleeves", "Long sleeves on the jacket"], "a sleeveless dress with a long-sleeved jacket", [sleeves, heels])).toEqual(["Long sleeves on the jacket"]);
   });
 });

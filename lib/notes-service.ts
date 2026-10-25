@@ -2,6 +2,7 @@ import "server-only";
 import { type FirmPreference, type ShownException, wantedNote } from "@/core/looks/exceptions";
 import { allowException, firmPreferences } from "@/lib/exceptions-service";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { markOf, ruleOf, wantMark } from "@/core/looks/wants";
 import { stylistContext } from "@/core/notes/context";
 import { feedbackOf, isFeedback, touchFeedback } from "@/core/notes/feedback";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
@@ -11,7 +12,7 @@ import type { CatalogConnector } from "@/connectors/catalog/types";
 import type { LookForReader, NotesReader, SwapRequest } from "@/core/notes/reader";
 import { currentLooks } from "@/lib/looks-service";
 import type { StyleItem } from "@/core/photos/item";
-import { active, type NextQuestion, type Note, type ShownNote } from "@/core/notes/types";
+import { active, type NextQuestion, type Note, NOTE_CAP, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { clearQuestion, loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
 import { activePhoto, changePhoto } from "@/lib/photos-service";
@@ -96,10 +97,12 @@ export async function preferencesOf(db: SupabaseClient, guestId: string) {
 }
 
 /** Merges and saves, trying again if another reading saved first. */
-async function apply(db: SupabaseClient, sessionId: string, change: (notes: Note[]) => Merged) {
+async function apply(db: SupabaseClient, sessionId: string, change: (notes: Note[], wordsSeq: number) => Merged) {
   for (let attempt = 0; attempt < 5; attempt++) {
-    const { notes, version } = await loadNotes(db, sessionId);
-    const merged = change(notes);
+    // The words sequence as of this attempt, so a touch is stamped newer than any words numbered before
+    // its save (full code review, B7).
+    const { notes, version, wordsSeq } = await loadNotes(db, sessionId);
+    const merged = change(notes, wordsSeq);
     if (!merged.changed.length) return { notes, version };
     const saved = await saveNotes(db, sessionId, version, merged.changed);
     if (saved !== null) return { notes: merged.notes, version: saved };
@@ -193,8 +196,8 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     answered = { preferenceId: asking.id, allow, ...(exceptions ? { exceptions } : {}) };
     // What they asked for is jotted, so the looks change to include it (fix plan 3, Q1).
     if (allow && heard.wanted) {
-      const jotted = await jotWanted(deps, guestId, sessionId, asking);
-      if (jotted) done = { notes: (await loadNotes(deps.db, sessionId)).notes, version: jotted.version };
+      const jotted = await jotWantedNotes(deps, guestId, sessionId, asking);
+      if (jotted) done = jotted.done;
     }
   }
   // Asking again for one already allowed is jotted in ink straight away, as just after allowing it, so
@@ -202,8 +205,9 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
   // only, like a request to break one.
   const wanted = reading.wanted && heard.final && !answered ? allowed.find((p) => p.id === reading.wanted) : undefined;
   if (wanted) {
-    const jotted = await jotWanted(deps, guestId, sessionId, wanted);
-    if (jotted) done = { notes: (await loadNotes(deps.db, sessionId)).notes, version: jotted.version };
+    // The notes and version it saved, as one (B8): read apart, the page briefly showed another save's notes.
+    const jotted = await jotWantedNotes(deps, guestId, sessionId, wanted);
+    if (jotted) done = jotted.done;
   }
   let question = reading.question;
   if (question) {
@@ -221,6 +225,8 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     notes: shown(done.notes),
     question,
     seq,
+    // Said outright, so the page changes "Notes paused" only on the server's word (B13).
+    paused: false,
     context: stylistContext(done.notes, preferences, question, latest?.item ?? null, wardrobe),
     ...(changed && photo ? { photo: { id: photo.id, item: changed } } : {}),
     ...(reading.swap ? { swap: reading.swap } : {}),
@@ -238,9 +244,9 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
   let done: Awaited<ReturnType<typeof apply>>;
   try {
-    const { notes, wordsSeq } = await loadNotes(deps.db, sessionId);
+    const { notes } = await loadNotes(deps.db, sessionId);
     if (!notes.some((n) => n.id === noteId)) return null;
-    done = await apply(deps.db, sessionId, (current) => touchNote(current, noteId, action, wordsSeq));
+    done = await apply(deps.db, sessionId, (current, wordsSeq) => touchNote(current, noteId, action, wordsSeq));
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
@@ -260,13 +266,22 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
  * reading can't undo it. Null when the session isn't the guest's.
  */
 export async function jotWanted(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, preference: FirmPreference, on = true) {
+  return (await jotWantedNotes(deps, guestId, sessionId, preference, on))?.update ?? null;
+}
+
+/** jotWanted, with the notes it saved as well as the update for the page (B8). */
+async function jotWantedNotes(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, preference: FirmPreference, on = true) {
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
   const text = wantedNote(preference);
+  // The note carries a mark naming the preference and its rule, so a reading rewording it, a repeat, or
+  // Save to my profile deleting the preference can't turn it into a plain requirement (review batch 3).
+  const { data: pref } = await deps.db.from("saved_preferences").select("rule").eq("id", preference.id).eq("user_id", guestId).maybeSingle().throwOnError();
+  const mark = wantMark({ ...preference, rule: ruleOf(pref?.rule) });
+  const isWant = (n: Note) => markOf(n)?.id === preference.id || (!markOf(n) && n.text.toLowerCase() === text.toLowerCase());
   let done: Awaited<ReturnType<typeof apply>>;
   try {
-    const { wordsSeq } = await loadNotes(deps.db, sessionId);
-    done = await apply(deps.db, sessionId, (current) => {
-      const same = active(current).filter((n) => n.text.toLowerCase() === text.toLowerCase());
+    done = await apply(deps.db, sessionId, (current, wordsSeq) => {
+      const same = active(current).filter(isWant);
       // Taken back: every note asking for it goes.
       if (!on)
         return same.reduce(
@@ -279,19 +294,32 @@ export async function jotWanted(deps: Pick<NotesDeps, "db">, guestId: string, se
       if (same.some((n) => n.status === "confirmed")) return { notes: current, changed: [] };
       // Already jotted in pencil: that note is confirmed, rather than a second one added (fix plan 8).
       if (same.length) return touchNote(current, same[0].id, "confirm", wordsSeq);
-      const note: Note = { id: crypto.randomUUID(), kind: "style", text, status: "confirmed", details: [], source: "touch", changedSeq: wordsSeq, version: 1, removed: false };
-      return { notes: [...current, note], changed: [note] };
+      // The cap holds here too (B12; 12 notes, Sabine's answer to Q2 in 2c): a want the shopper allowed on
+      // purpose makes room by dropping the oldest pencil note, and waits if every note is confirmed.
+      let notes = current;
+      const changed: Note[] = [];
+      const others = active(current).filter((n) => n.kind !== "budget" && !isFeedback(n));
+      if (others.length >= NOTE_CAP - 1) {
+        const oldest = others.find((n) => n.status !== "confirmed");
+        if (!oldest) return { notes: current, changed: [] };
+        const dropped = touchNote(notes, oldest.id, "remove", wordsSeq);
+        notes = dropped.notes;
+        changed.push(...dropped.changed);
+      }
+      const note: Note = { id: crypto.randomUUID(), kind: "style", text, status: "confirmed", details: [mark], source: "touch", changedSeq: wordsSeq, version: 1, removed: false };
+      return { notes: [...notes, note], changed: [...changed, note] };
     });
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
   }
   const [preferences, photo, wardrobe, kept] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId), keptQuestion(deps.db, sessionId)]);
-  return {
+  const update = {
     version: done.version,
     notes: shown(done.notes),
     context: stylistContext(done.notes, preferences, kept, photo?.item ?? null, wardrobe),
   } satisfies NotesUpdate;
+  return { done, update };
 }
 
 /**
@@ -302,8 +330,7 @@ export async function takeBackFeedback(deps: Pick<NotesDeps, "db">, guestId: str
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
   let done: Awaited<ReturnType<typeof apply>>;
   try {
-    const { wordsSeq } = await loadNotes(deps.db, sessionId);
-    done = await apply(deps.db, sessionId, (current) => {
+    done = await apply(deps.db, sessionId, (current, wordsSeq) => {
       let notes = current;
       const changed = new Map<string, Note>();
       for (const id of noteIds) {
@@ -344,9 +371,8 @@ export async function feedbackByTouch(
   if (!look || !item || item.owned) return null;
   let done: Awaited<ReturnType<typeof apply>>;
   try {
-    const { wordsSeq } = await loadNotes(deps.db, sessionId);
     const names = Object.fromEntries(look.items.map((i) => [i.id, i.name]));
-    done = await apply(deps.db, sessionId, (current) => touchFeedback(current, { look: look.slot, item: item.id, act: touch.act, on: touch.on, names }, wordsSeq));
+    done = await apply(deps.db, sessionId, (current, wordsSeq) => touchFeedback(current, { look: look.slot, item: item.id, act: touch.act, on: touch.on, names }, wordsSeq));
   } catch (e) {
     if (e instanceof SessionEndedError) return null;
     throw e;

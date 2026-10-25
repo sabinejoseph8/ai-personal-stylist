@@ -38,6 +38,8 @@ export async function loadNotes(db: SupabaseClient, sessionId: string): Promise<
     .select("notes_version, words_seq, session_notes(id, kind, note_text, status, hidden_details, source, changed_seq, version, removed, created_at)")
     .eq("id", sessionId)
     .order("created_at", { referencedTable: "session_notes" })
+    // Notes saved together share a time, and an update can change their physical order (review batch 3, B9).
+    .order("id", { referencedTable: "session_notes" })
     .maybeSingle<{ notes_version: number; words_seq: number; session_notes: Row[] }>()
     .throwOnError();
   // Deleted while words were being read (a guest deleted, or a test tidying up): the same as ended.

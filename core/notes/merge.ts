@@ -1,5 +1,5 @@
 import { feedbackOf, isFeedback } from "./feedback";
-import { active, type Detail, FEEDBACK_CAP, type Note, NOTE_CAP, type NoteChanges, type NoteKind, sameDetails } from "./types";
+import { active, type Detail, FEEDBACK_CAP, type Note, NOTE_CAP, type NoteChanges, type NoteKind, sameDetails, withMarks } from "./types";
 
 // Latest word wins (R22, tech spec 5, pattern 5). Readings can finish out of order, so each one
 // carries the sequence number its words arrived with, and only changes notes nothing newer has
@@ -27,6 +27,19 @@ const negative = (s: string) => /\b(not|no|nothing|never|avoid)\b/.test(norm(s))
 function within(small: string, big: string) {
   const words = keyWords(small);
   return words.length > 0 && negative(small) === negative(big) && words.every((w) => keyWords(big).includes(w));
+}
+/**
+ * The two say one idea in other words: they share two or more describing words when both have two or
+ * more, or one is within the other. One shared word isn't enough: "Owns a camel coat" and "Owns a camel
+ * scarf" are two things, and so are "Navy blazer" and "Navy trousers" (full code review, B1).
+ */
+export function twins(a: string, b: string) {
+  if (negative(a) !== negative(b)) return false;
+  const ka = keyWords(a);
+  const kb = keyWords(b);
+  const shared = ka.filter((w) => kb.includes(w)).length;
+  if (Math.min(ka.length, kb.length) >= 2) return shared >= 2;
+  return shared >= 1 && (within(a, b) || within(b, a));
 }
 
 export type Merged = { notes: Note[]; changed: Note[] };
@@ -59,16 +72,31 @@ export function mergeNotes(
   function update(n: Note, text: string, status: Note["status"], details: Detail[]) {
     if (n.removed || !fresh(n)) return;
     const next = text.trim() || n.text;
-    if (next === n.text && status === n.status && sameDetails(details, n.details)) return;
+    const kept = withMarks(details, n.details);
+    if (next === n.text && status === n.status && sameDetails(kept, n.details)) return;
     n.text = next;
     n.status = status;
-    n.details = details;
+    n.details = kept;
     mark(n);
   }
 
   for (const u of changes.update) {
     const n = byId.get(u.id);
-    if (n) update(n, u.text, u.status, u.details);
+    if (!n) continue;
+    // Reworded into another note's words: one note stays, and never a confirmed one goes (full code review, B14).
+    const text = u.text.trim();
+    const dup = text ? active([...byId.values()]).find((o) => o.id !== n.id && isFeedback(o) === isFeedback(n) && norm(o.text) === norm(text)) : undefined;
+    if (dup && !n.removed && fresh(n)) {
+      if (n.status !== "confirmed") {
+        n.removed = true;
+        mark(n);
+        continue;
+      }
+      if (dup.status === "confirmed" || !fresh(dup)) continue;
+      dup.removed = true;
+      mark(dup);
+    }
+    update(n, u.text, u.status, u.details);
   }
 
   for (const id of changes.remove) {
@@ -111,9 +139,11 @@ export function mergeNotes(
       if (all.some((n) => n.removed && sameIdea(n) && (n.source === "touch" || seq <= n.changedSeq))) continue;
       // The same idea again keeps the note's wording; a second budget is a correction of the first.
       if (active(all).some((n) => norm(n.text) === norm(text))) continue;
-      const twin = seen && active(all).find((n) => !seen.has(n.id) && !added.has(n.id) && n.kind === a.kind && shareWord(n.text, text));
+      const twin = seen && active(all).find((n) => !seen.has(n.id) && !added.has(n.id) && n.kind === a.kind && twins(n.text, text));
       if (twin) {
         update(twin, text, twin.status, a.details);
+        // Used once: a later add in this reading can't rewrite it again (B1).
+        added.add(twin.id);
         continue;
       }
       // An idea already noted, in more words: "November" next to "Outdoor wedding, November", or
@@ -128,7 +158,7 @@ export function mergeNotes(
           if (fresh(shorter)) {
             shorter.kind = a.kind;
             shorter.text = text;
-            if (a.details.length) shorter.details = a.details;
+            if (a.details.length) shorter.details = withMarks(a.details, shorter.details);
             mark(shorter);
           }
           continue;
