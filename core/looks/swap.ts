@@ -72,3 +72,20 @@ export const noOtherPiece = (item: ResolvedItem) => {
 
 /** The pieces a shopper can ask to swap by voice (the notes reader's answer, 4c). */
 export const SWAPPABLE: Group[] = ["dress", "suit", "top", "outer", "bottom", "shoes", "bag", "accessory"];
+
+/**
+ * Replacement sets when several pieces change at once (full code review, C5): each pool's best picks
+ * paired every way, best-ranked first, keeping only sets that `fits` (the whole look within the budget).
+ * The k-th of each pool paired blindly was over budget as often as not, and only 9 pairs were ever tried.
+ */
+export function pairedPicks<T>(pools: T[][], fits: (picks: T[]) => boolean, max: number, perPool = 6): T[][] {
+  const tops = pools.map((pool) => pool.slice(0, perPool));
+  if (tops.some((pool) => !pool.length)) return [];
+  let combos: { picks: T[]; rank: number }[] = [{ picks: [], rank: 0 }];
+  for (const pool of tops) combos = combos.flatMap((c) => pool.map((pick, i) => ({ picks: [...c.picks, pick], rank: c.rank + i })));
+  return combos
+    .filter((c) => fits(c.picks))
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, max)
+    .map((c) => c.picks);
+}

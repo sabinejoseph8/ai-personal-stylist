@@ -6,6 +6,7 @@ import { restoreLook } from "@/lib/looks-service";
 import { notesDeps } from "@/lib/notes-deps";
 import { takeBackFeedback } from "@/lib/notes-service";
 import { SessionEndedError } from "@/lib/notes-store";
+import { undoAnswer } from "@/lib/undo-answer";
 import { withinLimit } from "@/lib/rate-limits";
 
 // Undo feedback and Use this look (tech spec 4.1, R51, 5c): { undo: true } brings back the look before
@@ -34,8 +35,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
     if (!result) return Response.json({ error: "No such look." }, { status: 404 });
     if ("limited" in result) return Response.json({ error: "Too many changes this hour. Please wait a little, then try again." }, { status: 429 });
     if (!("look" in result)) return Response.json(result);
-    const notes = result.takeBack.length ? await takeBackFeedback(notesDeps(), guest.id, id, result.takeBack) : null;
-    return Response.json({ look: result.look, ...(notes ? { notes } : {}) });
+    // The look is back: the answer says so even if taking back its feedback fails (review batch 4, C12).
+    return Response.json(await undoAnswer(result.look, result.takeBack.length ? () => takeBackFeedback(notesDeps(), guest.id, id, result.takeBack) : null));
   } catch (e) {
     if (e instanceof SessionEndedError) return Response.json({ error: "No such look." }, { status: 404 });
     console.error(`looks: bringing back a look failed: ${e instanceof Error ? e.message : e}`);

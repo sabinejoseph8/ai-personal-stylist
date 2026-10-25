@@ -4,7 +4,8 @@ import type { BudgetLimit } from "@/core/looks/budget";
 import { looksChanged, looksForStylist, sameLooks } from "@/core/looks/context";
 import type { ResolvedItem } from "@/core/looks/look";
 import type { ShownLook } from "@/core/looks/shown";
-import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
+import { noOtherPiece, pairedPicks, swapCandidates } from "@/core/looks/swap";
+import { itemValues, type PhotoItem } from "@/core/photos/item";
 import { catalogProducts } from "./support/catalog-products";
 
 // 4c: the plain code behind the look panels: which replacements Swap checks first (R43, Sabine's answer
@@ -104,5 +105,37 @@ describe("what the stylist is told about the looks", () => {
     expect(told).toContain(`  Revised from their feedback. ${change}`);
     expect(told).toContain("Look 1 is being revised from their feedback right now.");
     expect(told).toContain("revises that look by itself");
+  });
+});
+
+describe("several pieces changing at once (full code review, batch 4)", () => {
+  it("pairs the replacements every way, best-ranked first, keeping only sets within the budget (C5)", () => {
+    // Shoes and bag pools, by price: the best shoes with the best bag are over budget together.
+    const shoes = [101, 60, 49];
+    const bags = [112, 70, 30];
+    const within = (picks: number[]) => 189 + picks[0] + picks[1] <= 350;
+    const pairs = pairedPicks([shoes, bags], within, 9);
+    expect(pairs[0]).toEqual([101, 30]); // rank 0 + 2, within budget
+    expect(pairs).not.toContainEqual([101, 112]);
+    expect(pairs.every(within)).toBe(true);
+    expect(pairs.length).toBeLessThanOrEqual(9);
+    // One piece: the pool in its own order; an empty pool: nothing to pair.
+    expect(pairedPicks([shoes], () => true, 9)).toEqual([[101], [60], [49]]);
+    expect(pairedPicks([shoes, []], () => true, 9)).toEqual([]);
+  });
+
+  it("the item to style around counts by its values, not by which details are in pencil or ink (C6)", () => {
+    const item: PhotoItem = {
+      name: "Navy wool blazer",
+      details: {
+        type: { value: "blazer", status: "confirmed" },
+        colors: { value: "navy", status: "to_confirm" },
+        pattern: { value: "solid", status: "confirmed" },
+        style: { value: "classic", status: "to_confirm" },
+      },
+    };
+    const confirmed: PhotoItem = { ...item, details: { ...item.details, colors: { value: "navy", status: "confirmed" } } };
+    expect(itemValues(confirmed)).toEqual(itemValues(item));
+    expect(itemValues({ ...item, details: { ...item.details, colors: { value: "black", status: "confirmed" } } })).not.toEqual(itemValues(item));
   });
 });
