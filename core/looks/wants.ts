@@ -69,9 +69,11 @@ export function wantPieces(items: ResolvedItem[], w: Want, keep: Set<string>, on
 
 /**
  * A revision plan from the look's feedback plan (`base`), also changing the pieces the wants are about
- * (`add`) and those of the wants taken back (`drop`), so its replacements meet both.
+ * (`add`) and those of the wants taken back (`drop`), so its replacements meet both. The wants it already
+ * answers (`standing`) still hold for any later change of their kind of piece: Change under the high heels
+ * brings other high heels (fix plan 9; it brought white sneakers, found on Sabine's iPhone in 5c, B.1).
  */
-export function wantsPlan(base: RevisionPlan, items: ResolvedItem[], add: Want[], drop: Want[]): RevisionPlan {
+export function wantsPlan(base: RevisionPlan, items: ResolvedItem[], add: Want[], drop: Want[], standing: Want[] = []): RevisionPlan {
   const change = new Set(base.change);
   const wishes = [...base.wishes];
   const asked = [...base.asked];
@@ -85,6 +87,20 @@ export function wantsPlan(base: RevisionPlan, items: ResolvedItem[], add: Want[]
       if (on && places.length) asked.push(words);
       notes.push(on ? `For this look, the shopper asked for ${words}, allowed for this session` : `For this look, the shopper no longer asks for ${words}`);
     }
+  for (const w of standing) {
+    if (drop.some((d) => d.words === w.words)) continue;
+    const words = w.words.toLowerCase();
+    // The kinds of piece it's about among those changing (all of them, for a whole new look), unless
+    // already asked of them above.
+    const places = base.whole ? items.map((_, i) => i) : [...change];
+    const groups = new Set(places.filter((i) => "product" in items[i] && ruledOut(w.kind, w.rule, (items[i] as { product: Product }).product) !== null).map((i) => groupOf(items[i])));
+    const fresh = [...groups].filter((group) => !wishes.some((x) => x.group === group && x.about === words));
+    if (!fresh.length) continue;
+    for (const group of fresh) wishes.push(wish(w, group, true));
+    if (!asked.includes(words)) asked.push(words);
+    const note = `For this look, the shopper asked for ${words}, allowed for this session`;
+    if (!notes.includes(note)) notes.push(note);
+  }
   return { ...base, change: base.whole ? [] : [...change].sort((a, b) => a - b), wishes, asked, notes };
 }
 

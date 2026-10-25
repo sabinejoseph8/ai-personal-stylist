@@ -90,6 +90,12 @@ describe("what the stylist is told about the looks", () => {
     expect(looksChanged([a], [stayed])).toBe(
       "Look 1 couldn't be revised as they asked: No other shoes fit everything you've asked for (closed toe), so these stay. Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.",
     );
+    // A new attempt that fails in the same words is told too, never "every look still meets everything"
+    // (fix plan 9, found on Sabine's iPhone in 5c, B.1).
+    const before: ShownLook = { ...stayed, noteFor: "w1:1" };
+    const again: ShownLook = { ...stayed, noteFor: "f1:1,w1:1" };
+    expect(looksChanged([before], [again])).toContain("Look 1 couldn't be revised as they asked: No other shoes fit");
+    expect(looksChanged([before], [before])).toBe("After the shopper's change, every look still meets everything they've asked for.");
     const told = looksForStylist({ looks: [revised], building: false, needs: null, noMatch: null, inView: 1, revising: [1], feedback: [{ look: 1, text: "Lower heels", confirmed: true }] });
     expect(told).toContain(`  Revised from their feedback. ${change}`);
     expect(told).toContain("Look 1 is being revised from their feedback right now.");

@@ -1,7 +1,7 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.35 (22 Oct 2026)
-**Last updated:** 22 Oct 2026
+**Status:** Agreed, version 1.36 (23 Oct 2026)
+**Last updated:** 23 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
 
@@ -310,6 +310,7 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
   - **The heels timing (npm run eval:heels, real Claude, your wedding with the sample profile):** the starting looks took 78 seconds and 25 cents. Allowing heels then took 42 seconds and 18 cents, checking the looks again and then changing each look's shoes one after another. Looks 1 and 2 got high heels (9 and 6 cm) with everything else kept; Look 3 stayed, since no high heels fitted the $500 limit with its other pieces, and said so. Taking the note back took 21 seconds and 11 cents, and both looks went back to flats. Since then, changes to pieces run side by side, so allowing heels should take about 20 seconds (not measured again).
   - **Taken back:** the note removed while still allowed, the shoes change back the same way. Remove on the clock line puts Never: high heels back, so the next check fails the heels. A look that fails only on pieces a rule now rules out has just those pieces replaced, rather than being rebuilt.
   - **Taken back (fix 7, found on your iPhone in 5c, A.9):** after Remove on the clock line, her context says so outright: "Taken back: the shopper took back allowing high heels. Their saved preference Never: high heels applies again, whatever was said earlier, so if they ask for it, ask the question again, word for word." It stays until it's allowed again or the session ends. With the line just gone, she'd gone by her own earlier words. And her reply counts as asking the question only when it's a question (a question mark, and this session with the preference or allowing): "High heels are allowed for this session" had stopped the app's back-up question.
+  - **What was asked still holds (fix 9, found on your iPhone in 5c, B.1):** a want a look already answers is passed on to any later change of its kind of piece, as a requirement plain code checks: Change under the high heels brings other high heels, with "(you asked for high heels)" in the change summary, and the judgment step is told. For a whole new look, the built candidates must meet it too. If none fits, the look stays, saying so. And the stylist is told every time a change couldn't be made: each look's note records what it answered, so a new attempt that fails in the same words is still told, never "every look still meets everything".
   - **One note per request (fix 8, found on your iPhone in 5c, A.7):** "High heels" was jotted twice when your "yes" was read twice at once. The notes and their version were read as two separate requests at the same time, so a reading could pair the notes from before another's save with the version from after it, and its save passed the version check. **loadNotes** now reads both in one request (the session with its notes embedded), so they always match. Allowing confirms a "High heels" note already in pencil rather than adding another; taking it back removes every note asking for it; and a want taken back changes nothing while another note still asks for the same thing.
   - **After she asks the shopper something (fix 6):** her looks line ("What changed in my looks?" or "Can you walk me through the looks…?") waits for the shopper's answer, or 12 seconds. After "Yes, allow it" she'd asked what heel height, and the looks line sent at the first pause had her talk straight on. Lines about a photo or the camera are the shopper's own doing, so they don't wait.
   - **A build stops when its session ends (fix 6):** the build checks the session is still open before each round, after the looks builder answers, and before each revision batch. A build that went on for 30 seconds after you ended had saved 3 looks after the session's data was deleted; the 10-minute cleanup (**close_idle_sessions**) had removed them.
@@ -547,6 +548,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.36 (23 Oct 2026):** 5c fix 9: what was asked still holds for later changes of a look, and the stylist is told every time a change couldn't be made.
 - **1.35 (22 Oct 2026):** 5c fix 8: notes and their version are read in one request, one note per request, and the browser tests' app runs with spending limits real spending can't reach.
 - **1.34 (22 Oct 2026):** The live site's monthly Claude stop is $40 (a Vercel setting), with Anthropic's limit above it, your decision after the $12 stop paused the notes.
 - **1.33 (22 Oct 2026):** 5c fix 7: the stylist is told when a permission is taken back, and only a question counts as her asking.
