@@ -231,6 +231,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   }
 
   async function connect({ reconnecting = false } = {}): Promise<Outcome> {
+    const mine = attempt.current;
     setProblem(null);
     setFlow("starting");
     dispatch(reconnecting ? { type: "connection", state: "reconnecting" } : { type: "starting" });
@@ -275,11 +276,14 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       if (live.current) setFlow("live");
       return { ok: true };
     } catch {
+      stopListening();
+      // The engine also reported the call ended, so the reconnect has already taken over: this failure
+      // steps aside rather than showing Ended on top of Reconnecting (full code review, A11).
+      if (attempt.current !== mine) return { ok: false, final: true };
       live.current = null;
       engine.current = null;
       callEnds.current = null;
       // Leave the call that couldn't join, so the next try can make a new one (Phase 2 review).
-      stopListening();
       await e.leave();
       void endOnServer(data.sessionId, true);
       return { ok: false, final: false, message: "The call couldn't connect. Please try again." };

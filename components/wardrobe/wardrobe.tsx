@@ -35,13 +35,15 @@ function ItemForm({
   item,
   adding,
   onSaved,
-  onDeleted,
+  onDeleted, onLinkExpired,
 }: {
   item: ShownWardrobeItem;
   /** A draft from Add item: Save adds it to the wardrobe. */
   adding: boolean;
   onSaved: (item: ShownWardrobeItem) => void;
   onDeleted: () => void;
+  /** The picture's 30-minute link has run out: fresh ones are fetched (review batch 5, D10). */
+  onLinkExpired: () => void;
 }) {
   const [name, setName] = useState(item.name);
   const [category, setCategory] = useState<Category>(item.category);
@@ -88,7 +90,7 @@ function ItemForm({
     >
       {item.photoUrl && (
         // eslint-disable-next-line @next/next/no-img-element -- a short-lived private link
-        <img src={item.photoUrl} alt={item.name} className="max-h-56 w-full rounded-image bg-showroom object-contain" />
+        <img src={item.photoUrl} alt={item.name} className="max-h-56 w-full rounded-image bg-showroom object-contain" onError={onLinkExpired} />
       )}
       <label className="flex flex-col gap-1">
         <span className="type-label text-ink">Name</span>
@@ -142,6 +144,23 @@ function ItemForm({
 export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownWardrobeItem[]; photosAllowed: boolean }) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
+  // Links last 30 minutes: when a picture's has run out, fresh ones are fetched, at most once in a while,
+  // as the pasted photo already does (review batch 5, D10).
+  const linksRefreshedAt = useRef(0);
+  async function refreshLinks() {
+    if (Date.now() - linksRefreshedAt.current < 10_000) return;
+    linksRefreshedAt.current = Date.now();
+    const res = await fetch("/api/wardrobe").catch(() => null);
+    if (!res?.ok) return;
+    const { items: fresh } = (await res.json()) as { items: ShownWardrobeItem[] };
+    const byId = new Map(fresh.map((i) => [i.id, i]));
+    setItems((list) =>
+      list.map((i) => {
+        const f = byId.get(i.id);
+        return f ? { ...i, photoUrl: f.photoUrl, thumbnailUrl: f.thumbnailUrl } : i;
+      }),
+    );
+  }
   const [filter, setFilter] = useState<Filter>("all");
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState(() => new Set(initialItems.filter((i) => i.styling).map((i) => i.id)));
@@ -333,7 +352,7 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
                   <span className="relative block aspect-square w-full overflow-hidden rounded-image bg-showroom">
                     {item.thumbnailUrl && (
                       // eslint-disable-next-line @next/next/no-img-element -- a short-lived private link
-                      <img src={item.thumbnailUrl} alt="" className="h-full w-full object-contain" />
+                      <img src={item.thumbnailUrl} alt="" className="h-full w-full object-contain" onError={() => void refreshLinks()} />
                     )}
                     {selecting && (
                       <span
@@ -367,7 +386,8 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
               setItems((list) => (open.adding ? [saved, ...list] : list.map((i) => (i.id === saved.id ? saved : i))));
               closeAndReturn();
             }}
-            onDeleted={() => {
+            onLinkExpired={() => void refreshLinks()}
+              onDeleted={() => {
               setItems((list) => list.filter((i) => i.id !== open.item.id));
               setSelected((s) => {
                 const next = new Set(s);

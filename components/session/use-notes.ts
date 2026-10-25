@@ -190,7 +190,9 @@ export function useNotes(
       return;
     }
     if (turn.current.id && e.turnId !== turn.current.id) flush(true);
-    if (turn.current.id !== e.turnId) turn.current.key = crypto.randomUUID();
+    // A new key per turn, even if the engine gives no turn id: with none, every turn shared one key and a
+    // spoken swap after the first was ignored (full code review, A10).
+    if (!turn.current.key || turn.current.id !== e.turnId) turn.current.key = crypto.randomUUID();
     turn.current.id = e.turnId;
     turn.current.text = e.text;
     if (e.final) flush(true);

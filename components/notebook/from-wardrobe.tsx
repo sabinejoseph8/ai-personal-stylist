@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { CATEGORY_LABELS, type ShownWardrobeItem } from "@/lib/wardrobe";
 
 // From your wardrobe (3d, Sabine's answer to Q2): the items chosen with Style with these, in My Styling
@@ -6,7 +9,20 @@ import { CATEGORY_LABELS, type ShownWardrobeItem } from "@/lib/wardrobe";
 
 const ROW = "pl-[calc(var(--margin-x)+0.75rem)] pr-4";
 
-export function FromYourWardrobe({ items }: { items: ShownWardrobeItem[] }) {
+export function FromYourWardrobe({ items: given }: { items: ShownWardrobeItem[] }) {
+  // The items as given, with fresh picture links fetched when one's 30-minute link has run out, at most
+  // once in a while (review batch 5, D10).
+  const [fresh, setFresh] = useState(new Map<string, ShownWardrobeItem>());
+  const items = given.map((i) => fresh.get(i.id) ?? i);
+  const linksRefreshedAt = useRef(0);
+  async function refreshLinks() {
+    if (Date.now() - linksRefreshedAt.current < 10_000) return;
+    linksRefreshedAt.current = Date.now();
+    const res = await fetch("/api/wardrobe").catch(() => null);
+    if (!res?.ok) return;
+    const { items: latest } = (await res.json()) as { items: ShownWardrobeItem[] };
+    setFresh(new Map(latest.map((i) => [i.id, i])));
+  }
   if (!items.length) return null;
   return (
     <section aria-labelledby="from-wardrobe" className="flex flex-col">
@@ -23,7 +39,7 @@ export function FromYourWardrobe({ items }: { items: ShownWardrobeItem[] }) {
           <li key={item.id} className="flex w-20 flex-col items-center gap-1 text-center">
             {item.thumbnailUrl && (
               // eslint-disable-next-line @next/next/no-img-element -- a short-lived private link
-              <img src={item.thumbnailUrl} alt="" className="size-14 rounded-print bg-page object-contain shadow-photo" />
+              <img src={item.thumbnailUrl} alt="" className="size-14 rounded-print bg-page object-contain shadow-photo" onError={() => void refreshLinks()} />
             )}
             <span className="type-small text-ink">{item.name}</span>
             <span className="sr-only">{CATEGORY_LABELS[item.category]}</span>

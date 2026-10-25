@@ -241,12 +241,13 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
   it("a swap waits for a build in progress, so they never fill the same place (Phase 4 code review)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     const [look] = looksOf(await buildLooks(deps(), guest.id, session));
-    await db.rpc("claim_looks_build", { session }).throwOnError();
+    // The lock is released with its token since batch 5 of the review.
+    const token = (await db.rpc("claim_looks_build", { session }).throwOnError()).data as string;
     let done = false;
     const swapping = swapPiece(deps(), guest.id, session, look.id, look.items.findIndex((i) => i.group === "shoes")).then((r) => ((done = true), r));
     await new Promise((r) => setTimeout(r, 2500));
     expect(done).toBe(false);
-    await db.rpc("release_looks_build", { session }).throwOnError();
+    await db.rpc("release_looks_build", { session, token }).throwOnError();
     const result = await swapping;
     expect(result && "look" in result).toBe(true);
   }, 60_000);

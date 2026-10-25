@@ -162,6 +162,21 @@ test.describe("the photo to style around", () => {
     await expect.poll(async () => ((await serverDb().storage.from("guest-photos").list(guest.id)).data ?? []).filter((f) => f.id).length).toBe(0);
   });
 
+  test("a Replace refused for the hourly limit keeps the photo on the page (full code review, batch 5, D7)", async ({ page }) => {
+    await inCall(page);
+    await pick(page, "Add a photo", { name: "navy.jpg", mimeType: "image/jpeg", buffer: await jpeg("#1f2a44") });
+    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/, READY);
+    const limit = "You've added 10 photos in the last hour. Try again later.";
+    await page.route("**/api/sessions/*/assets", (route) =>
+      route.request().method() === "POST" ? route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ error: limit }) }) : route.continue(),
+    );
+    await pick(page, "Replace", { name: "red.jpg", mimeType: "image/jpeg", buffer: await jpeg("#b42318") });
+    await expect(problem(page)).toHaveText(limit);
+    await expect(pasted(page)).toHaveCount(1);
+    await expect(pasted(page)).toHaveAttribute("src", /-v1\.jpg/, READY);
+    expect(await photoRows()).toMatchObject([{ version: 1, status: "ready" }]);
+  });
+
   test("a failed upload keeps the photo in place with Try again (R32)", async ({ page }) => {
     await inCall(page);
     let failures = 1;

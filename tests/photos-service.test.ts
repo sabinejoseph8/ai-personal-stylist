@@ -149,6 +149,18 @@ describe.skipIf(!canRunDatabaseTests)("photos to style around", () => {
     expect((await listPhotos(db, a.id, session)).map((p) => p.id)).toEqual([first.id]);
   });
 
+  it("two 'photo has arrived' requests at the same instant clean and keep it once (review batch 5, D3)", async () => {
+    const added = await addPhoto(db, a.id, session, "upload");
+    if (!added.ok) throw new Error(added.reason);
+    expect((await put(added.uploadUrl, await jpeg("#1f2a44"))).ok).toBe(true);
+    const both = await Promise.all([finishPhoto(db, a.id, session, added.id, added.version), finishPhoto(db, a.id, session, added.id, added.version)]);
+    expect(both.filter((r) => r && r.ok)).toHaveLength(1);
+    expect(both.filter((r) => r === null)).toHaveLength(1);
+    expect(await rows()).toMatchObject([{ status: "ready", version: 1, active: true }]);
+    expect((await files(`${a.id}/${session}`)).sort()).toEqual([`${added.id}-v1-thumb.jpg`, `${added.id}-v1.jpg`]);
+    expect(await files(`${a.id}/incoming`)).toEqual([]);
+  });
+
   it("guest B can't open, list, finish or change guest A's photo", async () => {
     const { id, finished } = await upload(a, await jpeg("#0b6b4f"));
     if (!finished?.ok) throw new Error("not kept");

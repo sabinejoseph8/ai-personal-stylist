@@ -1,10 +1,10 @@
 import sharp from "sharp";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Ask } from "@/core/ask";
 import { createCameraReader, type Sighting, sightingFrom } from "@/core/camera/reader";
 import { agreed, asksToCapture, CAPTURE_GRACE_MS, cameraForStylist, nextSeen, type Seen, seenLabel, whenToCapture } from "@/core/camera/sightings";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
-import { readFrame } from "@/lib/camera-service";
+import { readFrame, readQuietly } from "@/lib/camera-service";
 import { withinLimit } from "@/lib/rate-limits";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
@@ -25,6 +25,13 @@ describe("the camera reader's answer", () => {
     expect(sightingFrom({ s: "none", n: "", t: "", c: "", k: "l" })).toEqual(none);
     // An item without a name or type is nothing.
     expect(sightingFrom({ s: "one", n: "", t: "blazer", c: "navy", k: "h" })).toEqual(none);
+  });
+
+  it("gives no sighting, quietly, when the reader throws (full code review, batch 5, D8)", async () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(await readQuietly({ read: async () => { throw new Error("Claude unreachable"); } }, "abc")).toEqual({ sighting: null, costUsd: 0 });
+    expect(quiet).toHaveBeenCalledTimes(1);
+    quiet.mockRestore();
   });
 
   it("sends Claude the frame, and gives no sighting but still the cost when Claude can't answer", async () => {
@@ -169,12 +176,15 @@ describe.skipIf(!canRunDatabaseTests)("a camera frame on the server", () => {
     expect(seenFrames).toEqual([]);
   });
 
-  it("one frame every 2 seconds at most (tech spec 6)", async () => {
+  it("two frames in 3 seconds at most (tech spec 6; review batch 5, D11)", async () => {
     await db.from("rate_limits").delete().eq("user_id", a.id).throwOnError();
-    // The limit counts in fixed 2-second windows, so two tries can fall either side of a window's edge;
-    // of three quick tries, at least two share a window, and one of those is turned away.
-    const tries = [await withinLimit(a.db, "cameraFrame"), await withinLimit(a.db, "cameraFrame"), await withinLimit(a.db, "cameraFrame")];
+    // The limit counts in fixed 3-second windows, so quick tries can fall either side of a window's edge;
+    // of five, at least three share a window, and the third of those is turned away. A page sending one
+    // frame every 2.1 seconds never has three in one window, which 1 in 2 seconds couldn't promise.
+    const tries: boolean[] = [];
+    for (let i = 0; i < 5; i++) tries.push(await withinLimit(a.db, "cameraFrame"));
     expect(tries[0]).toBe(true);
+    expect(tries[1]).toBe(true);
     expect(tries.filter((ok) => !ok).length).toBeGreaterThanOrEqual(1);
   });
 });

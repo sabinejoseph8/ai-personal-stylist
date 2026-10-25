@@ -41,7 +41,21 @@ export async function readFrame(deps: CameraDeps, guestId: string, sessionId: st
   if (!session) return { ok: false, reason: "session" };
   const money = await deps.guard.checkAi(guestId, "claude");
   if (!money.ok) return { ok: false, reason: "allowance" };
-  const read = await deps.reader.read(frame.toString("base64"));
+  const read = await readQuietly(deps.reader, frame.toString("base64"));
   if (read.costUsd > 0) await deps.guard.recordAi(guestId, "claude", read.costUsd);
   return read.sighting ? { ok: true, sighting: read.sighting } : { ok: false, reason: "failed" };
+}
+
+/**
+ * The reader's answer, or no sighting when it throws (the Claude client unreachable): a frame that
+ * produced nothing, not a server error per frame while the page keeps sending (full code review, D8).
+ * The photo reader catches the same failure; a thrown call reports no cost.
+ */
+export async function readQuietly(reader: CameraDeps["reader"], frame: string): Promise<Awaited<ReturnType<CameraDeps["reader"]["read"]>>> {
+  try {
+    return await reader.read(frame);
+  } catch (e) {
+    console.error(`camera: reading a frame failed: ${e instanceof Error ? e.message : e}`);
+    return { sighting: null, costUsd: 0 };
+  }
 }

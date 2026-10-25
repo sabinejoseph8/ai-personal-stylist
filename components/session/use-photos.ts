@@ -107,16 +107,30 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     });
   };
 
-  /** Uploads a file as a new photo, or as a new version of `photo` (Replace, or Try again). A still from the camera is "camera" (3c). */
-  async function upload(file: File, photo?: PagePhoto, source: PhotoSource = photo?.source ?? "upload") {
+  /**
+   * Uploads a file as a new photo, or as a new version of `photo` (Replace, or Try again). A still from
+   * the camera is "camera" (3c). Resolves as soon as the server has taken the photo, or refused it, while
+   * the upload goes on: Capture waits for that before turning the camera off (review batch 5, D4).
+   */
+  function upload(file: File, photo?: PagePhoto, source: PhotoSource = photo?.source ?? "upload") {
+    return new Promise<boolean>((accept) => {
+      void run(file, photo, source, accept);
+    });
+  }
+
+  async function run(file: File, photo: PagePhoto | undefined, source: PhotoSource, accept: (ok: boolean) => void) {
     setProblem(null);
     const type = uploadType(file);
     if (!type || file.size > MAX_PHOTO_BYTES) {
       setProblem(PHOTO_MESSAGES.type);
+      accept(false);
       return;
     }
     const id = session.current;
-    if (!id) return;
+    if (!id) {
+      accept(false);
+      return;
+    }
     const key = photo?.key ?? crypto.randomUUID();
     const ticket = ++nextTicket.current;
     tickets.current.set(key, ticket);
@@ -132,6 +146,14 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     if (photo?.photoUrl.startsWith("blob:")) URL.revokeObjectURL(photo.photoUrl);
 
     const failed = () => update(key, ticket, { state: "failed", progress: 0 });
+    // A replacement the server turns away, for the file or for the hourly limit, leaves the original as it
+    // was; a new photo goes (review batches 1 and 5, D2 and D7).
+    const restore = () => {
+      if (!photo || photo.state !== "ready") return false;
+      URL.revokeObjectURL(preview);
+      update(key, ticket, { state: "ready", progress: 1, photoUrl: photo.photoUrl, thumbnailUrl: photo.thumbnailUrl, version: photo.version, file: undefined, source: photo.source, item: photo.item, inWardrobe: photo.inWardrobe });
+      return true;
+    };
     try {
       const res = await fetch(`/api/sessions/${id}/assets`, {
         method: "POST",
@@ -141,14 +163,16 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       const answer = (await res.json().catch(() => ({}))) as { id?: string; version?: number; uploadUrl?: string; error?: string };
       if (!res.ok || !answer.id || !answer.uploadUrl || !answer.version) {
         // Turned away (5 photos already, too many this hour, the session ended): it isn't added.
+        accept(false);
         if (tickets.current.get(key) !== ticket) return;
         if (res.status >= 500 || !answer.error) failed();
         else {
-          drop(key);
+          if (!restore()) drop(key);
           setProblem(answer.error);
         }
         return;
       }
+      accept(true);
       if (!update(key, ticket, { id: answer.id, version: answer.version })) {
         // Removed while it was being added: the server's copy goes too.
         if (!tickets.current.has(key)) void fetch(`/api/sessions/${id}/assets/${answer.id}`, { method: "DELETE" }).catch(() => null);
@@ -201,13 +225,11 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       if (tickets.current.get(key) !== ticket) return;
       if (result.reason === "type" || result.reason === "size" || result.reason === "unreadable" || result.reason === "photo") {
         // The server turned the file away. A replacement leaves the original as it was; a new photo goes.
-        if (photo?.state === "ready" && result.reason !== "photo") {
-          URL.revokeObjectURL(preview);
-          update(key, ticket, { state: "ready", progress: 1, photoUrl: photo.photoUrl, thumbnailUrl: photo.thumbnailUrl, version: photo.version, file: undefined, source: photo.source, item: photo.item, inWardrobe: photo.inWardrobe });
-        } else drop(key);
+        if (result.reason === "photo" || !restore()) drop(key);
         setProblem(result.error ?? PHOTO_MESSAGES.type);
       } else failed();
     } catch {
+      accept(false);
       failed();
     }
   }
@@ -328,7 +350,9 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     setPhotos((list) =>
       list.map((p) => {
         const f = p.id && p.state === "ready" ? latest.get(p.id) : undefined;
-        return f && f.version === p.version ? { ...p, photoUrl: f.photoUrl, thumbnailUrl: f.thumbnailUrl, item: f.item } : p;
+        // Active and saved-to-wardrobe come from the server too: back from the Wardrobe page after deleting
+        // the saved item, the photo still said "Saved to your wardrobe" (full code review, D6).
+        return f && f.version === p.version ? { ...p, photoUrl: f.photoUrl, thumbnailUrl: f.thumbnailUrl, item: f.item, active: f.active, inWardrobe: f.inWardrobe } : p;
       }),
     );
   }
@@ -359,7 +383,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     photos,
     active: photos.find((p) => p.active) ?? photos.at(-1) ?? null,
     problem,
-    add: (file: File, source: PhotoSource = "upload") => void upload(file, undefined, source),
+    add: (file: File, source: PhotoSource = "upload") => upload(file, undefined, source),
     replace: (photo: PagePhoto, file: File) => void upload(file, photo, "upload"),
     retry: (photo: PagePhoto) => photo.file && void upload(photo.file, photo),
     choose: (photo: PagePhoto) => void choose(photo),

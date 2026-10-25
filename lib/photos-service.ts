@@ -176,9 +176,15 @@ export async function finishPhoto(db: SupabaseClient, guestId: string, sessionId
     return null;
   }
 
+  // Claimed in one database step, so two requests at the same instant can't both clean and read it, paying
+  // Claude twice and putting a confirmed detail back in pencil (full code review, D3). Let go on failure,
+  // so a retry can claim it again.
+  const { data: claimed } = await db.rpc("claim_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
+  if (!claimed) return null;
   const paths = { photo: keptPath(guestId, sessionId, photoId, version, false), thumbnail: keptPath(guestId, sessionId, photoId, version, true) };
   const cleaned = await keepUpload(db, original, paths);
   if (!cleaned.ok) {
+    await db.rpc("unclaim_session_asset", { owner: guestId, asset: photoId, expected_version: version }).throwOnError();
     if (cleaned.reason !== "missing") {
       // Turned away: a replacement is dropped and the original stays; a new photo goes.
       if (replacing && row.status === "ready") await db.from("session_assets").update({ pending_version: null }).eq("id", photoId).eq("pending_version", version).throwOnError();

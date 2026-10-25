@@ -34,3 +34,29 @@ export async function deleteGuest(db: SupabaseClient, guestId: string) {
   const { error } = await db.auth.admin.deleteUser(guestId);
   if (error) throw new Error(`deleting the guest failed: ${error.message}`);
 }
+
+/** How old a raw upload may be before the daily job sweeps it: long after any upload would have finished. */
+export const INCOMING_MAX_AGE_MS = 60 * 60 * 1000;
+
+/**
+ * Deletes raw uploads in the "incoming" folders of guests active in the last week that are older than
+ * `olderThanMs`: a wardrobe upload abandoned between the file landing and the ready step, or a session
+ * photo removed while its file was still landing, stayed until the guest was deleted (full code review,
+ * E4 and D5). Returns how many files went.
+ */
+export async function sweepIncoming(db: SupabaseClient, olderThanMs = INCOMING_MAX_AGE_MS, maxGuests = 200) {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: guests } = await db.from("profiles").select("user_id").gte("last_active_at", since).limit(maxGuests).throwOnError();
+  const cutoff = Date.now() - olderThanMs;
+  let swept = 0;
+  for (const g of guests ?? []) {
+    const folder = `${g.user_id}/incoming`;
+    const { data: files, error } = await stored(() => db.storage.from(BUCKET).list(folder, { limit: 100 }));
+    if (error || !files?.length) continue;
+    const old = files.filter((f) => f.name && Date.parse(f.created_at ?? f.updated_at ?? "") < cutoff).map((f) => `${folder}/${f.name}`);
+    if (!old.length) continue;
+    const removed = await stored(() => db.storage.from(BUCKET).remove(old));
+    if (!removed.error) swept += old.length;
+  }
+  return swept;
+}
