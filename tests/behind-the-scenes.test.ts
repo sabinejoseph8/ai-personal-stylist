@@ -47,6 +47,8 @@ describe("what the stylist captured", () => {
 describe("each preference check", () => {
   it("says what a look that passed meets", () => {
     expect(checkEntry(check())?.text).toBe("Check passed: Look 1, Garden ceremony. It meets Never: high heels; your budget; Outdoor wedding, November.");
+    // Named by its place on screen when known (Look 2 of 2 after a held look left a gap), as the page names it (review batch 2, C13).
+    expect(checkEntry(check({ look: { number: 2 } }))?.text).toContain("Check passed: Look 2, Garden ceremony.");
   });
 
   it("gives a blocked candidate as one line of reasons, never the look itself (R72)", () => {

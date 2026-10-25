@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Product } from "@/connectors/catalog/types";
 import type { BudgetLimit } from "@/core/looks/budget";
-import { looksChanged, looksForStylist } from "@/core/looks/context";
+import { looksChanged, looksForStylist, sameLooks } from "@/core/looks/context";
 import type { ResolvedItem } from "@/core/looks/look";
 import type { ShownLook } from "@/core/looks/shown";
 import { noOtherPiece, swapCandidates } from "@/core/looks/swap";
@@ -96,6 +96,10 @@ describe("what the stylist is told about the looks", () => {
     const again: ShownLook = { ...stayed, noteFor: "f1:1,w1:1" };
     expect(looksChanged([before], [again])).toContain("Look 1 couldn't be revised as they asked: No other shoes fit");
     expect(looksChanged([before], [before])).toBe("After the shopper's change, every look still meets everything they've asked for.");
+    // The page tells the two apart the same way, so her line is queued at all (review batch 2, C3).
+    expect(sameLooks([before], [before])).toBe(true);
+    expect(sameLooks([before], [again])).toBe(false);
+    expect(sameLooks([a], [stayed])).toBe(false);
     const told = looksForStylist({ looks: [revised], building: false, needs: null, noMatch: null, inView: 1, revising: [1], feedback: [{ look: 1, text: "Lower heels", confirmed: true }] });
     expect(told).toContain(`  Revised from their feedback. ${change}`);
     expect(told).toContain("Look 1 is being revised from their feedback right now.");

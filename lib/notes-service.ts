@@ -13,7 +13,7 @@ import { currentLooks } from "@/lib/looks-service";
 import type { StyleItem } from "@/core/photos/item";
 import { active, type NextQuestion, type Note, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
-import { loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
+import { clearQuestion, loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
 import { activePhoto, changePhoto } from "@/lib/photos-service";
 import { stylingPicks } from "@/lib/wardrobe-service";
 
@@ -206,10 +206,15 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
     if (jotted) done = { notes: (await loadNotes(deps.db, sessionId)).notes, version: jotted.version };
   }
   let question = reading.question;
-  if (question) await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question);
-  else if (heard.turn) {
+  if (question) {
+    // Newer words moved on meanwhile: this reading's question is stale, and the stylist's context says
+    // what's kept now, not a question the shopper has passed (review batch 2, B6).
+    if (!(await saveQuestion(deps.db, sessionId, seq, heard.turn ?? "", question))) question = (await loadQuestion(deps.db, sessionId)).question;
+  } else if (heard.turn) {
     const kept = await loadQuestion(deps.db, sessionId);
     if (kept.turn === heard.turn) question = kept.question;
+    // A later turn with no question: the kept one goes, so a late reading of its turn can't bring it back.
+    else await clearQuestion(deps.db, sessionId, seq, heard.turn);
   }
   emit({
     version: done.version,
@@ -225,6 +230,9 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
   });
 }
 
+/** The next question as kept, for a touch's context: a tap doesn't answer it, so she's still to ask it (review batch 2, B6). */
+const keptQuestion = async (db: SupabaseClient, sessionId: string) => (await loadQuestion(db, sessionId).catch(() => ({ question: null }))).question;
+
 /** Confirm, Remove or Undo by touch (PATCH /api/sessions/:id/notes/:noteId, R20). Null if not the guest's. */
 export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, noteId: string, action: TouchAction) {
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
@@ -237,11 +245,11 @@ export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: str
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
   }
-  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  const [preferences, photo, wardrobe, kept] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId), keptQuestion(deps.db, sessionId)]);
   return {
     version: done.version,
     notes: shown(done.notes),
-    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+    context: stylistContext(done.notes, preferences, kept, photo?.item ?? null, wardrobe),
   } satisfies NotesUpdate;
 }
 
@@ -278,11 +286,11 @@ export async function jotWanted(deps: Pick<NotesDeps, "db">, guestId: string, se
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
   }
-  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  const [preferences, photo, wardrobe, kept] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId), keptQuestion(deps.db, sessionId)]);
   return {
     version: done.version,
     notes: shown(done.notes),
-    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+    context: stylistContext(done.notes, preferences, kept, photo?.item ?? null, wardrobe),
   } satisfies NotesUpdate;
 }
 
@@ -310,11 +318,11 @@ export async function takeBackFeedback(deps: Pick<NotesDeps, "db">, guestId: str
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
   }
-  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  const [preferences, photo, wardrobe, kept] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId), keptQuestion(deps.db, sessionId)]);
   return {
     version: done.version,
     notes: shown(done.notes),
-    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+    context: stylistContext(done.notes, preferences, kept, photo?.item ?? null, wardrobe),
   } satisfies NotesUpdate;
 }
 
@@ -343,10 +351,10 @@ export async function feedbackByTouch(
     if (e instanceof SessionEndedError) return null;
     throw e;
   }
-  const [preferences, photo, wardrobe] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId)]);
+  const [preferences, photo, wardrobe, kept] = await Promise.all([preferencesOf(deps.db, guestId), activePhoto(deps.db, sessionId), stylingPicks(deps.db, guestId), keptQuestion(deps.db, sessionId)]);
   return {
     version: done.version,
     notes: shown(done.notes),
-    context: stylistContext(done.notes, preferences, null, photo?.item ?? null, wardrobe),
+    context: stylistContext(done.notes, preferences, kept, photo?.item ?? null, wardrobe),
   } satisfies NotesUpdate;
 }

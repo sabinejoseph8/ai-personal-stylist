@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { readLines } from "@/components/session/use-notes";
 import type { NoMatch } from "@/core/looks/no-match";
+import { sameLooks } from "@/core/looks/context";
 import type { ShownLook } from "@/core/looks/shown";
 
 // The browser's side of the looks (4c; R39 to R45, R58). Whenever what the looks must meet may have
@@ -130,8 +131,10 @@ export function useLooks(sessionId: string | null, inputs: string, onEvent: (e: 
     setNoMatch(got.noMatch ?? null);
     show(next);
     setPhase("ready");
-    // A revision that couldn't be made changes no look, but its note is news too (5b).
-    const same = next.length === before.length && next.every((l, i) => l.id === before[i].id && (l.note ?? null) === (before[i].note ?? null)) && before.every((l) => l.current);
+    // A revision that couldn't be made changes no look, but its note is news too (5b), even when it says
+    // the same as last time: which feedback it answers (noteFor) tells the two apart, so the stylist is
+    // told again that the change couldn't be made (full code review, C3; the second half of 5c fix 9).
+    const same = sameLooks(before, next);
     if (!before.length && next.length) hook.current({ kind: "new", before, looks: next });
     else if (before.length && (rechecked || !same)) hook.current({ kind: "updated", before, looks: next });
   }

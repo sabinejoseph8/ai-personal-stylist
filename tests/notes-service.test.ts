@@ -157,6 +157,35 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     expect((await say("Something elegant", "turn-b", silent)).question).toBeNull();
   });
 
+  it("a reading that finishes after a later turn can't bring back a question the shopper has moved past (review batch 2, B6)", async () => {
+    // Turn A's reading is slow; turn B, with no question, finishes first and clears the kept question.
+    let release = () => {};
+    const waiting = new Promise<void>((r) => (release = r));
+    const slow: NotesReader = { read: async (input) => (await waiting, createFakeNotesReader().read(input)) };
+    const silent: NotesReader = { read: async (input) => ({ ...(await createFakeNotesReader().read(input))!, question: null }) };
+    const late: NotesUpdate[] = [];
+    const hearing = hearWords(deps({ reader: slow }), guest.id, sessionId, { words: "It's for a wedding", stylistSaid: "", final: true, turn: "turn-a" }, (u) => late.push(u));
+    await expect.poll(() => late.length).toBe(1); // the quick update, before the reading
+    const next: NotesUpdate[] = [];
+    await hearWords(deps({ reader: silent }), guest.id, sessionId, { words: "Something elegant", stylistSaid: "", final: true, turn: "turn-b" }, (u) => next.push(u));
+    expect(next.at(-1)!.question).toBeNull();
+    release();
+    expect(await hearing).toBe(true);
+    // Its question is stale: neither shown nor in the stylist's context, and not kept on the server.
+    const last = late.at(-1)!;
+    expect(last.question).toBeNull();
+    expect(last.context).not.toContain("Ask next");
+    expect((await db.from("sessions").select("question").eq("id", sessionId).single()).data?.question).toBeNull();
+  });
+
+  it("a tap keeps the next question in the stylist's context (review batch 2, B6)", async () => {
+    const { last } = await hear(WEDDING);
+    expect(last.question?.text).toBe("Dress or pantsuit?");
+    const elegant = last.notes.find((n) => n.text === "Elegant")!;
+    const touched = await touchSessionNote({ db }, guest.id, sessionId, elegant.id, "confirm");
+    expect(touched?.context).toContain("Ask next, when it fits: Dress or pantsuit?");
+  });
+
   it("two overlapping readings of a growing sentence jot one note", async () => {
     const updates: NotesUpdate[] = [];
     const heard = (words: string) => ({ words, stylistSaid: "", final: false, turn: "t" });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextStage, READY, showSamplePhrases, type Stage, type StageAction, stageLabel, timeLeftLabel } from "@/lib/stage";
+import { holdFor, nextStage, READY, showSamplePhrases, type Stage, type StageAction, stageLabel, THINKING_WAIT_MS, timeLeftLabel } from "@/lib/stage";
 
 // 2b: the stylist's state in words (R8), interrupting (R7) and when the sample phrases show (R70).
 const run = (...actions: StageAction[]): Stage => actions.reduce(nextStage, READY);
@@ -88,5 +88,26 @@ describe("tap to try (R70)", () => {
 
   it("a tapped phrase is answered: Thinking until she speaks", () => {
     expect(label(...connected, { type: "phrase-sent" })).toBe("Thinking");
+  });
+});
+
+describe("how long a line for her waits (full code review, batch 2, A5)", () => {
+  const finished: StageAction[] = [{ type: "shopper-speaking", speaking: true }, { type: "shopper-speaking", speaking: false }];
+  const thinking = run(...connected, ...finished);
+
+  it("not at all while nobody talks or thinks, and for as long as someone talks", () => {
+    expect(holdFor(run(...connected), 0, 10_000)).toBe(0);
+    expect(holdFor(run(...connected, { type: "stylist-speaking", speaking: true }), 0, 10_000)).toBe(Infinity);
+    expect(holdFor(run(...connected, { type: "shopper-speaking", speaking: true }), 0, 10_000)).toBe(Infinity);
+  });
+
+  it("while she's thinking of her reply: until it comes, or 4 seconds at most", () => {
+    expect(holdFor(thinking, 10_000, 10_000)).toBe(THINKING_WAIT_MS);
+    expect(holdFor(thinking, 10_000, 12_500)).toBe(1500);
+    expect(holdFor(thinking, 10_000, 15_000)).toBe(0);
+    // Her reply came and went: nothing to wait for.
+    expect(holdFor(run(...connected, ...finished, { type: "stylist-speaking", speaking: true }, { type: "stylist-speaking", speaking: false }), 10_000, 10_000)).toBe(0);
+    // Thinking with no start time known counts as quiet.
+    expect(holdFor(thinking, 0, 10_000)).toBe(0);
   });
 });

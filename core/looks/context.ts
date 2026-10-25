@@ -64,6 +64,16 @@ export function looksForStylist(now: LooksNow): string {
  * revision's summary (5b, R50), why a revision couldn't be made (R49), or which looks were replaced after
  * a change.
  */
+/**
+ * Nothing on screen changed: the same looks, with the same notes answering the same feedback. A failed
+ * change whose note says the same as last time is still news, told apart by what it answers (noteFor),
+ * so the stylist is told again (full code review, C3: the second half of 5c fix 9).
+ */
+export const sameLooks = (before: ShownLook[], next: ShownLook[]) =>
+  next.length === before.length &&
+  next.every((l, i) => l.id === before[i].id && (l.note ?? null) === (before[i].note ?? null) && (l.noteFor ?? null) === (before[i].noteFor ?? null)) &&
+  before.every((l) => l.current);
+
 export function looksChanged(before: ShownLook[], after: ShownLook[]): string | null {
   const revised: string[] = [];
   after.forEach((look, i) => {

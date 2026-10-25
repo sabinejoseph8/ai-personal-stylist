@@ -59,16 +59,33 @@ export const takeOffQuestion = (p: FirmPreference) => `Take "${label(p)}: ${p.wo
  * about now. A permission taken back is said outright: with its line just gone, she went by her own earlier
  * words and told the shopper it was still allowed (found on Sabine's iPhone in 5c, A.9).
  */
-export function exceptionsForStylist(allowed: FirmPreference[], asking: FirmPreference | null, takenBack: FirmPreference[] = []): string {
+export function exceptionsForStylist(allowed: FirmPreference[], asking: FirmPreference | null, takenBack: FirmPreference[] = [], kept: FirmPreference[] = []): string {
   const lines: string[] = [];
   for (const a of allowed) lines.push(`This session only: the shopper allowed breaking their saved preference ${label(a)}: ${a.words}. Looks may now include it; their profile is unchanged.`);
   for (const t of takenBack.filter((t) => !allowed.some((a) => a.id === t.id)))
     lines.push(
       `Taken back: the shopper took back allowing ${t.kind === "never" ? t.words : `going without ${t.words}`}. Their saved preference ${label(t)}: ${t.words} applies again, whatever was said earlier, so if they ask for it, ask the question again, word for word.`,
     );
+  // Keep my preference, by tap or by a spoken no, is said outright: told only to wait for the answer, she
+  // waited, repeated the question or went by her earlier words (full code review, A8).
+  for (const k of kept.filter((k) => !allowed.some((a) => a.id === k.id)))
+    lines.push(
+      `Kept: asked whether to ${k.kind === "never" ? `allow ${k.words}` : `go without ${k.words}`} for this session, the shopper said no. Their saved preference ${label(k)}: ${k.words} stands: don't suggest anything against it, and don't ask again unless they ask for it again.`,
+    );
   if (asking)
     lines.push(
       `You've just asked the shopper: "${spokenQuestion(asking)}" Wait for their answer, by voice or with the buttons on their screen. Don't allow or refuse it yourself, and don't suggest anything with it until they've answered. If they stay quiet and you remind them, repeat the question exactly as it is, without starting with "certainly", "absolutely" or "of course", since they haven't said anything (found on Sabine's iPhone in 5c).`,
     );
   return lines.join("\n");
+}
+
+/**
+ * Which saved preference the notes reader is told she just asked about, so a spoken yes or no is heard
+ * as the answer: only while the last question she asked is that one (or she hasn't asked anything since
+ * it came up). Told it for every reading while the card was up, the reader heard a "yes" to a later
+ * question of hers ("Shall I show you the looks?") as allowing it (full code review, B10).
+ */
+export function askingHint(asking: string | null, herLastQuestion: string | null): string | null {
+  if (!asking) return null;
+  return herLastQuestion === null || asksAboutIt(herLastQuestion) ? asking : null;
 }

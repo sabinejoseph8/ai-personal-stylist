@@ -62,6 +62,9 @@ export async function behindTheScenesFor(deps: { db: SupabaseClient; catalog: Ca
   // looks on screen are checked again after a change. Its later checks are those checks again.
   const names = new Map(catalog.map((p) => [p.id, p.name]));
   const byId = new Map(looks.map((l) => [l.id, l]));
+  // Looks on screen are numbered by their place (Look 2 of 2), as the page numbers them (review batch 2, C13).
+  const placed = [...new Set(looks.filter((l) => l.status === "published" || l.status === "needs_check").map((l) => l.input_versions.slot ?? 0))].filter((n) => n >= 1).sort((a, b) => a - b);
+  const numberOf = (slot: number | null) => (slot && placed.includes(slot) ? placed.indexOf(slot) + 1 : slot);
   const total = new Map<string, number>();
   for (const c of checks) total.set(c.look_id, (total.get(c.look_id) ?? 0) + 1);
   const seen = new Map<string, number>();
@@ -79,6 +82,7 @@ export async function behindTheScenesFor(deps: { db: SupabaseClient; catalog: Ca
         look: {
           name: look.name ?? "Look",
           slot: look.input_versions.slot ?? null,
+          number: numberOf(look.input_versions.slot ?? null),
           shown: SHOWN.includes(look.status) || (total.get(c.look_id) ?? 0) > 1,
           swap: swap ? { from: names.get(swap.from) ?? "the old piece", to: names.get(swap.to) ?? "a new piece" } : null,
           revision: look.input_versions.revision?.summary ?? null,
