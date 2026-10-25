@@ -45,19 +45,24 @@ export const INCOMING_MAX_AGE_MS = 60 * 60 * 1000;
  * E4 and D5). Returns how many files went.
  */
 export async function sweepIncoming(db: SupabaseClient, olderThanMs = INCOMING_MAX_AGE_MS, only?: string[], maxGuests = 100) {
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  // `only`: these guests' folders alone (tests), rather than every guest active this week.
-  const guests = only ?? ((await db.from("profiles").select("user_id").gte("last_active_at", since).limit(maxGuests).throwOnError()).data ?? []).map((g) => g.user_id as string);
+  // Guests active in the last two days: the job runs daily, so a day plus a margin covers every upload since
+  // the last run (5d review: a week re-listed each folder seven times).
+  const since = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  // `only`: these guests' folders alone (tests), rather than every guest active recently.
+  const guests =
+    only ?? ((await db.from("profiles").select("user_id").gte("last_active_at", since).order("last_active_at", { ascending: false }).limit(maxGuests).throwOnError()).data ?? []).map((g) => g.user_id as string);
   const cutoff = Date.now() - olderThanMs;
   let swept = 0;
-  for (const guest of guests) {
+  const sweepOne = async (guest: string) => {
     const folder = `${guest}/incoming`;
     const { data: files, error } = await stored(() => db.storage.from(BUCKET).list(folder, { limit: 100 }));
-    if (error || !files?.length) continue;
+    if (error || !files?.length) return;
     const old = files.filter((f) => f.name && Date.parse(f.created_at ?? f.updated_at ?? "") < cutoff).map((f) => `${folder}/${f.name}`);
-    if (!old.length) continue;
+    if (!old.length) return;
     const removed = await stored(() => db.storage.from(BUCKET).remove(old));
     if (!removed.error) swept += old.length;
-  }
+  };
+  // Ten folders at a time: one after another, a hundred listings took most of the job's minute.
+  for (let i = 0; i < guests.length; i += 10) await Promise.all(guests.slice(i, i + 10).map(sweepOne));
   return swept;
 }

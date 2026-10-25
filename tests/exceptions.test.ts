@@ -200,5 +200,8 @@ describe("the notes reader's two fields and word filter (full code review, batch
     ]);
     // For a Must have, the note must say the thing is to go without: "Long sleeves" fits the preference.
     expect(await adds("s1", ["Sleeveless dress", "Without sleeves", "Long sleeves on the jacket"], "a sleeveless dress with a long-sleeved jacket", [sleeves, heels])).toEqual(["Long sleeves on the jacket"]);
+    // A preference with no word of four letters names nothing, so nothing is dropped (5d review).
+    const fur: FirmPreference = { id: "pref-fur", kind: "never", words: "fur" };
+    expect(await adds("s1", ["Gala", "May"], "something in fur for the gala in May", [fur])).toEqual(["Gala", "May"]);
   });
 });

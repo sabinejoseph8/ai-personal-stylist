@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.39
+**Status:** Living document, version 1.40
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -153,7 +153,7 @@ Your final iPhone check then found two more problems, both fixed: "use this one"
 
 After the run of bugs her iPhone checks found in 5c (nine fixes in one task group), Sabine asked for a complete review of everything built so far, ahead of 5d. Five reviewers (the conversation and session page; notes; looks; photos, camera and wardrobe; database, security and money) read all of the code, about 14,700 lines plus the database rules, and I checked each finding against the code. 58 findings: 2 serious (a call that failed to start lost the guest's reserved 10 minutes for the day and the month; a failed photo upload silently dropped the item to style around while the page still showed it), 21 a shopper would notice, and 35 small. None was a security hole: every server route checks the guest and the session, guests can't write app-owned records, photos are only readable by their owner, and no secrets are in the code or its history. The bugs were of the same family as the ones from the phone: two things happening at once, state that isn't passed on, and background work that doesn't notice the world changed.
 
-The fixes go in five pull requests, each with tests for every bug it fixes (Q1): 1 money and data (done 24 Oct 2026), 2 the stylist's behaviour (done 25 Oct 2026), 3 notes and wants (done 25 Oct 2026), 4 the looks engine (done 25 Oct 2026), 5 hardening (done 25 Oct 2026). Sabine's iPhone check (5c's A again, with B, C and D) comes after batch 5, one check for everything (her decision of 25 Oct 2026), and 5d becomes a short review of the fixes. Her answers to Q1 to Q4 are in the log below.
+The fixes go in five pull requests, each with tests for every bug it fixes (Q1): 1 money and data (done 24 Oct 2026), 2 the stylist's behaviour (done 25 Oct 2026), 3 notes and wants (done 25 Oct 2026), 4 the looks engine (done 25 Oct 2026), 5 hardening (done 25 Oct 2026). Sabine's iPhone check (5c's A again, with B, C and D) comes after batch 5, one check for everything (her decision of 25 Oct 2026). 5d, the review of the fixes, was run the same day: 15 findings, fixed. Her answers to Q1 to Q4 are in the log below.
 
 ## 7. Decisions log
 
@@ -161,6 +161,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 25 Oct 2026 | 5d: the five batches of review fixes were themselves reviewed (eight angles; two more stopped at the usage limit) and the 15 findings fixed before the iPhone check. Still open from the batch 2 plan: whether the app should count video minutes from the 21st, as Tavus does, rather than by calendar month; it was to be decided with the batch 5 plan and was left out, so the Vercel setting stays the way to keep the two in step until it's decided | Claude, for Sabine to decide | tech spec 1.42 |
 | 25 Oct 2026 | Full code review, batch 5 plan approved: eighteen hardening fixes and one migration, no options to choose. All 58 findings of the review are now fixed or decided | Sabine | tech spec 1.41 |
 | 25 Oct 2026 | Batches 4 and 5 of the review fixes before the iPhone check, with one check after batch 5, rather than the check after batch 3 as planned (Q1 of the review): nothing in batches 4 and 5 depends on the check, one check covers everything, and a bug found then is fixed on top of them | Sabine | progress.md (5d) |
 | 25 Oct 2026 | Full code review, batch 4 plan approved: six looks-engine fixes and the lock token's database change, no options to choose | Sabine | tech spec 1.40 |

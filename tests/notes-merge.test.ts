@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mergeNotes, touchNote } from "@/core/notes/merge";
 import { parseBudget, parseMonth, plainChanges } from "@/core/notes/plain";
+import { feedbackDetails } from "@/core/notes/feedback";
 import { active, type NewNote, type Note, NO_CHANGES, type NoteChanges } from "@/core/notes/types";
 
 // Phase 2 automated tests: latest word wins (R22) and budget parsing, with no AI and no database.
@@ -207,6 +208,28 @@ describe("twins and duplicates (full code review, batch 3)", () => {
     notes = mergeNotes([], add("colors", "Emerald green, preferred"), 1, 12, newId, seen).notes;
     notes = mergeNotes(notes, add("colors", "Emerald green dress"), 2, 12, newId, seen).notes;
     expect(texts(notes)).toEqual(["Emerald green dress"]);
+  });
+
+  it("feedback lines with the same words on different looks are two lines, and a confirmation carries over to the note that stays (5d review)", () => {
+    const line = (id: string, look: number, text: string, status: Note["status"]): Note => ({
+      id,
+      kind: "feedback",
+      text,
+      status,
+      details: feedbackDetails({ look, items: ["shoes-1"], act: "change", scope: "item" }),
+      source: "voice",
+      changedSeq: 1,
+      version: 1,
+      removed: false,
+    });
+    const two = [line("a", 1, "Change the shoes", "confirmed"), line("b", 2, "change the shoes", "to_confirm")];
+    const updated = mergeNotes(two, { ...NO_CHANGES, update: [{ id: "b", text: "Change the shoes", status: "confirmed", details: two[1].details }] }, 2, 12, newId).notes;
+    expect(active(updated).map((n) => [n.id, n.status])).toEqual([["a", "confirmed"], ["b", "confirmed"]]);
+    // Two pencil notes; the reading rewords the first into the second's words and confirms it: the second is inked.
+    const start = mergeNotes([], { ...NO_CHANGES, add: [...add("style", "Elegant").add, ...add("style", "Elegant, understated").add] }, 1, 12, newId).notes;
+    const [a, b] = active(start);
+    const notes = mergeNotes(start, { ...NO_CHANGES, update: [{ id: a.id, text: b.text, status: "confirmed", details: [] }] }, 2, 12, newId).notes;
+    expect(active(notes).map((n) => [n.id, n.status])).toEqual([[b.id, "confirmed"]]);
   });
 
   it("an update that rewords a note into another's words leaves one note, never dropping a confirmed one (B14)", () => {

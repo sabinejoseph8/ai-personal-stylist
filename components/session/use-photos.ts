@@ -148,11 +148,22 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
     const failed = () => update(key, ticket, { state: "failed", progress: 0 });
     // A replacement the server turns away, for the file or for the hourly limit, leaves the original as it
     // was; a new photo goes (review batches 1 and 5, D2 and D7).
-    const restore = () => {
-      if (!photo || photo.state !== "ready") return false;
+    const restore = async () => {
+      if (!photo) return false;
+      // Try again after a failed replacement: the tile no longer holds the original, but the server does (5d review).
+      const from = photo.state === "ready" ? photo : await fromServer(photo.id);
+      if (!from) return false;
+      if (tickets.current.get(key) !== ticket) return true; // a newer attempt owns the tile
       URL.revokeObjectURL(preview);
-      update(key, ticket, { state: "ready", progress: 1, photoUrl: photo.photoUrl, thumbnailUrl: photo.thumbnailUrl, version: photo.version, file: undefined, source: photo.source, item: photo.item, inWardrobe: photo.inWardrobe });
+      update(key, ticket, { state: "ready", progress: 1, photoUrl: from.photoUrl, thumbnailUrl: from.thumbnailUrl, version: from.version, file: undefined, source: from.source, item: from.item, inWardrobe: from.inWardrobe });
       return true;
+    };
+    const fromServer = async (photoId: string | null) => {
+      if (!photoId) return null;
+      const res = await fetch(`/api/sessions/${id}/assets`).catch(() => null);
+      if (!res?.ok) return null;
+      const { photos: fresh } = (await res.json().catch(() => ({ photos: [] }))) as { photos: ShownPhoto[] };
+      return fresh.find((p) => p.id === photoId) ?? null;
     };
     try {
       const res = await fetch(`/api/sessions/${id}/assets`, {
@@ -167,7 +178,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
         if (tickets.current.get(key) !== ticket) return;
         if (res.status >= 500 || !answer.error) failed();
         else {
-          if (!restore()) drop(key);
+          if (!(await restore())) drop(key);
           setProblem(answer.error);
         }
         return;
@@ -206,7 +217,8 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
               });
               update(key, ticket, { item: p.item });
               // Kept: it's the one to style around now.
-              if (p.active) setPhotos((list) => list.map((q) => ({ ...q, active: q.key === key })));
+              // Only for the attempt that still owns the tile: a late line for a removed photo cleared every photo's Active (5d review).
+              if (p.active && tickets.current.get(key) === ticket) setPhotos((list) => list.map((q) => ({ ...q, active: q.key === key })));
             } else if (line.item && update(key, ticket, { item: line.item })) {
               read = true;
               if (line.context) said.current.onContext(line.context);
@@ -225,7 +237,7 @@ export function usePhotos(sessionId: string | null, initial: ShownPhoto[], hooks
       if (tickets.current.get(key) !== ticket) return;
       if (result.reason === "type" || result.reason === "size" || result.reason === "unreadable" || result.reason === "photo") {
         // The server turned the file away. A replacement leaves the original as it was; a new photo goes.
-        if (result.reason === "photo" || !restore()) drop(key);
+        if (result.reason === "photo" || !(await restore())) drop(key);
         setProblem(result.error ?? PHOTO_MESSAGES.type);
       } else failed();
     } catch {

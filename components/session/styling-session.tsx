@@ -265,6 +265,8 @@ export function StylingSession({
     askingNow.current = asking;
     askException.current = (preference) => {
       if (exceptions.some((e) => e.id === preference.id)) return;
+      // Asked again: the earlier Keep no longer stands beside the new question (5d review).
+      setKept((k) => k.filter((p) => p.id !== preference.id));
       askingNow.current = { ...preference, wanted: true };
       setAsking(askingNow.current);
       if (call.flow !== "live") return;
@@ -388,6 +390,8 @@ export function StylingSession({
     call.sessionId,
     inputs,
     (e: LooksEvent) => {
+    // A newer change is said afresh: the shopper's next turn clears only what she has said (5d review).
+    changeSaid.current = false;
     if (e.kind === "swapped") {
       setLooksChange(`Just swapped in Look ${e.number}: ${e.look.items[e.index].name}, checked against their preferences.`);
       return;

@@ -2,7 +2,8 @@ import "server-only";
 import { type FirmPreference, type ShownException, wantedNote } from "@/core/looks/exceptions";
 import { allowException, firmPreferences } from "@/lib/exceptions-service";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { markOf, ruleOf, wantMark } from "@/core/looks/wants";
+import { markOf, wantMark } from "@/core/looks/wants";
+import { RuleSchema } from "@/lib/profile";
 import { stylistContext } from "@/core/notes/context";
 import { feedbackOf, isFeedback, touchFeedback } from "@/core/notes/feedback";
 import { type Merged, mergeNotes, type TouchAction, touchNote } from "@/core/notes/merge";
@@ -12,7 +13,7 @@ import type { CatalogConnector } from "@/connectors/catalog/types";
 import type { LookForReader, NotesReader, SwapRequest } from "@/core/notes/reader";
 import { currentLooks } from "@/lib/looks-service";
 import type { StyleItem } from "@/core/photos/item";
-import { active, type NextQuestion, type Note, NOTE_CAP, type ShownNote } from "@/core/notes/types";
+import { active, isMark, type NextQuestion, type Note, NOTE_CAP, type ShownNote } from "@/core/notes/types";
 import type { BudgetGuard } from "@/lib/budget-guard";
 import { clearQuestion, loadNotes, loadQuestion, nextWordsSeq, SessionEndedError, saveNotes, saveQuestion } from "@/lib/notes-store";
 import { activePhoto, changePhoto } from "@/lib/photos-service";
@@ -237,16 +238,23 @@ async function readWords(deps: NotesDeps, guestId: string, sessionId: string, he
 }
 
 /** The next question as kept, for a touch's context: a tap doesn't answer it, so she's still to ask it (review batch 2, B6). */
-const keptQuestion = async (db: SupabaseClient, sessionId: string) => (await loadQuestion(db, sessionId).catch(() => ({ question: null }))).question;
+async function keptQuestion(db: SupabaseClient, sessionId: string) {
+  try {
+    return (await loadQuestion(db, sessionId)).question;
+  } catch (e) {
+    if (e instanceof SessionEndedError) return null;
+    throw e;
+  }
+}
 
 /** Confirm, Remove or Undo by touch (PATCH /api/sessions/:id/notes/:noteId, R20). Null if not the guest's. */
 export async function touchSessionNote(deps: Pick<NotesDeps, "db">, guestId: string, sessionId: string, noteId: string, action: TouchAction) {
   if (!(await ownSession(deps.db, guestId, sessionId))) return null;
   let done: Awaited<ReturnType<typeof apply>>;
   try {
-    const { notes } = await loadNotes(deps.db, sessionId);
-    if (!notes.some((n) => n.id === noteId)) return null;
-    done = await apply(deps.db, sessionId, (current, wordsSeq) => touchNote(current, noteId, action, wordsSeq));
+    // One read: the note's existence is checked on the notes the save starts from (5d review).
+    done = await apply(deps.db, sessionId, (current, wordsSeq) => (current.some((n) => n.id === noteId) ? touchNote(current, noteId, action, wordsSeq) : { notes: current, changed: [] }));
+    if (!done.notes.some((n) => n.id === noteId)) return null;
   } catch (e) {
     if (e instanceof SessionEndedError) return null; // ended meanwhile
     throw e;
@@ -276,7 +284,7 @@ async function jotWantedNotes(deps: Pick<NotesDeps, "db">, guestId: string, sess
   // The note carries a mark naming the preference and its rule, so a reading rewording it, a repeat, or
   // Save to my profile deleting the preference can't turn it into a plain requirement (review batch 3).
   const { data: pref } = await deps.db.from("saved_preferences").select("rule").eq("id", preference.id).eq("user_id", guestId).maybeSingle().throwOnError();
-  const mark = wantMark({ ...preference, rule: ruleOf(pref?.rule) });
+  const mark = wantMark({ ...preference, rule: RuleSchema.safeParse(pref?.rule).data ?? { type: "judged" } });
   const isWant = (n: Note) => markOf(n)?.id === preference.id || (!markOf(n) && n.text.toLowerCase() === text.toLowerCase());
   let done: Awaited<ReturnType<typeof apply>>;
   try {
@@ -293,7 +301,16 @@ async function jotWantedNotes(deps: Pick<NotesDeps, "db">, guestId: string, sess
         );
       if (same.some((n) => n.status === "confirmed")) return { notes: current, changed: [] };
       // Already jotted in pencil: that note is confirmed, rather than a second one added (fix plan 8).
-      if (same.length) return touchNote(current, same[0].id, "confirm", wordsSeq);
+      if (same.length) {
+        // Confirmed, and marked as the want it is: without the mark it was still matched by its words (5d review).
+        const confirmed = touchNote(current, same[0].id, "confirm", wordsSeq);
+        const note = confirmed.notes.find((n) => n.id === same[0].id);
+        if (note && !markOf(note)) {
+          note.details = [...note.details.filter((d) => !isMark(d)), mark];
+          if (!confirmed.changed.includes(note)) confirmed.changed.push(note);
+        }
+        return confirmed;
+      }
       // The cap holds here too (B12; 12 notes, Sabine's answer to Q2 in 2c): a want the shopper allowed on
       // purpose makes room by dropping the oldest pencil note, and waits if every note is confirmed.
       let notes = current;
@@ -302,9 +319,10 @@ async function jotWantedNotes(deps: Pick<NotesDeps, "db">, guestId: string, sess
       if (others.length >= NOTE_CAP - 1) {
         const oldest = others.find((n) => n.status !== "confirmed");
         if (!oldest) return { notes: current, changed: [] };
-        const dropped = touchNote(notes, oldest.id, "remove", wordsSeq);
-        notes = dropped.notes;
-        changed.push(...dropped.changed);
+        // Removed as a reading would, not as a tap: a tap's removal is for good, while this note may be jotted again (5d review).
+        const evicted: Note = { ...oldest, removed: true, version: oldest.version + 1, changedSeq: wordsSeq, source: "voice" };
+        notes = notes.map((n) => (n.id === oldest.id ? evicted : n));
+        changed.push(evicted);
       }
       const note: Note = { id: crypto.randomUUID(), kind: "style", text, status: "confirmed", details: [mark], source: "touch", changedSeq: wordsSeq, version: 1, removed: false };
       return { notes: [...notes, note], changed: [...changed, note] };
