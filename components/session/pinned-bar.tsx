@@ -28,9 +28,18 @@ export function PinnedBar({
   cameraOn?: boolean;
 }) {
   const circle = useRef<HTMLVideoElement>(null);
+  // Copied again whenever the call's state changes and whenever the stage's video gets a stream: copied
+  // once at mount, the circle stayed black when the bar showed while the call was still connecting, or
+  // kept a dead stream after a reconnect (full code review, A9).
   useEffect(() => {
-    if (circle.current) circle.current.srcObject = stylistVideo.current?.srcObject ?? null;
-  }, [stylistVideo]);
+    const main = stylistVideo.current;
+    const copy = () => {
+      if (circle.current) circle.current.srcObject = main?.srcObject ?? null;
+    };
+    copy();
+    main?.addEventListener("loadedmetadata", copy);
+    return () => main?.removeEventListener("loadedmetadata", copy);
+  }, [stylistVideo, label]);
 
   return (
     <aside

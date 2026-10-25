@@ -7,6 +7,7 @@ const supabase = new URL(SUPABASE_URL).host;
  * The content security policy: the browser may only talk to our site and the services we use.
  * `local` is true on this computer's test server, which has no https, so requests aren't upgraded there.
  */
+// connect-src gains https://api.openai.com with voice only (6c), not before (full code review, E8).
 export function contentSecurityPolicy(nonce: string, dev: boolean, local = dev): string {
   return [
     "default-src 'self'",
@@ -15,7 +16,7 @@ export function contentSecurityPolicy(nonce: string, dev: boolean, local = dev):
     `img-src 'self' blob: data: https://${supabase} https://cdn.replica.tavus.io`,
     "media-src 'self' blob:",
     "font-src 'self'",
-    `connect-src 'self' https://${supabase} wss://${supabase} https://*.daily.co wss://*.daily.co https://api.openai.com https://challenges.cloudflare.com`,
+    `connect-src 'self' https://${supabase} wss://${supabase} https://*.daily.co wss://*.daily.co https://challenges.cloudflare.com`,
     "frame-src https://challenges.cloudflare.com",
     "worker-src 'self' blob:",
     "object-src 'none'",

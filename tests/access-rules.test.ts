@@ -102,6 +102,28 @@ describe.skipIf(!canRunDatabaseTests)("access rules", () => {
     expect(data).toEqual([{ name: "Navy blazer" }]);
   });
 
+  it("guests can't write the bag, saved looks or feedback themselves (review batch 5, E2)", async () => {
+    expect((await a.db.from("saved_looks").insert({ user_id: a.id, look: {} })).error?.code).toBe("42501");
+    expect((await a.db.from("session_feedback").insert({ user_id: a.id, session_id: sessionId, feedback_kind: "like" })).error?.code).toBe("42501");
+    const product = (await serverDb().from("catalog_products").select("id").limit(1).single().throwOnError()).data!;
+    expect((await a.db.from("bag_items").insert({ user_id: a.id, product_id: product.id })).error?.code).toBe("42501");
+  });
+
+  it("a guest can't make themselves permanent by editing their last-active date, while the app's touch still works (review batch 5, E3)", async () => {
+    const lastActive = async () => (await serverDb().from("profiles").select("last_active_at").eq("user_id", a.id).single().throwOnError()).data!.last_active_at as string;
+    const before = await lastActive();
+    await a.db.from("profiles").update({ last_active_at: "2999-01-01T00:00:00Z" }).eq("user_id", a.id);
+    expect(await lastActive()).toBe(before);
+    await serverDb().from("profiles").update({ last_active_at: new Date(Date.now() - 2 * 3_600_000).toISOString() }).eq("user_id", a.id).throwOnError();
+    await a.db.rpc("touch_last_active").throwOnError();
+    expect(Date.parse(await lastActive())).toBeGreaterThan(Date.now() - 60_000);
+  });
+
+  it("the rate-limit step refuses junk bucket names and windows (review batch 5, E7)", async () => {
+    expect((await a.db.rpc("take_rate_limit", { bucket: "x".repeat(65), max_hits: 5, window_seconds: 60 })).data).toBe(false);
+    expect((await a.db.rpc("take_rate_limit", { bucket: "junk", max_hits: 5, window_seconds: 90_000 })).data).toBe(false);
+  });
+
   it("guests can't touch the usage table", async () => {
     const write = await a.db.from("usage").insert({ user_id: a.id, video_seconds: 1 });
     expect(write.error).not.toBeNull();

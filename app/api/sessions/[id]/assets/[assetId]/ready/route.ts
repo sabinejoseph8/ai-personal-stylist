@@ -46,6 +46,9 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
     } catch (e) {
       if (e instanceof SessionEndedError) return null; // the session was deleted meanwhile
       console.error(`photos: reading a photo failed: ${e instanceof Error ? e.message : e}`);
+      // Saved as failed too, or a reload showed Analyzing for two minutes (review batch 5, D9).
+      const failed = { state: "failed", items: [], chosen: null };
+      await deps.db.rpc("save_asset_details", { asset: assetId, expected_version: photo.version, details: failed }).then(() => undefined, () => undefined);
       return { id: assetId, version: photo.version, item: { reading: { state: "failed", items: [], chosen: null }, ownership: null } };
     }
   })();

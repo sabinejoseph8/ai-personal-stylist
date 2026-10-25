@@ -81,6 +81,21 @@ test.describe("the camera", () => {
     await expect.poll(photoRows, READY).toEqual([{ source: "camera", status: "ready" }]);
   });
 
+  test("Capture refused by the server keeps the camera on, with the reason in the notebook (full code review, batch 5, D4)", async ({ page }) => {
+    await inCall(page);
+    await cameraOn(page);
+    await expect(page.getByRole("button", { name: "Capture" })).toBeVisible({ timeout: 15_000 });
+    const limit = "You've added 10 photos in the last hour. Try again later.";
+    await page.route("**/api/sessions/*/assets", (route) =>
+      route.request().method() === "POST" ? route.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ error: limit }) }) : route.continue(),
+    );
+    await page.getByRole("button", { name: "Capture" }).click();
+    await expect(page.getByText(limit)).toBeVisible();
+    await expect(cameraButton(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("Photo added to your notes", { exact: true })).toHaveCount(0);
+    expect(await photoRows()).toEqual([]);
+  });
+
   test("saying 'use this one' takes the still (R34, Q1 in 3c)", async ({ page }) => {
     await inCall(page);
     await cameraOn(page);

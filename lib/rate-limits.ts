@@ -8,7 +8,8 @@ export const LIMITS = {
   touchNote: { max: 4, windowSeconds: 1 },
   photo: { max: 10, windowSeconds: 3600 },
   changePhoto: { max: 4, windowSeconds: 1 },
-  cameraFrame: { max: 1, windowSeconds: 2 },
+  // 2 in 3 seconds rather than 1 in 2: fixed buckets dropped a frame now and then when two sends landed in one (review batch 5, D11).
+  cameraFrame: { max: 2, windowSeconds: 3 },
   // Asking for the looks is cheap when nothing changed (4c); building or checking them again counts as a build.
   looksRequest: { max: 120, windowSeconds: 3600 },
   buildLooks: { max: 20, windowSeconds: 3600 },

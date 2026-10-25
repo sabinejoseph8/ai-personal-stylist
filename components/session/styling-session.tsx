@@ -27,6 +27,7 @@ import { ALLOW_CHOICE } from "@/core/looks/no-match";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
 import type { SwapRequest } from "@/core/notes/reader";
 import { notesSummary } from "@/lib/notebook";
+import { MAX_PHOTOS, PHOTO_MESSAGES } from "@/lib/photos";
 import { SAMPLE_PHRASES } from "@/lib/sample-phrases";
 import { holdFor, type MicrophoneProblem, showSamplePhrases, someoneSpeaking } from "@/lib/stage";
 
@@ -492,9 +493,15 @@ export function StylingSession({
     try {
       const file = await camera.capture();
       if (!file) return;
+      // Five photos already, or the server refuses it: the camera stays on and the notebook says why,
+      // rather than "Photo added" with the camera off (review batch 5, D4).
+      if (photos.photos.length >= MAX_PHOTOS) {
+        toast(PHOTO_MESSAGES.full);
+        return;
+      }
+      if (!(await photos.add(file, "camera"))) return;
       // The still is now the item, so the camera turns off (Sabine's answer to Q2 in 3c).
       camera.stop();
-      photos.add(file, "camera");
       setNotebookOpen(true);
       toast("Photo added to your notes");
     } finally {

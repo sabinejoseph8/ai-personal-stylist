@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { deleteGuest } from "@/lib/guest-cleanup";
+import { deleteGuest, sweepIncoming } from "@/lib/guest-cleanup";
 import { deleteEndedSessionPhotos } from "@/lib/photos-service";
 import { sessionDeps } from "@/lib/session-deps";
 import { endLeftBehindCalls, retryStaleCalls } from "@/lib/sessions";
@@ -46,6 +46,12 @@ export async function GET(request: Request) {
     return 0;
   });
 
+  // Raw uploads that never finished, older than an hour (review batch 5, E4).
+  const incomingSwept = await sweepIncoming(db).catch((e) => {
+    console.error(`daily job: sweeping raw uploads failed: ${e instanceof Error ? e.message : e}`);
+    return 0;
+  });
+
   const expired = await db.rpc("expired_guests", {
     idle_days: IDLE_DAYS,
     test_hours: TEST_GUEST_HOURS,
@@ -58,14 +64,15 @@ export async function GET(request: Request) {
   let deleted = 0;
   const failures: string[] = [];
   for (let i = 0; i < ids.length; i += AT_ONCE) {
-    const results = await Promise.allSettled(ids.slice(i, i + AT_ONCE).map((id) => deleteGuest(db, id)));
+    // Their left-behind calls are ended first: deleted with them, a call's record would never reach Tavus (review batch 5, E6).
+    const results = await Promise.allSettled(ids.slice(i, i + AT_ONCE).map((id) => endLeftBehindCalls(sessionDeps(), id).then(() => deleteGuest(db, id))));
     for (const r of results) {
       if (r.status === "fulfilled") deleted++;
       else failures.push(r.reason instanceof Error ? r.reason.message : String(r.reason));
     }
   }
 
-  const summary = { ...tidy.data, calls_ended: callsEnded, calls_retried: callsRetried, photos_deleted: photosDeleted, guests_deleted: deleted, guests_failed: failures.length };
+  const summary = { ...tidy.data, calls_ended: callsEnded, calls_retried: callsRetried, photos_deleted: photosDeleted, incoming_swept: incomingSwept, guests_deleted: deleted, guests_failed: failures.length };
   console.log(`daily job: ${JSON.stringify(summary)}${failures.length ? `; first failure: ${failures[0]}` : ""}`);
   return Response.json(summary, { status: failures.length ? 500 : 200 });
 }

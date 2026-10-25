@@ -24,3 +24,10 @@ describe("browser protections", () => {
   });
 
 });
+
+describe("the connection list (full code review, batch 5, E8)", () => {
+  it("has no OpenAI entry until voice only arrives in 6c", () => {
+    expect(contentSecurityPolicy("nonce", false)).not.toContain("api.openai.com");
+    expect(contentSecurityPolicy("nonce", false)).toContain("https://*.daily.co");
+  });
+});
