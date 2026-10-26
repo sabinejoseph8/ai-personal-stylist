@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.43
+**Status:** Living document, version 1.44
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 26 Oct 2026 | 6b plan approved as recommended. Q1: Download my data is a ZIP (data.json and the photos), rather than a JSON file with 30-minute photo links. Q2: turning off wardrobe photos deletes the wardrobe after asking, rather than only stopping new items. Q3: saving preferences in setup records the permission, and turning it off deletes them, rather than a separate permission card. Also: 6b and 6c are built before one iPhone check for 6a, 6b and 6c, rather than a check after each group (likely over two evenings, as the 10 minutes a day won't cover all three) | Sabine | tech spec 1.45 |
 | 26 Oct 2026 | 6a plan approved as recommended. Q1: Open checks a saved look on the Saved looks page against the saved profile alone (about 2 cents), rather than bringing it into the session. Q2: a look with the shopper's own session photo is saved with that piece by name and no photo, rather than asking to save it to the wardrobe first. Q3: the bag takes pieces only from a look whose check passed on the current requirements, with no new Claude check, rather than a new check per piece. Not in 6a: the stylist opening saved looks by voice | Sabine | tech spec 1.44 |
 | 25 Oct 2026 | The limit-lines plan approved as recommended, from the iPhone check after the review's five batches (B.1 stopped by the $1 daily AI allowance, used up by section A's re-judging of every look). Q1: when the day's AI is used up, Change, Swap, Undo and Compare say "You've reached today's limit for the demo, so these stay", the welcome screen's words (the other option: the whole-look line's "today's AI allowance is used up"); nothing is saved for a check that couldn't run, and Swap leaves unchecked replacements unmarked. Q2: the built-in daily AI allowance is $3 instead of $1 (the other option: keep $1 and rely on the Vercel setting). This changes the 5c Q4 answer, which showed "couldn't be checked just now" for the day's AI too. Open for the 6a plan: the cost per session (judging candidates one at a time, reusing verdicts for Undo and Compare, prompt caching) | Sabine | tech spec 1.43 |
 | 25 Oct 2026 | 5d: the five batches of review fixes were themselves reviewed (eight angles; two more stopped at the usage limit) and the 15 findings fixed before the iPhone check. Still open from the batch 2 plan: whether the app should count video minutes from the 21st, as Tavus does, rather than by calendar month; it was to be decided with the batch 5 plan and was left out, so the Vercel setting stays the way to keep the two in step until it's decided | Claude, for Sabine to decide | tech spec 1.42 |
@@ -426,6 +427,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.44 (26 Oct 2026):** The 6b decisions (Q1 to Q3) and the order: 6a, 6b and 6c checked on the iPhone together.
 - **1.43 (26 Oct 2026):** The 6a decisions (Q1 to Q3).
 - **1.42 (25 Oct 2026):** Phase 5 complete: the iPhone check passed B to E after the limit-lines fix (57 cents of AI and 7 minutes of video for the half-check).
 - **1.41 (25 Oct 2026):** The limit-lines plan (Q1, Q2) from the iPhone check after the review's five batches, and the cost per demo measured (section 6, risk 4).

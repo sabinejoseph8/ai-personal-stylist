@@ -2,7 +2,9 @@
 
 import { currentGuest } from "@/lib/guest";
 import { BudgetSchema, PreferencesSchema, SAMPLE_PROFILE, ShoppingSchema } from "@/lib/profile";
+import { rememberPreferencesAllowed } from "@/lib/privacy-service";
 import { saveBudget, savePreferences, saveShopping } from "@/lib/profile-store";
+import { serverKeyDb } from "@/lib/supabase/admin";
 
 // Setup answers are saved to the guest's own profile as they go (R4). Every input is checked first.
 type Result = { ok: true } | { ok: false; error: string };
@@ -32,6 +34,8 @@ export async function saveBudgetAndPreferencesStep(input: unknown): Promise<Resu
   return asGuest(async (g) => {
     await saveBudget(g.db, g.id, budget.data);
     await savePreferences(g.db, preferences.data);
+    // Saving preferences records the permission (R64, Sabine's answer to Q3 in 6b).
+    if (preferences.data.length) await rememberPreferencesAllowed(serverKeyDb(), g.id);
   });
 }
 
@@ -42,5 +46,6 @@ export async function applySampleProfile(): Promise<Result> {
     await saveShopping(g.db, g.id, shopping);
     await saveBudget(g.db, g.id, budget);
     await savePreferences(g.db, preferences);
+    await rememberPreferencesAllowed(serverKeyDb(), g.id);
   });
 }

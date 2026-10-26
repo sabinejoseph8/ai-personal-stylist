@@ -240,6 +240,12 @@ export async function deleteItem(db: SupabaseClient, guestId: string, id: string
   return true;
 }
 
+/** Every wardrobe item and its photos, drafts too: wardrobe photos turned off (6b, Sabine's answer to Q2). */
+export async function deleteWardrobe(db: SupabaseClient, guestId: string) {
+  const { data } = await db.from("wardrobe_items").select(COLUMNS).eq("user_id", guestId).returns<Row[]>().throwOnError();
+  await deleteRows(db, data ?? []);
+}
+
 /** Style with these (R37, Sabine's answer to Q2 in 3d): exactly these items are chosen for styling. */
 export async function chooseForStyling(db: SupabaseClient, guestId: string, ids: string[]) {
   await db.from("wardrobe_items").update({ styling: false }).eq("user_id", guestId).eq("styling", true).throwOnError();

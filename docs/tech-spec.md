@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.44 (26 Oct 2026)
+**Status:** Agreed, version 1.45 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -118,7 +118,7 @@ All tables live in Supabase Postgres. Every table that holds guest data has a **
 |---|---|---|---|
 | **profiles** | One row per guest | departments, style words, sizes, default budget (amount, currency, meaning), last active time | Until deleted, or 7 days without use |
 | **saved_preferences** | Must have, Never and Likes items | kind, the shopper's words, the matching rule for Must have and Never (for example heel height over 5 cm, made by the rule maker and read back in setup, 4a), version | Same as profile |
-| **consents** | Separate permissions (R64) | wardrobe photos, remember preferences, camera explained, with times | Same as profile |
+| **consents** | Separate permissions (R64) | wardrobe photos, remember preferences (recorded when preferences are saved in setup, 6b), camera explained, with times. Turning wardrobe photos or saving preferences off in Profile and privacy deletes what it covered | Same as profile |
 | **sessions** | One styling conversation | status (active, paused, ended), engine (video, voice), started and last activity times, the live call's id and start time, the seconds the budget guard reserved for it and their day, versions for notes, feedback, anchor and profile, the words sequence (one number per send of words, for latest word wins), and the next question with the turn and sequence it came from (Phase 2 review), until when a looks build or swap has the session (4d) and the token of the request that holds it (review batch 4), and the requirements its last complete build was for (4e), and the id of a call whose end at Tavus failed, for the daily job to try again (full code review, batch 1). At most one open session per guest. Read-only for guests: only the server changes it (decision A) | Ends after End or 30 minutes idle (a database timer closes idle ones every 10 minutes), then the row is closed |
 | **session_notes** | The stylist's jotted notes | note text, kind (occasion, timing, colors, style, budget, outfit, owned item, fit, other), hidden details for looks and checks, status, source (voice or touch), the words sequence that last changed it, created and update times, version, removed. At most 12 per session, saved preferences not counted (your answer to Q2 in 2c). Read-only for guests: the server saves them through **save_notes**, which only saves if nothing else saved in between (decision A, done in 2c) | Deleted when the session ends (R63) |
 | **session_feedback** | Planned for feedback; not used, since feedback is kept as notes of the "feedback" kind in **session_notes** (your answer to Q1 in 5a), with its look's place, items, act (keep, change, like, dislike) and scope (item, look, session) as hidden details | look, item or attribute, scope, status, source, version | Deleted when the session ends |
@@ -163,7 +163,8 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **GET /api/sessions/:id/context** | What the stylist should know as a call starts: the notes, saved preferences, the photo to style around and the wardrobe items chosen to style with (3d). |
 | **/api/saved-looks** | GET lists the guest's saved looks; POST { sessionId, lookId } is Save look, for a look on the guest's screen whose check passed on the current requirements (6a, your answer to Q3), once per look, 60 an hour; **DELETE .../:savedId** is Remove; **POST .../:savedId/open** checks the saved look against the saved profile first, with the judgment step through the budget guard, and answers { look } or { none } with why (your answer to Q1), 20 an hour. |
 | **/api/bag** | GET lists the demo bag; POST { sessionId, lookId, items: [{ productId, size }] } is Add to bag: only sample products of a look on the guest's screen whose check passed on the current requirements, each in a size it comes in, never the shopper's own pieces (R61, your answer to Q3); **PATCH .../:itemId** { size } and **DELETE .../:itemId**; 120 bag changes an hour. **POST /api/bag/checkout** always answers 403 "Demo only: these sample products can't be bought." (R62). |
-| **GET /api/me/export**, **DELETE /api/me** | Download my data and delete all my data (R65). |
+| **GET /api/me/export**, **DELETE /api/me** | Download my data, a ZIP with data.json and the photos (6b, your answer to Q1), 10 an hour; and delete all my data, which ends the call, deletes the guest (every row and photo) and signs the browser out (R65, S19). |
+| **DELETE /api/me/session-notes**, **PATCH /api/me/permissions**, **DELETE /api/preferences/:id** | Clear this session's notes (its notes, feedback and exceptions; saved preferences stay); turn wardrobe photos or saving preferences on or off, off deleting the wardrobe or the saved preferences (your answers to Q2 and Q3); delete one saved preference (R64, R65). 60 privacy changes an hour. |
 | **POST /api/webhooks/tavus** | Not built. Tavus would report a call's end, so usage is exact. Deferred to Phase 7 (your answer to Q4 of the full code review, 24 Oct 2026): until then a call that ended without the page (a closed browser, a dropped connection) is counted up to the shopper's last activity plus 30 seconds, on the next start or by the daily job. |
 | **GET /api/cron/daily** | The daily clean-up, at 08:00 UTC (vercel.json). Since batch 5 of the review it also sweeps raw uploads older than an hour and ends a guest's left-behind calls before deleting them. Only Vercel's scheduler can call it, because it sends **CRON_SECRET**. It also ends at Tavus any call a session left behind, and deletes the photos of sessions that ended from being idle. |
 
@@ -340,6 +341,13 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**Profile and privacy as built (6b).** The files are **lib/privacy-service.ts**, **lib/zip.ts** (a ZIP with no compression and no library) and **components/profile/**.
+- **The page** (/profile) has the four sections in design order, reached from the session page, the welcome-back screen and the saved preferences at the top of My Styling Notes.
+- **Microphone and camera:** the browser's own permissions. Every page but the session blocks the camera and microphone (the security headers, 1b), so Profile and privacy can't read their state: it says what each is for and how to change it in Safari's settings.
+- **Wardrobe photos (your answer to Q2):** turning it off asks first, then deletes every wardrobe item and its photos. **Saving preferences (Q3):** saving preferences in setup (or Use a sample profile) records the permission; turning it off asks first, then deletes the saved preferences. Save to my profile (5c) takes a preference off the profile, so it needs no permission, and with none saved it has nothing to offer.
+- **Clear this session's notes:** every note of the open session is removed as Remove would (so no later reading brings it back), with its exceptions and the stylist's waiting question. The session page's notebook catches up at its next update, or at once after a reload.
+- **Delete all my data:** asks first, ends the call, deletes the guest and their photos, signs the browser out, and loads the welcome screen afresh.
+
 **Saved looks and the demo bag as built (6a).** The files are **core/looks/saved.ts**, **lib/saved-looks-service.ts**, **lib/bag-service.ts** and **checkedLook** and **checkSaved** in **lib/looks-service.ts**; the page side is **components/looks/keeping.tsx** and **look-actions.tsx**, **components/saved/** and **components/bag/**.
 - **Save look and Add to bag (your answer to Q3):** both take only a look on the guest's screen that's published, built for the current requirements, with a passing check on them: the same gate as the screen (pattern 6). No new check, so no AI. While a look is being checked, revised or needs a new check, both wait.
 - **A saved look** is a copy: its pieces, name, reason and total, and the shopper's own pieces by name (your answer to Q2). A session photo goes when the session ends (R63), so its piece shows as "Your item" with no photo; a wardrobe piece shows its photo while it's in the wardrobe. The same pieces are saved once.
@@ -416,6 +424,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Photos: 10 per guest per hour. Photo changes (checking an arrived photo, switching the active one, Remove): 4 a second (3a). Camera frames: 2 every 3 seconds, while the camera is on (review batch 5; the page sends one every 2.1 seconds).
 - Building looks: 20 per guest per hour, counted only when AI work is needed; asking for the looks, 120 an hour (4c). Swaps: 40 per guest per hour (4c). Behind the scenes: 240 an hour (4d).
 - Making preference rules: 20 per guest per hour (4a).
+- Profile and privacy (6b): 60 privacy changes an hour, 10 data downloads an hour.
 - Saved looks and the demo bag (6a): Save look and Remove, 60 an hour; opening a saved look (a check with the judgment step), 20 an hour; bag changes, 120 an hour.
 
 ### Cost limits
@@ -432,7 +441,8 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Each Tavus conversation is hard-deleted when its call ends, because Tavus publishes no retention period (decided 18 Oct 2026). Checked with a real call in 2e: afterwards Tavus answers "Invalid conversation_id". A call a closed browser left behind is ended and deleted on the guest's next start or by the daily job. If ending or deleting a call fails at Tavus, the session keeps the call's id and the daily job tries again (full code review, batch 1); before, the id was cleared first, so nothing could retry. OpenAI and Anthropic delete API data within 30 days and don't train on it.
 - The browser sends words to our server to update notes. The server keeps only the resulting notes.
 - How Tavus, OpenAI and Anthropic store data is checked in Phase 0 and summarized on the About page.
-- Deleting all data removes database rows, stored photos and the guest sign-in.
+- Deleting all data removes database rows, stored photos and the guest sign-in (6b: the open call is ended first, then the daily job's guest deletion runs, and the browser is signed out).
+- Download my data (6b) holds what the app keeps and nothing else: the profile, saved preferences, permissions, wardrobe items and photos, saved looks, the demo bag, and the open session's notes and photos. Never audio, words or video, which aren't kept (R63).
 
 ### Browser protections
 - A content security policy only allows connections to our own site, Supabase, Tavus and Daily, and Cloudflare (for Turnstile); OpenAI joins it with voice only (6c). Scripts need a fresh per-request nonce (proxy.ts). Every page follows it: the Phase 0 test pages were deleted in 2f.
@@ -564,6 +574,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.45 (26 Oct 2026):** 6b: Profile and privacy (your answers to Q1 to Q3): the endpoints, rate limits, privacy lines, and how it's built, including why the page explains the microphone and camera rather than showing their state.
 - **1.44 (26 Oct 2026):** 6a: saved looks and the demo bag (your answers to Q1 to Q3): the tables' key and limits, the endpoints, rate limits, and how they're built.
 - **1.43 (25 Oct 2026):** The limit-lines plan: when the day's AI allowance is used up, Change, Swap, Undo and Compare say "You've reached today's limit for the demo", nothing is saved for a check that couldn't run, Swap leaves unchecked replacements unmarked, the stylist says so briefly, and the daily AI allowance defaults to $3 (Sabine's Q1 and Q2); the cost per demo measured in section 9.
 - **1.42 (25 Oct 2026):** 5d: the review of the five batches' fixes, 15 findings fixed (the reader's short words, the photo claim and retried upload, the merge's duplicates, the restored original, stale calls, the note cap, the want mark, the allowance gate, the looks change line, the Kept line) and the stale rate-limit and security-policy lines corrected.

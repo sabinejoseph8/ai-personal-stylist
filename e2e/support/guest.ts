@@ -10,9 +10,9 @@ import { createTestGuest, PUBLISHABLE_KEY, serverDb, SUPABASE_URL, type TestGues
 
 export type BrowserGuest = { guest: TestGuest; cookies: { name: string; value: string; domain: string; path: string; httpOnly: boolean; sameSite: "Lax" }[] };
 
-/** A new test guest, with the sign-in cookies a browser needs. */
-export async function createBrowserGuest(): Promise<BrowserGuest> {
-  const guest = await createTestGuest();
+/** A new test guest, with the sign-in cookies a browser needs. `fresh` for one a test deletes (6b). */
+export async function createBrowserGuest(options: { fresh?: boolean } = {}): Promise<BrowserGuest> {
+  const guest = await createTestGuest(options);
   const { data } = await guest.db.auth.getSession();
   const session = data.session!;
   let written: { name: string; value: string }[] = [];

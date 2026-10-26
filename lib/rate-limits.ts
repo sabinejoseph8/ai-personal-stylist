@@ -21,6 +21,9 @@ export const LIMITS = {
   saveLook: { max: 60, windowSeconds: 3600 },
   openSavedLook: { max: 20, windowSeconds: 3600 },
   bagChange: { max: 120, windowSeconds: 3600 },
+  // Profile and privacy (6b).
+  privacyChange: { max: 60, windowSeconds: 3600 },
+  exportData: { max: 10, windowSeconds: 3600 },
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

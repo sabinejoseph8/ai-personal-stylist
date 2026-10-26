@@ -77,6 +77,9 @@ export default async function SessionPage() {
             <Link href="/wardrobe" className={buttonClasses("secondary")}>
               Wardrobe
             </Link>
+            <Link href="/profile" className={buttonClasses("secondary")}>
+              Profile and privacy
+            </Link>
             {/* Saved looks and the demo bag (6a), here until the app menu arrives in Phase 7. */}
             <KeepingLinks />
             {/* A portfolio extra (4d), here until the app menu arrives in Phase 7. */}
