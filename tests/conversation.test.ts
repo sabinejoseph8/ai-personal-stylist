@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createFakeEngine, createFakeProvider } from "@/connectors/conversation/fake";
+import { createGptLiveProvider } from "@/connectors/conversation/gpt-live/server";
+import { isPendingVoiceCall, liveSessionId } from "@/connectors/conversation/gpt-live/shared";
 import { fakeEngineAllowed } from "@/connectors/conversation/server";
 import { createTavusProvider } from "@/connectors/conversation/tavus/server";
 import { callProviderContract, conversationEngineContract } from "./support/conversation-contract";
@@ -28,6 +30,22 @@ const tavusOk = () =>
 callProviderContract("fake", createFakeProvider);
 callProviderContract("tavus (stand-in)", () => createTavusProvider({ apiKey: KEY, palId: "p1", fetch: tavusOk().fetch }));
 conversationEngineContract("fake", () => createFakeEngine());
+// Voice only (6c): GPT-Live's server side makes a pending call until the browser's offer arrives, so
+// its contract runs without OpenAI; the fake has a voice provider for the browser tests.
+callProviderContract("gpt-live", createGptLiveProvider);
+callProviderContract("fake voice", () => createFakeProvider("voice"));
+
+describe("GPT-Live provider", () => {
+  it("starts a pending call whose join link is the session's offer page", async () => {
+    const call = await createGptLiveProvider().start({ sessionId: "s1", maxSeconds: 600 });
+    if (!call.ok) throw new Error("expected a call");
+    expect(isPendingVoiceCall(call.callId)).toBe(true);
+    expect(liveSessionId(call.callId)).toBeNull();
+    expect(call.joinUrl).toBe("/api/sessions/s1/voice");
+    expect(liveSessionId("voice:live_abc")).toBe("live_abc");
+    expect(liveSessionId("c123")).toBeNull();
+  });
+});
 
 describe("Tavus provider", () => {
   it("creates the call with recording off, the time granted as its longest length, and the stylist's setup", async () => {

@@ -2,7 +2,8 @@
 
 import { type RefObject, useEffect, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { engineFor } from "@/connectors/conversation/client";
-import type { ConversationEngine, ConversationEvent } from "@/connectors/conversation/types";
+import { SWITCH_LINE } from "@/connectors/conversation/gpt-live/shared";
+import type { ConversationEngine, ConversationEvent, Engine } from "@/connectors/conversation/types";
 import { checkMicrophone, microphoneAllowed } from "@/lib/microphone";
 import { type MicrophoneProblem, nextStage, READY, stageLabel, timeLeftLabel } from "@/lib/stage";
 
@@ -48,6 +49,13 @@ function waitUntilOnline(ms: number) {
     window.addEventListener("online", onOnline);
   });
 }
+
+/**
+ * Switching to voice only (6c, R9): the video stylist says the switch line, then her call ends and the
+ * voice stylist picks up, first with a short line of her own. The line takes about 4 seconds to say.
+ */
+const SWITCH_WAIT_MS = 4500;
+const PICK_UP_LINE = "Right, let's carry on.";
 
 /** How starting a call went. `final` means trying again won't help (a refusal or the microphone). */
 type Outcome = { ok: true } | { ok: false; final: boolean; message?: string; reason?: string };
@@ -97,6 +105,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const [problem, setProblem] = useState<string | null>(null);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const engine = useRef<ConversationEngine | null>(null);
+  // Stops hearing the current call: a call left for another (a switch, 6c, or a reconnect) mustn't end the new one with its late "ended".
+  const unlisten = useRef<(() => void) | null>(null);
   const live = useRef<{ sessionId: string; callId: string; ending: boolean } | null>(null);
   const shown = useRef(false);
   // R13: when the call's time runs out, and which limit ends it. R14: each Start, End or Try again
@@ -105,6 +115,11 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const attempt = useRef(0);
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [timeUpMessage, setTimeUpMessage] = useState<string | null>(null);
+  // Video, or voice only (6c, R9): the engine the next call starts with, and why voice when it is.
+  const [engineKind, setEngineKind] = useState<Engine>("video");
+  const wanted = useRef<Engine>("video");
+  // The engine a switch is heading for, while it's under way: the current call stays on screen until then.
+  const [switchingTo, setSwitchingTo] = useState<Engine | null>(null);
   // Leaving the page (Next.js hides it rather than closing it) or closing the tab pauses the
   // session, so the call doesn't run on unseen and the shopper can resume within 30 minutes.
   useLayoutEffect(() => {
@@ -153,6 +168,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     live.current = null;
     engine.current = null;
     callEnds.current = null;
+    unlisten.current?.();
+    unlisten.current = null;
     void e?.leave();
     void endOnServer(current.sessionId, true, false, current.callId);
     return true;
@@ -188,7 +205,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       if (!(await waitUntilOnline(OFFLINE_WAIT_MS))) break;
       await new Promise((r) => setTimeout(r, RETRY_MS * (i + 1)));
       if (attempt.current !== mine || !shown.current) return;
-      const outcome = await connect({ reconnecting: true });
+      const outcome = await connect({ reconnecting: true, engine: wanted.current });
       if (outcome.ok || attempt.current !== mine) return;
       if (outcome.final) return settle(outcome);
     }
@@ -227,10 +244,41 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   async function start() {
     attempt.current++;
     setTimeUpMessage(null);
-    settle(await connect());
+    settle(await connect({ engine: wanted.current }));
   }
 
-  async function connect({ reconnecting = false } = {}): Promise<Outcome> {
+  /**
+   * Voice only, mid-call (6c; R9, S3): the video stylist says the switch line, her call ends, and the
+   * voice stylist picks up. Notes and looks don't change: they belong to the session, not the call.
+   */
+  async function switchToVoice() {
+    wanted.current = "voice";
+    if (flow !== "live" || !live.current) return;
+    setSwitchingTo("voice");
+    engine.current?.say(SWITCH_LINE);
+    await new Promise((r) => setTimeout(r, SWITCH_WAIT_MS));
+    const mine = ++attempt.current;
+    leaveCall();
+    const outcome = await connect({ engine: "voice" });
+    setSwitchingTo(null);
+    if (attempt.current !== mine) return;
+    if (outcome.ok) engine.current?.say(PICK_UP_LINE);
+    else settle(outcome);
+  }
+
+  /** Turn video on (S3): the voice call ends and the video stylist picks up. */
+  async function switchToVideo() {
+    wanted.current = "video";
+    if (flow !== "live" || !live.current) return;
+    setSwitchingTo("video");
+    const mine = ++attempt.current;
+    leaveCall();
+    const outcome = await connect({ engine: "video" });
+    setSwitchingTo(null);
+    if (attempt.current === mine && !outcome.ok) settle(outcome);
+  }
+
+  async function connect({ reconnecting = false, engine: kind = "video" as Engine } = {}): Promise<Outcome> {
     const mine = attempt.current;
     setProblem(null);
     setFlow("starting");
@@ -245,7 +293,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
 
     let res: Response;
     try {
-      res = await fetch("/api/sessions", { method: "POST" });
+      res = await fetch("/api/sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ engine: kind }) });
     } catch {
       return { ok: false, final: false, message: NO_CONNECTION };
     }
@@ -257,14 +305,19 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     }
 
     setSessionId(data.sessionId);
+    setEngineKind(data.engine === "voice" ? "voice" : "video");
     callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : "day" };
     const e = await engineFor(data.call.joinUrl);
     engine.current = e;
     live.current = { sessionId: data.sessionId, callId: data.call.callId, ending: false };
     const stopListening = e.on(onEvent);
+    unlisten.current?.();
+    unlisten.current = stopListening;
     e.attach({ video: video.current, audio: audio.current });
     try {
-      await e.join(data.call);
+      const joined = await e.join(data.call);
+      // A voice call is made as it's joined, so it now has its own id (6c).
+      if (joined?.callId && live.current?.callId === data.call.callId) live.current.callId = joined.callId;
       // The shopper left the page while the call was connecting: pause it straight away.
       if (!shown.current) {
         live.current = null;
@@ -331,6 +384,9 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     engine.current = null;
     if (id) await endOnServer(id, false);
     setSessionId(null);
+    // The next session starts with video again (R13: voice only is for when something goes wrong, or chosen).
+    wanted.current = "video";
+    setEngineKind("video");
     hooks.current.onEnd();
     setProblem(null);
     setSoundBlocked(false);
@@ -342,6 +398,13 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     flow,
     stage,
     label: stageLabel(stage),
+    /** Video, or voice only (6c). */
+    engine: engineKind,
+    /** A switch between video and voice is under way, and where it's heading. */
+    switching: switchingTo !== null,
+    switchingTo,
+    switchToVoice,
+    switchToVideo,
     sessionId,
     problem,
     /** A dropped call couldn't be brought back: the button reads Try again (R14). */

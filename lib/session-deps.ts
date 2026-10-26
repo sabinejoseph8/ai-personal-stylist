@@ -7,5 +7,5 @@ import { serverKeyDb } from "@/lib/supabase/admin";
 /** What the session endpoints run with on the server: the server key, the call provider and the budget guard. */
 export function sessionDeps(): SessionDeps {
   const db = serverKeyDb();
-  return { db, provider: callProvider(), guard: createBudgetGuard(db) };
+  return { db, provider: callProvider("video"), voice: callProvider("voice"), guard: createBudgetGuard(db) };
 }

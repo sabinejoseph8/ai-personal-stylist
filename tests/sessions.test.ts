@@ -257,6 +257,43 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(data).toEqual([]);
   });
 
+  // Voice only (6c, R9): a voice call is started on request, counted in the day's time, ended by its own
+  // provider, and paid from the OpenAI account by the second.
+  const voiceEnded: string[] = [];
+  const voice = (): CallProvider => {
+    const fake = createFakeProvider("voice");
+    return { ...fake, end: async (id) => void voiceEnded.push(id) };
+  };
+
+  it("Voice only starts a voice call in the same session, and its end is paid from the OpenAI account (6c)", async () => {
+    voiceEnded.length = 0;
+    const video = await startConversation(deps({ voice: voice() }), guest.id);
+    if (!video.ok) throw new Error(video.reason);
+    expect(video.engine).toBe("video");
+    // The switch: the video call pauses, and the voice call picks the session up.
+    expect(await endConversation(deps({ voice: voice() }), guest.id, video.sessionId, true, video.call.callId)).toEqual({ status: "paused" });
+    const started = await startConversation(deps({ voice: voice() }), guest.id, "voice");
+    if (!started.ok) throw new Error(started.reason);
+    expect(started).toMatchObject({ sessionId: video.sessionId, resumed: true, engine: "voice" });
+    expect(started.call.callId).toMatch(/^voice:/);
+    expect(await row(started.sessionId)).toMatchObject({ status: "active", engine: "voice", call_id: started.call.callId });
+    await db.from("sessions").update({ call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    expect(await endConversation(deps({ voice: voice() }), guest.id, started.sessionId)).toEqual({ status: "ended" });
+    expect(voiceEnded).toEqual([started.call.callId]);
+    expect(ended).toEqual([video.call.callId]);
+    const { data: usage } = await db.from("usage").select("voice_seconds, openai_microdollars").eq("user_id", guest.id).single().throwOnError();
+    expect(usage!.voice_seconds).toBeGreaterThanOrEqual(60);
+    expect(usage!.voice_seconds).toBeLessThan(70);
+    // $0.05 a minute: about 5 cents for the minute.
+    expect(Number(usage!.openai_microdollars)).toBeGreaterThanOrEqual(50_000);
+    expect(Number(usage!.openai_microdollars)).toBeLessThan(60_000);
+  });
+
+  it("Voice only is refused when there's no voice stylist, giving nothing away (6c)", async () => {
+    expect(await startConversation(deps(), guest.id, "voice")).toEqual({ ok: false, reason: "voice_unavailable" });
+    expect(await usedToday()).toBe(0);
+  });
+
   it("only the guest's own session can be ended", async () => {
     const other = await createTestGuest();
     try {

@@ -528,6 +528,8 @@ export function StylingSession({
     };
   });
   const [confirmEnd, setConfirmEnd] = useState(false);
+  // Phones: Voice only sits under More (design 4.1, 6c).
+  const [moreOpen, setMoreOpen] = useState(false);
   const [confirmEndPaused, setConfirmEndPaused] = useState(false);
   // Leaving the page closes any open End dialog (Next.js keeps the page's state while it's hidden).
   useLayoutEffect(
@@ -689,12 +691,31 @@ export function StylingSession({
             autoPlay
             playsInline
             muted
-            className={`object-cover ${showVideo ? "" : "hidden"} ${
+            className={`object-cover ${showVideo && call.engine === "video" ? "" : "hidden"} ${
               camera.on
                 ? "absolute bottom-3 right-3 z-10 size-20 rounded-pill border-2 border-page tablet:static tablet:size-full tablet:rounded-none tablet:border-0"
                 : "h-full w-full"
             }`}
           />
+          {/* Voice only (6c, R9, design 4.1): a still portrait of the same stylist, with a soft ring while she speaks. */}
+          {showVideo && call.engine === "voice" && (
+            <div
+              className={`overflow-hidden bg-ink ${
+                camera.on
+                  ? "absolute bottom-3 right-3 z-10 size-20 rounded-pill border-2 border-page tablet:static tablet:size-full tablet:rounded-none tablet:border-0"
+                  : "absolute inset-0"
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- one small still, served as it is */}
+              <img src="/stylist-portrait.jpg" alt="Your stylist, in voice only" className="size-full object-cover" />
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none absolute inset-2 rounded-panel border-4 border-emerald transition-opacity duration-quick ${
+                  stage.stylistSpeaking ? "opacity-80 motion-safe:animate-pulse" : "opacity-0"
+                }`}
+              />
+            </div>
+          )}
           <audio ref={audio} autoPlay />
           {!showVideo && (
             <p className="type-body absolute inset-0 m-0 flex items-center justify-center p-6 text-center text-white/80">
@@ -754,6 +775,19 @@ export function StylingSession({
               onClick={() => (camera.on ? camera.stop() : void camera.begin())}
               disabled={flow !== "live"}
             />
+            {/* Voice only (6c, R9): beside Camera on tablets and computers, under More on phones (design 4.1). */}
+            <span className="hidden tablet:contents">
+              <ControlButton
+                icon="voiceOnly"
+                label={call.engine === "voice" ? "Video off" : "Voice only"}
+                pressed={call.engine === "voice"}
+                onClick={() => void (call.engine === "voice" ? call.switchToVideo() : call.switchToVoice())}
+                disabled={flow !== "live" || call.switching}
+              />
+            </span>
+            <span className="contents tablet:hidden">
+              <ControlButton icon="more" label="More" aria-expanded={moreOpen} aria-controls="more-controls" onClick={() => setMoreOpen((o) => !o)} disabled={flow !== "live"} />
+            </span>
             <ConfirmDialog
               open={confirmEnd}
               onOpenChange={setConfirmEnd}
@@ -765,6 +799,33 @@ export function StylingSession({
               destructive
               onConfirm={call.end}
             />
+          </div>
+        )}
+
+        {inCall && moreOpen && flow === "live" && (
+          <div id="more-controls" className="flex justify-center tablet:hidden">
+            <Button
+              variant="secondary"
+              icon="voiceOnly"
+              disabled={call.switching}
+              onClick={() => {
+                setMoreOpen(false);
+                void (call.engine === "voice" ? call.switchToVideo() : call.switchToVoice());
+              }}
+            >
+              {call.engine === "voice" ? "Turn video on" : "Voice only"}
+            </Button>
+          </div>
+        )}
+        {/* What voice only means right now, with the way back (design 4.1). */}
+        {inCall && (call.engine === "voice" || call.switching) && (
+          <div role="status" className="flex flex-wrap items-center justify-center gap-2 desktop:justify-start">
+            <p className="type-label m-0 text-ink">{call.switchingTo === "voice" ? "Switching to voice only…" : call.switchingTo === "video" ? "Turning video on…" : "Voice only"}</p>
+            {call.engine === "voice" && !call.switching && flow === "live" && (
+              <Button variant="quiet" onClick={() => void call.switchToVideo()}>
+                Turn video on
+              </Button>
+            )}
           </div>
         )}
 

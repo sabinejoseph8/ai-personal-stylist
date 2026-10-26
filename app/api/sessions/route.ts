@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
 import { withinLimit } from "@/lib/rate-limits";
 import { sessionDeps } from "@/lib/session-deps";
@@ -11,6 +12,7 @@ const WHY: Record<StartRefusal | "too_many_starts", { status: number; message: s
   monthly_video_used: { status: 503, message: "The video stylist is resting until the 1st of next month." },
   video_busy: { status: 503, message: "The video stylist is with another visitor. Please try again in a few minutes." },
   video_unavailable: { status: 503, message: "The video stylist couldn't start. Please try again in a moment." },
+  voice_unavailable: { status: 503, message: "The voice stylist couldn't start. Please try again in a moment." },
   too_many_starts: { status: 429, message: "You've started 5 conversations in the last hour. Please wait a little, then try again." },
   daily_ai_used: { status: 409, message: "You've reached today's limit for the demo. Come back tomorrow." },
   monthly_claude_used: { status: 503, message: "The demo is resting until the 1st of next month." },
@@ -19,12 +21,16 @@ const WHY: Record<StartRefusal | "too_many_starts", { status: number; message: s
 
 const refuse = (reason: keyof typeof WHY) => Response.json({ reason, error: WHY[reason].message }, { status: WHY[reason].status });
 
-export async function POST() {
+const Body = z.object({ engine: z.enum(["video", "voice"]).default("video") }).catch({ engine: "video" });
+
+/** Start conversation: { engine } is video, or voice only (Voice only, 6c). */
+export async function POST(request: Request) {
   const guest = await currentGuest();
   if (!guest) return Response.json({ error: "Your demo has ended. Start again from the welcome screen." }, { status: 401 });
   if (!(await withinLimit(guest.db, "startSession"))) return refuse("too_many_starts");
+  const { engine } = Body.parse(await request.json().catch(() => ({})));
 
-  const result = await startConversation(sessionDeps(), guest.id);
+  const result = await startConversation(sessionDeps(), guest.id, engine);
   if (!result.ok) return refuse(result.reason);
-  return Response.json({ sessionId: result.sessionId, resumed: result.resumed, call: result.call, seconds: result.seconds, endsBecause: result.endsBecause });
+  return Response.json({ sessionId: result.sessionId, resumed: result.resumed, engine: result.engine, call: result.call, seconds: result.seconds, endsBecause: result.endsBecause });
 }

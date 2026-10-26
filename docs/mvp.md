@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.44
+**Status:** Living document, version 1.45
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 26 Oct 2026 | 6c plan approved as recommended, in two pull requests. Q1: the voice-only portrait is a still of Anna saved into the site from her Tavus preview. Q2: the demo is "resting" when the month's Claude stop is reached, or both the video and OpenAI stops are. Q3: check GPT-Live's docs and keep the browser to the least it needs; found and used: OpenAI limits the browser's events (only context, exact lines, mute and close), and its trusted server connection closes calls, though the live site can't hold it for a whole call. Q4 (owed from the limit-lines plan): leave the cost per session for now and revisit in 7a. The Tavus webhook stays in Phase 7 (the full code review's Q4) | Sabine | tech spec 1.46 |
 | 26 Oct 2026 | 6b plan approved as recommended. Q1: Download my data is a ZIP (data.json and the photos), rather than a JSON file with 30-minute photo links. Q2: turning off wardrobe photos deletes the wardrobe after asking, rather than only stopping new items. Q3: saving preferences in setup records the permission, and turning it off deletes them, rather than a separate permission card. Also: 6b and 6c are built before one iPhone check for 6a, 6b and 6c, rather than a check after each group (likely over two evenings, as the 10 minutes a day won't cover all three) | Sabine | tech spec 1.45 |
 | 26 Oct 2026 | 6a plan approved as recommended. Q1: Open checks a saved look on the Saved looks page against the saved profile alone (about 2 cents), rather than bringing it into the session. Q2: a look with the shopper's own session photo is saved with that piece by name and no photo, rather than asking to save it to the wardrobe first. Q3: the bag takes pieces only from a look whose check passed on the current requirements, with no new Claude check, rather than a new check per piece. Not in 6a: the stylist opening saved looks by voice | Sabine | tech spec 1.44 |
 | 25 Oct 2026 | The limit-lines plan approved as recommended, from the iPhone check after the review's five batches (B.1 stopped by the $1 daily AI allowance, used up by section A's re-judging of every look). Q1: when the day's AI is used up, Change, Swap, Undo and Compare say "You've reached today's limit for the demo, so these stay", the welcome screen's words (the other option: the whole-look line's "today's AI allowance is used up"); nothing is saved for a check that couldn't run, and Swap leaves unchecked replacements unmarked. Q2: the built-in daily AI allowance is $3 instead of $1 (the other option: keep $1 and rely on the Vercel setting). This changes the 5c Q4 answer, which showed "couldn't be checked just now" for the day's AI too. Open for the 6a plan: the cost per session (judging candidates one at a time, reusing verdicts for Undo and Compare, prompt caching) | Sabine | tech spec 1.43 |
@@ -427,6 +428,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.45 (26 Oct 2026):** The 6c decisions (Q1 to Q4).
 - **1.44 (26 Oct 2026):** The 6b decisions (Q1 to Q3) and the order: 6a, 6b and 6c checked on the iPhone together.
 - **1.43 (26 Oct 2026):** The 6a decisions (Q1 to Q3).
 - **1.42 (25 Oct 2026):** Phase 5 complete: the iPhone check passed B to E after the limit-lines fix (57 cents of AI and 7 minutes of video for the half-check).

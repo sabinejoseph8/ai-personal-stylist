@@ -7,7 +7,8 @@ const supabase = new URL(SUPABASE_URL).host;
  * The content security policy: the browser may only talk to our site and the services we use.
  * `local` is true on this computer's test server, which has no https, so requests aren't upgraded there.
  */
-// connect-src gains https://api.openai.com with voice only (6c), not before (full code review, E8).
+// No OpenAI entry, even with voice only (6c): the browser's WebRTC offer goes to our own server, which
+// talks to OpenAI, and the call's audio isn't a connect-src request (full code review, E8).
 export function contentSecurityPolicy(nonce: string, dev: boolean, local = dev): string {
   return [
     "default-src 'self'",
