@@ -8,6 +8,7 @@ import { ALLOW_CHOICE, type NoMatch } from "@/core/looks/no-match";
 import { CompareSheet } from "./compare-sheet";
 import { ConflictCard } from "./conflict-card";
 import type { ShownItem, ShownLook } from "@/core/looks/shown";
+import { LookActions } from "./look-actions";
 import { LookPanel } from "./look-panel";
 import type { LooksPhase } from "./use-looks";
 
@@ -172,6 +173,16 @@ export function LooksArea({
           restoring={restoring === look.id}
           restoreNote={restoreNote?.lookId === look.id ? restoreNote.text : null}
           onUndo={() => void onRestore(look.id, { undo: true })}
+          actions={
+            sessionId ? (
+              <LookActions
+                sessionId={sessionId}
+                look={look}
+                number={i + 1}
+                disabled={busy || Boolean(swapping) || Boolean(restoring) || revising.includes(look.slot)}
+              />
+            ) : null
+          }
           compare={
             look.earlier && sessionId ? (
               <CompareSheet

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.21 (25 Oct 2026)
+**Status:** Agreed, version 1.22 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -311,7 +311,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **Revisions (5b):** a look being revised shows the Revising chip in place of its check status, with Swap, Keep and Change paused, and "Revising your look" with a spinner above the looks. The revised look's change summary sits above its items in an Emerald-wash box, and its new pieces carry the New chip. When no revision fits, a note in a Showroom box above the items says so, and the look stays. After a Keep or Change tap the looks wait 2 seconds, so several taps make one revision.
 - **Undo and compare (5c):** Undo feedback is a quiet button with the undo icon inside the change summary box; while the earlier look is checked, "Checking the earlier look against your preferences" with a spinner shows under it, and if it no longer fits, a note in a Showroom box says why. Compare is a secondary button under the look, for a look with an earlier version; it opens a sheet (wider on tablets and computers) with Current and Earlier side by side, or a Current and Earlier switch on phones, the differences as highlighter labels, Newer and Older, and Use this look.
 - **Conflict card (5c):** above the looks, in a highlighter box with the clock icon: the question, **Allow for this session** and **Keep my preference**. The no-match box's "Allow it for this session" opens it too. End closes it with the session, so it never shows in the next one (full code review, batch 2).
-- Give feedback and Compare (Phase 5), and Save look and Add to bag (6a) join later.
+- Give feedback and Compare (Phase 5) joined in 5a to 5c. **Save look** and **Add to bag** (6a) sit with Compare under the look, and wait while it's being checked, revised or needs a new check; a saved look's button reads **Saved** (disabled, with the check) after "Look saved".
 
 **Preference check status**
 - Inside the look panel: Checking (a spinner and "Checking your preferences"), Checked (a shield and "Checked against your preferences"), Needs a new check (circular arrows), Held ("This look couldn't be checked." with **Try again**).
@@ -325,6 +325,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Each item: photo, name, size, price, **Remove**.
 - The total, then a disabled **Checkout** button with the reason under it.
 - States: empty ("Your demo bag is empty. Add pieces from a look."), with items, checking (new items are checked first), error.
+- As built (6a): each piece shows "Sample product", and its size is a menu of the sizes it comes in. The empty bag has **Go to your looks**. Add to bag on a look opens a sheet, "Add Look 1 to your bag", with the demo line, each sample product ticked with its price and a size menu (starting on the profile's size, or "Pick a size"), and the shopper's own pieces as "… you own this" with no tick; its **Add to bag** says "Added to bag".
 
 **Wardrobe**
 - A grid of photos with category filters: All, Tops, Bottoms, Dresses, Outerwear, Shoes, Bags, Accessories. Each card shows the photo on a Showroom square, the name and the category, with "Styling with" for chosen items. Items in no category show under All.
@@ -336,6 +337,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - A list of saved looks, each with a small collage of its items, its name and the date saved.
 - **Open** (checked first) and **Remove** (after confirming).
 - States: empty ("No saved looks yet"), loading, list, checking.
+- As built (6a): a card per look, newest first, with up to four of its pieces in a row, the name, and "Saved 25 Oct · $312 to buy". **Open** shows "Checking your preferences", then the look in full (its pieces, "Sample product" and prices, the total and budget comparison against the saved profile, the reason and "Checked against your preferences") with **Close**, or a note saying why it no longer fits. **Remove** asks "Remove this saved look?" (**Remove look** or **Keep it**). The shopper's own piece from a session photo shows a "Your item" tile (your answer to Q2). A list on phones, 2 columns on tablets, 3 on computers.
 
 **Permission card**
 - Explains one permission at a time in plain words, just before it is needed: microphone, camera, wardrobe photo storage, saving preferences.
@@ -584,6 +586,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.22 (26 Oct 2026):** 6a as built: Save look and Add to bag on the look panel, the bag sheet, the Saved looks and Demo bag pages.
 - **1.21 (25 Oct 2026):** Full code review, batch 2: the conflict card closes with End (4.3).
 - **1.20 (24 Oct 2026):** Full code review, batch 1: a photo is Active only once kept, and Replace keeps the earlier photo until the new one is kept (4.2).
 - **1.19 (22 Oct 2026):** 5c fix 6: once what was asked is jotted, only its pieces change in each look, with Revising and a change summary (4.2, 4.3).

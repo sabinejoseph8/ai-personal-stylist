@@ -17,6 +17,10 @@ export const LIMITS = {
   // Behind the scenes (4d): read only, asked again while open as notes and looks change.
   behindTheScenes: { max: 240, windowSeconds: 3600 },
   makeRule: { max: 20, windowSeconds: 3600 },
+  // Saved looks and the demo bag (6a). Opening a saved look checks it again, with the judgment step.
+  saveLook: { max: 60, windowSeconds: 3600 },
+  openSavedLook: { max: 20, windowSeconds: 3600 },
+  bagChange: { max: 120, windowSeconds: 3600 },
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

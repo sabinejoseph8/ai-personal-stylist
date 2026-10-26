@@ -14,7 +14,7 @@ import type { ShownItem, ShownLook } from "@/core/looks/shown";
 // "Needs a new check" while it's checked again after a change. Keep and Change (5a) jot feedback under
 // the look, as if said. A look revised from feedback (5b) shows Revising meanwhile, then its change
 // summary above the items, with New on the pieces it changed, and Undo feedback (5c). Compare opens the
-// look's earlier versions (5c). Save look and Add to bag join in 6a.
+// look's earlier versions (5c). Save look and Add to bag (6a) sit beside it.
 
 const KINDS: Record<string, string> = {
   outer: "Jacket",
@@ -137,6 +137,7 @@ export function LookPanel({
   restoreNote,
   onUndo,
   compare,
+  actions,
   swappingIndex,
   newIndex,
   note,
@@ -162,6 +163,8 @@ export function LookPanel({
   onUndo: () => void;
   /** The Compare button and its sheet, for a look with earlier versions (5c). */
   compare: ReactNode;
+  /** Save look and Add to bag (6a). */
+  actions?: ReactNode;
   /** The piece being swapped in this look, if any. */
   swappingIndex: number | null;
   /** The piece a swap just brought in. */
@@ -240,7 +243,12 @@ export function LookPanel({
         {revising ? <StatusChip status="revising" /> : look.current ? <StatusChip status="checked" /> : <StatusChip status="needsNewCheck" />}
         {updating && !look.current && <span className="type-label text-graphite">Updating</span>}
       </div>
-      {compare && <div className="flex flex-wrap gap-2">{compare}</div>}
+      {(actions || compare) && (
+        <div className="flex flex-wrap gap-2">
+          {actions}
+          {compare}
+        </div>
+      )}
     </article>
   );
 }

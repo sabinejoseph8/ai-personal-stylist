@@ -12,7 +12,8 @@ import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/
 // Phase 4's end-to-end test: with the sample profile, no look shows high heels across 10 swaps (S13).
 // 4d: Behind the scenes (R72). 5a: feedback by Keep and Change, and by voice, jotted under its look (R46, R47).
 // 5b: feedback revises its look, with the pieces kept and a change summary (R48, R50). 5c: "This session
-// only" exceptions (R57, S14), Undo feedback and Compare (R51).
+// only" exceptions (R57, S14), Undo feedback and Compare (R51). 6a: Save look and Saved looks (R60), and the
+// demo bag with Checkout disabled (R61, R62, S16).
 test.describe("the looks", () => {
   test.skip(!canRunDatabaseTests, "needs SUPABASE_SECRET_KEY");
   let shared: BrowserGuest;
@@ -474,5 +475,66 @@ test.describe("the looks", () => {
     // She says what changed (R44).
     await expect.poll(() => sent(page, "sendPhrase")).toContain("What changed in my looks?");
     expect((await sent(page, "updateContext")).at(-1)).toContain("After the shopper's change");
+  });
+
+  test("Save look reads Saved, and Saved looks opens it after a check and removes it when asked (6a, R60)", async ({ page }) => {
+    const db = serverDb();
+    await db.from("saved_looks").delete().eq("user_id", guest.id).throwOnError();
+    await page.goto("/saved-looks");
+    await expect(page.getByText("No saved looks yet")).toBeVisible();
+    await weddingLooks(page);
+    const first = panels(page).first();
+    const name = (await first.getByRole("heading").textContent())!;
+    await first.getByRole("button", { name: "Save look" }).click();
+    await expect(page.getByText("Look saved").first()).toBeVisible();
+    await expect(first.getByRole("button", { name: "Saved" })).toBeDisabled();
+    // Open checks it against the saved profile (Q1): a $500 budget, so the $500 looks fit.
+    await db.from("profiles").update({ budget_amount_cents: 50000 }).eq("user_id", guest.id).throwOnError();
+    try {
+      await page.getByRole("link", { name: "Saved looks" }).click();
+      const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name }) });
+      await expect(card).toContainText(/Saved \d+ \w+/);
+      await card.getByRole("button", { name: "Open" }).click();
+      await expect(card).toContainText("Checked against your preferences", { timeout: 15_000 });
+      await expect(card).toContainText("to buy, owned items not included");
+      await noSeriousA11yProblems(page);
+      await card.getByRole("button", { name: `Remove ${name}` }).click();
+      await page.getByRole("button", { name: "Remove look" }).click();
+      await expect(page.getByText("No saved looks yet")).toBeVisible();
+    } finally {
+      await db.from("profiles").update({ budget_amount_cents: 40000 }).eq("user_id", guest.id).throwOnError();
+    }
+  });
+
+  test("Add to bag puts a look's sample products in the demo bag in a size, and Checkout stays disabled (6a, R61, R62, S16)", async ({ page }) => {
+    await serverDb().from("bag_items").delete().eq("user_id", guest.id).throwOnError();
+    await page.goto("/bag");
+    await expect(page.getByText("Your demo bag is empty. Add pieces from a look.")).toBeVisible();
+    await weddingLooks(page);
+    await panels(page).first().getByRole("button", { name: "Add to bag" }).click();
+    const sheet = page.getByRole("dialog", { name: "Add Look 1 to your bag" });
+    await expect(sheet).toContainText("Demo only: these sample products can't be bought.");
+    // Sizes start on the profile's (dress 8, shoes 7), or a piece's only size; any other is picked here.
+    for (const select of await sheet.getByRole("combobox").all()) {
+      if (!(await select.inputValue())) await select.selectOption({ index: 1 });
+    }
+    const count = (await sheet.getByRole("checkbox").all()).length;
+    expect(count).toBeGreaterThan(1);
+    await sheet.getByRole("button", { name: "Add to bag" }).click();
+    await expect(page.getByText("Added to bag").first()).toBeVisible();
+    await page.getByRole("link", { name: `Demo bag (${count})` }).click();
+
+    const bag = page.getByRole("list", { name: "Pieces in your demo bag" });
+    await expect(bag.getByRole("listitem")).toHaveCount(count);
+    await expect(page.getByRole("status").filter({ hasText: "Demo only: these sample products can't be bought." }).first()).toBeVisible();
+    await expect(bag.getByText("Sample product")).toHaveCount(count);
+    await expect(page.getByRole("button", { name: "Checkout" })).toBeDisabled();
+    await noSeriousA11yProblems(page);
+    // The server refuses checkout too.
+    const refused = await page.request.post("/api/bag/checkout");
+    expect(refused.status()).toBe(403);
+    // Remove takes one piece out.
+    await bag.getByRole("button", { name: /^Remove / }).first().click();
+    await expect(bag.getByRole("listitem")).toHaveCount(count - 1);
   });
 });

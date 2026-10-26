@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BehindTheScenes } from "@/components/behind/behind-the-scenes";
+import { KeepingLinks, KeepingProvider } from "@/components/looks/keeping";
 import { redirect } from "next/navigation";
 import { StylingSession } from "@/components/session/styling-session";
 import { buttonClasses } from "@/components/ui/button";
@@ -24,11 +25,14 @@ export const metadata: Metadata = {
 export default async function SessionPage() {
   const guest = await currentGuest();
   if (!guest) redirect("/");
-  const [profile, open, wardrobe] = await Promise.all([
+  const [profile, open, wardrobe, saved, bag] = await Promise.all([
     loadProfile(guest.db, guest.id),
     guest.db.from("sessions").select("id, last_activity_at").in("status", ["active", "paused"]).maybeSingle(),
     // Chosen with Style with these on the Wardrobe page (3d).
     stylingItems(guest.db, guest.id).catch(() => []),
+    // Which looks are saved, and how many pieces are in the bag (6a): guests read their own.
+    guest.db.from("saved_looks").select("items_key"),
+    guest.db.from("bag_items").select("id", { count: "exact", head: true }),
   ]);
   const budget = describeBudget(profile.budget);
   // Within 30 minutes, the shopper can carry on the same session (R12).
@@ -51,6 +55,7 @@ export default async function SessionPage() {
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:grid tablet:max-w-5xl tablet:grid-cols-2 tablet:items-start tablet:gap-x-8 tablet:px-6 desktop:max-w-7xl desktop:grid-cols-[320px_minmax(0,400px)_minmax(0,1fr)] desktop:gap-x-10 desktop:px-8">
       <h1 className="type-title m-0 tablet:col-span-2 desktop:col-span-3">Your styling session</h1>
       <ToastProvider>
+      <KeepingProvider savedKeys={(saved.data ?? []).map((r) => r.items_key as string)} bagCount={bag.count ?? 0}>
       <StylingSession openSessionId={resumable} initialNotes={notes} initialPhotos={photos} wardrobe={wardrobe} preferences={profile.preferences.map(describePreference)}>
         <section aria-labelledby="profile-title" className="flex flex-col gap-3">
           <h2 id="profile-title" className="type-subheading m-0">
@@ -72,6 +77,8 @@ export default async function SessionPage() {
             <Link href="/wardrobe" className={buttonClasses("secondary")}>
               Wardrobe
             </Link>
+            {/* Saved looks and the demo bag (6a), here until the app menu arrives in Phase 7. */}
+            <KeepingLinks />
             {/* A portfolio extra (4d), here until the app menu arrives in Phase 7. */}
             <BehindTheScenes />
             <Link href="/" className={buttonClasses("quiet")}>
@@ -81,6 +88,7 @@ export default async function SessionPage() {
           <p className="type-small m-0 text-graphite">Sample products only. Nothing here is for sale.</p>
         </section>
       </StylingSession>
+      </KeepingProvider>
       </ToastProvider>
     </main>
   );
