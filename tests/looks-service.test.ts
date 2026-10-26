@@ -851,6 +851,80 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(again.note).toBeNull();
   }, 90_000);
 
+  // The day's AI allowance is used up (25 Oct 2026, from Sabine's iPhone check: B.1): a budget guard that
+  // refuses AI, a judge that counts what it's asked (which should be nothing), and one whose call fails.
+  const noAi = (judge: Judge = createFakeJudge()): LooksDeps => ({ ...deps(), judge, guard: { ...guard, checkAi: async () => ({ ok: false as const, reason: "daily_ai_used" as const }) } });
+  const countingJudge = () => {
+    let judged = 0;
+    const fake = createFakeJudge();
+    const judge: Judge = { judge: (input) => (judged++, fake.judge(input)) };
+    return { judge, count: () => judged };
+  };
+  const failing: Judge = { judge: async () => ({ verdict: "needs_clarification", reasons: [{ about: "Judgment", ok: false, why: "The check couldn't be completed" }], costUsd: 0 }) };
+  const candidatesOf = async (lookId: string) => (await db.from("looks").select("id", { count: "exact", head: true }).eq("revision_of", lookId).throwOnError()).count ?? 0;
+
+  it("when the day's AI is used up, Change keeps the look with the limit line, saves nothing, and tries again once allowed (25 Oct 2026, B.1)", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [look.items[at].id])).throwOnError();
+    const asked = countingJudge();
+    const after = looksOf(await buildLooks(noAi(asked.judge), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(after.id).toBe(look.id);
+    expect(after.note).toBe("You've reached today's limit for the demo, so these stay.");
+    expect(asked.count()).toBe(0);
+    expect(await candidatesOf(look.id)).toBe(0);
+    // A whole-look change says so too.
+    await db.from("session_notes").insert(feedback("Not this look", look.slot, "dislike", [], "look")).throwOnError();
+    const whole = looksOf(await buildLooks(noAi(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(whole.id).toBe(look.id);
+    expect(whole.note).toBe("You've reached today's limit for the demo, so this look stays.");
+    expect(await candidatesOf(look.id)).toBe(0);
+    // Allowed again, the next update revises it.
+    const again = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(again.id).not.toBe(look.id);
+    expect(again.note).toBeNull();
+    expect(again.items.map((i) => i.id)).not.toContain(look.items[at].id);
+  }, 120_000);
+
+  it("when the day's AI is used up, Swap keeps the piece with the limit line and marks nothing as failed; a failed judgment doesn't either", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const index = look.items.findIndex((i) => i.group === "shoes");
+    const asked = countingJudge();
+    expect(await swapPiece(noAi(asked.judge), guest.id, session, look.id, index)).toEqual({ none: "You've reached today's limit for the demo, so these stay." });
+    expect(asked.count()).toBe(0);
+    const failedOf = async () => {
+      const { data } = await db.from("looks").select("input_versions").eq("id", look.id).single().throwOnError();
+      return Object.values((data!.input_versions as { failed?: { pieces: Record<string, string[]> } }).failed?.pieces ?? {}).flat();
+    };
+    expect(await failedOf()).toEqual([]);
+    expect(await candidatesOf(look.id)).toBe(0);
+    // A judgment step that fails: the piece stays with the "just now" line, and nothing is marked as failed either.
+    expect(await swapPiece({ ...deps(), judge: failing }, guest.id, session, look.id, index)).toEqual({ none: "The new shoes couldn't be checked just now, so these stay. Try again in a moment." });
+    expect(await failedOf()).toEqual([]);
+    expect(await candidatesOf(look.id)).toBe(0);
+    // Allowed again, Swap brings other shoes.
+    const result = await swapPiece(deps(), guest.id, session, look.id, index);
+    if (!result || !("look" in result)) throw new Error(JSON.stringify(result));
+    expect(result.look.items[index].id).not.toBe(look.items[index].id);
+  }, 90_000);
+
+  it("when the day's AI is used up, Undo keeps the look with the limit line, and works once allowed", async () => {
+    await db.from("session_notes").insert(wedding()).throwOnError();
+    const [look] = looksOf(await buildLooks(deps(), guest.id, session));
+    const at = look.items.findIndex((i) => i.group === "shoes");
+    await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [look.items[at].id])).throwOnError();
+    const revised = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    expect(await restoreLook(noAi(), guest.id, session, revised.id, { undo: true })).toEqual({ none: "You've reached today's limit for the demo, so this one stays." });
+    expect(await restoreLook({ ...deps(), judge: failing }, guest.id, session, revised.id, { undo: true })).toEqual({ none: "That earlier look couldn't be checked just now, so this one stays. Try again in a moment." });
+    expect((await currentLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)?.id).toBe(revised.id);
+    expect(await candidatesOf(revised.id)).toBe(0);
+    const undone = await restoreLook(deps(), guest.id, session, revised.id, { undo: true });
+    if (!undone || !("look" in undone)) throw new Error(JSON.stringify(undone));
+    expect(undone.look.items.map((i) => i.id)).toEqual(look.items.map((i) => i.id));
+  }, 90_000);
+
   it("looks and their checks are deleted when the session ends (R63)", async () => {
     await db.from("session_notes").insert(wedding()).throwOnError();
     await buildLooks(deps(), guest.id, session);

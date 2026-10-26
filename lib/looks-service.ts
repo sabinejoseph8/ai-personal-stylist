@@ -6,10 +6,11 @@ import { type BuiltLook, type LooksBuilder } from "@/core/looks/builder";
 import { filterCandidates, type Requirements, ruleLabel } from "@/core/looks/candidates";
 import { type Anchor, budgetWords, type CheckReason, codeCheck } from "@/core/looks/checker";
 import type { Judge, Verdict } from "@/core/looks/judge";
+import { todaysLimit, type Unchecked } from "@/core/looks/limit";
 import { canMakeAnother, groupOf, type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, productGroup, REPEATS_SHOWN, type ResolvedItem } from "@/core/looks/look";
 import { differences } from "@/core/looks/compare";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
-import { changeSummary, feedbackKey, type LookFeedback, lookFeedback, meetsWishes, nothingFits, pendingFeedback, type RevisionPlan, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
+import { changeSummary, couldNotCheck, feedbackKey, type LookFeedback, lookFeedback, meetsWishes, nothingFits, pendingFeedback, type RevisionPlan, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
 import { type Rule, ruledOut } from "@/core/looks/rules";
 import { noOtherPiece, pairedPicks, swapCandidates } from "@/core/looks/swap";
 import { looksReadiness } from "@/core/looks/readiness";
@@ -214,18 +215,21 @@ function shown(id: string, slot: number, look: { name: string; reason: string },
   };
 }
 
-type Checked = { verdict: Verdict; reasons: CheckReason[]; failedProducts: string[]; reason?: string };
+/** A candidate's check. `unchecked`: it has no verdict, since the judgment couldn't run (the day's AI allowance, or a failed call). */
+type Checked = { verdict: Verdict; reasons: CheckReason[]; failedProducts: string[]; reason?: string; unchecked?: Unchecked };
 
 /** Checks one candidate look: rules in code, then, only if they all hold, the judgment step. */
 async function check(deps: LooksDeps, guestId: string, g: Gathered, items: ResolvedItem[], withReason = false, extraNotes: string[] = []): Promise<Checked> {
   const code = codeCheck({ items, requirements: g.requirements, anchor: g.anchor, wardrobePicks: g.owned.filter((o) => o.ref.kind === "wardrobe").map((o) => (o.ref as { itemId: string }).itemId) });
   if (!code.ok) return { verdict: "conflict", reasons: code.reasons, failedProducts: code.failedProducts };
   const money = await deps.guard.checkAi(guestId, "claude");
-  if (!money.ok) return { verdict: "needs_clarification", reasons: [...code.reasons, { about: "Judgment", ok: false, why: "Today's AI allowance is used up" }], failedProducts: [] };
+  if (!money.ok) return { verdict: "needs_clarification", reasons: [...code.reasons, { about: "Judgment", ok: false, why: "Today's AI allowance is used up" }], failedProducts: [], unchecked: "allowance" };
   await g.beforeAi?.();
   const judged = await deps.judge.judge({ items, notes: [...g.noteWords, ...extraNotes], judged: g.judged, likes: g.likes, inspiration: g.inspiration, withReason });
   if (judged.costUsd > 0) await deps.guard.recordAi(guestId, "claude", judged.costUsd);
-  return { verdict: judged.verdict, reasons: [...code.reasons, ...judged.reasons], failedProducts: [], reason: judged.reason };
+  // A judgment that couldn't be completed (core/looks/judge.ts) is no verdict either.
+  const failed = judged.reasons.some((r) => r.about === "Judgment" && !r.ok);
+  return { verdict: judged.verdict, reasons: [...code.reasons, ...judged.reasons], failedProducts: [], reason: judged.reason, ...(failed ? { unchecked: "failed" as const } : {}) };
 }
 
 const failedWhy = (c: Checked) =>
@@ -644,6 +648,13 @@ async function revise(
       .eq("id", row.id)
       .throwOnError();
   const hold = (ids: string[]) => db.from("looks").update({ status: "held" }).in("id", ids).throwOnError();
+  // The day's AI allowance is used up: the look stays and says so in the welcome screen's words, nothing is
+  // saved, and the next request after the allowance comes back tries again (25 Oct 2026, from Sabine's
+  // iPhone check: B.1 showed "couldn't be checked just now" when the day's $1 was spent).
+  const limitReached = async (): Promise<{ done: "kept" }> => {
+    await answered({ none: nothingFits(items, plan, { unchecked: "allowance" }) }, true);
+    return { done: "kept" };
+  };
   // Nothing to change: the feedback is about pieces no longer in this look, or it already has what was asked.
   if (!plan.whole && !plan.change.length) {
     await answered();
@@ -668,11 +679,7 @@ async function revise(
   // How many replacements each changed piece had within the budget, for saying when the budget is the limit.
   let pooled: number[] = [];
   if (plan.whole) {
-    const money = await deps.guard.checkAi(guestId, "claude");
-    if (!money.ok) {
-      await answered({ none: "This look couldn't be revised: today's AI allowance is used up." });
-      return { done: "kept" };
-    }
+    if (!(await deps.guard.checkAi(guestId, "claude")).ok) return limitReached();
     const kept = row.items.filter((ref) => plan.keep.has(refId(ref)));
     await g.beforeAi?.();
     const built = await deps.builder.build({
@@ -723,20 +730,25 @@ async function revise(
   }
 
   const before = feedbackKey(lines);
-  const tried: { unchecked: boolean }[] = [];
+  type Tried = { id: string | null; verdict: Verdict; unchecked?: Unchecked; items: ResolvedItem[] };
+  const tried: Tried[] = [];
   for (const batch of batches) {
     // Ended meanwhile: nothing more is checked or saved (5c fix 6).
     if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
-    // The allowance is asked before the batch's rows are inserted: refused inside it, a candidate that skipped
-    // the judge was left in "checking" (5d review).
+    // The day's allowance is asked before a round, so a refused round saves nothing.
+    if (!(await deps.guard.checkAi(guestId, "claude")).ok) return limitReached();
+    // The hourly allowance is asked before the batch's rows are inserted: refused inside it, a candidate that
+    // skipped the judge was left in "checking" (5d review).
     await g.beforeAi?.();
     const checked = await Promise.all(
-      batch.map(async (c) => {
+      batch.map(async (c): Promise<Tried> => {
         const same = others.find((o) => o.main === mainPieces(c.items));
         const result: Checked = same
           ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.number}` }], failedProducts: [] }
           : await check(deps, guestId, g, c.items, true, plan.notes);
         if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
+        // No verdict (the allowance ran out between the question and the call, or the judgment failed): nothing to save.
+        if (result.unchecked) return { id: null, verdict: result.verdict, unchecked: result.unchecked, items: c.items };
         const total = totalOf(c.items, g.requirements);
         const changed = c.items.flatMap((it, i) => (items.some((o) => JSON.stringify(o.ref) === JSON.stringify(it.ref)) ? [] : [i]));
         const revision: Revision = { seen, wanted, summary: changeSummary(items, c.items, total, plan.asked), changed };
@@ -758,9 +770,7 @@ async function revise(
           .single()
           .throwOnError();
         await db.rpc("record_check", { look: inserted!.id, verdict: result.verdict, reasons: result.reasons, requirements_key: g.key }).throwOnError();
-        // A check that couldn't run (the judgment step failed or the day's AI is used up) isn't a "no".
-        const unchecked = result.verdict === "needs_clarification" && result.reasons.some((r) => r.about === "Judgment" && !r.ok);
-        return { id: inserted!.id as string, verdict: result.verdict, unchecked, items: c.items };
+        return { id: inserted!.id as string, verdict: result.verdict, items: c.items };
       }),
     );
     tried.push(...checked);
@@ -773,8 +783,9 @@ async function revise(
           return its ? [mainPieces(its)] : [];
         }),
     );
-    const winner = checked.find((c) => c.verdict === "pass" && !mainsNow.has(mainPieces(c.items)));
-    const losers = checked.filter((c) => c !== winner).map((c) => c.id);
+    // A candidate with no verdict never passes, so the winner has a row.
+    const winner = checked.find((c): c is Tried & { id: string } => c.id !== null && c.verdict === "pass" && !mainsNow.has(mainPieces(c.items)));
+    const losers = checked.flatMap((c) => (c !== winner && c.id ? [c.id] : []));
     if (losers.length) await hold(losers);
     // Newest wins (R52): a change to the requirements or to this look's feedback meanwhile means this
     // revision answered old information.
@@ -789,9 +800,11 @@ async function revise(
       await hold([winner.id]);
       return { done: "stale" };
     }
+    // The allowance ran out during the round: the look stays with the limit line, and no more rounds.
+    if (checked.some((c) => c.unchecked === "allowance")) return limitReached();
   }
   if (tried.length && tried.every((t) => t.unchecked)) {
-    await answered({ none: nothingFits(items, plan, { unchecked: true }) }, true);
+    await answered({ none: nothingFits(items, plan, { unchecked: "failed" }) }, true);
     return { done: "kept" };
   }
   // The budget is the limit when every replacement within it was tried, and without it there would have
@@ -912,6 +925,9 @@ async function restoreNow(deps: LooksDeps, guestId: string, sessionId: string, l
   const takeBack = undo ? [...new Set((row.input_versions.revision?.seen ?? []).filter((s) => !before.has(s)).map((s) => s.split(":")[0]))] : [];
   const result = await check(deps, guestId, g, items);
   if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
+  // No verdict (the day's AI allowance, or the judgment step failing): the look stays and says so; nothing is saved (25 Oct 2026).
+  if (result.unchecked === "allowance") return { none: todaysLimit("this one stays") };
+  if (result.unchecked) return { none: "That earlier look couldn't be checked just now, so this one stays. Try again in a moment." };
   const total = totalOf(items, g.requirements);
   const { data: inserted } = await db
     .from("looks")
@@ -1031,12 +1047,18 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
   }
   if (!pool.length) return { none: noOtherPiece(items[index]) };
 
+  // The replacements couldn't be checked (the day's AI allowance, or the judgment step failing): the piece
+  // stays and says so, nothing is saved, and none of them is marked as failed (25 Oct 2026, Sabine's iPhone check).
+  const unchecked = (why: Unchecked): SwapResult => ({ none: couldNotCheck([groupOf(items[index])], why) });
+  let unjudged = false;
+  type Swapped = Checked & { id: string | null; product: string; swapped: ResolvedItem[] };
   for (let batch = 0; batch < 3 && pool.length; batch++) {
+    if (!(await deps.guard.checkAi(guestId, "claude")).ok) return unchecked("allowance");
     const picks = pool.splice(0, SWAP_BATCH);
     for (const p of picks) tried.add(p.id);
     await g.beforeAi?.();
     const checked = await Promise.all(
-      picks.map(async (product) => {
+      picks.map(async (product): Promise<Swapped> => {
         const refs = row.items.map((r, i): LookItem => (i === index ? { kind: "product", productId: product.id } : r));
         const swapped = items.map((it, i): ResolvedItem => (i === index ? { ref: refs[i], product } : it));
         const same = others.find((o) => o.main === mainPieces(swapped));
@@ -1044,6 +1066,8 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
           ? { verdict: "conflict", reasons: [{ about: "Outfit", ok: false, why: `The same main pieces as Look ${same.number}` }], failedProducts: [] }
           : await check(deps, guestId, g, swapped, true, wantNotes);
         if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
+        // No verdict: nothing to save.
+        if (result.unchecked) return { id: null, product: product.id, swapped, ...result };
         const { data: inserted } = await db
           .from("looks")
           .insert({
@@ -1065,9 +1089,13 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
         return { id: inserted!.id as string, product: product.id, swapped, ...result };
       }),
     );
-    for (const c of checked) if (c.verdict !== "pass") failed.add(c.product);
-    const winner = checked.find((c) => c.verdict === "pass");
-    const losers = checked.filter((c) => c !== winner).map((c) => c.id);
+    // A replacement with no verdict was neither tried nor failed.
+    for (const c of checked) {
+      if (c.unchecked) tried.delete(c.product);
+      else if (c.verdict !== "pass") failed.add(c.product);
+    }
+    const winner = checked.find((c): c is Swapped & { id: string } => c.id !== null && c.verdict === "pass");
+    const losers = checked.flatMap((c) => (c !== winner && c.id ? [c.id] : []));
     if (losers.length) await db.from("looks").update({ status: "held" }).in("id", losers).throwOnError();
     // Newest wins (R52): a change meanwhile means this swap was checked on old requirements.
     if ((await gather(db, guestId, sessionId)).key !== g.key) {
@@ -1087,7 +1115,10 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
       const look = shown(winner.id, row.slot, { name: row.name ?? "Look", reason: winner.reason ?? row.reason ?? "" }, winner.swapped, g.requirements, true);
       return { look, index };
     }
+    // The allowance ran out during the round: the piece stays with the limit line, and no more rounds.
+    if (checked.some((c) => c.unchecked === "allowance")) return unchecked("allowance");
+    if (checked.some((c) => c.unchecked)) unjudged = true;
   }
   await remember(row.id, row.input_versions, true);
-  return { none: noOtherPiece(items[index]) };
+  return unjudged ? unchecked("failed") : { none: noOtherPiece(items[index]) };
 }

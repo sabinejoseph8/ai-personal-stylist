@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Product } from "@/connectors/catalog/types";
 import type { ResolvedItem } from "@/core/looks/look";
-import { changeSummary, detailTest, lookFeedback, nothingFits, pendingFeedback, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
+import { changeSummary, couldNotCheck, detailTest, lookFeedback, nothingFits, pendingFeedback, revisionPlan, seenOf, turnedDownIn } from "@/core/looks/revise";
 import { lookTotal } from "@/core/looks/totals";
 import { feedbackDetails } from "@/core/notes/feedback";
 import type { FeedbackAct, FeedbackScope, Note } from "@/core/notes/types";
@@ -105,7 +105,12 @@ describe("the change summary (R50)", () => {
     // When the budget is the limit, or the checks couldn't run, it says so (Sabine's answer to Q4 in 5c).
     const plan = revisionPlan(look, lines, lines, () => null);
     expect(nothingFits(look, plan, { budget: "your $500 limit" })).toBe("No other shoes fit within your $500 limit with the rest of this look, so these stay.");
-    expect(nothingFits(look, plan, { unchecked: true })).toBe("The new shoes couldn't be checked just now, so these stay. Try again in a moment.");
+    expect(nothingFits(look, plan, { unchecked: "failed" })).toBe("The new shoes couldn't be checked just now, so these stay. Try again in a moment.");
+    // The day's AI allowance is used up: the welcome screen's words, for a piece, a whole look, and a swap (25 Oct 2026).
+    expect(nothingFits(look, plan, { unchecked: "allowance" })).toBe("You've reached today's limit for the demo, so these stay.");
+    expect(nothingFits(look, { ...plan, whole: true }, { unchecked: "allowance" })).toBe("You've reached today's limit for the demo, so this look stays.");
+    expect(couldNotCheck(["bag"], "allowance")).toBe("You've reached today's limit for the demo, so this one stays.");
+    expect(couldNotCheck(["bag"], "failed")).toBe("The new bag couldn't be checked just now, so this one stays. Try again in a moment.");
   });
 });
 
