@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.41
+**Status:** Living document, version 1.42
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -425,6 +425,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.42 (25 Oct 2026):** Phase 5 complete: the iPhone check passed B to E after the limit-lines fix (57 cents of AI and 7 minutes of video for the half-check).
 - **1.41 (25 Oct 2026):** The limit-lines plan (Q1, Q2) from the iPhone check after the review's five batches, and the cost per demo measured (section 6, risk 4).
 - **1.35 to 1.40 (24 and 25 Oct 2026):** The full code review's batches 1 to 5 and 5d, each recorded in the decisions log when approved.
 - **1.34 (23 Oct 2026):** Fix plan 9 approved, from the 5c iPhone check (A passed).
