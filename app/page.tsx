@@ -21,11 +21,15 @@ function SmallPrint() {
 }
 
 async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<typeof currentGuest>>> }) {
-  const [profile, wardrobe] = await Promise.all([
+  const [profile, wardrobe, saved, bag] = await Promise.all([
     loadProfile(guest.db, guest.id),
     guest.db.from("wardrobe_items").select("id", { count: "exact", head: true }).eq("draft", false),
+    guest.db.from("saved_looks").select("id", { count: "exact", head: true }),
+    guest.db.from("bag_items").select("id", { count: "exact", head: true }),
   ]);
   const items = wardrobe.count ?? 0;
+  const looks = saved.count ?? 0;
+  const pieces = bag.count ?? 0;
   const empty = isEmpty(profile);
   const lines = [
     profile.departments.length ? `Shopping ${profile.departments.join(" and ")}` : null,
@@ -61,9 +65,25 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
           )}
         </dd>
         <dt>Saved looks</dt>
-        <dd className="m-0">None yet</dd>
+        <dd className="m-0">
+          {looks ? (
+            <Link href="/saved-looks" className="text-emerald underline underline-offset-2">
+              {looks} {looks === 1 ? "look" : "looks"}
+            </Link>
+          ) : (
+            "None yet"
+          )}
+        </dd>
         <dt>Demo bag</dt>
-        <dd className="m-0">Empty</dd>
+        <dd className="m-0">
+          {pieces ? (
+            <Link href="/bag" className="text-emerald underline underline-offset-2">
+              {pieces} {pieces === 1 ? "piece" : "pieces"}
+            </Link>
+          ) : (
+            "Empty"
+          )}
+        </dd>
       </dl>
       <div className="flex flex-wrap gap-2">
         <Link href={empty ? "/setup" : "/session"} className={buttonClasses("primary")}>

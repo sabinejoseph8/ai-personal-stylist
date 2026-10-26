@@ -14,6 +14,9 @@ export type ShownItem = {
   priceCents: number | null;
   imageUrl: string | null;
   imageAlt: string;
+  /** A sample product's sizes, and the one the bag sheet starts on: the profile's, or the only one (6a). */
+  sizes?: string[];
+  size?: string | null;
 };
 
 /** A look for its panel. */

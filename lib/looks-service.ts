@@ -7,6 +7,7 @@ import { filterCandidates, type Requirements, ruleLabel } from "@/core/looks/can
 import { type Anchor, budgetWords, type CheckReason, codeCheck } from "@/core/looks/checker";
 import type { Judge, Verdict } from "@/core/looks/judge";
 import { todaysLimit, type Unchecked } from "@/core/looks/limit";
+import { defaultSize, type OpenedLook, type SavedCopy, sizesOf } from "@/core/looks/saved";
 import { canMakeAnother, groupOf, type LookItem, mainPieces, nameOf, type OwnedPiece, ownedGroup, productGroup, REPEATS_SHOWN, type ResolvedItem } from "@/core/looks/look";
 import { differences } from "@/core/looks/compare";
 import { explainNoMatch, type NoMatch } from "@/core/looks/no-match";
@@ -21,7 +22,7 @@ import { feedbackOf } from "@/core/notes/feedback";
 import { active, type Note } from "@/core/notes/types";
 import { chosenItem, itemValues } from "@/core/photos/item";
 import type { BudgetGuard } from "@/lib/budget-guard";
-import { lookRequirements, sessionExceptions } from "@/lib/looks-inputs";
+import { lookRequirements, profileRequirements, sessionExceptions } from "@/lib/looks-inputs";
 import { loadNotes, SessionEndedError } from "@/lib/notes-store";
 import { activePhoto } from "@/lib/photos-service";
 import { RuleSchema } from "@/lib/profile";
@@ -184,6 +185,24 @@ const totalOf = (items: ResolvedItem[], r: Requirements) =>
 
 const refId = (ref: LookItem) => (ref.kind === "product" ? ref.productId : ref.kind === "photo" ? ref.photoId : ref.itemId);
 
+/** An item as its tile shows it. The shopper's own pieces get their photos in the browser, which has their links (4c). */
+const shownItem = (i: ResolvedItem, sizes: Requirements["sizes"]): ShownItem =>
+  "product" in i
+    ? {
+        kind: "product",
+        id: i.product.id,
+        group: groupOf(i),
+        name: i.product.name,
+        category: i.product.category,
+        owned: false,
+        priceCents: i.product.price.amountCents,
+        imageUrl: i.product.image.url,
+        imageAlt: i.product.image.alt,
+        sizes: sizesOf(i.product),
+        size: defaultSize(i.product, sizes),
+      }
+    : { kind: i.ref.kind, id: refId(i.ref), group: i.owned.group, name: i.owned.name, category: i.owned.group, owned: true, priceCents: null, imageUrl: null, imageAlt: i.owned.name };
+
 function shown(id: string, slot: number, look: { name: string; reason: string }, items: ResolvedItem[], r: Requirements, current: boolean, revision?: Revision): ShownLook {
   return {
     id,
@@ -194,22 +213,7 @@ function shown(id: string, slot: number, look: { name: string; reason: string },
     changed: revision?.changed ?? [],
     note: revision?.none ?? null,
     noteFor: revision?.none ? [...(revision.seen ?? []), ...(revision.wanted ?? [])].join(",") : null,
-    // The shopper's own pieces get their photos in the browser, which has their links (4c).
-    items: items.map((i) =>
-      "product" in i
-        ? {
-            kind: "product",
-            id: i.product.id,
-            group: groupOf(i),
-            name: i.product.name,
-            category: i.product.category,
-            owned: false,
-            priceCents: i.product.price.amountCents,
-            imageUrl: i.product.image.url,
-            imageAlt: i.product.image.alt,
-          }
-        : { kind: i.ref.kind, id: refId(i.ref), group: i.owned.group, name: i.owned.name, category: i.owned.group, owned: true, priceCents: null, imageUrl: null, imageAlt: i.owned.name },
-    ),
+    items: items.map((i) => shownItem(i, r.sizes)),
     total: totalOf(items, r),
     current,
   };
@@ -218,8 +222,11 @@ function shown(id: string, slot: number, look: { name: string; reason: string },
 /** A candidate's check. `unchecked`: it has no verdict, since the judgment couldn't run (the day's AI allowance, or a failed call). */
 type Checked = { verdict: Verdict; reasons: CheckReason[]; failedProducts: string[]; reason?: string; unchecked?: Unchecked };
 
+/** What a check reads: a session's requirements and what's been said, or a saved profile's alone (6a). */
+type Checkable = Pick<Gathered, "requirements" | "anchor" | "owned" | "noteWords" | "judged" | "likes" | "inspiration" | "beforeAi">;
+
 /** Checks one candidate look: rules in code, then, only if they all hold, the judgment step. */
-async function check(deps: LooksDeps, guestId: string, g: Gathered, items: ResolvedItem[], withReason = false, extraNotes: string[] = []): Promise<Checked> {
+async function check(deps: LooksDeps, guestId: string, g: Checkable, items: ResolvedItem[], withReason = false, extraNotes: string[] = []): Promise<Checked> {
   const code = codeCheck({ items, requirements: g.requirements, anchor: g.anchor, wardrobePicks: g.owned.filter((o) => o.ref.kind === "wardrobe").map((o) => (o.ref as { itemId: string }).itemId) });
   if (!code.ok) return { verdict: "conflict", reasons: code.reasons, failedProducts: code.failedProducts };
   const money = await deps.guard.checkAi(guestId, "claude");
@@ -1121,4 +1128,78 @@ async function swapNow(deps: LooksDeps, guestId: string, sessionId: string, look
   }
   await remember(row.id, row.input_versions, true);
   return unjudged ? unchecked("failed") : { none: noOtherPiece(items[index]) };
+}
+
+/**
+ * A look on screen whose check passed on the current requirements, with that check: Save look and Add to
+ * bag (6a) take a look only through the same gate as the screen (tech spec 5, rule 6; Sabine's answer to
+ * Q3 in 6a), with no new check and no AI. Null when the look isn't on the guest's screen; { stale } while
+ * it needs a new check.
+ */
+export async function checkedLook(
+  deps: Pick<LooksDeps, "db" | "catalog">,
+  guestId: string,
+  sessionId: string,
+  lookId: string,
+): Promise<{ look: ShownLook; copy: SavedCopy; checkId: string } | { stale: true } | null> {
+  const { db } = deps;
+  const rows = await onScreen(db, guestId, sessionId);
+  const row = rows.find((r) => r.id === lookId);
+  if (!row) return null;
+  const g = await gather(db, guestId, sessionId);
+  if (row.status !== "published" || row.requirements_key !== g.key) return { stale: true };
+  const { data: checks } = await db
+    .from("check_results")
+    .select("id, versions_checked")
+    .eq("look_id", row.id)
+    .eq("user_id", guestId)
+    .eq("verdict", "pass")
+    .order("created_at", { ascending: false })
+    .throwOnError();
+  const passed = (checks ?? []).find((c) => (c.versions_checked as { requirements?: string })?.requirements === g.key);
+  const items = resolve(row.items, await productsOf(deps.catalog, row.items), g.owned);
+  if (!passed || !items) return { stale: true };
+  const look = shownRow(row, items, g);
+  const owned = items.flatMap((i) => ("owned" in i ? [i.owned] : []));
+  return { look, copy: { name: look.name, reason: look.reason, refs: row.items, items: look.items, owned, totalCents: look.total.totalCents }, checkId: passed.id as string };
+}
+
+/**
+ * Opens a saved look (6a, R60, Sabine's answer to Q1): checked first against the saved profile alone
+ * (preferences, sizes and budget), since no session's notes apply, with the judgment step through the
+ * budget guard. The shopper's own pieces are taken as they were saved: a photo piece is the item it was
+ * styled around. Says why when it no longer fits, or can't be checked now.
+ */
+export async function checkSaved(
+  deps: LooksDeps,
+  guestId: string,
+  id: string,
+  copy: SavedCopy,
+  options: Pick<BuildOptions, "allowAi"> = {},
+): Promise<{ look: OpenedLook } | { none: string } | { limited: true }> {
+  try {
+    const profile = await loadProfile(deps.db, guestId);
+    const requirements = profileRequirements(profile);
+    const items = resolve(copy.refs, await productsOf(deps.catalog, copy.refs), copy.owned);
+    if (!items) return { none: "A piece in this look isn't in the sample catalog any more, so it can't be opened." };
+    const photo = copy.owned.find((o) => o.ref.kind === "photo");
+    const anchor: Anchor | null = photo && photo.ref.kind === "photo" ? { photoId: photo.ref.photoId, version: photo.ref.version, name: photo.name, owned: true } : null;
+    const g: Checkable = {
+      requirements,
+      anchor,
+      owned: copy.owned,
+      noteWords: [],
+      judged: requirements.rules.filter((r) => r.rule.type === "judged").map(ruleLabel),
+      likes: profile.preferences.filter((p) => p.kind === "likes").map((p) => p.words),
+      inspiration: null,
+      beforeAi: aiGate(options.allowAi),
+    };
+    const result = await check(deps, guestId, g, items);
+    if (result.unchecked === "allowance") return { none: todaysLimit("it can't be checked again today") };
+    if (result.unchecked) return { none: "This look couldn't be checked just now. Try again in a moment." };
+    if (result.verdict !== "pass") return { none: `This look no longer fits your preferences (${failedWhy(result)}).` };
+    return { look: { id, name: copy.name, reason: copy.reason, items: items.map((i) => shownItem(i, requirements.sizes)), total: totalOf(items, requirements) } };
+  } catch (e) {
+    return limited(e);
+  }
 }
