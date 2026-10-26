@@ -289,6 +289,26 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(Number(usage!.openai_microdollars)).toBeLessThan(60_000);
   });
 
+  it("when video can't start, voice only starts instead and says why; when voice can't either, the video refusal stands (6c, R9)", async () => {
+    for (const [refuse, because] of [["busy", "busy"], ["unavailable", "unavailable"], ["out_of_minutes", "resting"]] as const) {
+      await db.from("sessions").delete().eq("user_id", guest.id).throwOnError();
+      await db.from("usage").delete().eq("user_id", guest.id).throwOnError();
+      const started = await startConversation(deps({ provider: createFakeProvider("video", refuse), voice: voice() }), guest.id);
+      if (!started.ok) throw new Error(started.reason);
+      expect(started).toMatchObject({ engine: "voice", because, resumed: false });
+      expect(await row(started.sessionId)).toMatchObject({ status: "active", engine: "voice" });
+      // Only the voice call's time is reserved.
+      const { data: usage } = await db.from("usage").select("video_seconds, voice_seconds").eq("user_id", guest.id).single().throwOnError();
+      expect(usage).toMatchObject({ video_seconds: 0, voice_seconds: 600 });
+    }
+    await db.from("sessions").delete().eq("user_id", guest.id).throwOnError();
+    await db.from("usage").delete().eq("user_id", guest.id).throwOnError();
+    expect(await startConversation(deps({ provider: createFakeProvider("video", "busy") }), guest.id)).toEqual({ ok: false, reason: "video_busy" });
+    // The month's video used up: voice stands in, for the same daily time.
+    const resting = await startConversation(deps({ voice: voice(), guard: createBudgetGuard(db, { ...readBudgetLimits({}), dailyConversationSeconds: 600, monthlyVideoSeconds: 0 }) }), guest.id);
+    expect(resting).toMatchObject({ ok: true, engine: "voice", because: "resting" });
+  });
+
   it("Voice only is refused when there's no voice stylist, giving nothing away (6c)", async () => {
     expect(await startConversation(deps(), guest.id, "voice")).toEqual({ ok: false, reason: "voice_unavailable" });
     expect(await usedToday()).toBe(0);

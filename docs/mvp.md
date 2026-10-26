@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.45
+**Status:** Living document, version 1.46
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -428,6 +428,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.46 (26 Oct 2026):** 6c built in full (two pull requests); its iPhone check is part of the combined 6a to 6c check.
 - **1.45 (26 Oct 2026):** The 6c decisions (Q1 to Q4).
 - **1.44 (26 Oct 2026):** The 6b decisions (Q1 to Q3) and the order: 6a, 6b and 6c checked on the iPhone together.
 - **1.43 (26 Oct 2026):** The 6a decisions (Q1 to Q3).

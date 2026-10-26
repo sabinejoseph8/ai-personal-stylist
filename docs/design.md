@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.24 (26 Oct 2026)
+**Status:** Agreed, version 1.25 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -587,6 +587,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.25 (26 Oct 2026):** 6c as built (second part): the why-lines under the stage when voice stands in for video (another visitor; unavailable or dropped; resting for the month), Turn video on in every voice-only case, and the resting welcome screen.
 - **1.24 (26 Oct 2026):** 6c as built (first part): Voice only beside Camera, More on phones, the still portrait with a ring that pulses while she speaks (a pulse, not the voice's volume), "Switching to voice only…" and "Turning video on…" while a switch runs, and "Voice only" with **Turn video on** under the stage.
 - **1.23 (26 Oct 2026):** 6b as built: the Profile and privacy page, its links, and saved preferences in the notebook opening it.
 - **1.22 (26 Oct 2026):** 6a as built: Save look and Add to bag on the look panel, the bag sheet, the Saved looks and Demo bag pages.

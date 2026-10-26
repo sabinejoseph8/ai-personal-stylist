@@ -47,12 +47,19 @@ export type StartResult =
       resumed: boolean;
       /** Video, or voice only (6c). */
       engine: Engine;
+      /** Why voice when video was asked for (6c, R9): busy with another visitor, unavailable, or resting for the month. */
+      because?: VoiceBecause;
       call: { callId: string; joinUrl: string };
       /** The call's longest length, and which limit ends it (R13). */
       seconds: number;
       endsBecause: "day" | "month";
     }
   | { ok: false; reason: StartRefusal };
+
+export type VoiceBecause = "busy" | "unavailable" | "resting";
+
+/** Video refusals that voice only stands in for (R9). The day's time is shared, so it never does. */
+const FALLBACK: Partial<Record<StartRefusal, VoiceBecause>> = { video_busy: "busy", video_unavailable: "unavailable", monthly_video_used: "resting" };
 
 export const isIdle = (lastActivityAt: string, now = Date.now()) => now - Date.parse(lastActivityAt) > IDLE_MINUTES * 60_000;
 
@@ -202,8 +209,19 @@ export async function openSession(deps: SessionDeps, guestId: string): Promise<S
 /**
  * Start conversation: picks up the open session or opens one, reserves time, and starts a call: video,
  * or voice only when asked (Voice only, 6c). A voice call is pending until the browser sends its offer.
+ * When video can't start (another visitor, unavailable, or the month's video used up), voice only
+ * starts instead, saying why (R9, 6c); if voice can't either, the video refusal stands.
  */
 export async function startConversation(deps: SessionDeps, guestId: string, engine: Engine = "video"): Promise<StartResult> {
+  const first = await startCall(deps, guestId, engine);
+  if (first.ok || engine !== "video" || !deps.voice) return first;
+  const because = FALLBACK[first.reason];
+  if (!because) return first;
+  const voice = await startCall(deps, guestId, "voice");
+  return voice.ok ? { ...voice, because } : first;
+}
+
+async function startCall(deps: SessionDeps, guestId: string, engine: Engine): Promise<StartResult> {
   const provider = engine === "voice" ? deps.voice : deps.provider;
   if (!provider) return { ok: false, reason: "voice_unavailable" };
   await endLeftBehindCalls(deps, guestId);
@@ -240,6 +258,7 @@ export async function startConversation(deps: SessionDeps, guestId: string, engi
   if (!call.ok) {
     await giveBack();
     if (provider.engine === "voice") return { ok: false, reason: "voice_unavailable" };
+    if (call.reason === "out_of_minutes") return { ok: false, reason: "monthly_video_used" };
     return { ok: false, reason: call.reason === "busy" ? "video_busy" : "video_unavailable" };
   }
 

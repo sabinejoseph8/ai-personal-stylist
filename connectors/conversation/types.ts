@@ -9,8 +9,11 @@ export type Engine = "video" | "voice";
 
 export type CallStart =
   | { ok: true; callId: string; joinUrl: string }
-  /** busy: the stylist is with another visitor (Tavus Starter allows one call at a time). */
-  | { ok: false; reason: "busy" | "unavailable" };
+  /**
+   * busy: the stylist is with another visitor (one call at a time). out_of_minutes: the provider's own
+   * plan has no minutes left this month (Tavus answers 402, found on 21 Oct 2026; 6c).
+   */
+  | { ok: false; reason: "busy" | "unavailable" | "out_of_minutes" };
 
 export interface CallProvider {
   readonly engine: Engine;

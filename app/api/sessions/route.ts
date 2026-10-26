@@ -1,3 +1,4 @@
+import { fakeEngineAllowed } from "@/connectors/conversation/server";
 import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
 import { withinLimit } from "@/lib/rate-limits";
@@ -30,7 +31,9 @@ export async function POST(request: Request) {
   if (!(await withinLimit(guest.db, "startSession"))) return refuse("too_many_starts");
   const { engine } = Body.parse(await request.json().catch(() => ({})));
 
-  const result = await startConversation(sessionDeps(), guest.id, engine);
+  // Browser tests only (never on the live site): the fake video stylist can be made busy.
+  const fakeVideo = fakeEngineAllowed() ? request.headers.get("x-fake-video") : null;
+  const result = await startConversation(sessionDeps(fakeVideo), guest.id, engine);
   if (!result.ok) return refuse(result.reason);
-  return Response.json({ sessionId: result.sessionId, resumed: result.resumed, engine: result.engine, call: result.call, seconds: result.seconds, endsBecause: result.endsBecause });
+  return Response.json({ sessionId: result.sessionId, resumed: result.resumed, engine: result.engine, because: result.because ?? null, call: result.call, seconds: result.seconds, endsBecause: result.endsBecause });
 }

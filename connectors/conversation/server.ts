@@ -9,8 +9,14 @@ export function fakeEngineAllowed(env: Record<string, string | undefined> = proc
   return env.CONVERSATION_ENGINE === "fake" && env.VERCEL_ENV !== "production";
 }
 
-/** The provider for new calls: Tavus video or GPT-Live voice only (6c), or the fake engine in tests. */
-export function callProvider(engine: Engine = "video"): CallProvider {
-  if (fakeEngineAllowed()) return createFakeProvider(engine);
+/**
+ * The provider for new calls: Tavus video or GPT-Live voice only (6c), or the fake engine in tests,
+ * where `fakeRefusal` (the browser tests' x-fake-video header) makes the fake video turn calls away.
+ */
+export function callProvider(engine: Engine = "video", fakeRefusal?: string | null): CallProvider {
+  if (fakeEngineAllowed()) {
+    const refuse = engine === "video" && (fakeRefusal === "busy" || fakeRefusal === "unavailable" || fakeRefusal === "out_of_minutes") ? fakeRefusal : undefined;
+    return createFakeProvider(engine, refuse);
+  }
   return engine === "voice" ? createGptLiveProvider() : createTavusProvider();
 }

@@ -101,6 +101,38 @@ test.describe("the stylist stage", () => {
     expect(await sessions()).toHaveLength(1);
   });
 
+  test("when the video stylist is with another visitor, the conversation starts in voice only and she says why (6c, R9)", async ({ page }) => {
+    // The fake video stylist is made busy for this test only (never possible on the live site).
+    await page.route("**/api/sessions", (route) =>
+      route.request().method() === "POST" ? route.continue({ headers: { ...route.request().headers(), "x-fake-video": "busy" } }) : route.fallback(),
+    );
+    await fakeMicrophone(page, "allowed", true);
+    await page.goto("/session");
+    await page.getByRole("button", { name: "Start conversation" }).click();
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("The video stylist is with another visitor. Continuing with voice.")).toBeVisible();
+    await expect.poll(async () => (await commandsSent(page)).filter((c) => c.name === "say").map((c) => c.value)).toContain(
+      "The video stylist is with another visitor right now, so I'm with you by voice. What are you dressing for?",
+    );
+    await expect.poll(async () => (await serverDb().from("sessions").select("engine").eq("user_id", guest.id).single()).data?.engine).toBe("voice");
+    await noSeriousA11yProblems(page);
+  });
+
+  test("when the video drops mid-call, she carries on by voice first, saying the switch line (6c, R14)", async ({ page }) => {
+    await inCall(page);
+    await playInCall(page, { type: "connection", state: "ended" });
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Video unavailable. Continuing with voice.")).toBeVisible();
+    await expect.poll(async () => (await commandsSent(page)).filter((c) => c.name === "say").map((c) => c.value)).toContain(
+      "I'm switching to voice only, so I'll sound a little different.",
+    );
+    expect(await sessions()).toEqual([expect.objectContaining({ status: "active" })]);
+    // Turn video on brings the video stylist back.
+    const back = page.getByRole("button", { name: "Turn video on" }).first();
+    await back.click();
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toHaveCount(0, { timeout: 15_000 });
+  });
+
   test("Not now explains that the conversation can't start without the microphone (R6)", async ({ page }) => {
     await fakeMicrophone(page, "allowed");
     await page.goto("/session");

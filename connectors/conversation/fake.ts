@@ -14,11 +14,15 @@ export const GREETING: FakeStep[] = [
   { afterMs: 150, event: { type: "stylist-speaking", speaking: false } },
 ];
 
-/** A fake provider for either engine: a voice call's id carries the voice prefix, as GPT-Live's does (6c). */
-export function createFakeProvider(engine: Engine = "video"): CallProvider {
+/**
+ * A fake provider for either engine: a voice call's id carries the voice prefix, as GPT-Live's does (6c).
+ * `refuse` makes it turn calls away, for the browser tests of voice only standing in for video.
+ */
+export function createFakeProvider(engine: Engine = "video", refuse?: "busy" | "unavailable" | "out_of_minutes"): CallProvider {
   return {
     engine,
     async start({ sessionId }) {
+      if (refuse) return { ok: false, reason: refuse };
       const id = `fake-${crypto.randomUUID()}`;
       return { ok: true, callId: engine === "voice" ? `voice:${id}` : id, joinUrl: `${FAKE_JOIN_PREFIX}${sessionId}${engine === "voice" ? "?voice" : ""}` };
     },

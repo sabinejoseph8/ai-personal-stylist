@@ -5,6 +5,7 @@ import { engineFor } from "@/connectors/conversation/client";
 import { SWITCH_LINE } from "@/connectors/conversation/gpt-live/shared";
 import type { ConversationEngine, ConversationEvent, Engine } from "@/connectors/conversation/types";
 import { checkMicrophone, microphoneAllowed } from "@/lib/microphone";
+import { spokenWhy, type VoiceWhy } from "@/lib/voice-lines";
 import { type MicrophoneProblem, nextStage, READY, stageLabel, timeLeftLabel } from "@/lib/stage";
 
 // The conversation's life on the session screen (R6 to R8, R12 to R14): starting a call (the
@@ -120,6 +121,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const wanted = useRef<Engine>("video");
   // The engine a switch is heading for, while it's under way: the current call stays on screen until then.
   const [switchingTo, setSwitchingTo] = useState<Engine | null>(null);
+  // Why she's in voice only, for the line under the stage (design 4.1).
+  const [voiceWhy, setVoiceWhy] = useState<VoiceWhy | null>(null);
   // Leaving the page (Next.js hides it rather than closing it) or closing the tab pauses the
   // session, so the call doesn't run on unseen and the shopper can resume within 30 minutes.
   useLayoutEffect(() => {
@@ -199,6 +202,9 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     if (near) return timeUp(callEnds.current!.because);
     if (!leaveCall()) return;
     const mine = ++attempt.current;
+    // A dropped video call carries on by voice first (R14, 6c), saying the switch line as her first words.
+    const toVoice = wanted.current === "video";
+    if (toVoice) wanted.current = "voice";
     setFlow("starting");
     dispatch({ type: "connection", state: "reconnecting" });
     for (let i = 0; i < RETRIES; i++) {
@@ -206,6 +212,10 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       await new Promise((r) => setTimeout(r, RETRY_MS * (i + 1)));
       if (attempt.current !== mine || !shown.current) return;
       const outcome = await connect({ reconnecting: true, engine: wanted.current });
+      if (outcome.ok && attempt.current === mine && toVoice) {
+        setVoiceWhy("dropped");
+        engine.current?.say(SWITCH_LINE);
+      }
       if (outcome.ok || attempt.current !== mine) return;
       if (outcome.final) return settle(outcome);
     }
@@ -262,8 +272,10 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     const outcome = await connect({ engine: "voice" });
     setSwitchingTo(null);
     if (attempt.current !== mine) return;
-    if (outcome.ok) engine.current?.say(PICK_UP_LINE);
-    else settle(outcome);
+    if (outcome.ok) {
+      setVoiceWhy((was) => (was === "busy" || was === "unavailable" || was === "resting" ? was : "chosen"));
+      engine.current?.say(PICK_UP_LINE);
+    } else settle(outcome);
   }
 
   /** Turn video on (S3): the voice call ends and the video stylist picks up. */
@@ -305,7 +317,12 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     }
 
     setSessionId(data.sessionId);
-    setEngineKind(data.engine === "voice" ? "voice" : "video");
+    const kindNow: Engine = data.engine === "voice" ? "voice" : "video";
+    setEngineKind(kindNow);
+    // Voice only standing in for video (6c, R9): further calls stay voice, and the stage says why.
+    const because = data.engine === "voice" && (data.because === "busy" || data.because === "unavailable" || data.because === "resting") ? (data.because as "busy" | "unavailable" | "resting") : null;
+    if (because) wanted.current = "voice";
+    setVoiceWhy((was) => (kindNow === "video" ? null : because ?? (reconnecting ? was : (was ?? "chosen"))));
     callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : "day" };
     const e = await engineFor(data.call.joinUrl);
     engine.current = e;
@@ -327,6 +344,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
         return { ok: false, final: true };
       }
       if (live.current) setFlow("live");
+      // She says why she's in voice only, then carries on (tech spec 4.2).
+      if (because && live.current) e.say(spokenWhy(because, Boolean(data.resumed)));
       return { ok: true };
     } catch {
       stopListening();
@@ -387,6 +406,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     // The next session starts with video again (R13: voice only is for when something goes wrong, or chosen).
     wanted.current = "video";
     setEngineKind("video");
+    setVoiceWhy(null);
     hooks.current.onEnd();
     setProblem(null);
     setSoundBlocked(false);
@@ -403,6 +423,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     /** A switch between video and voice is under way, and where it's heading. */
     switching: switchingTo !== null,
     switchingTo,
+    /** Why voice only, for the line under the stage (6c). */
+    voiceWhy,
     switchToVoice,
     switchToVideo,
     sessionId,

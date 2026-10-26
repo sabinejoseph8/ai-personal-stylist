@@ -3,7 +3,9 @@ import Link from "next/link";
 import { NoteLine, NotebookPage } from "@/components/notebook/notebook-page";
 import { buttonClasses } from "@/components/ui/button";
 import { StartDemo } from "@/components/welcome/start-demo";
+import { demoResting, nextMonthFirst } from "@/lib/budget-guard";
 import { currentGuest } from "@/lib/guest";
+import { serverKeyDb } from "@/lib/supabase/admin";
 import { describeBudget, describePreference, isEmpty } from "@/lib/profile";
 import { loadProfile } from "@/lib/profile-store";
 
@@ -105,6 +107,9 @@ export default async function Home() {
   const guest = await currentGuest();
   if (guest) return <WelcomeBack guest={guest} />;
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  // The resting state (R13, TQ4, Sabine's answer to Q2 in 6c): when the month's allowance can't run a
+  // demo, Try the demo gives way to a line, and How it was built becomes the main button (design 5.1).
+  const resting = await demoResting(serverKeyDb()).catch(() => false);
 
   return (
     <main className="mx-auto grid max-w-5xl gap-8 px-4 py-10 tablet:px-6 desktop:grid-cols-2 desktop:grid-rows-[auto_1fr] desktop:gap-x-12 desktop:px-8 desktop:py-16">
@@ -121,10 +126,23 @@ export default async function Home() {
         ))}
       </NotebookPage>
       <div className="flex flex-col gap-4 desktop:col-start-1 desktop:row-start-2">
-        <StartDemo nonce={nonce} />
-        <Link href="/about" className="type-label self-start text-emerald underline underline-offset-2">
-          How it was built
-        </Link>
+        {resting ? (
+          <>
+            <p role="status" className="type-body m-0 text-ink">
+              The demo is resting until {nextMonthFirst()}. You can still read how it was built.
+            </p>
+            <Link href="/about" className={buttonClasses("primary", "self-start")}>
+              How it was built
+            </Link>
+          </>
+        ) : (
+          <>
+            <StartDemo nonce={nonce} />
+            <Link href="/about" className="type-label self-start text-emerald underline underline-offset-2">
+              How it was built
+            </Link>
+          </>
+        )}
         <SmallPrint />
       </div>
     </main>

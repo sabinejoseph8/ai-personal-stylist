@@ -35,6 +35,15 @@ conversationEngineContract("fake", () => createFakeEngine());
 callProviderContract("gpt-live", createGptLiveProvider);
 callProviderContract("fake voice", () => createFakeProvider("voice"));
 
+describe("Tavus out of minutes", () => {
+  it("tells a 402 (the plan's minutes used up) apart from other failures (6c)", async () => {
+    const out = tavusStandIn(() => ({ status: 402, body: { message: "The user is out of conversational credits." } }));
+    expect(await createTavusProvider({ apiKey: KEY, palId: "p1", fetch: out.fetch }).start({ sessionId: "s1", maxSeconds: 60 })).toEqual({ ok: false, reason: "out_of_minutes" });
+    const down = tavusStandIn(() => ({ status: 500, body: {} }));
+    expect(await createTavusProvider({ apiKey: KEY, palId: "p1", fetch: down.fetch }).start({ sessionId: "s1", maxSeconds: 60 })).toEqual({ ok: false, reason: "unavailable" });
+  });
+});
+
 describe("GPT-Live provider", () => {
   it("starts a pending call whose join link is the session's offer page", async () => {
     const call = await createGptLiveProvider().start({ sessionId: "s1", maxSeconds: 600 });

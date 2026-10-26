@@ -117,6 +117,34 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
 
 export type BudgetGuard = ReturnType<typeof createBudgetGuard>;
 
+/** The month's totals for the whole demo, as budget_status counts them. */
+export type MonthTotals = { month_video_seconds: number; month_claude_microdollars: number; month_openai_microdollars: number };
+
+/**
+ * The demo is resting (R13, TQ4; Sabine's answer to Q2 in 6c) when the month's Claude stop is reached, since
+ * nothing works without it, or when both the video and the OpenAI stops are, since there's no way to talk.
+ * With only the video minutes used up, voice only carries on.
+ */
+export function isResting(m: MonthTotals, limits: BudgetLimits) {
+  const claude = m.month_claude_microdollars >= limits.monthlyClaudeUsd * MICRO;
+  const video = m.month_video_seconds >= limits.monthlyVideoSeconds;
+  const openai = m.month_openai_microdollars >= limits.monthlyOpenaiUsd * MICRO;
+  return claude || (video && openai);
+}
+
+/** Whether the demo is resting this month, from the usage table (no guest needed). */
+export async function demoResting(db: SupabaseClient, limits: BudgetLimits = readBudgetLimits()) {
+  const { data, error } = await db.rpc("budget_status", { guest: "00000000-0000-0000-0000-000000000000" });
+  if (error) throw new Error(`budget guard: budget_status failed: ${error.message}`);
+  return isResting(data as MonthTotals, limits);
+}
+
+/** "1 November": the 1st of next month, in UTC as the budget counts months. */
+export function nextMonthFirst(now = new Date()) {
+  const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return first.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+
 /** Which limit ends a call (R13): today's time, or the month's video minutes when they run out first. */
 export function endsBecause(granted: number, wanted: number, leftToday: number): "day" | "month" {
   return granted < Math.min(wanted, leftToday) ? "month" : "day";
