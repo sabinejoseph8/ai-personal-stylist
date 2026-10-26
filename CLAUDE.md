@@ -56,3 +56,7 @@ Update this file whenever there is a significant new feature, a major bug resolv
 ## Safety rules
 
 - The GitHub repository is public. Never commit secrets, .env files or database backups.
+
+  When you open a pull request, enable auto-merge by running:
+gh pr merge --auto --squash <PR_NUMBER>
+Do not merge manually. GitHub merges automatically once the required checks pass.
