@@ -3,6 +3,7 @@ import { feedbackOf } from "../notes/feedback";
 import { active, type Note } from "../notes/types";
 import { dollars } from "./budget";
 import { type Group, groupOf, type LookItem, nameOf, productGroup, type ResolvedItem } from "./look";
+import { todaysLimit, type Unchecked } from "./limit";
 import { list } from "./rules";
 import type { LookTotal } from "./totals";
 
@@ -179,21 +180,39 @@ export function changeSummary(before: ResolvedItem[], after: ResolvedItem[], tot
   return parts.join(" ");
 }
 
+const WORDS: Partial<Record<Group, string>> = { outer: "jacket", bottom: "trousers or skirt", other: "piece" };
+
+/** The pieces being changed, in words, and how they stay: "shoes" and "these stay", or "bag" and "this one stays". */
+function piecesOf(groups: Group[]) {
+  const what = groups.length === 1 ? (WORDS[groups[0]] ?? groups[0]) : "pieces";
+  const plural = what === "shoes" || what === "pieces" || what === "trousers or skirt";
+  return { what, plural, stay: plural ? "these stay" : "this one stays" };
+}
+
+/**
+ * The checks couldn't run, which isn't a "no" (Sabine's answer to Q4 in 5c): the day's AI allowance is
+ * used up, said in the welcome screen's words (25 Oct 2026), or the judgment step failed, so trying
+ * again helps. For a piece Change and for Swap.
+ */
+export function couldNotCheck(groups: Group[], why: Unchecked): string {
+  const { what, stay } = piecesOf(groups);
+  return why === "allowance" ? todaysLimit(stay) : `The new ${what} couldn't be checked just now, so ${stay}. Try again in a moment.`;
+}
+
 /**
  * Why no revision passed, so the look stays (R48, R49; Sabine's answer to Q4 in 5c): "No other shoes fit
  * everything you've asked for (lower heel), so these stay." With `budget` (in words, such as "your $500
  * limit"), the budget is what limits it, so it says so and the stylist can ask what to change. With
- * `unchecked`, the checks couldn't run, which isn't a "no".
+ * `unchecked`, the checks couldn't run, which isn't a "no" (`couldNotCheck`).
  */
-export function nothingFits(items: ResolvedItem[], plan: RevisionPlan, why: { budget?: string; unchecked?: boolean } = {}): string {
-  if (plan.whole || !plan.change.length)
+export function nothingFits(items: ResolvedItem[], plan: RevisionPlan, why: { budget?: string; unchecked?: Unchecked } = {}): string {
+  if (plan.whole || !plan.change.length) {
+    if (why.unchecked === "allowance") return todaysLimit("this look stays");
     return why.unchecked ? "The new look couldn't be checked just now, so this one stays. Try again in a moment." : "No other look fits everything you've asked for, so this one stays.";
+  }
   const groups = [...new Set(plan.change.map((i) => groupOf(items[i])))];
-  const WORDS: Partial<Record<Group, string>> = { outer: "jacket", bottom: "trousers or skirt", other: "piece" };
-  const what = groups.length === 1 ? (WORDS[groups[0]] ?? groups[0]) : "pieces";
-  const plural = what === "shoes" || what === "pieces" || what === "trousers or skirt";
-  const stay = plural ? "these stay" : "this one stays";
-  if (why.unchecked) return `The new ${what} couldn't be checked just now, so ${stay}. Try again in a moment.`;
+  if (why.unchecked) return couldNotCheck(groups, why.unchecked);
+  const { what, plural, stay } = piecesOf(groups);
   if (why.budget) return `No other ${what} ${plural ? "fit" : "fits"} within ${why.budget} with the rest of this look, so ${stay}.`;
   const asked = plan.asked.length ? ` (${list(plan.asked.map((a) => a.toLowerCase()), "and")})` : "";
   return `No other ${what} ${plural ? "fit" : "fits"} everything you've asked for${asked}, so ${stay}.`;

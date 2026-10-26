@@ -1,3 +1,4 @@
+import { isTodaysLimit } from "./limit";
 import type { NoMatch } from "./no-match";
 import { list } from "./rules";
 import type { ShownLook } from "./shown";
@@ -6,7 +7,8 @@ import type { ShownLook } from "./shown";
 // by the page after the notes, since only the page knows which look the shopper is looking at. She
 // presents new looks in her own words, kept short (Sabine's answer to Q4 in 4c), and says what changed
 // after a change (R44). A look revised from feedback (5b) comes with its change summary, which she says
-// in a few words (R50); one that couldn't be revised comes with why, so she can ask what to change (R49).
+// in a few words (R50); one that couldn't be revised comes with why, so she can ask what to change (R49),
+// unless the day's AI allowance is what stopped it, which she says briefly (25 Oct 2026).
 
 export type LooksNow = {
   looks: ShownLook[];
@@ -82,7 +84,11 @@ export function looksChanged(before: ShownLook[], after: ShownLook[]): string | 
     // Every time a change couldn't be made, even in the same words as before: told nothing, she heard
     // "every look still meets everything" and said the shoes were updated (found on Sabine's iPhone in 5c, B.1).
     else if (look.note && was?.id === look.id && (was.note !== look.note || was.noteFor !== look.noteFor))
-      revised.push(`Look ${i + 1} couldn't be revised as they asked: ${look.note} Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.`);
+      revised.push(
+        isTodaysLimit(look.note)
+          ? `Look ${i + 1} couldn't be revised: ${look.note} Say so briefly, and don't ask them to change anything: their looks stand as they are.`
+          : `Look ${i + 1} couldn't be revised as they asked: ${look.note} Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.`,
+      );
   });
   if (revised.length) return revised.join(" ");
   const kept: number[] = [];

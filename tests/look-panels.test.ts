@@ -91,6 +91,11 @@ describe("what the stylist is told about the looks", () => {
     expect(looksChanged([a], [stayed])).toBe(
       "Look 1 couldn't be revised as they asked: No other shoes fit everything you've asked for (closed toe), so these stay. Explain briefly, and if their budget or another requirement is what blocks it, ask which they'd rather change.",
     );
+    // The day's AI allowance is used up: she says so briefly, and doesn't ask what to change (25 Oct 2026).
+    const limited: ShownLook = { ...a, note: "You've reached today's limit for the demo, so these stay." };
+    expect(looksChanged([a], [limited])).toBe(
+      "Look 1 couldn't be revised: You've reached today's limit for the demo, so these stay. Say so briefly, and don't ask them to change anything: their looks stand as they are.",
+    );
     // A new attempt that fails in the same words is told too, never "every look still meets everything"
     // (fix plan 9, found on Sabine's iPhone in 5c, B.1).
     const before: ShownLook = { ...stayed, noteFor: "w1:1" };

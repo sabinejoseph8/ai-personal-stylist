@@ -14,10 +14,10 @@ export type BudgetLimits = {
   monthlyOpenaiUsd: number;
 };
 
-/** Sabine's limits (1f, 20 Oct 2026). Each can be changed with a setting in Vercel. */
+/** Sabine's limits (1f, 20 Oct 2026; the daily AI allowance raised on 25 Oct 2026). Each can be changed with a setting in Vercel. */
 const DEFAULTS = {
   BUDGET_DAILY_CONVERSATION_MINUTES: 10, // R13
-  BUDGET_DAILY_AI_USD: 1, // a full demo uses about $0.35
+  BUDGET_DAILY_AI_USD: 3, // a 10-minute session with styling changes uses about $1 of Opus judgments (measured 25 Oct 2026; $1 until then, when a demo used about $0.35)
   BUDGET_MONTHLY_VIDEO_MINUTES: 165, // Sabine's Tavus plan has 175 a month since 21 Oct 2026; 10 are kept for testing
   BUDGET_MONTHLY_CLAUDE_USD: 12, // the Anthropic console limit is $15
   BUDGET_MONTHLY_OPENAI_USD: 4, // the OpenAI console limit is $5
