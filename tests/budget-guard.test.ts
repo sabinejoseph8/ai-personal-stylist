@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { type BudgetLimits, createBudgetGuard, endsBecause, readBudgetLimits } from "@/lib/budget-guard";
+import { type BudgetLimits, createBudgetGuard, endsBecause, isResting, nextMonthFirst, readBudgetLimits } from "@/lib/budget-guard";
 import { canRunDatabaseTests, createTestGuest, recordEvalSpend, serverDb, type TestGuest } from "./support/test-guests";
 
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
@@ -20,6 +20,18 @@ describe("budget limits", () => {
     expect(endsBecause(240, 600, 240)).toBe("day"); // 4 minutes left today
     expect(endsBecause(120, 600, 600)).toBe("month"); // the month has 2 minutes left
     expect(endsBecause(60, 60, 600)).toBe("day"); // only asked for a minute
+  });
+
+  it("rests the demo when the month's Claude is used up, or both video and OpenAI are (R13, TQ4, Q2 in 6c)", () => {
+    const limits = readBudgetLimits({ BUDGET_MONTHLY_CLAUDE_USD: "40", BUDGET_MONTHLY_VIDEO_MINUTES: "100", BUDGET_MONTHLY_OPENAI_USD: "4" });
+    const month = (claude: number, videoMin: number, openai: number) => ({ month_claude_microdollars: claude * 1e6, month_video_seconds: videoMin * 60, month_openai_microdollars: openai * 1e6 });
+    expect(isResting(month(15, 50, 0), limits)).toBe(false);
+    expect(isResting(month(40, 0, 0), limits)).toBe(true);
+    // Video used up alone: voice only carries on.
+    expect(isResting(month(15, 100, 1), limits)).toBe(false);
+    expect(isResting(month(15, 100, 4), limits)).toBe(true);
+    expect(nextMonthFirst(new Date("2026-10-26T06:00:00Z"))).toBe("1 November");
+    expect(nextMonthFirst(new Date("2026-12-31T23:00:00Z"))).toBe("1 January");
   });
 
   it("can be changed with settings, ignoring values that aren't numbers", () => {

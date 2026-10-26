@@ -41,7 +41,8 @@ export function createTavusProvider(options: { apiKey?: string; palId?: string; 
         // Measured in Phase 0: a second call is refused at once with this message.
         const busy = res.status === 400 && /concurrent conversations/i.test(res.text);
         console.error(`tavus: starting a call failed (${res.status})`);
-        return { ok: false, reason: busy ? "busy" : "unavailable" };
+        // 402 "out of conversational credits": the Tavus plan's minutes are used up (21 Oct 2026, 6c).
+        return { ok: false, reason: busy ? "busy" : res.status === 402 ? "out_of_minutes" : "unavailable" };
       }
       const data = JSON.parse(res.text) as { conversation_id?: unknown; conversation_url?: unknown };
       if (typeof data.conversation_id !== "string" || typeof data.conversation_url !== "string") {

@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.46 (26 Oct 2026)
+**Status:** Agreed, version 1.47 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -342,6 +342,11 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**Voice only standing in for video (6c, pull request 2 of 2).**
+- **At the start (R9):** when the video call can't start because the stylist is with another visitor, Tavus is unavailable, the month's video stop is reached, or Tavus's own plan is out of minutes (its 402, now told apart), a voice call starts instead in the same session, and the answer says why (busy, unavailable or resting). The stage reads "The video stylist is with another visitor. Continuing with voice.", "Video unavailable. Continuing with voice." or "The video stylist is resting for the rest of the month. Continuing with voice.", and she says it in her own first words, then asks what they're dressing for (or carries on, for a resumed session). If voice can't start either, the video refusal stands. The day's time is shared, so a day used up never falls back.
+- **Mid-call (R14):** a dropped video call reconnects by voice, saying the switch line as her first words, and the stage reads "Video unavailable. Continuing with voice."; if voice drops too, the existing 3 tries and Try again follow. **Turn video on** is offered in every voice-only case: if video still can't start, voice carries on with the reason.
+- Browser tests make the fake video stylist busy with an **x-fake-video** header, honoured only with the fake engine, never on the live site.
+
 **Voice only as built (6c, pull request 1 of 2).** The files are **connectors/conversation/gpt-live/** (shared rules, the server side, the browser engine and its turn keeping), **lib/voice-calls.ts** and the voice parts of **lib/sessions.ts** and **components/session/use-conversation.ts**.
 - **Starting:** POST /api/sessions with { engine: "voice" } reserves the guest's time as for video and records a pending call ("voice:pending:…"); the browser makes its offer and sends it to POST /api/sessions/:id/voice, which creates the GPT-Live call (gpt-live-1, the quartz voice, the stylist's own instructions for voice, recording off by default) with the session's notes as its starting context, and records OpenAI's id ("voice:live_…"). The key never leaves the server.
 - **The browser's channel (your answer to Q3):** OpenAI lets a call limit what the browser may send. It may send only context, exact lines, mute and close; anything else is refused ("event_not_allowed", checked against OpenAI on 26 Oct 2026). It hears only the call starting and closing, the words and errors. OpenAI also offers a trusted server connection, but the live site can't hold one for a whole call (Vercel functions are short), so the server uses it only to close a call (End from elsewhere, calls left behind, Delete all); the page composes the stylist's context, as it does for Tavus.
@@ -444,6 +449,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - OpenAI and Anthropic: spending limits set in their consoles as the final backstop.
 - The AI money check and the cost record are separate steps, so AI calls at the same moment can run a few cents over a limit. Accepted (your decision, Phase 1 code review): the monthly ceilings sit $3 (Claude) and $1 (OpenAI) below the console limits, so a provider never cuts in.
 - When the monthly allowance runs out, the conversation ends for now (R13). If AI is used up too, the welcome screen says the demo is resting until the 1st of next month (TQ4).
+- **Resting (6c, your answer to Q2):** the welcome screen says "The demo is resting until 1 November. You can still read how it was built.", with How it was built as the main button, when the month's Claude stop is reached, or when both the video and the OpenAI stops are. With only the video minutes used up, voice only carries on (**isResting** in lib/budget-guard.ts).
 
 ### Privacy
 - Recording is off for every Tavus call. Tavus never receives the camera: the call starts with video off, and the camera is a separate stream only the page uses. Frames are read by our server and thrown away, never saved or logged (3c). Only a still the shopper captures is kept, as a session photo.
@@ -583,6 +589,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.47 (26 Oct 2026):** 6c, pull request 2: voice only standing in for video at the start and after a drop, the why-lines, Tavus's out-of-minutes told apart, and the resting welcome screen (your answer to Q2).
 - **1.46 (26 Oct 2026):** 6c, pull request 1: the GPT-Live voice-only engine, the switch both ways, the voice offer endpoint, the browser channel's limits (your answers to Q1 and Q3), and why the security policy needs no OpenAI entry.
 - **1.45 (26 Oct 2026):** 6b: Profile and privacy (your answers to Q1 to Q3): the endpoints, rate limits, privacy lines, and how it's built, including why the page explains the microphone and camera rather than showing their state.
 - **1.44 (26 Oct 2026):** 6a: saved looks and the demo bag (your answers to Q1 to Q3): the tables' key and limits, the endpoints, rate limits, and how they're built.

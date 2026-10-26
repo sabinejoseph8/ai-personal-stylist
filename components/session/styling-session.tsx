@@ -17,6 +17,7 @@ import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icons";
+import { voiceLine } from "@/lib/voice-lines";
 import { PermissionCard } from "@/components/ui/permission-card";
 import { useToast } from "@/components/ui/toast";
 import type { ShownWardrobeItem } from "@/lib/wardrobe";
@@ -820,7 +821,9 @@ export function StylingSession({
         {/* What voice only means right now, with the way back (design 4.1). */}
         {inCall && (call.engine === "voice" || call.switching) && (
           <div role="status" className="flex flex-wrap items-center justify-center gap-2 desktop:justify-start">
-            <p className="type-label m-0 text-ink">{call.switchingTo === "voice" ? "Switching to voice only…" : call.switchingTo === "video" ? "Turning video on…" : "Voice only"}</p>
+            <p className="type-label m-0 text-ink">
+              {call.switchingTo === "voice" ? "Switching to voice only…" : call.switchingTo === "video" ? "Turning video on…" : voiceLine(call.voiceWhy ?? "chosen")}
+            </p>
             {call.engine === "voice" && !call.switching && flow === "live" && (
               <Button variant="quiet" onClick={() => void call.switchToVideo()}>
                 Turn video on
