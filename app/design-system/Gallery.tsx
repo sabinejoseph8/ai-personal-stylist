@@ -61,6 +61,7 @@ const MEANINGS: Record<IconName, string> = {
   microphone: "Mute (microphone on)",
   muted: "Muted",
   end: "End the conversation",
+  more: "More controls (phones)",
 };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

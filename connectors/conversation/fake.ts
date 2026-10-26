@@ -1,4 +1,4 @@
-import type { CallProvider, ConversationEngine, ConversationEvent, ConversationListener } from "./types";
+import type { CallProvider, ConversationEngine, ConversationEvent, ConversationListener, Engine } from "./types";
 
 // The fake engine (tech spec 8): plays a scripted conversation, so tests can run a "call" for free,
 // as often as they like. The server only picks it in tests (connectors/conversation/server.ts).
@@ -14,11 +14,13 @@ export const GREETING: FakeStep[] = [
   { afterMs: 150, event: { type: "stylist-speaking", speaking: false } },
 ];
 
-export function createFakeProvider(): CallProvider {
+/** A fake provider for either engine: a voice call's id carries the voice prefix, as GPT-Live's does (6c). */
+export function createFakeProvider(engine: Engine = "video"): CallProvider {
   return {
-    engine: "video",
+    engine,
     async start({ sessionId }) {
-      return { ok: true, callId: `fake-${crypto.randomUUID()}`, joinUrl: `${FAKE_JOIN_PREFIX}${sessionId}` };
+      const id = `fake-${crypto.randomUUID()}`;
+      return { ok: true, callId: engine === "voice" ? `voice:${id}` : id, joinUrl: `${FAKE_JOIN_PREFIX}${sessionId}${engine === "voice" ? "?voice" : ""}` };
     },
     async end() {},
   };

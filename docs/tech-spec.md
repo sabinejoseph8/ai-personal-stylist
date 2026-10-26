@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.45 (26 Oct 2026)
+**Status:** Agreed, version 1.46 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -142,7 +142,8 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 
 | Endpoint | Used for |
 |---|---|
-| **POST /api/sessions** | Start conversation: picks up the guest's open session or opens one (5 starts an hour), reserves their time with the budget guard, and starts the call with that time as its longest length; if the call can't start, or the session can't be saved, the reserved time is given back at once and any call created is ended (full code review, batch 1). Returns the call's join link, its longest length, and which limit ends it (today's time or the month's video minutes), for time left and Time is up (R13). Until voice only arrives (6c), if video is unavailable (another visitor, or the month's minutes used) it says so and the conversation doesn't start (your decision, 2a). |
+| **POST /api/sessions** | Start conversation ({ engine }: video, or voice only, 6c): picks up the guest's open session or opens one (5 starts an hour), reserves their time with the budget guard, and starts the call with that time as its longest length; if the call can't start, or the session can't be saved, the reserved time is given back at once and any call created is ended (full code review, batch 1). Returns the call's join link, its longest length, and which limit ends it (today's time or the month's video minutes), for time left and Time is up (R13). Until voice only arrives (6c), if video is unavailable (another visitor, or the month's minutes used) it says so and the conversation doesn't start (your decision, 2a). |
+| **POST /api/sessions/:id/voice** | Joining a voice-only call (6c): { callId, sdp } is the session's pending voice call and the browser's WebRTC offer; the server creates the GPT-Live call with the session's notes as its starting context, records OpenAI's id on the session, and answers with the SDP answer and that id, never the key. |
 | **POST /api/sessions/:id/voice** | Exchanges the browser's connection offer with OpenAI for GPT-Live. The OpenAI key never reaches the browser. |
 | **POST /api/sessions/:id/end** | End: ends the call, hard-deletes the Tavus conversation and gives back the reserved time the call didn't use. With keep: true (the call stopped by itself, or the shopper left the page) the session pauses and can be resumed for 30 minutes; the page names the call it means (callId), so a late "the call stopped" from a dropped connection can't end the call that replaced it (review batch 1). Ending deletes the session's notes and photos, and later its other session-only data (R63). |
 | **POST /api/sessions/:id/words** | New words heard: the turn's words so far, what the stylist last said, whether the turn has ended, and a label for the shopper's turn. The session keeps the next question on the server until a reading of a later turn replaces it (Phase 2 review). Streams one line of JSON per update: first the plain-code money and dates, then the notes after Claude's reading, with the next question and the stylist's context. As for photos, the reading is registered with **after()**, so it finishes if the page goes away (Phase 3 review). Also sent: whether looks are on screen, and the number of the one most in view (5a). Feedback on the looks arrives as notes of the "feedback" kind. |
@@ -341,6 +342,14 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**Voice only as built (6c, pull request 1 of 2).** The files are **connectors/conversation/gpt-live/** (shared rules, the server side, the browser engine and its turn keeping), **lib/voice-calls.ts** and the voice parts of **lib/sessions.ts** and **components/session/use-conversation.ts**.
+- **Starting:** POST /api/sessions with { engine: "voice" } reserves the guest's time as for video and records a pending call ("voice:pending:…"); the browser makes its offer and sends it to POST /api/sessions/:id/voice, which creates the GPT-Live call (gpt-live-1, the quartz voice, the stylist's own instructions for voice, recording off by default) with the session's notes as its starting context, and records OpenAI's id ("voice:live_…"). The key never leaves the server.
+- **The browser's channel (your answer to Q3):** OpenAI lets a call limit what the browser may send. It may send only context, exact lines, mute and close; anything else is refused ("event_not_allowed", checked against OpenAI on 26 Oct 2026). It hears only the call starting and closing, the words and errors. OpenAI also offers a trusted server connection, but the live site can't hold one for a whole call (Vercel functions are short), so the server uses it only to close a call (End from elsewhere, calls left behind, Delete all); the page composes the stylist's context, as it does for Tavus.
+- **Words:** GPT-Live sends transcript pieces with no turns, so the engine keeps turns itself: a turn ends when the other side starts talking or after 1.2 seconds of quiet, and only then is it final for the notes reader.
+- **The switch (S3):** Voice only has the video stylist say "I'm switching to voice only, so I'll sound a little different.", waits 4.5 seconds, pauses the video call (its time settled), and starts a voice call in the same session, which opens with "Right, let's carry on." Turn video on does the reverse. Notes, looks and photos belong to the session, so they're untouched. A dropped call reconnects on the engine it was using.
+- **Cost:** a voice call's seconds count in the guest's 10 minutes a day, and at its end $0.05 a minute is recorded against the app's OpenAI stop.
+- **On screen:** the still portrait of Anna (her Tavus preview image, saved as public/stylist-portrait.jpg, your answer to Q1), with an Emerald ring that pulses while she speaks; the video stays until the voice stylist takes over.
+
 **Profile and privacy as built (6b).** The files are **lib/privacy-service.ts**, **lib/zip.ts** (a ZIP with no compression and no library) and **components/profile/**.
 - **The page** (/profile) has the four sections in design order, reached from the session page, the welcome-back screen and the saved preferences at the top of My Styling Notes.
 - **Microphone and camera:** the browser's own permissions. Every page but the session blocks the camera and microphone (the security headers, 1b), so Profile and privacy can't read their state: it says what each is for and how to change it in Safari's settings.
@@ -445,7 +454,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 - Download my data (6b) holds what the app keeps and nothing else: the profile, saved preferences, permissions, wardrobe items and photos, saved looks, the demo bag, and the open session's notes and photos. Never audio, words or video, which aren't kept (R63).
 
 ### Browser protections
-- A content security policy only allows connections to our own site, Supabase, Tavus and Daily, and Cloudflare (for Turnstile); OpenAI joins it with voice only (6c). Scripts need a fresh per-request nonce (proxy.ts). Every page follows it: the Phase 0 test pages were deleted in 2f.
+- A content security policy only allows connections to our own site, Supabase, Tavus and Daily, and Cloudflare (for Turnstile). Voice only (6c) needs no OpenAI entry: the browser's offer goes to our server, and the call's audio isn't governed by connect-src. Scripts need a fresh per-request nonce (proxy.ts). Every page follows it: the Phase 0 test pages were deleted in 2f.
 - Microphone and camera access are only allowed on the session screen.
 
 ## 7. Hosting, deployment and configuration
@@ -574,6 +583,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.46 (26 Oct 2026):** 6c, pull request 1: the GPT-Live voice-only engine, the switch both ways, the voice offer endpoint, the browser channel's limits (your answers to Q1 and Q3), and why the security policy needs no OpenAI entry.
 - **1.45 (26 Oct 2026):** 6b: Profile and privacy (your answers to Q1 to Q3): the endpoints, rate limits, privacy lines, and how it's built, including why the page explains the microphone and camera rather than showing their state.
 - **1.44 (26 Oct 2026):** 6a: saved looks and the demo bag (your answers to Q1 to Q3): the tables' key and limits, the endpoints, rate limits, and how they're built.
 - **1.43 (25 Oct 2026):** The limit-lines plan: when the day's AI allowance is used up, Change, Swap, Undo and Compare say "You've reached today's limit for the demo", nothing is saved for a check that couldn't run, Swap leaves unchecked replacements unmarked, the stylist says so briefly, and the daily AI allowance defaults to $3 (Sabine's Q1 and Q2); the cost per demo measured in section 9.

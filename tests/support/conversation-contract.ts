@@ -11,7 +11,8 @@ export function callProviderContract(name: string, make: () => CallProvider) {
       expect(call.ok).toBe(true);
       if (!call.ok) return;
       expect(call.callId).toBeTruthy();
-      expect(call.joinUrl).toMatch(/^[a-z]+:\/\//);
+      // A link to the call, or for voice only our own page to send the offer to (6c).
+      expect(call.joinUrl).toMatch(/^([a-z]+:\/\/|\/api\/sessions\/[^/]+\/voice$)/);
       expect(JSON.stringify(call)).not.toMatch(/key/i);
     });
 

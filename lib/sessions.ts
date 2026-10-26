@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isVoiceCall, VOICE_USD_PER_SECOND } from "@/connectors/conversation/gpt-live/shared";
 import type { CallProvider, Engine } from "@/connectors/conversation/types";
 import type { BudgetGuard, Refusal } from "@/lib/budget-guard";
 import { deleteEndedSessionPhotos, deleteSessionPhotos } from "@/lib/photos-service";
@@ -28,16 +29,24 @@ const COLUMNS = "id, user_id, status, engine, last_activity_at, call_id, call_st
 export type SessionDeps = {
   /** Supabase with the server key. */
   db: SupabaseClient;
+  /** The video stylist (Tavus). */
   provider: CallProvider;
+  /** The voice-only stylist (GPT-Live, 6c). */
+  voice?: CallProvider;
   guard: BudgetGuard;
 };
 
-export type StartRefusal = Refusal | "video_busy" | "video_unavailable";
+/** The provider a call belongs to: voice calls carry their own prefix (6c). */
+const providerFor = (deps: SessionDeps, callId: string) => (isVoiceCall(callId) && deps.voice ? deps.voice : deps.provider);
+
+export type StartRefusal = Refusal | "video_busy" | "video_unavailable" | "voice_unavailable";
 export type StartResult =
   | {
       ok: true;
       sessionId: string;
       resumed: boolean;
+      /** Video, or voice only (6c). */
+      engine: Engine;
       call: { callId: string; joinUrl: string };
       /** The call's longest length, and which limit ends it (R13). */
       seconds: number;
@@ -85,11 +94,10 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
     await endAtProvider(deps, s.id, s.call_id);
     if (s.reserved_seconds !== null && s.reserved_day) {
       const ran = s.call_started_at ? (usedUntil - Date.parse(s.call_started_at)) / 1000 : 0;
-      await deps.guard.settleTime(
-        s.user_id,
-        { engine: s.engine, seconds: s.reserved_seconds, day: s.reserved_day },
-        Math.min(s.reserved_seconds, Math.max(0, ran)),
-      );
+      const used = Math.min(s.reserved_seconds, Math.max(0, ran));
+      await deps.guard.settleTime(s.user_id, { engine: s.engine, seconds: s.reserved_seconds, day: s.reserved_day }, used);
+      // Voice only is paid by the second from the OpenAI account, against the app's OpenAI stop (6c).
+      if (s.engine === "voice" && used > 0) await deps.guard.recordAi(s.user_id, "openai", used * VOICE_USD_PER_SECOND);
     }
   } else if (!claimed?.length && status === "ended") {
     // Another request finished the call first: End still ends the session.
@@ -105,7 +113,7 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
 /** Ends and hard-deletes a call at the provider; a failure is remembered on the session for retryStaleCalls. */
 async function endAtProvider(deps: SessionDeps, sessionId: string, callId: string) {
   try {
-    await deps.provider.end(callId);
+    await providerFor(deps, callId).end(callId);
     return true;
   } catch (e) {
     console.error(`ending a call failed: ${e instanceof Error ? e.message : e}`);
@@ -136,7 +144,7 @@ export async function retryStaleCalls(deps: SessionDeps, limit = 50) {
     const left: string[] = [];
     for (const id of staleIds(s.stale_call_id as string)) {
       try {
-        await deps.provider.end(id);
+        await providerFor(deps, id).end(id);
         ended++;
       } catch (e) {
         console.error(`retrying a call's end failed: ${e instanceof Error ? e.message : e}`);
@@ -191,8 +199,13 @@ export async function openSession(deps: SessionDeps, guestId: string): Promise<S
   return data;
 }
 
-/** Start conversation: picks up the open session or opens one, reserves time, and starts a video call. */
-export async function startConversation(deps: SessionDeps, guestId: string): Promise<StartResult> {
+/**
+ * Start conversation: picks up the open session or opens one, reserves time, and starts a call: video,
+ * or voice only when asked (Voice only, 6c). A voice call is pending until the browser sends its offer.
+ */
+export async function startConversation(deps: SessionDeps, guestId: string, engine: Engine = "video"): Promise<StartResult> {
+  const provider = engine === "voice" ? deps.voice : deps.provider;
+  if (!provider) return { ok: false, reason: "voice_unavailable" };
   await endLeftBehindCalls(deps, guestId);
   // Photos of a session that ended from being idle (Sabine's answer to Q4 in 3a).
   await deleteEndedSessionPhotos(deps.db, guestId).catch((e) => console.error(`deleting old photos failed: ${e instanceof Error ? e.message : e}`));
@@ -209,7 +222,7 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
   // and resumed later was charged for the whole time away (review batch 1, A2).
   if (session.call_id) await finishCall(deps, session, "paused", lastUse(session));
 
-  const reserved = await deps.guard.reserveTime(guestId, "video");
+  const reserved = await deps.guard.reserveTime(guestId, provider.engine);
   if (!reserved.ok) return { ok: false, reason: reserved.reason };
   const giveBack = async () => {
     await deps.guard.settleTime(guestId, reserved.reservation, 0);
@@ -219,13 +232,14 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
   // reserved, it cost the shopper their day and the month 10 minutes with no call made (review batch 1, A1).
   let call: Awaited<ReturnType<CallProvider["start"]>>;
   try {
-    call = await deps.provider.start({ sessionId: session.id, maxSeconds: reserved.reservation.seconds });
+    call = await provider.start({ sessionId: session.id, maxSeconds: reserved.reservation.seconds });
   } catch (e) {
     console.error(`starting a call failed: ${e instanceof Error ? e.message : e}`);
     call = { ok: false, reason: "unavailable" };
   }
   if (!call.ok) {
     await giveBack();
+    if (provider.engine === "voice") return { ok: false, reason: "voice_unavailable" };
     return { ok: false, reason: call.reason === "busy" ? "video_busy" : "video_unavailable" };
   }
 
@@ -235,7 +249,7 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
       .from("sessions")
       .update({
         status: "active",
-        engine: deps.provider.engine,
+        engine: provider.engine,
         call_id: call.callId,
         call_started_at: now,
         reserved_seconds: reserved.reservation.seconds,
@@ -259,6 +273,7 @@ export async function startConversation(deps: SessionDeps, guestId: string): Pro
     ok: true,
     sessionId: session.id,
     resumed,
+    engine: provider.engine,
     call: { callId: call.callId, joinUrl: call.joinUrl },
     seconds: reserved.reservation.seconds,
     endsBecause: reserved.endsBecause,

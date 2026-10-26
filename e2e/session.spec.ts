@@ -56,6 +56,51 @@ test.describe("the stylist stage", () => {
     await noSeriousA11yProblems(page);
   });
 
+  /** Voice only or Turn video on: beside Camera on tablets and computers, under More on phones (6c). */
+  async function toggleVoice(page: Page, name: "Voice only" | "Video off") {
+    const more = page.getByRole("button", { name: "More", exact: true });
+    if (await more.isVisible()) {
+      await more.click();
+      await page.getByRole("button", { name: name === "Voice only" ? "Voice only" : "Turn video on", exact: true }).click();
+    } else await page.getByRole("button", { name, exact: true }).click();
+  }
+
+  test("Voice only: she says the switch line, carries on as a still portrait with the notes kept, and Turn video on brings video back (6c, R9, S3)", async ({ page }) => {
+    await inCall(page);
+    await page.getByRole("button", { name: `“${SAMPLE_PHRASES[0]}”` }).click();
+    const notebook = page.getByRole("region", { name: "My Styling Notes" });
+    await expect(notebook.getByText("Outdoor wedding, November")).toBeVisible();
+    await toggleVoice(page, "Voice only");
+    // The video stylist says the switch line first (R9).
+    await expect.poll(async () => (await commandsSent(page)).filter((c) => c.name === "say").map((c) => c.value)).toContain(
+      "I'm switching to voice only, so I'll sound a little different.",
+    );
+    await expect(page.getByText("Switching to voice only…")).toBeVisible();
+    // The video stays while she says it.
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toHaveCount(0);
+    // Then the voice stylist, as a still portrait, picks up in the same session.
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("status").filter({ hasText: /^Voice only/ })).toBeVisible({ timeout: 15_000 });
+    await expect.poll(async () => (await commandsSent(page)).filter((c) => c.name === "say").map((c) => c.value)).toContain("Right, let's carry on.");
+    const rows = await sessions();
+    expect(rows).toHaveLength(1);
+    const { data: voice } = await serverDb().from("sessions").select("engine, call_id").eq("user_id", guest.id).single();
+    expect(voice).toMatchObject({ engine: "voice" });
+    expect(voice?.call_id).toMatch(/^voice:/);
+    // Notes are never affected (R9).
+    await expect(notebook.getByText("Outdoor wedding, November")).toBeVisible();
+    await noSeriousA11yProblems(page);
+
+    // Turn video on: the video stylist is back, in the same session.
+    if (await page.getByRole("button", { name: "Turn video on" }).first().isVisible()) await page.getByRole("button", { name: "Turn video on" }).first().click();
+    else await toggleVoice(page, "Video off");
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toHaveCount(0, { timeout: 15_000 });
+    await expect(page.getByRole("status").filter({ hasText: /^Voice only/ })).toHaveCount(0);
+    await expect.poll(async () => (await serverDb().from("sessions").select("engine").eq("user_id", guest.id).single()).data?.engine).toBe("video");
+    await expect(notebook.getByText("Outdoor wedding, November")).toBeVisible();
+    expect(await sessions()).toHaveLength(1);
+  });
+
   test("Not now explains that the conversation can't start without the microphone (R6)", async ({ page }) => {
     await fakeMicrophone(page, "allowed");
     await page.goto("/session");

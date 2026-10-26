@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.23 (26 Oct 2026)
+**Status:** Agreed, version 1.24 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -182,7 +182,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Voice controls**
 - **Start conversation** (primary), **Mute**, **Camera**, **Voice only**, **End**.
-- On phones the row shows Mute, Camera, More and End. **More** holds Voice only. Until Voice only arrives (6c), the row is Mute, Camera, End.
+- On phones the row shows Mute, Camera, More and End. **More** holds Voice only (as built in 6c: More opens a **Voice only** or **Turn video on** button under the row). On tablets and computers, **Voice only** sits between Camera and End and reads **Video off** when pressed.
 - States: enabled, pressed (Mute shows a crossed-out microphone and "Muted", Camera shows "Camera on", Voice only shows "Video off"), disabled while connecting.
 - 48 px circles with a label underneath. In the pinned phone bar they are icon-only, with accessible names.
 - End asks "End this session? Notes you haven't saved will be cleared." with **Keep talking** and **End session**.
@@ -587,6 +587,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.24 (26 Oct 2026):** 6c as built (first part): Voice only beside Camera, More on phones, the still portrait with a ring that pulses while she speaks (a pulse, not the voice's volume), "Switching to voice only…" and "Turning video on…" while a switch runs, and "Voice only" with **Turn video on** under the stage.
 - **1.23 (26 Oct 2026):** 6b as built: the Profile and privacy page, its links, and saved preferences in the notebook opening it.
 - **1.22 (26 Oct 2026):** 6a as built: Save look and Add to bag on the look panel, the bag sheet, the Saved looks and Demo bag pages.
 - **1.21 (25 Oct 2026):** Full code review, batch 2: the conflict card closes with End (4.3).

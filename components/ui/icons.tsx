@@ -1,5 +1,6 @@
 import {
   Bookmark,
+  Ellipsis,
   Check,
   CircleDot,
   CircleQuestionMark,
@@ -64,6 +65,7 @@ export const ICONS = {
   microphone: Mic,
   muted: MicOff,
   end: PhoneOff,
+  more: Ellipsis,
 } satisfies Record<string, ComponentType<LucideProps>>;
 
 export type IconName = keyof typeof ICONS;
