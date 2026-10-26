@@ -92,6 +92,9 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
         <Link href="/setup" className={buttonClasses("secondary")}>
           Edit your profile
         </Link>
+        <Link href="/profile" className={buttonClasses("secondary")}>
+          Profile and privacy
+        </Link>
       </div>
       <SmallPrint />
     </main>

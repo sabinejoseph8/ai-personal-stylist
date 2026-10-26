@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type ReactNode, type Ref, useEffect, useRef, useState } from "react";
 import type { ShownNote, TouchAction } from "@/components/session/use-notes";
 import { Button } from "@/components/ui/button";
@@ -350,7 +351,10 @@ export function MyStylingNotes({
           <ul aria-label="Saved preferences" className="m-0 list-none p-0">
             {preferences.map((p) => (
               <li key={p} className={`${ROW} flex flex-wrap items-start justify-between gap-x-3`}>
-                <span className="type-note text-ink">{p}</span>
+                {/* Opens it in Profile and privacy (design 4.2, from 6b). */}
+                <Link href="/profile#saved-preferences" className="type-note text-ink underline decoration-hairline underline-offset-4">
+                  {p}
+                </Link>
                 <span className="flex h-7 shrink-0 items-center">
                   <StatusChip status="savedPreference" />
                 </span>

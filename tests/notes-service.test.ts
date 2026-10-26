@@ -165,7 +165,8 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     const silent: NotesReader = { read: async (input) => ({ ...(await createFakeNotesReader().read(input))!, question: null }) };
     const late: NotesUpdate[] = [];
     const hearing = hearWords(deps({ reader: slow }), guest.id, sessionId, { words: "It's for a wedding", stylistSaid: "", final: true, turn: "turn-a" }, (u) => late.push(u));
-    await expect.poll(() => late.length).toBe(1); // the quick update, before the reading
+    // The quick update, before the reading: up to 20 seconds, as the shared database can be slow on GitHub.
+    await expect.poll(() => late.length, { timeout: 20_000 }).toBe(1);
     const next: NotesUpdate[] = [];
     await hearWords(deps({ reader: silent }), guest.id, sessionId, { words: "Something elegant", stylistSaid: "", final: true, turn: "turn-b" }, (u) => next.push(u));
     expect(next.at(-1)!.question).toBeNull();
@@ -176,7 +177,7 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     expect(last.question).toBeNull();
     expect(last.context).not.toContain("Ask next");
     expect((await db.from("sessions").select("question").eq("id", sessionId).single()).data?.question).toBeNull();
-  });
+  }, 45_000);
 
   it("a tap keeps the next question in the stylist's context (review batch 2, B6)", async () => {
     const { last } = await hear(WEDDING);

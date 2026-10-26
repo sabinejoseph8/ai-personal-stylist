@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.22 (26 Oct 2026)
+**Status:** Agreed, version 1.23 (26 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -273,7 +273,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - **As built (5a):** after the notes, a heading in Graphite for each look with feedback ("Look 1", or "An earlier look" when it's gone), then its lines, which work like notes. A tap on Keep or Change jots its line in ink.
 
 **Saved preferences and session exceptions**
-- Saved preferences: the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a Saved preference chip and its bookmark icon. Tapping one opens it in Profile and privacy, from Phase 6. Until then they aren't tappable (your answer to Q1 in 2d).
+- Saved preferences (since 6b, each a link to it in Profile and privacy): the Must have, Never and Likes items from the profile that apply, jotted at the top of the page, each with a Saved preference chip and its bookmark icon. Tapping one opens it in Profile and privacy, from Phase 6. Until then they aren't tappable (your answer to Q1 in 2d).
 - This session only: each exception with a clock icon, for example "High heels allowed for this session. Your profile still says Never: high heels." Buttons: **Save to my profile** and **Remove**. As built (5c), the lines sit after the notes, before the feedback, and Save to my profile first asks "Take "Never: high heels" off your profile? Later sessions will allow it too." with **Take it off** and **Cancel**. What the shopper asked for with it is jotted as its own note ("High heels", Confirmed). Removing that note takes back the request and keeps the permission; **Remove** on the line takes back both (5c fix 5, Q2). Asking again for something already allowed needs no card: it's jotted straight away (Q1). Once jotted, each look shows Revising while only its pieces of that kind change (its shoes), with "Changed: … (you asked for high heels)" above it (5c fix 6).
 
 ### 4.3 Looks
@@ -561,6 +561,7 @@ Shows the pencil and ink states and the pasted photo.
 - **Saved looks:** a list on phones, a 2 to 3 column grid on wider screens.
 - **Demo bag:** one column with the demo banner on top, and the total and disabled Checkout at the bottom (pinned on phones).
 - **Profile and privacy:** four sections in this order: Your profile, Saved preferences, Permissions (microphone, camera, wardrobe photos, saving preferences), Your data (Clear this session's notes, Download my data, Delete all my data).
+- As built (6b): each section a white panel. Your profile lists shopping, style, sizes and budget with **Edit your profile**. Each saved preference has a quiet **Delete** ("Delete "Never: high heels"?", **Delete preference**); none: "No saved preferences". Microphone and Camera say what they're for and how to change them in Safari's settings; Wardrobe photos and Saving preferences show Allowed or Not allowed, with **Turn off** ("Turn off wardrobe photos?", naming what's deleted, **Turn off and delete**) or **Allow …**. Your data: the privacy promise in a line, **Clear this session's notes** (waits with "No session is open now." when there's none; then "This session's notes are cleared."), **Download my data** ("A ZIP file with your data and your photos."), and **Delete all my data** in Red pen ("Delete all your data?", **Delete all data**). A problem shows in a Red wash line at the top. One column, up to 42 rem wide.
 - **About this project:** a readable article page (Newsreader headings, Figtree body, lines of about 70 characters) covering the problem, the approach, key decisions and how it was built, with links to the PRD, the planning files in docs/ and the source code.
 
 ## 6. Accessibility built into the design
@@ -586,6 +587,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.23 (26 Oct 2026):** 6b as built: the Profile and privacy page, its links, and saved preferences in the notebook opening it.
 - **1.22 (26 Oct 2026):** 6a as built: Save look and Add to bag on the look panel, the bag sheet, the Saved looks and Demo bag pages.
 - **1.21 (25 Oct 2026):** Full code review, batch 2: the conflict card closes with End (4.3).
 - **1.20 (24 Oct 2026):** Full code review, batch 1: a photo is Active only once kept, and Replace keeps the earlier photo until the new one is kept (4.2).
