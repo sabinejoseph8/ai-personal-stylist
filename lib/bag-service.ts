@@ -59,7 +59,8 @@ export async function addToBag(
   if (!found || "stale" in found) return found;
   const items = found.look.items;
   const rows: { user_id: string; product_id: string; size: string; check_result_id: string; added_at: string }[] = [];
-  for (const pick of picks) {
+  // The same product twice in one request: the last size wins, as adding it again would (6d review).
+  for (const pick of new Map(picks.map((p) => [p.productId, p])).values()) {
     const item = items.find((i) => i.id === pick.productId);
     if (item?.owned) return { refused: "owned" };
     if (!item || item.kind !== "product") return { refused: "not_in_look" };

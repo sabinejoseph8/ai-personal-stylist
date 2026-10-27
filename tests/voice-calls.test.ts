@@ -43,7 +43,10 @@ describe.skipIf(!canRunDatabaseTests)("joining a voice call", () => {
   it("makes the call with the notes so far, and records OpenAI's id on the session", async () => {
     expect(await attachVoiceCall(deps(), guest.id, session, pending, "offer-sdp")).toEqual({ ok: true, callId: "voice:live_1", sdp: "answer-sdp" });
     expect(made[0]).toContain("Outdoor wedding, November");
-    expect((await db.from("sessions").select("call_id").eq("id", session).single()).data?.call_id).toBe("voice:live_1");
+    const { data: s } = await db.from("sessions").select("call_id, call_started_at").eq("id", session).single().throwOnError();
+    expect(s?.call_id).toBe("voice:live_1");
+    // The call's time counts from here, when OpenAI started it (6d review).
+    expect(Date.now() - Date.parse(s!.call_started_at)).toBeLessThan(10_000);
     // The same pending call can't be joined twice.
     expect(await attachVoiceCall(deps(), guest.id, session, pending, "offer-sdp")).toEqual({ ok: false, reason: "no_call" });
     expect(made).toHaveLength(1);

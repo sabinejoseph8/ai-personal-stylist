@@ -8,6 +8,9 @@ import { GUEST_COOKIE } from "@/lib/supabase/cookies";
 // Delete all my data (6b; R65, S19): after the page has asked, the call ends, every row and photo goes
 // with the guest, and this browser is signed out. The page then goes to the welcome screen.
 
+// Ending a call at its provider, deleting the photos and the guest can take longer than a plain request (6d review).
+export const maxDuration = 60;
+
 export async function DELETE() {
   const guest = await currentGuest();
   if (!guest) return Response.json({ error: "Your demo has ended. Start again from the welcome screen." }, { status: 401 });

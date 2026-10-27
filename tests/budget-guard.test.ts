@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { type BudgetLimits, createBudgetGuard, endsBecause, isResting, nextMonthFirst, readBudgetLimits } from "@/lib/budget-guard";
+import { type BudgetLimits, createBudgetGuard, demoRestingRemembered, endsBecause, isResting, nextMonthFirst, readBudgetLimits } from "@/lib/budget-guard";
 import { canRunDatabaseTests, createTestGuest, recordEvalSpend, serverDb, type TestGuest } from "./support/test-guests";
 
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
@@ -58,6 +58,13 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
     const { data } = await db.from("usage").select("*").eq("user_id", guest.id).maybeSingle().throwOnError();
     return data;
   };
+
+  it("remembers whether the demo is resting for a minute (6d review, Q2)", async () => {
+    const first = demoRestingRemembered(db, 1_000_000, limits({}));
+    expect(demoRestingRemembered(db, 1_030_000, limits({}))).toBe(first);
+    expect(await first).toBe(false);
+    expect(demoRestingRemembered(db, 1_061_000, limits({}))).not.toBe(first);
+  });
 
   beforeAll(async () => {
     guest = await createTestGuest();

@@ -139,6 +139,25 @@ export async function demoResting(db: SupabaseClient, limits: BudgetLimits = rea
   return isResting(data as MonthTotals, limits);
 }
 
+/**
+ * The resting answer, remembered for a minute on this server (6d review; Sabine's answer to Q2): the
+ * welcome screen asks on every visit, and the answer changes a few times a month at most. A failed
+ * answer isn't kept, so the next visit asks again.
+ */
+export const RESTING_REMEMBERED_MS = 60_000;
+let remembered: { at: number; value: Promise<boolean> } | null = null;
+export function demoRestingRemembered(db: SupabaseClient, now = Date.now(), limits?: BudgetLimits) {
+  if (!remembered || now - remembered.at >= RESTING_REMEMBERED_MS) {
+    const value = demoResting(db, limits);
+    const mine = { at: now, value };
+    remembered = mine;
+    void value.catch(() => {
+      if (remembered === mine) remembered = null;
+    });
+  }
+  return remembered.value;
+}
+
 /** "1 November": the 1st of next month, in UTC as the budget counts months. */
 export function nextMonthFirst(now = new Date()) {
   const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));

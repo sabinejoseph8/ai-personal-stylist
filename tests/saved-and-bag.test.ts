@@ -142,6 +142,14 @@ describe.skipIf(!canRunDatabaseTests)("saved looks and the demo bag", () => {
     if (!again || !("items" in again)) throw new Error(JSON.stringify(again));
     expect(again.items).toHaveLength(2);
     expect(again.items.find((i) => i.productId === a.id)?.size).toBe(a.sizes!.at(-1));
+    // The same product twice in one request: one row, in the last size (6d review).
+    const twice = await addToBag(deps(), guest.id, session, look.id, [
+      { productId: a.id, size: a.sizes!.at(-1)! },
+      { productId: a.id, size: a.sizes![0] },
+    ]);
+    if (!twice || !("items" in twice)) throw new Error(JSON.stringify(twice));
+    expect(twice.items.filter((i) => i.productId === a.id)).toHaveLength(1);
+    expect(twice.items.find((i) => i.productId === a.id)?.size).toBe(a.sizes![0]);
     // A size it doesn't come in, a piece not in the look.
     expect(await addToBag(deps(), guest.id, session, look.id, [{ productId: a.id, size: "XXXL" }])).toEqual({ refused: "size" });
     expect(await addToBag(deps(), guest.id, session, look.id, [{ productId: "00000000-0000-0000-0000-000000000000", size: "M" }])).toEqual({ refused: "not_in_look" });

@@ -1,6 +1,8 @@
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createFakeProvider } from "@/connectors/conversation/fake";
+import { createGptLiveProvider } from "@/connectors/conversation/gpt-live/server";
+import { isPendingVoiceCall } from "@/connectors/conversation/gpt-live/shared";
 import type { CallProvider } from "@/connectors/conversation/types";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { addPhoto, finishPhoto } from "@/lib/photos-service";
@@ -334,6 +336,27 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
   it("Voice only is refused when there's no voice stylist, giving nothing away (6c)", async () => {
     expect(await startConversation(deps(), guest.id, "voice")).toEqual({ ok: false, reason: "voice_unavailable" });
     expect(await usedToday()).toBe(0);
+  });
+
+  it("a voice call still pending when it ends costs nothing at OpenAI (6d review)", async () => {
+    // GPT-Live's own provider: a pending call until the browser's offer, which never comes here.
+    const started = await startConversation(deps({ voice: createGptLiveProvider() }), guest.id, "voice");
+    if (!started.ok) throw new Error(started.reason);
+    expect(isPendingVoiceCall(started.call.callId)).toBe(true);
+    await db.from("sessions").update({ call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    expect(await endConversation(deps({ voice: createGptLiveProvider() }), guest.id, started.sessionId)).toEqual({ status: "ended" });
+    const { data: usage } = await db.from("usage").select("voice_seconds, openai_microdollars").eq("user_id", guest.id).single().throwOnError();
+    expect(usage!.voice_seconds).toBeGreaterThanOrEqual(60);
+    expect(Number(usage!.openai_microdollars)).toBe(0);
+  });
+
+  it("a failed settle still ends the call at the provider, then reports the failure (6d review)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    const broken = deps({ guard: { ...deps().guard, settleTime: async () => { throw new Error("pool full"); } } });
+    await expect(endConversation(broken, guest.id, started.sessionId)).rejects.toThrow("pool full");
+    expect(ended).toEqual([started.call.callId]);
+    expect(await row(started.sessionId)).toMatchObject({ status: "ended", call_id: null });
   });
 
   it("only the guest's own session can be ended", async () => {

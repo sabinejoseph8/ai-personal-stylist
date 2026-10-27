@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icons";
+import { NOT_NOW } from "@/components/ui/not-now";
 import { StatusChip } from "@/components/ui/status-chip";
 import { dollars } from "@/core/looks/budget";
 import type { OpenedLook, SavedLook } from "@/core/looks/saved";
@@ -15,8 +16,18 @@ import type { ShownItem } from "@/core/looks/shown";
 // full, or says why it no longer fits. Remove asks first. A piece from a session photo shows by name only:
 // the photo went when the session ended (Q2).
 
-const NOT_NOW = "That didn't work. Check your connection and try again.";
-const savedOn = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+const savedOn = (iso: string, timeZone?: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone });
+const noChange = () => () => {};
+
+/** "27 Oct" in the shopper's own time zone, which only their browser knows: the server renders the UTC date first (6d review). */
+function SavedOn({ iso }: { iso: string }) {
+  const text = useSyncExternalStore(
+    noChange,
+    () => savedOn(iso),
+    () => savedOn(iso, "UTC"),
+  );
+  return <time dateTime={iso}>{text}</time>;
+}
 
 function Picture({ item, photos, className }: { item: ShownItem; photos: Record<string, string>; className: string }) {
   const src = item.owned ? (item.kind === "wardrobe" ? photos[item.id] : null) : item.imageUrl;
@@ -101,7 +112,7 @@ function SavedCard({ look, photos, onRemoved }: { look: SavedLook; photos: Recor
           {look.name}
         </h2>
         <p className="type-small m-0 text-graphite">
-          Saved {savedOn(look.savedAt)} · <span className="price">{dollars(look.totalCents)}</span> to buy
+          Saved <SavedOn iso={look.savedAt} /> · <span className="price">{dollars(look.totalCents)}</span> to buy
         </p>
       </div>
       {state.kind === "checking" && (

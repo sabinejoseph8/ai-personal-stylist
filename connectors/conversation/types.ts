@@ -45,9 +45,10 @@ export type ConversationListener = (event: ConversationEvent) => void;
 export interface ConversationEngine {
   /**
    * Joins the call the server started. Resolves once connected. A voice call is only made when the
-   * browser joins (6c), so it resolves with the call's own id, which replaces the pending one.
+   * browser joins (6c), so it resolves with the call's own id, which replaces the pending one, and says
+   * it through `onCallId` as soon as the server has answered, before the call is connected (6d review).
    */
-  join(call: { callId: string; joinUrl: string }): Promise<void | { callId: string }>;
+  join(call: { callId: string; joinUrl: string }, options?: { onCallId?: (callId: string) => void }): Promise<void | { callId: string }>;
   /** Leaves the call. Safe to call more than once. */
   leave(): Promise<void>;
   setMuted(muted: boolean): void;

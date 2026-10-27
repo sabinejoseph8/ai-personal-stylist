@@ -133,6 +133,21 @@ test.describe("the stylist stage", () => {
     await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toHaveCount(0, { timeout: 15_000 });
   });
 
+  test("when the voice stylist can't stand in after a drop, the video stylist comes back by herself (6d review)", async ({ page }) => {
+    // The fake voice stylist is made unavailable for this test only (never possible on the live site).
+    await page.route("**/api/sessions", (route) =>
+      route.request().method() === "POST" ? route.continue({ headers: { ...route.request().headers(), "x-fake-voice": "unavailable" } }) : route.fallback(),
+    );
+    await inCall(page);
+    await playInCall(page, { type: "connection", state: "ended" });
+    // Voice refused, so the next try is video: back in the same session, with no portrait and no voice line.
+    await expect(state(page)).toHaveText("Listening", { timeout: 20_000 });
+    await expect(page.getByRole("img", { name: "Your stylist, in voice only" })).toHaveCount(0);
+    await expect(page.getByRole("status").filter({ hasText: "Continuing with voice" })).toHaveCount(0);
+    await expect.poll(async () => (await serverDb().from("sessions").select("engine").eq("user_id", guest.id).single()).data?.engine).toBe("video");
+    expect(await sessions()).toEqual([expect.objectContaining({ status: "active" })]);
+  });
+
   test("Not now explains that the conversation can't start without the microphone (R6)", async ({ page }) => {
     await fakeMicrophone(page, "allowed");
     await page.goto("/session");

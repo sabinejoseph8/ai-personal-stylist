@@ -31,9 +31,9 @@ export async function POST(request: Request) {
   if (!(await withinLimit(guest.db, "startSession"))) return refuse("too_many_starts");
   const { engine } = Body.parse(await request.json().catch(() => ({})));
 
-  // Browser tests only (never on the live site): the fake video stylist can be made busy.
-  const fakeVideo = fakeEngineAllowed() ? request.headers.get("x-fake-video") : null;
-  const result = await startConversation(sessionDeps(fakeVideo), guest.id, engine);
+  // Browser tests only (never on the live site): the fake video or voice stylist can be made to refuse.
+  const fake = fakeEngineAllowed() ? { video: request.headers.get("x-fake-video"), voice: request.headers.get("x-fake-voice") } : undefined;
+  const result = await startConversation(sessionDeps(fake), guest.id, engine);
   if (!result.ok) return refuse(result.reason);
   return Response.json({ sessionId: result.sessionId, resumed: result.resumed, engine: result.engine, because: result.because ?? null, call: result.call, seconds: result.seconds, endsBecause: result.endsBecause });
 }

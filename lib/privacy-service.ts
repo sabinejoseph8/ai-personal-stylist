@@ -50,6 +50,9 @@ export async function clearSessionNotes(db: SupabaseClient, guestId: string): Pr
 
 export type Permission = "wardrobePhotos" | "savingPreferences";
 
+type WardrobeRow = { id: string; name: string; category: string; details: unknown; photo_path: string | null; created_at: string };
+type AssetRow = { id: string; source: string; ownership: string | null; photo_path: string | null; created_at: string };
+
 /**
  * Turns a permission on or off (R64). Off asks first on the page, then deletes what it covered: every
  * wardrobe item and its photos (Q2), or every saved preference (Q3). On records the time.
@@ -83,6 +86,22 @@ async function photo(db: SupabaseClient, path: string | null): Promise<Uint8Arra
   return data ? new Uint8Array(await data.arrayBuffer()) : null;
 }
 
+/** Up to eight photos read at once, in order: one after another, a full wardrobe took seconds (6d review). */
+async function photosOf<T extends { id: string; photo_path: string | null }>(db: SupabaseClient, rows: T[], folder: string) {
+  const out: { row: T; file: { path: string; data: Uint8Array } | null }[] = [];
+  for (let i = 0; i < rows.length; i += 8) {
+    out.push(
+      ...(await Promise.all(
+        rows.slice(i, i + 8).map(async (row) => {
+          const bytes = await photo(db, row.photo_path);
+          return { row, file: bytes ? { path: `photos/${folder}/${row.id}.jpg`, data: bytes } : null };
+        }),
+      )),
+    );
+  }
+  return out;
+}
+
 /**
  * Download my data (R65, S9; Sabine's answer to Q1): a ZIP with data.json and a photos folder. What the
  * app keeps about the guest: the profile, saved preferences, permissions, wardrobe items and photos, saved
@@ -92,30 +111,20 @@ export async function exportData(db: SupabaseClient, guestId: string): Promise<U
   const sessionId = await openSessionId(db, guestId);
   const [profile, consents, wardrobe, saved, bag, notes, photos] = await Promise.all([
     loadProfile(db, guestId),
-    db.from("consents").select("wardrobe_photos_at, remember_preferences_at, camera_explained_at").eq("user_id", guestId).maybeSingle().throwOnError(),
-    db.from("wardrobe_items").select("id, name, category, details, photo_path, created_at").eq("user_id", guestId).eq("draft", false).order("created_at").throwOnError(),
+    db.from("consents").select("wardrobe_photos_at, remember_preferences_at").eq("user_id", guestId).maybeSingle().throwOnError(),
+    db.from("wardrobe_items").select("id, name, category, details, photo_path, created_at").eq("user_id", guestId).eq("draft", false).order("created_at").returns<WardrobeRow[]>().throwOnError(),
     db.from("saved_looks").select("look, saved_at").eq("user_id", guestId).order("saved_at").throwOnError(),
     listBag({ db, catalog: createSampleCatalog(db) }, guestId),
     sessionId ? loadNotes(db, sessionId).catch(() => null) : Promise.resolve(null),
     sessionId
-      ? db.from("session_assets").select("id, source, ownership, recognized_details, photo_path, created_at").eq("session_id", sessionId).eq("user_id", guestId).eq("status", "ready").order("created_at").throwOnError()
-      : Promise.resolve({ data: [] as never[] }),
+      ? db.from("session_assets").select("id, source, ownership, photo_path, created_at").eq("session_id", sessionId).eq("user_id", guestId).eq("status", "ready").order("created_at").returns<AssetRow[]>().throwOnError()
+      : Promise.resolve({ data: [] as AssetRow[] }),
   ]);
-  const files: { path: string; data: Uint8Array }[] = [];
-  const wardrobeOut = [];
-  for (const w of wardrobe.data ?? []) {
-    const bytes = await photo(db, w.photo_path as string | null);
-    const file = bytes ? `photos/wardrobe/${w.id}.jpg` : null;
-    if (bytes && file) files.push({ path: file, data: bytes });
-    wardrobeOut.push({ name: w.name, category: w.category, details: w.details, added: w.created_at, photo: file });
-  }
-  const photosOut = [];
-  for (const p of photos.data ?? []) {
-    const bytes = await photo(db, p.photo_path as string | null);
-    const file = bytes ? `photos/session/${p.id}.jpg` : null;
-    if (bytes && file) files.push({ path: file, data: bytes });
-    photosOut.push({ from: p.source, whose: p.ownership, added: p.created_at, photo: file });
-  }
+  const wardrobePhotos = await photosOf(db, wardrobe.data ?? [], "wardrobe");
+  const sessionPhotos = await photosOf(db, photos.data ?? [], "session");
+  const files = [...wardrobePhotos, ...sessionPhotos].flatMap((p) => (p.file ? [p.file] : []));
+  const wardrobeOut = wardrobePhotos.map(({ row: w, file }) => ({ name: w.name, category: w.category, details: w.details, added: w.created_at, photo: file?.path ?? null }));
+  const photosOut = sessionPhotos.map(({ row: p, file }) => ({ from: p.source, whose: p.ownership, added: p.created_at, photo: file?.path ?? null }));
   const data = {
     about: "Your data from the AI Personal Stylist demo. Audio, the words you said and camera video are never kept, so they aren't here.",
     exported: new Date().toISOString(),

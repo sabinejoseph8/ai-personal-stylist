@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import { buttonClasses } from "@/components/ui/button";
+import { NOT_NOW } from "@/components/ui/not-now";
 import { itemsKey } from "@/core/looks/saved";
 import type { ShownLook } from "@/core/looks/shown";
 
@@ -19,7 +20,6 @@ type Keeping = {
   add: (sessionId: string, look: ShownLook, picks: { productId: string; size: string }[]) => Promise<true | string>;
 };
 
-const NOT_NOW = "That didn't work. Check your connection and try again.";
 const Context = createContext<Keeping | null>(null);
 
 export function useKeeping() {

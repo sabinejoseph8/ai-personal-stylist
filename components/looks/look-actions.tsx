@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
+import { selectClasses } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/toast";
 import { dollars } from "@/core/looks/budget";
@@ -14,8 +15,6 @@ import { useKeeping } from "./keeping";
 // checked, revised or needs a new check. Save look then reads Saved, with "Look saved". Add to bag opens a
 // sheet with the look's sample products, each ticked, in the profile's size when it comes in it; the
 // shopper's own pieces say "You own this" and can't be added (R61).
-
-const selectClass = "focus-ring type-body min-h-touch rounded-control border border-control-edge bg-page px-3 text-ink";
 
 function BagSheet({ sessionId, look, number, disabled }: { sessionId: string; look: ShownLook; number: number; disabled: boolean }) {
   const keeping = useKeeping();
@@ -67,7 +66,7 @@ function BagSheet({ sessionId, look, number, disabled }: { sessionId: string; lo
                   </label>
                   <select
                     aria-label={`Size for ${item.name}`}
-                    className={selectClass}
+                    className={selectClasses}
                     value={pick.size}
                     disabled={!pick.on}
                     onChange={(e) => setPicks({ ...picks, [item.id]: { ...pick, size: e.target.value } })}
