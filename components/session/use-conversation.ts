@@ -108,6 +108,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const engine = useRef<ConversationEngine | null>(null);
   // Stops hearing the current call: a call left for another (a switch, 6c, or a reconnect) mustn't end the new one with its late "ended".
   const unlisten = useRef<(() => void) | null>(null);
+  // The server pausing the call just left: a switch waits for it, so the next call has its time back (6c fix).
+  const pausing = useRef<Promise<void>>(Promise.resolve());
   const live = useRef<{ sessionId: string; callId: string; ending: boolean } | null>(null);
   const shown = useRef(false);
   // R13: when the call's time runs out, and which limit ends it. R14: each Start, End or Try again
@@ -174,7 +176,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     unlisten.current?.();
     unlisten.current = null;
     void e?.leave();
-    void endOnServer(current.sessionId, true, false, current.callId);
+    pausing.current = endOnServer(current.sessionId, true, false, current.callId);
     return true;
   }
 
@@ -211,6 +213,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       if (!(await waitUntilOnline(OFFLINE_WAIT_MS))) break;
       await new Promise((r) => setTimeout(r, RETRY_MS * (i + 1)));
       if (attempt.current !== mine || !shown.current) return;
+      await pausing.current;
       const outcome = await connect({ reconnecting: true, engine: wanted.current });
       if (outcome.ok && attempt.current === mine && toVoice) {
         setVoiceWhy("dropped");
@@ -269,6 +272,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     await new Promise((r) => setTimeout(r, SWITCH_WAIT_MS));
     const mine = ++attempt.current;
     leaveCall();
+    await pausing.current;
     const outcome = await connect({ engine: "voice" });
     setSwitchingTo(null);
     if (attempt.current !== mine) return;
@@ -285,6 +289,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     setSwitchingTo("video");
     const mine = ++attempt.current;
     leaveCall();
+    await pausing.current;
     const outcome = await connect({ engine: "video" });
     setSwitchingTo(null);
     if (attempt.current === mine && !outcome.ok) settle(outcome);

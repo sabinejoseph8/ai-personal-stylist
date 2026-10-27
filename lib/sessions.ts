@@ -97,8 +97,9 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
   const { data: claimed } = await claim.select("id").throwOnError();
 
   if (claimed?.length && s.call_id) {
-    // Ending or hard-deleting at Tavus can fail; the id is kept so the daily job tries again (review batch 1).
-    await endAtProvider(deps, s.id, s.call_id);
+    // The unused time goes back first, before the provider is asked to end the call: a start arriving
+    // meanwhile (Voice only switching from video, 6c) was refused as "today's 10 minutes used" while
+    // Tavus took a second to end the call (found on Sabine's iPhone, 27 Oct 2026).
     if (s.reserved_seconds !== null && s.reserved_day) {
       const ran = s.call_started_at ? (usedUntil - Date.parse(s.call_started_at)) / 1000 : 0;
       const used = Math.min(s.reserved_seconds, Math.max(0, ran));
@@ -106,6 +107,8 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
       // Voice only is paid by the second from the OpenAI account, against the app's OpenAI stop (6c).
       if (s.engine === "voice" && used > 0) await deps.guard.recordAi(s.user_id, "openai", used * VOICE_USD_PER_SECOND);
     }
+    // Ending or hard-deleting at Tavus can fail; the id is kept so the daily job tries again (review batch 1).
+    await endAtProvider(deps, s.id, s.call_id);
   } else if (!claimed?.length && status === "ended") {
     // Another request finished the call first: End still ends the session.
     await deps.db.from("sessions").update({ status: "ended", ended_at: now }).eq("id", s.id).throwOnError();
