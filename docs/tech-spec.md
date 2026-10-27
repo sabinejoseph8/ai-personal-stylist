@@ -342,6 +342,8 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**The first live voice calls (27 Oct 2026, C.1 again).** Two causes, found with throwaway test guests against the live site: the live site's OpenAI key was missing or mistyped in Vercel (fixed by Sabine: a new key under OPENAI_API_KEY), and the voice route trimmed the browser's offer, cutting its final line break, which OpenAI refuses as "invalid_offer" (fixed: the offer passes through untouched, with a test). The voice route now reports OpenAI's status and short error name (never the key or message text), so a refusal can be read without the live logs, and the key is trimmed of stray spaces.
+
 **The switch's time (fix, 27 Oct 2026, from Sabine's iPhone check, C.1).** Voice only said "You've used today's 10 minutes" after 4 minutes: the video call was still being ended at Tavus when the voice call asked for its time, and the call's whole reserved 10 minutes were only given back after Tavus answered. Now a call's unused time goes back first, before the provider is asked to end it, and a switch (and a reconnect) waits for the server to pause the call it left before starting the next. A test holds Tavus's end open while the voice call starts.
 
 **Voice only standing in for video (6c, pull request 2 of 2).**
