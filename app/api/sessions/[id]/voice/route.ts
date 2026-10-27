@@ -22,7 +22,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
   // apart from no credit or no access without the live site's logs (27 Oct 2026).
   if (!result.ok)
     return Response.json(
-      { error: "The voice stylist couldn't start. Please try again.", ...(result.reason === "unavailable" ? { providerStatus: result.status } : {}) },
+      { error: "The voice stylist couldn't start. Please try again.", ...(result.reason === "unavailable" ? { providerStatus: result.status, providerCode: result.code, providerParam: result.param } : {}) },
       { status: result.reason === "no_call" ? 409 : 503 },
     );
   return Response.json({ callId: result.callId, sdp: result.sdp });
