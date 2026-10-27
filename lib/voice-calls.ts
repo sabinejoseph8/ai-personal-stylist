@@ -35,9 +35,11 @@ export async function attachVoiceCall(deps: VoiceCallDeps, guestId: string, sess
   const made = await deps.create(offer, context);
   if (!made.ok) return { ok: false, reason: "unavailable", status: made.status, code: made.code, param: made.param };
   const real = `${VOICE_PREFIX}${made.sessionId}`;
+  // The call's time counts from here, when OpenAI started it, not from the pending reservation (6d review).
+  const now = new Date().toISOString();
   const { data: claimed } = await deps.db
     .from("sessions")
-    .update({ call_id: real, last_activity_at: new Date().toISOString() })
+    .update({ call_id: real, call_started_at: now, last_activity_at: now })
     .eq("id", sessionId)
     .eq("user_id", guestId)
     .eq("status", "active")

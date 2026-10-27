@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.47
+**Status:** Living document, version 1.48
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 27 Oct 2026 | 6d plan approved as recommended. Q1: a voice stylist that can't start sends the next Start or Try again back to video (after a dropped video call, the reconnect tries video next), and the server falls back to voice again only if video still can't; a shopper who chose voice keeps it through a plain network blip. Q2: the welcome screen's resting answer is remembered for a minute per server, so the resting screen can be up to a minute late | Sabine | tech spec 1.49 |
 | 26 Oct 2026 | 6c plan approved as recommended, in two pull requests. Q1: the voice-only portrait is a still of Anna saved into the site from her Tavus preview. Q2: the demo is "resting" when the month's Claude stop is reached, or both the video and OpenAI stops are. Q3: check GPT-Live's docs and keep the browser to the least it needs; found and used: OpenAI limits the browser's events (only context, exact lines, mute and close), and its trusted server connection closes calls, though the live site can't hold it for a whole call. Q4 (owed from the limit-lines plan): leave the cost per session for now and revisit in 7a. The Tavus webhook stays in Phase 7 (the full code review's Q4) | Sabine | tech spec 1.46 |
 | 26 Oct 2026 | 6b plan approved as recommended. Q1: Download my data is a ZIP (data.json and the photos), rather than a JSON file with 30-minute photo links. Q2: turning off wardrobe photos deletes the wardrobe after asking, rather than only stopping new items. Q3: saving preferences in setup records the permission, and turning it off deletes them, rather than a separate permission card. Also: 6b and 6c are built before one iPhone check for 6a, 6b and 6c, rather than a check after each group (likely over two evenings, as the 10 minutes a day won't cover all three) | Sabine | tech spec 1.45 |
 | 26 Oct 2026 | 6a plan approved as recommended. Q1: Open checks a saved look on the Saved looks page against the saved profile alone (about 2 cents), rather than bringing it into the session. Q2: a look with the shopper's own session photo is saved with that piece by name and no photo, rather than asking to save it to the wardrobe first. Q3: the bag takes pieces only from a look whose check passed on the current requirements, with no new Claude check, rather than a new check per piece. Not in 6a: the stylist opening saved looks by voice | Sabine | tech spec 1.44 |
@@ -428,6 +429,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.48 (27 Oct 2026):** 6d done, and Phase 6 complete: the Phase 6 review's 15 fixes (Q1 and Q2; tech spec 1.49).
 - **1.47 (27 Oct 2026):** 6a, 6b and 6c done: the combined iPhone check passed A to F, after the first live voice calls found a missing key in Vercel and a trimmed offer (both fixed; tech spec 1.48). 6d, the Phase 6 code review, next.
 - **1.46 (26 Oct 2026):** 6c built in full (two pull requests); its iPhone check is part of the combined 6a to 6c check.
 - **1.45 (26 Oct 2026):** The 6c decisions (Q1 to Q4).

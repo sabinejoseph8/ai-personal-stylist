@@ -63,7 +63,7 @@ export function createGptLiveEngine(): ConversationEngine {
   }
 
   return {
-    async join(target) {
+    async join(target, options) {
       ended = false;
       emit({ type: "connection", state: "connecting" });
       try {
@@ -91,15 +91,24 @@ export function createGptLiveEngine(): ConversationEngine {
       const chan = pc.createDataChannel("oai-events");
       channel = chan;
       chan.addEventListener("message", (m) => onMessage(String(m.data)));
+      // The call has started once OpenAI says so on the channel, within 15 seconds. A join that fails
+      // before then stops the wait, so nothing rejects later with nobody listening (6d review).
+      let stopWaiting = () => {};
       const started = new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error("the voice call didn't start")), 15_000);
-        chan.addEventListener("message", (m) => {
+        const onStarted = (m: MessageEvent) => {
           if (String(m.data).includes('"session.started"')) {
-            clearTimeout(timer);
+            stopWaiting();
             resolve();
           }
-        });
+        };
+        stopWaiting = () => {
+          clearTimeout(timer);
+          chan.removeEventListener("message", onStarted);
+        };
+        chan.addEventListener("message", onStarted);
       });
+      void started.catch(() => undefined);
       try {
         await pc.setLocalDescription(await pc.createOffer());
         // All candidates in the offer: the server sends it to OpenAI once.
@@ -117,11 +126,13 @@ export function createGptLiveEngine(): ConversationEngine {
         });
         const answer = (await res.json().catch(() => null)) as { sdp?: string; callId?: string } | null;
         if (!res.ok || !answer?.sdp || !answer.callId) throw new Error("the voice call couldn't be created");
+        options?.onCallId?.(answer.callId);
         await pc.setRemoteDescription({ type: "answer", sdp: answer.sdp });
         await started;
         emit({ type: "connection", state: "connected" });
         return { callId: answer.callId };
       } catch (e) {
+        stopWaiting();
         ended = true;
         cleanup();
         throw e;

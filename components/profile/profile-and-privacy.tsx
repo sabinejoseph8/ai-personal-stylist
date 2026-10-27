@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
+import { NOT_NOW } from "@/components/ui/not-now";
 
 // Profile and privacy (6b; R63 to R66, design 5.8). Your profile, with Edit your profile. Saved
 // preferences, each with Delete. Permissions: the microphone and camera are the browser's, so the page
 // says how to change them; wardrobe photos and saving preferences are the app's, and turning one off
 // deletes what it covered (Sabine's answers to Q2 and Q3). Your data: Clear this session's notes,
 // Download my data (a ZIP, Q1) and Delete all my data, which returns to the welcome screen (S19).
-
-const NOT_NOW = "That didn't work. Check your connection and try again.";
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (

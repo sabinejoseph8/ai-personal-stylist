@@ -3,7 +3,7 @@ import Link from "next/link";
 import { NoteLine, NotebookPage } from "@/components/notebook/notebook-page";
 import { buttonClasses } from "@/components/ui/button";
 import { StartDemo } from "@/components/welcome/start-demo";
-import { demoResting, nextMonthFirst } from "@/lib/budget-guard";
+import { demoRestingRemembered, nextMonthFirst } from "@/lib/budget-guard";
 import { currentGuest } from "@/lib/guest";
 import { serverKeyDb } from "@/lib/supabase/admin";
 import { describeBudget, describePreference, isEmpty } from "@/lib/profile";
@@ -109,7 +109,8 @@ export default async function Home() {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   // The resting state (R13, TQ4, Sabine's answer to Q2 in 6c): when the month's allowance can't run a
   // demo, Try the demo gives way to a line, and How it was built becomes the main button (design 5.1).
-  const resting = await demoResting(serverKeyDb()).catch(() => false);
+  // The answer is remembered for a minute (6d review), so the resting screen can be up to a minute late.
+  const resting = await demoRestingRemembered(serverKeyDb()).catch(() => false);
 
   return (
     <main className="mx-auto grid max-w-5xl gap-8 px-4 py-10 tablet:px-6 desktop:grid-cols-2 desktop:grid-rows-[auto_1fr] desktop:gap-x-12 desktop:px-8 desktop:py-16">

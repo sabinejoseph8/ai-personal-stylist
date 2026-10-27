@@ -5,15 +5,14 @@ import { useState } from "react";
 import { Banner } from "@/components/ui/banner";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
+import { NOT_NOW } from "@/components/ui/not-now";
+import { selectClasses } from "@/components/ui/select";
 import { dollars } from "@/core/looks/budget";
 import { type BagItem, DEMO_ONLY } from "@/core/looks/saved";
 
 // The demo bag (6a; R61, R62, design 4: Demo bag). The banner, then each piece with its photo, name,
 // size, price, "Sample product" and Remove, then the total and Checkout, disabled with the reason under
 // it. The server refuses checkout too. Nothing here is in stock, on sale or sold by a real retailer (R62).
-
-const selectClass = "focus-ring type-body min-h-touch rounded-control border border-control-edge bg-page px-3 text-ink";
-const NOT_NOW = "That didn't work. Check your connection and try again.";
 
 export function DemoBag({ initialItems }: { initialItems: BagItem[] }) {
   const [items, setItems] = useState(initialItems);
@@ -62,7 +61,7 @@ export function DemoBag({ initialItems }: { initialItems: BagItem[] }) {
                 <label className="type-small flex items-center gap-2 text-graphite">
                   Size
                   <select
-                    className={selectClass}
+                    className={selectClasses}
                     value={item.size}
                     disabled={busy === item.id}
                     onChange={(e) =>

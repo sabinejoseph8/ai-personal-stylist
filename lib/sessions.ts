@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isVoiceCall, VOICE_USD_PER_SECOND } from "@/connectors/conversation/gpt-live/shared";
+import { isPendingVoiceCall, isVoiceCall, VOICE_USD_PER_SECOND } from "@/connectors/conversation/gpt-live/shared";
 import type { CallProvider, Engine } from "@/connectors/conversation/types";
 import type { BudgetGuard, Refusal } from "@/lib/budget-guard";
 import { deleteEndedSessionPhotos, deleteSessionPhotos } from "@/lib/photos-service";
@@ -99,16 +99,24 @@ async function finishCall(deps: SessionDeps, s: Session, status: "paused" | "end
   if (claimed?.length && s.call_id) {
     // The unused time goes back first, before the provider is asked to end the call: a start arriving
     // meanwhile (Voice only switching from video, 6c) was refused as "today's 10 minutes used" while
-    // Tavus took a second to end the call (found on Sabine's iPhone, 27 Oct 2026).
+    // Tavus took a second to end the call (found on Sabine's iPhone, 27 Oct 2026). A failure here mustn't
+    // leave the call running: the provider is still asked to end it, then the failure is reported (6d review).
+    let notSettled: unknown;
     if (s.reserved_seconds !== null && s.reserved_day) {
-      const ran = s.call_started_at ? (usedUntil - Date.parse(s.call_started_at)) / 1000 : 0;
-      const used = Math.min(s.reserved_seconds, Math.max(0, ran));
-      await deps.guard.settleTime(s.user_id, { engine: s.engine, seconds: s.reserved_seconds, day: s.reserved_day }, used);
-      // Voice only is paid by the second from the OpenAI account, against the app's OpenAI stop (6c).
-      if (s.engine === "voice" && used > 0) await deps.guard.recordAi(s.user_id, "openai", used * VOICE_USD_PER_SECOND);
+      try {
+        const ran = s.call_started_at ? (usedUntil - Date.parse(s.call_started_at)) / 1000 : 0;
+        const used = Math.min(s.reserved_seconds, Math.max(0, ran));
+        await deps.guard.settleTime(s.user_id, { engine: s.engine, seconds: s.reserved_seconds, day: s.reserved_day }, used);
+        // Voice only is paid by the second from the OpenAI account, against the app's OpenAI stop (6c),
+        // once the browser's offer has made the call: a call still pending cost nothing (6d review).
+        if (s.engine === "voice" && used > 0 && !isPendingVoiceCall(s.call_id)) await deps.guard.recordAi(s.user_id, "openai", used * VOICE_USD_PER_SECOND);
+      } catch (e) {
+        notSettled = e;
+      }
     }
     // Ending or hard-deleting at Tavus can fail; the id is kept so the daily job tries again (review batch 1).
     await endAtProvider(deps, s.id, s.call_id);
+    if (notSettled) throw notSettled;
   } else if (!claimed?.length && status === "ended") {
     // Another request finished the call first: End still ends the session.
     await deps.db.from("sessions").update({ status: "ended", ended_at: now }).eq("id", s.id).throwOnError();
@@ -216,17 +224,23 @@ export async function openSession(deps: SessionDeps, guestId: string): Promise<S
  * starts instead, saying why (R9, 6c); if voice can't either, the video refusal stands.
  */
 export async function startConversation(deps: SessionDeps, guestId: string, engine: Engine = "video"): Promise<StartResult> {
-  const first = await startCall(deps, guestId, engine);
-  if (first.ok || engine !== "video" || !deps.voice) return first;
-  const because = FALLBACK[first.reason];
-  if (!because) return first;
-  const voice = await startCall(deps, guestId, "voice");
-  return voice.ok ? { ...voice, because } : first;
-}
-
-async function startCall(deps: SessionDeps, guestId: string, engine: Engine): Promise<StartResult> {
   const provider = engine === "voice" ? deps.voice : deps.provider;
   if (!provider) return { ok: false, reason: "voice_unavailable" };
+  // The session is settled once, whichever call then starts in it (6d review).
+  const { session, resumed } = await settleSession(deps, guestId);
+  let result = await placeCall(deps, guestId, session, resumed, provider);
+  const because = !result.ok && engine === "video" && deps.voice ? FALLBACK[result.reason] : undefined;
+  if (because && deps.voice) {
+    const voice = await placeCall(deps, guestId, session, resumed, deps.voice);
+    if (voice.ok) result = { ...voice, because };
+  }
+  // A session opened for a call that couldn't start goes, so none is left empty (review batch 1).
+  if (!result.ok && !resumed) await deps.db.from("sessions").delete().eq("id", session.id).throwOnError();
+  return result;
+}
+
+/** The guest's open session, or a new one, with any call still running in it ended first. */
+async function settleSession(deps: SessionDeps, guestId: string): Promise<{ session: Session; resumed: boolean }> {
   await endLeftBehindCalls(deps, guestId);
   // Photos of a session that ended from being idle (Sabine's answer to Q4 in 3a).
   await deleteEndedSessionPhotos(deps.db, guestId).catch((e) => console.error(`deleting old photos failed: ${e instanceof Error ? e.message : e}`));
@@ -242,13 +256,13 @@ async function startCall(deps: SessionDeps, guestId: string, engine: Engine): Pr
   // last activity plus Tavus's 30 seconds, as a left-behind call does: a phone that dropped the call
   // and resumed later was charged for the whole time away (review batch 1, A2).
   if (session.call_id) await finishCall(deps, session, "paused", lastUse(session));
+  return { session, resumed };
+}
 
+/** Reserves the day's time and starts a call on `provider` for the session; a call that can't start gives the time back. */
+async function placeCall(deps: SessionDeps, guestId: string, session: Session, resumed: boolean, provider: CallProvider): Promise<StartResult> {
   const reserved = await deps.guard.reserveTime(guestId, provider.engine);
   if (!reserved.ok) return { ok: false, reason: reserved.reason };
-  const giveBack = async () => {
-    await deps.guard.settleTime(guestId, reserved.reservation, 0);
-    if (!resumed) await deps.db.from("sessions").delete().eq("id", session.id).throwOnError();
-  };
   // A start that throws (Tavus unreachable, a reply that isn't JSON) gives the time back too: left
   // reserved, it cost the shopper their day and the month 10 minutes with no call made (review batch 1, A1).
   let call: Awaited<ReturnType<CallProvider["start"]>>;
@@ -259,7 +273,7 @@ async function startCall(deps: SessionDeps, guestId: string, engine: Engine): Pr
     call = { ok: false, reason: "unavailable" };
   }
   if (!call.ok) {
-    await giveBack();
+    await deps.guard.settleTime(guestId, reserved.reservation, 0);
     if (provider.engine === "voice") return { ok: false, reason: "voice_unavailable" };
     if (call.reason === "out_of_minutes") return { ok: false, reason: "monthly_video_used" };
     return { ok: false, reason: call.reason === "busy" ? "video_busy" : "video_unavailable" };

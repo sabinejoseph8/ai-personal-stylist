@@ -214,13 +214,19 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       await new Promise((r) => setTimeout(r, RETRY_MS * (i + 1)));
       if (attempt.current !== mine || !shown.current) return;
       await pausing.current;
-      const outcome = await connect({ reconnecting: true, engine: wanted.current });
-      if (outcome.ok && attempt.current === mine && toVoice) {
-        setVoiceWhy("dropped");
-        engine.current?.say(SWITCH_LINE);
+      const kind = wanted.current;
+      const outcome = await connect({ reconnecting: true, engine: kind });
+      if (attempt.current !== mine) return;
+      if (outcome.ok) {
+        if (toVoice && kind === "voice") {
+          setVoiceWhy("dropped");
+          engine.current?.say(SWITCH_LINE);
+        }
+        return;
       }
-      if (outcome.ok || attempt.current !== mine) return;
-      if (outcome.final) return settle(outcome);
+      // A voice stylist who couldn't stand in (no key, the day's AI used, OpenAI down) has put `wanted`
+      // back to video (connect), so the next try is the video call that dropped (6d review).
+      if (outcome.final && !(toVoice && kind === "voice")) return settle(outcome);
     }
     if (attempt.current !== mine || !shown.current) return;
     // The session isn't over: the notes stay, and Try again picks it up (R14).
@@ -262,37 +268,41 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
 
   /**
    * Voice only, mid-call (6c; R9, S3): the video stylist says the switch line, her call ends, and the
-   * voice stylist picks up. Notes and looks don't change: they belong to the session, not the call.
+   * voice stylist picks up. Turn video on is the reverse. Notes and looks don't change: they belong to
+   * the session, not the call. One sequence for both ways (6d review).
    */
-  async function switchToVoice() {
-    wanted.current = "voice";
+  async function switchTo(kind: Engine) {
+    wanted.current = kind;
     if (flow !== "live" || !live.current) return;
-    setSwitchingTo("voice");
-    engine.current?.say(SWITCH_LINE);
-    await new Promise((r) => setTimeout(r, SWITCH_WAIT_MS));
+    setSwitchingTo(kind);
+    if (kind === "voice") {
+      // She says the line on the call that's live now. A call that drops while she says it is taken over
+      // by dropped(), which carries on by voice itself: it isn't switched a second time (6d review).
+      const current = live.current;
+      engine.current?.say(SWITCH_LINE);
+      await new Promise((r) => setTimeout(r, SWITCH_WAIT_MS));
+      if (live.current !== current) return setSwitchingTo(null);
+    }
     const mine = ++attempt.current;
     leaveCall();
     await pausing.current;
-    const outcome = await connect({ engine: "voice" });
+    const outcome = await connect({ engine: kind });
     setSwitchingTo(null);
     if (attempt.current !== mine) return;
-    if (outcome.ok) {
+    if (!outcome.ok) return settle(outcome);
+    if (kind === "voice") {
       setVoiceWhy((was) => (was === "busy" || was === "unavailable" || was === "resting" ? was : "chosen"));
       engine.current?.say(PICK_UP_LINE);
-    } else settle(outcome);
+    }
   }
 
-  /** Turn video on (S3): the voice call ends and the video stylist picks up. */
-  async function switchToVideo() {
-    wanted.current = "video";
-    if (flow !== "live" || !live.current) return;
-    setSwitchingTo("video");
-    const mine = ++attempt.current;
-    leaveCall();
-    await pausing.current;
-    const outcome = await connect({ engine: "video" });
-    setSwitchingTo(null);
-    if (attempt.current === mine && !outcome.ok) settle(outcome);
+  /**
+   * A voice call that couldn't start (refused, or its offer turned away) isn't asked for again: the next
+   * Start or Try again asks for video, and the server falls back to voice again only if video still can't
+   * (6d review; Sabine's answer to Q1). A shopper who chose voice keeps it through a plain network blip.
+   */
+  function backToVideo(kind: Engine) {
+    if (kind === "voice") wanted.current = "video";
   }
 
   async function connect({ reconnecting = false, engine: kind = "video" as Engine } = {}): Promise<Outcome> {
@@ -318,6 +328,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     if (!res.ok || !data?.call) {
       // A refusal (time used, the stylist busy, too many starts) won't change by trying again.
       const final = [401, 409, 429, 503].includes(res.status);
+      backToVideo(kind);
       return { ok: false, final, message: data?.error ?? NO_CONNECTION, reason: data?.reason };
     }
 
@@ -336,10 +347,15 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     unlisten.current?.();
     unlisten.current = stopListening;
     e.attach({ video: video.current, audio: audio.current });
+    // A voice call is made as it's joined, so it gets its own id (6c), told as soon as the server has it,
+    // so a pause sent meanwhile (the page hidden) names the right call (6d review).
+    const rename = (callId: string) => {
+      const current = live.current;
+      if (current && current.callId === data.call.callId) current.callId = callId;
+    };
     try {
-      const joined = await e.join(data.call);
-      // A voice call is made as it's joined, so it now has its own id (6c).
-      if (joined?.callId && live.current?.callId === data.call.callId) live.current.callId = joined.callId;
+      const joined = await e.join(data.call, { onCallId: rename });
+      if (joined?.callId) rename(joined.callId);
       // The shopper left the page while the call was connecting: pause it straight away.
       if (!shown.current) {
         live.current = null;
@@ -363,6 +379,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       // Leave the call that couldn't join, so the next try can make a new one (Phase 2 review).
       await e.leave();
       void endOnServer(data.sessionId, true);
+      backToVideo(kindNow);
       return { ok: false, final: false, message: "The call couldn't connect. Please try again." };
     }
   }
@@ -430,8 +447,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     switchingTo,
     /** Why voice only, for the line under the stage (6c). */
     voiceWhy,
-    switchToVoice,
-    switchToVideo,
+    switchToVoice: () => switchTo("voice"),
+    switchToVideo: () => switchTo("video"),
     sessionId,
     problem,
     /** A dropped call couldn't be brought back: the button reads Try again (R14). */
