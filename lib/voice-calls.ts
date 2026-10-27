@@ -12,7 +12,8 @@ export type VoiceCallDeps = {
   close: (callId: string) => Promise<void>;
 };
 
-export type AttachResult = { ok: true; callId: string; sdp: string } | { ok: false; reason: "no_call" | "unavailable" };
+/** `status`: OpenAI's refusal code, such as 401 for a key it doesn't accept: a number, never the key. */
+export type AttachResult = { ok: true; callId: string; sdp: string } | { ok: false; reason: "no_call" } | { ok: false; reason: "unavailable"; status: number };
 
 /**
  * Creates the call for the guest's open session whose pending voice call is `callId`, telling the
@@ -25,7 +26,7 @@ export async function attachVoiceCall(deps: VoiceCallDeps, guestId: string, sess
   if (!data) return { ok: false, reason: "no_call" };
   const context = await sessionContext(deps.db, guestId, sessionId).catch(() => null);
   const made = await deps.create(offer, context);
-  if (!made.ok) return { ok: false, reason: "unavailable" };
+  if (!made.ok) return { ok: false, reason: "unavailable", status: made.status };
   const real = `${VOICE_PREFIX}${made.sessionId}`;
   const { data: claimed } = await deps.db
     .from("sessions")
