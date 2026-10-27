@@ -50,7 +50,7 @@ describe.skipIf(!canRunDatabaseTests)("joining a voice call", () => {
       await other.remove();
     }
     expect(await attachVoiceCall(deps(), guest.id, session, "voice:live_9", "offer-sdp")).toEqual({ ok: false, reason: "no_call" });
-    expect(await attachVoiceCall(deps(false), guest.id, session, pending, "offer-sdp")).toEqual({ ok: false, reason: "unavailable" });
+    expect(await attachVoiceCall(deps(false), guest.id, session, pending, "offer-sdp")).toEqual({ ok: false, reason: "unavailable", status: 503 });
     expect((await db.from("sessions").select("call_id").eq("id", session).single()).data?.call_id).toBe(pending);
   });
 

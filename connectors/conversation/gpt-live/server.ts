@@ -17,11 +17,13 @@ export const VOICE_INSTRUCTIONS = `${stylist.system_prompt} You are now in voice
 
 /** Removes the OpenAI key from any text before it's logged. */
 function scrub(text: string) {
-  const key = process.env.OPENAI_API_KEY;
+  const key = process.env.OPENAI_API_KEY?.trim();
   return key ? text.split(key).join("[hidden]") : text;
 }
 
-const client = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 0, timeout: 20_000 });
+/** The key, without stray spaces or line breaks a copy and paste can bring into a setting. */
+const apiKey = () => process.env.OPENAI_API_KEY?.trim();
+const client = () => new OpenAI({ apiKey: apiKey(), maxRetries: 0, timeout: 20_000 });
 
 /**
  * Creates the GPT-Live call for the browser's offer. `context` is what the stylist knows so far, read
@@ -60,7 +62,7 @@ async function closeVoiceCall(sessionId: string) {
   await new Promise<void>((resolve, reject) => {
     // Node's WebSocket (undici) takes headers as an extension of the standard options.
     const Socket = WebSocket as unknown as new (url: string, init: { headers: Record<string, string> }) => WebSocket;
-    const ws = new Socket(url, { headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` } });
+    const ws = new Socket(url, { headers: { Authorization: `Bearer ${apiKey()}` } });
     const timer = setTimeout(() => {
       ws.close();
       resolve();

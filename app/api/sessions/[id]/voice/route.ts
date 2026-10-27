@@ -18,6 +18,12 @@ export async function POST(request: Request, ctx: RouteContext<"/api/sessions/[i
   if (!body.success) return Response.json({ error: "That request isn't valid." }, { status: 400 });
   const provider = createGptLiveProvider();
   const result = await attachVoiceCall({ db: serverKeyDb(), create: createVoiceCall, close: (callId) => provider.end(callId) }, guest.id, id, body.data.callId, body.data.sdp);
-  if (!result.ok) return Response.json({ error: "The voice stylist couldn't start. Please try again." }, { status: result.reason === "no_call" ? 409 : 503 });
+  // OpenAI's refusal code goes with the answer (a number, never the key), so a refused key can be told
+  // apart from no credit or no access without the live site's logs (27 Oct 2026).
+  if (!result.ok)
+    return Response.json(
+      { error: "The voice stylist couldn't start. Please try again.", ...(result.reason === "unavailable" ? { providerStatus: result.status } : {}) },
+      { status: result.reason === "no_call" ? 409 : 503 },
+    );
   return Response.json({ callId: result.callId, sdp: result.sdp });
 }
