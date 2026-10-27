@@ -309,6 +309,28 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(resting).toMatchObject({ ok: true, engine: "voice", because: "resting" });
   });
 
+  it("a switch's voice call gets its time even while the video call is still being ended at Tavus (found on Sabine's iPhone, 27 Oct 2026)", async () => {
+    // Tavus takes a moment to end a call: here it waits until the voice call has started.
+    let release = () => {};
+    const slow = new Promise<void>((r) => (release = r));
+    let ending = () => {};
+    const endCalled = new Promise<void>((r) => (ending = r));
+    const slowVideo: CallProvider = { ...createFakeProvider("video"), end: async () => (ending(), await slow) };
+    const video = await startConversation(deps({ provider: slowVideo, voice: voice() }), guest.id);
+    if (!video.ok) throw new Error(video.reason);
+    await db.from("sessions").update({ call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", video.sessionId).throwOnError();
+    const pausing = endConversation(deps({ provider: slowVideo, voice: voice() }), guest.id, video.sessionId, true, video.call.callId);
+    await endCalled;
+    const started = await startConversation(deps({ provider: slowVideo, voice: voice() }), guest.id, "voice");
+    release();
+    await pausing;
+    if (!started.ok) throw new Error(started.reason);
+    expect(started).toMatchObject({ engine: "voice", sessionId: video.sessionId });
+    // The minute of video is kept; the rest of the day went to the voice call.
+    expect(started.seconds).toBeGreaterThan(520);
+    expect(started.seconds).toBeLessThanOrEqual(540);
+  });
+
   it("Voice only is refused when there's no voice stylist, giving nothing away (6c)", async () => {
     expect(await startConversation(deps(), guest.id, "voice")).toEqual({ ok: false, reason: "voice_unavailable" });
     expect(await usedToday()).toBe(0);

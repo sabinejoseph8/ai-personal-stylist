@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.47 (26 Oct 2026)
+**Status:** Agreed, version 1.48 (27 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -342,6 +342,8 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**The switch's time (fix, 27 Oct 2026, from Sabine's iPhone check, C.1).** Voice only said "You've used today's 10 minutes" after 4 minutes: the video call was still being ended at Tavus when the voice call asked for its time, and the call's whole reserved 10 minutes were only given back after Tavus answered. Now a call's unused time goes back first, before the provider is asked to end it, and a switch (and a reconnect) waits for the server to pause the call it left before starting the next. A test holds Tavus's end open while the voice call starts.
+
 **Voice only standing in for video (6c, pull request 2 of 2).**
 - **At the start (R9):** when the video call can't start because the stylist is with another visitor, Tavus is unavailable, the month's video stop is reached, or Tavus's own plan is out of minutes (its 402, now told apart), a voice call starts instead in the same session, and the answer says why (busy, unavailable or resting). The stage reads "The video stylist is with another visitor. Continuing with voice.", "Video unavailable. Continuing with voice." or "The video stylist is resting for the rest of the month. Continuing with voice.", and she says it in her own first words, then asks what they're dressing for (or carries on, for a resumed session). If voice can't start either, the video refusal stands. The day's time is shared, so a day used up never falls back.
 - **Mid-call (R14):** a dropped video call reconnects by voice, saying the switch line as her first words, and the stage reads "Video unavailable. Continuing with voice."; if voice drops too, the existing 3 tries and Try again follow. **Turn video on** is offered in every voice-only case: if video still can't start, voice carries on with the reason.
@@ -589,6 +591,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.48 (27 Oct 2026):** The switch's time fix (from Sabine's iPhone check, C.1).
 - **1.47 (26 Oct 2026):** 6c, pull request 2: voice only standing in for video at the start and after a drop, the why-lines, Tavus's out-of-minutes told apart, and the resting welcome screen (your answer to Q2).
 - **1.46 (26 Oct 2026):** 6c, pull request 1: the GPT-Live voice-only engine, the switch both ways, the voice offer endpoint, the browser channel's limits (your answers to Q1 and Q3), and why the security policy needs no OpenAI entry.
 - **1.45 (26 Oct 2026):** 6b: Profile and privacy (your answers to Q1 to Q3): the endpoints, rate limits, privacy lines, and how it's built, including why the page explains the microphone and camera rather than showing their state.
