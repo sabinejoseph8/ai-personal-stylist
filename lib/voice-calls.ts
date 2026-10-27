@@ -1,10 +1,17 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import { isPendingVoiceCall, VOICE_PREFIX } from "@/connectors/conversation/gpt-live/shared";
 import { sessionContext } from "@/lib/session-context";
 
 // Joining a voice-only call (6c, R9): the browser's WebRTC offer becomes a GPT-Live call for the session's
 // pending voice call, and the session then records OpenAI's id, so End and the daily job can close it.
+
+/**
+ * The browser's offer, exactly as sent: an SDP offer must end with its line break, and trimming it made
+ * OpenAI refuse every call as "invalid_offer" (found on the live site, 27 Oct 2026).
+ */
+export const VoiceOffer = z.object({ callId: z.string().min(1).max(200), sdp: z.string().min(1).max(20_000) });
 
 export type VoiceCallDeps = {
   db: SupabaseClient;

@@ -1,9 +1,16 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { attachVoiceCall, type VoiceCallDeps } from "@/lib/voice-calls";
+import { attachVoiceCall, type VoiceCallDeps, VoiceOffer } from "@/lib/voice-calls";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // 6c: the browser's offer becomes the session's voice call, only for the guest's open session's pending
 // call; a call made after the session moved on is closed at once. OpenAI is replaced by a stand-in.
+
+describe("the browser's offer", () => {
+  it("is kept exactly as sent, with its final line break (OpenAI refused trimmed offers, 27 Oct 2026)", () => {
+    const sdp = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\ns=-\r\n";
+    expect(VoiceOffer.parse({ callId: "voice:pending:x", sdp }).sdp).toBe(sdp);
+  });
+});
 
 describe.skipIf(!canRunDatabaseTests)("joining a voice call", () => {
   const db = serverDb();
