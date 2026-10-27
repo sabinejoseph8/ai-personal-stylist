@@ -8,12 +8,12 @@ import { sessionContext } from "@/lib/session-context";
 
 export type VoiceCallDeps = {
   db: SupabaseClient;
-  create: (offer: string, context: string | null) => Promise<{ ok: true; sessionId: string; sdp: string } | { ok: false; status: number }>;
+  create: (offer: string, context: string | null) => Promise<{ ok: true; sessionId: string; sdp: string } | { ok: false; status: number; code?: string; param?: string }>;
   close: (callId: string) => Promise<void>;
 };
 
 /** `status`: OpenAI's refusal code, such as 401 for a key it doesn't accept: a number, never the key. */
-export type AttachResult = { ok: true; callId: string; sdp: string } | { ok: false; reason: "no_call" } | { ok: false; reason: "unavailable"; status: number };
+export type AttachResult = { ok: true; callId: string; sdp: string } | { ok: false; reason: "no_call" } | { ok: false; reason: "unavailable"; status: number; code?: string; param?: string };
 
 /**
  * Creates the call for the guest's open session whose pending voice call is `callId`, telling the
@@ -26,7 +26,7 @@ export async function attachVoiceCall(deps: VoiceCallDeps, guestId: string, sess
   if (!data) return { ok: false, reason: "no_call" };
   const context = await sessionContext(deps.db, guestId, sessionId).catch(() => null);
   const made = await deps.create(offer, context);
-  if (!made.ok) return { ok: false, reason: "unavailable", status: made.status };
+  if (!made.ok) return { ok: false, reason: "unavailable", status: made.status, code: made.code, param: made.param };
   const real = `${VOICE_PREFIX}${made.sessionId}`;
   const { data: claimed } = await deps.db
     .from("sessions")

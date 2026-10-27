@@ -29,7 +29,7 @@ const client = () => new OpenAI({ apiKey: apiKey(), maxRetries: 0, timeout: 20_0
  * Creates the GPT-Live call for the browser's offer. `context` is what the stylist knows so far, read
  * by the server from the session's notes. Returns OpenAI's session id and the SDP answer.
  */
-export async function createVoiceCall(offer: string, context: string | null): Promise<{ ok: true; sessionId: string; sdp: string } | { ok: false; status: number }> {
+export async function createVoiceCall(offer: string, context: string | null): Promise<{ ok: true; sessionId: string; sdp: string } | { ok: false; status: number; code?: string; param?: string }> {
   try {
     const result = await client().live.create({
       session: {
@@ -46,7 +46,10 @@ export async function createVoiceCall(offer: string, context: string | null): Pr
   } catch (e) {
     if (e instanceof OpenAI.APIError) {
       console.error(`gpt-live: starting a call failed (${e.status}): ${scrub(String(e.message)).slice(0, 300)}`);
-      return { ok: false, status: e.status ?? 502 };
+      // OpenAI's short error name and the setting it's about ("model_not_found", "session.client"): never
+      // the key or the message text, so they can go back to the page for diagnosis (27 Oct 2026).
+      const name = (v: unknown) => (typeof v === "string" && /^[\w.\-]{1,64}$/.test(v) ? v : undefined);
+      return { ok: false, status: e.status ?? 502, code: name(e.code) ?? name(e.type), param: name(e.param) };
     }
     throw e;
   }
