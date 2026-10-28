@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { SAMPLE_PROFILE } from "../lib/profile";
 import { SAMPLE_PHRASES } from "../lib/sample-phrases";
 import { canRunDatabaseTests, serverDb, type TestGuest } from "../tests/support/test-guests";
-import { noSeriousA11yProblems } from "./support/a11y";
+import { fitsAtDoubleText, noSeriousA11yProblems, smallTouchTargets } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
 import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/microphone";
 import { openFromMenu } from "./support/menu";
@@ -94,6 +94,9 @@ test.describe("the looks", () => {
     expect(context).toContain('Look 1, "Test look 1"');
     expect(context).toContain("keep it short: each look's name and one line about it");
     await noSeriousA11yProblems(page);
+    // In a call, with notes and looks on screen: 44 px touch targets and 200% text (7a, R69).
+    expect(await smallTouchTargets(page)).toEqual([]);
+    await fitsAtDoubleText(page);
   });
 
   test("swapping the shoes ten times never brings high heels, each new pair marked New (R43, S13)", async ({ page }) => {

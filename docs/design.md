@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.26 (27 Oct 2026)
+**Status:** Agreed, version 1.27 (27 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -570,13 +570,14 @@ Shows the pencil and ink states and the pasted photo.
 - Every text color pair in the palette meets 4.5 to 1. Control edges and the focus ring meet 3 to 1.
 - Focus: a 2 px Focus ring with a 2 px white gap on every interactive element.
 - Status is always an icon plus a word.
-- Touch targets are at least 44 by 44 px.
+- Touch targets are at least 44 by 44 px. The one exception: a note or a photo detail in My Styling Notes is one 28 px ruled line tall and the full width of the notebook (your decision A, 7a; WCAG's AA minimum is 24 px).
 - Screen reader announcements are polite, grouped while the shopper speaks, and never move focus.
 - There are no captions in v1, and the conversation needs the shopper's voice. People who are deaf, hard of hearing or can't speak can't use the conversation in v1 (product spec R6, R10, R67).
 - The camera view says in words whether it is on, and items recognized on camera are announced.
 - **Voice only** is always one tap away for anyone who finds video distracting or has a slow connection.
 - Every image has a description. Product photos use the product's name and color. Shopper photos use the recognized description, or "Your photo" until recognition finishes.
 - Works at 200% text size and with reduced motion.
+- **As checked (7a):** at 200% text, a note's status (Confirmed, To confirm, Saved preference) moves under the note when both don't fit on its line, still on the ruled lines; the label-and-value lists (From your profile, Your profile, Welcome back) wrap long values; the welcome screen's column shrinks to the phone; a look's tiles are at least 9 rem wide (11 on desktops), two to a row on phones and three on desktops at normal text and one as the text grows; the call controls wrap onto a second row. Links that stand alone (How it was built, the About page's links) are 44 px tall. The notebook's ink-in moves only the words' reveal, and keeps 60 frames a second on a phone-sized screen with the processor slowed to a quarter.
 
 ## 7. Open design questions
 
@@ -588,6 +589,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.27 (27 Oct 2026):** 7a's accessibility pass: what changed at 200% text, and the 44 px links.
 - **1.26 (27 Oct 2026):** The app bar and menu as built (7a, your answer to Q1).
 - **1.25 (26 Oct 2026):** 6c as built (second part): the why-lines under the stage when voice stands in for video (another visitor; unavailable or dropped; resting for the month), Turn video on in every voice-only case, and the resting welcome screen.
 - **1.24 (26 Oct 2026):** 6c as built (first part): Voice only beside Camera, More on phones, the still portrait with a ring that pulses while she speaks (a pulse, not the voice's volume), "Switching to voice only…" and "Turning video on…" while a switch runs, and "Voice only" with **Turn video on** under the stage.

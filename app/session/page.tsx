@@ -66,7 +66,7 @@ export default async function SessionPage({ searchParams }: PageProps<"/session"
           <h2 id="profile-title" className="type-subheading m-0">
             From your profile
           </h2>
-          <dl className="type-body m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+          <dl className="type-body m-0 grid grid-cols-[auto_minmax(0,1fr)] break-words gap-x-4 gap-y-1">
             <dt className="text-graphite">Shopping</dt>
             <dd className="m-0">{profile.departments.length ? profile.departments.join(" and ") : "Not set"}</dd>
             <dt className="text-graphite">Style</dt>

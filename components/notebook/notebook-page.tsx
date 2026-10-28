@@ -21,11 +21,11 @@ export function NotebookPage({ title = "My Styling Notes", children, className =
 export function NoteLine({ note, inkIn = false, delayMs = 0 }: { note: JottedNote; inkIn?: boolean; delayMs?: number }) {
   const pencil = note.status === "to_confirm";
   return (
-    <li className="flex min-h-7 items-center justify-between gap-3 pl-[calc(var(--margin-x)+0.75rem)] pr-4">
+    <li className="flex min-h-7 flex-wrap items-center justify-between gap-x-3 pl-[calc(var(--margin-x)+0.75rem)] pr-4">
       <span className={`type-note ${inkIn ? "ink-in" : ""}`} style={inkIn ? { animationDelay: `${delayMs}ms` } : undefined}>
         <span className={`px-0.5 ${pencil ? "highlighter-mark text-graphite" : "text-ink"}`}>{note.text}</span>
       </span>
-      <span className={`type-small inline-flex shrink-0 items-center gap-1 ${pencil ? "text-graphite" : "text-emerald"}`}>
+      <span className={`type-small inline-flex max-w-full items-center gap-1 ${pencil ? "text-graphite" : "text-emerald"}`}>
         <Icon name={pencil ? "toConfirm" : "confirmed"} />
         {pencil ? "To confirm" : "Confirmed"}
       </span>

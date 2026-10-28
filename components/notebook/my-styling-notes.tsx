@@ -91,10 +91,11 @@ function NoteRow({
         type="button"
         aria-expanded={selected}
         onClick={selected ? onClose : onSelect}
-        className="focus-ring flex min-h-7 w-full items-start justify-between gap-3 rounded-[3px] text-left"
+        data-ruled-row
+        className="focus-ring flex min-h-7 w-full flex-wrap items-start justify-between gap-x-3 rounded-[3px] text-left"
       >
         <NoteText text={note.text} pencil={pencil} animate={animate} />
-        <span className="flex h-7 shrink-0 items-center">
+        <span className="flex min-h-7 max-w-full items-center">
           <StatusChip status={pencil ? "toConfirm" : "confirmed"} />
         </span>
       </button>
@@ -146,9 +147,9 @@ function ExceptionRow({ exception, onAction }: { exception: ShownException; onAc
   };
   return (
     <li className={ROW}>
-      <div className="flex min-h-7 items-start justify-between gap-3">
+      <div className="flex min-h-7 flex-wrap items-start justify-between gap-x-3">
         <span className="type-note leading-7 text-ink">{exception.text}</span>
-        <span className="flex h-7 shrink-0 items-center">
+        <span className="flex min-h-7 max-w-full items-center">
           <StatusChip status="thisSessionOnly" />
         </span>
       </div>
@@ -355,7 +356,7 @@ export function MyStylingNotes({
                 <Link href="/profile#saved-preferences" className="type-note text-ink underline decoration-hairline underline-offset-4">
                   {p}
                 </Link>
-                <span className="flex h-7 shrink-0 items-center">
+                <span className="flex min-h-7 max-w-full items-center">
                   <StatusChip status="savedPreference" />
                 </span>
               </li>

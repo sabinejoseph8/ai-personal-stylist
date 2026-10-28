@@ -1,6 +1,6 @@
 # AI Personal Stylist: Product Spec
 
-**Status:** Agreed, version 1.4 (19 Oct 2026)
+**Status:** Agreed, version 1.5 (27 Oct 2026)
 **Last updated:** 19 Oct 2026
 **Based on:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026), both in the project root
 **Next step:** the tech spec builds on this agreed version. Any later change gets a new version number and a change log entry.
@@ -223,7 +223,7 @@ Each requirement can be checked by using the app. Empty, loading and error state
 
 - **R67 Touch and keyboard outside the conversation.** Everything apart from the conversation itself can be done by touch or keyboard: setup, photos, the wardrobe, notes, looks, feedback buttons, saving and the bag. The conversation needs the shopper's voice in v1 (R6), and there are no captions (R10), so people who are deaf, hard of hearing or can't speak can't use the conversation in v1. (AC-06, D18; accepted trade-off, 19 Oct 2026)
 - **R68 Screen readers.** Changes to notes, statuses and looks, and items recognized on camera, are announced politely, without moving focus or talking over the stylist. Every control has a label and every photo has a description. (AC-06, AC-FB-07, FR-27)
-- **R69 Visual access.** Text contrast is at least 4.5 to 1. Touch targets are at least 44 by 44 pixels. Focus is always visible. With reduced motion turned on, non-essential animation stops. (Privacy and accessibility)
+- **R69 Visual access.** Text contrast is at least 4.5 to 1. Touch targets are at least 44 by 44 pixels, apart from the notes and photo details in My Styling Notes, which are one 28 px ruled line tall and the full width of the notebook (your decision, 27 Oct 2026; 28 px meets WCAG's AA minimum of 24 px). Focus is always visible. With reduced motion turned on, non-essential animation stops. (Privacy and accessibility)
 
 ### Portfolio extras (default)
 
@@ -311,6 +311,7 @@ Each check can be done by a person using the app.
 | 19 Oct 2026 | No captions and no transcript on screen. The stylist's voice and the notes are the only output (R10). | Your decision |
 | 19 Oct 2026 | My Styling Notes is a free-form notebook with no fixed fields: the stylist jots down any relevant details (R15). Notes are confirmed or removed by touch and changed by voice (R16, R20). | Your decision |
 | 19 Oct 2026 | No typing to the stylist in v1 (R11), and a working microphone is required (R6). People who are deaf, hard of hearing or can't speak can't use the conversation in v1 (R67). | Your decision |
+| 27 Oct 2026 | Notes and photo details in My Styling Notes stay one 28 px ruled line tall, full width: the one exception to R69's 44 px touch targets. | Your decision |
 
 ## 12. Open questions
 
@@ -328,6 +329,7 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 
 ## 13. Change log
 
+- **1.5 (27 Oct 2026):** R69: notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to 44 px touch targets (your decision in 7a).
 - **1.4 (19 Oct 2026):** Your scope changes: no captions or transcript (R10), no typing to the stylist in v1 (R11), a working microphone required (R6), and a free-form notebook where the stylist jots down any relevant details (R15), confirmed or removed by touch and changed by voice (R16, R20). Text only mode is removed (R8, R13, R14). Also updated the overview, key terms, users, stories, R9, R17, R18, R19, R22 to R25, R28, R32, R46, R47, R57, R63, R67, R70, the layout, scope, future features, success checks S3, S4, S6, S7, S17 and S18, Q5 and the decisions. Requirement numbers are unchanged.
 - **1.3 (18 Oct 2026):** Added the "demo is resting" welcome message to R13, from tech spec TQ4, which you accepted.
 - **1.2 (18 Oct 2026):** Video now lasts the whole 10-minute conversation (R13), and voice only is a fallback when something goes wrong (R9). Updated Q5 and the decisions. Requested by you.
