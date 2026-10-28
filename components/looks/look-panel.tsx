@@ -87,13 +87,13 @@ function ItemTile({
       <p className="type-label m-0 text-ink">{item.name}</p>
       <p className="type-small m-0 text-graphite">{kindOf(item.category)}</p>
       {item.owned ? (
-        <p className="type-small m-0 flex items-center gap-1 whitespace-nowrap text-ink">
+        <p className="type-small m-0 flex items-center gap-1 text-ink">
           <Icon name="youOwnThis" />
           You own this
         </p>
       ) : (
         <>
-          <p className="type-small m-0 flex items-center gap-1 whitespace-nowrap text-graphite">
+          <p className="type-small m-0 flex items-center gap-1 text-graphite">
             <Icon name="sampleProduct" />
             Sample product
           </p>
@@ -217,7 +217,7 @@ export function LookPanel({
           {look.note}
         </p>
       )}
-      <ul aria-label={`Items in ${look.name}`} className="m-0 grid list-none grid-cols-2 gap-3 p-0 desktop:grid-cols-3">
+      <ul aria-label={`Items in ${look.name}`} className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-3 p-0 desktop:grid-cols-[repeat(auto-fill,minmax(min(100%,11rem),1fr))]">
         {look.items.map((item, i) => (
           <ItemTile
             key={`${i}-${item.id}`}

@@ -13,6 +13,7 @@
     "tavus:apply": "node scripts/apply-tavus-pal.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "e2e": "playwright test",
+    "lighthouse": "node scripts/lighthouse.mjs",
     "eval:notes": "vitest run --config vitest.evals.config.mts tests/evals/notes.eval.ts",
     "eval:photos": "vitest run --config vitest.evals.config.mts tests/evals/photos.eval.ts",
     "eval:camera": "vitest run --config vitest.evals.config.mts tests/evals/camera.eval.ts",

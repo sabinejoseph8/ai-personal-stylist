@@ -58,7 +58,7 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
           ))}
         </ul>
       )}
-      <dl className="type-small m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-graphite">
+      <dl className="type-small m-0 grid grid-cols-[auto_minmax(0,1fr)] break-words gap-x-3 gap-y-1 text-graphite">
         <dt>Wardrobe</dt>
         <dd className="m-0">
           {items ? (
@@ -116,7 +116,7 @@ export default async function Home() {
   return (
     <>
     <AppBar current="welcome" />
-    <main className="mx-auto grid max-w-5xl gap-8 px-4 py-10 tablet:px-6 desktop:grid-cols-2 desktop:grid-rows-[auto_1fr] desktop:gap-x-12 desktop:px-8 desktop:py-16">
+    <main className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-8 px-4 py-10 tablet:px-6 desktop:grid-cols-2 desktop:grid-rows-[auto_1fr] desktop:gap-x-12 desktop:px-8 desktop:py-16">
       <div className="flex flex-col gap-5 desktop:col-start-1 desktop:row-start-1">
         <h1 className="type-display m-0">Say what you need. Watch your stylist take notes.</h1>
         <p className="type-body m-0 max-w-[60ch] text-graphite">
@@ -141,7 +141,7 @@ export default async function Home() {
         ) : (
           <>
             <StartDemo nonce={nonce} />
-            <Link href="/about" className="type-label self-start text-emerald underline underline-offset-2">
+            <Link href="/about" className="focus-ring type-label inline-flex min-h-touch items-center self-start rounded-control text-emerald underline underline-offset-2">
               How it was built
             </Link>
           </>

@@ -31,13 +31,13 @@ function DetailRow({ name, value, pencil, onConfirm }: { name: DetailName; value
     </span>
   );
   const chip = (
-    <span className="flex h-7 shrink-0 items-center">
+    <span className="flex min-h-7 max-w-full items-center">
       <StatusChip status={pencil ? "toConfirm" : "confirmed"} />
     </span>
   );
   if (!pencil)
     return (
-      <li className={`${ROW} flex min-h-7 items-start justify-between gap-3`}>
+      <li className={`${ROW} flex min-h-7 flex-wrap items-start justify-between gap-x-3`}>
         {words}
         {chip}
       </li>
@@ -48,7 +48,8 @@ function DetailRow({ name, value, pencil, onConfirm }: { name: DetailName; value
         type="button"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className="focus-ring flex min-h-7 w-full items-start justify-between gap-3 rounded-[3px] text-left"
+        data-ruled-row
+        className="focus-ring flex min-h-7 w-full flex-wrap items-start justify-between gap-x-3 rounded-[3px] text-left"
       >
         {words}
         {chip}

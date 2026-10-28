@@ -17,10 +17,10 @@ export default function AboutPage() {
         refine by voice or touch. The full story is coming soon. Until then, here is the plan behind it:
       </p>
       <ul className="type-body m-0 flex list-disc flex-col gap-1 pl-5">
-        <li><a className="text-emerald underline" href={`${DOCS}/product-spec.md`}>Product spec</a></li>
-        <li><a className="text-emerald underline" href={`${DOCS}/design.md`}>Design</a></li>
-        <li><a className="text-emerald underline" href={`${DOCS}/tech-spec.md`}>Tech spec</a></li>
-        <li><a className="text-emerald underline" href={`${DOCS}/progress.md`}>Build plan and progress</a></li>
+        <li><a className="focus-ring inline-flex min-h-touch items-center rounded-control text-emerald underline" href={`${DOCS}/product-spec.md`}>Product spec</a></li>
+        <li><a className="focus-ring inline-flex min-h-touch items-center rounded-control text-emerald underline" href={`${DOCS}/design.md`}>Design</a></li>
+        <li><a className="focus-ring inline-flex min-h-touch items-center rounded-control text-emerald underline" href={`${DOCS}/tech-spec.md`}>Tech spec</a></li>
+        <li><a className="focus-ring inline-flex min-h-touch items-center rounded-control text-emerald underline" href={`${DOCS}/progress.md`}>Build plan and progress</a></li>
       </ul>
     </main>
     </>

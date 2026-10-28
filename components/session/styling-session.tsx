@@ -761,7 +761,7 @@ export function StylingSession({
 
         {/* In a call, Mute and End sit right under the stage, so End is always within reach. */}
         {inCall && (
-          <div className="flex items-start justify-center gap-8 desktop:justify-start">
+          <div className="flex flex-wrap items-start justify-center gap-x-8 gap-y-3 desktop:justify-start">
             <ControlButton
               icon={stage.muted ? "muted" : "microphone"}
               label={stage.muted ? "Muted" : "Mute"}

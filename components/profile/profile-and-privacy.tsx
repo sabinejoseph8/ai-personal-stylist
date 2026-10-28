@@ -117,7 +117,7 @@ export function ProfileAndPrivacy({
       )}
 
       <Section id="your-profile" title="Your profile">
-        <dl className="type-body m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+        <dl className="type-body m-0 grid grid-cols-[auto_minmax(0,1fr)] break-words gap-x-4 gap-y-1">
           <dt className="text-graphite">Shopping</dt>
           <dd className="m-0">{profile.shopping}</dd>
           <dt className="text-graphite">Style</dt>
