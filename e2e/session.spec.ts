@@ -356,7 +356,26 @@ test.describe("the stylist stage", () => {
   });
 
   // 2e: time limits (R13) and connection problems (R14).
+  test("a call that reaches its 15 minutes with time left today hands over to the next call by itself, notes kept (7c)", async ({ page }) => {
+    const callId = async () => (await serverDb().from("sessions").select("call_id").eq("user_id", guest.id).single()).data?.call_id as string | null;
+    await page.clock.install();
+    await weddingNotes(page);
+    const first = await callId();
+    expect(first).toBeTruthy();
+    // No countdown: the conversation carries on past this call.
+    await page.clock.fastForward("13:30");
+    await expect(page.getByRole("region", { name: "Your stylist" }).getByRole("status")).toHaveCount(0);
+    await page.clock.fastForward("01:40");
+    await expect.poll(callId, { timeout: 15_000 }).not.toBe(first);
+    await expect(state(page)).not.toHaveText("Time is up");
+    await expect(note(page, "Emerald green, preferred")).toBeVisible();
+    expect(await sessions()).toEqual([expect.objectContaining({ status: "active" })]);
+  });
+
   test("shows the time left in the last 2 minutes, then Time is up, keeping the notes (R13)", async ({ page }) => {
+    // 10 of today's 20 minutes already used, so this call is the day's last (7c).
+    const today = new Date().toISOString().slice(0, 10);
+    await serverDb().from("usage").insert({ user_id: guest.id, day: today, video_seconds: 600 }).throwOnError();
     await page.clock.install();
     await weddingNotes(page);
     const timeLeft = page.getByRole("region", { name: "Your stylist" }).getByRole("status");
@@ -366,7 +385,7 @@ test.describe("the stylist stage", () => {
     await expect(timeLeft).toHaveText("1 minute left");
     await page.clock.fastForward("01:00");
     await expect(state(page)).toHaveText("Time is up");
-    await expect(page.getByText("You've used today's 10 minutes with your stylist.", { exact: false })).toBeVisible();
+    await expect(page.getByText("You've used today's 20 minutes with your stylist.", { exact: false })).toBeVisible();
     await expect(note(page, "Elegant")).toBeVisible();
     await expect(page.getByRole("button", { name: /conversation$/ })).toHaveCount(0);
     await expect.poll(sessions).toEqual([expect.objectContaining({ status: "paused" })]);

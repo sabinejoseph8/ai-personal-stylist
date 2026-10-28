@@ -19,12 +19,17 @@ export type Flow = "idle" | "explain" | "declined" | "starting" | "live" | "endi
 const NO_CONNECTION = "We couldn't reach your stylist. Check your connection and try again.";
 const NO_RECONNECT = "We couldn't reconnect to your stylist. Check your connection, then tap Try again. Your notes are still here.";
 
-/** What Time is up says, by the limit that ended the call (R13). */
+/**
+ * What Time is up says, by the limit that ended the call (R13). The server sends the exact lines with each
+ * call (the day's minutes and when video is back, 7c); these are only for a call that started without them.
+ */
 const TIME_UP = {
-  day: "You've used today's 10 minutes with your stylist. Come back tomorrow to talk again.",
-  month: "The video stylist is resting until the 1st of next month.",
+  day: "You've used today's minutes with your stylist. Come back tomorrow to talk again.",
+  month: "The video stylist is resting for now.",
 } as const;
 type Limit = keyof typeof TIME_UP;
+/** A call can also end at its own longest length (15 minutes on Tavus) with time left today: the next call carries on (7c). */
+type CallLimit = Limit | "call";
 const TIME_USED = new Set(["daily_time_used", "monthly_video_used"]);
 
 /**
@@ -114,7 +119,10 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const shown = useRef(false);
   // R13: when the call's time runs out, and which limit ends it. R14: each Start, End or Try again
   // starts a new attempt, so a dropped call's retries stop when the shopper does something else.
-  const callEnds = useRef<{ at: number; because: Limit } | null>(null);
+  const callEnds = useRef<{ at: number; because: CallLimit } | null>(null);
+  // The server's lines for this call's limits (7c), and when video is back after the month's minutes.
+  const lines = useRef<{ day: string; month: string } | null>(null);
+  const [videoBackOn, setVideoBackOn] = useState<string | null>(null);
   const attempt = useRef(0);
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [timeUpMessage, setTimeUpMessage] = useState<string | null>(null);
@@ -156,6 +164,11 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       const ends = callEnds.current;
       if (!ends) return;
       const left = (ends.at - Date.now()) / 1000;
+      // A call that ends at its own length with time left today isn't the end of the conversation.
+      if (ends.because === "call") {
+        if (left <= 0) void nextCall();
+        return;
+      }
       setTimeLeft(timeLeftLabel(left));
       if (left <= 0) timeUp(ends.because);
     }, 1000);
@@ -187,8 +200,20 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     dispatch({ type: "microphone", problem: reason });
   }
 
+  /**
+   * The call reached its own longest length with time left today (7c): the next call starts by itself, in
+   * the same session and on the same engine, with no switch line. Notes and looks belong to the session.
+   */
+  async function nextCall() {
+    if (!leaveCall()) return;
+    const mine = ++attempt.current;
+    await pausing.current;
+    const outcome = await connect({ reconnecting: true, engine: wanted.current });
+    if (attempt.current === mine && !outcome.ok) settle(outcome);
+  }
+
   /** The day's or month's conversation time ran out: the conversation ends for now, and the notes stay (R13). */
-  function timeUp(because: Limit, message: string = TIME_UP[because]) {
+  function timeUp(because: Limit, message: string = lines.current?.[because] ?? TIME_UP[because]) {
     leaveCall();
     callEnds.current = null;
     setFlow("idle");
@@ -200,8 +225,11 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   /** The call dropped: a fresh call starts by itself, up to 3 times, then Try again (R14). */
   async function dropped() {
     const near = callEnds.current && Date.now() >= callEnds.current.at - 10_000;
-    // Tavus ends a call itself when its time is up.
-    if (near) return timeUp(callEnds.current!.because);
+    // Tavus ends a call itself when its time is up: the day's or month's, or only this call's (7c).
+    if (near) {
+      const because = callEnds.current!.because;
+      return because === "call" ? void nextCall() : timeUp(because);
+    }
     if (!leaveCall()) return;
     const mine = ++attempt.current;
     // A dropped video call carries on by voice first (R14, 6c), saying the switch line as her first words.
@@ -339,7 +367,13 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     const because = data.engine === "voice" && (data.because === "busy" || data.because === "unavailable" || data.because === "resting") ? (data.because as "busy" | "unavailable" | "resting") : null;
     if (because) wanted.current = "voice";
     setVoiceWhy((was) => (kindNow === "video" ? null : because ?? (reconnecting ? was : (was ?? "chosen"))));
-    callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : "day" };
+    callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : data.endsBecause === "call" ? "call" : "day" };
+    const backOn = typeof data.videoBackOn === "string" ? data.videoBackOn : null;
+    setVideoBackOn(backOn);
+    lines.current = {
+      day: typeof data.dayUsedLine === "string" ? data.dayUsedLine : TIME_UP.day,
+      month: backOn ? `The video stylist is resting until ${backOn}.` : TIME_UP.month,
+    };
     const e = await engineFor(data.call.joinUrl);
     engine.current = e;
     live.current = { sessionId: data.sessionId, callId: data.call.callId, ending: false };
@@ -366,7 +400,7 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       }
       if (live.current) setFlow("live");
       // She says why she's in voice only, then carries on (tech spec 4.2).
-      if (because && live.current) e.say(spokenWhy(because, Boolean(data.resumed)));
+      if (because && live.current) e.say(spokenWhy(because, Boolean(data.resumed), backOn));
       return { ok: true };
     } catch {
       stopListening();
@@ -445,8 +479,9 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     /** A switch between video and voice is under way, and where it's heading. */
     switching: switchingTo !== null,
     switchingTo,
-    /** Why voice only, for the line under the stage (6c). */
+    /** Why voice only, for the line under the stage (6c), and when video is back after the month's minutes (7c). */
     voiceWhy,
+    videoBackOn,
     switchToVoice: () => switchTo("voice"),
     switchToVideo: () => switchTo("video"),
     sessionId,

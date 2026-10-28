@@ -1,6 +1,6 @@
 # AI Personal Stylist: Product Spec
 
-**Status:** Agreed, version 1.5 (27 Oct 2026)
+**Status:** Agreed, version 1.6 (28 Oct 2026)
 **Last updated:** 19 Oct 2026
 **Based on:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026), both in the project root
 **Next step:** the tech spec builds on this agreed version. Any later change gets a new version number and a change log entry.
@@ -134,7 +134,7 @@ Each requirement can be checked by using the app. Empty, loading and error state
 - **R10 No transcript.** The screen never shows a word-for-word transcript of the shopper or the stylist, and there are no captions. The stylist's voice and My Styling Notes are the only output. (Replaces the transcript captions in FR-01 and AC-06; decided 19 Oct 2026)
 - **R11 Typing is out of scope for v1.** The shopper can't type to the stylist in v1. Typing is a future feature (section 9). (Replaces typing in D18; decided 19 Oct 2026)
 - **R12 Sessions.** A session starts with **Start conversation** and ends with **End** or after 30 minutes without activity. Before then, it can be resumed in the same browser. (default)
-- **R13 Time limits.** Each guest gets up to 10 minutes of conversation per day, all with the video stylist. Time left is shown during the last 2 minutes. Voice only is used only when something goes wrong (R9). When conversation time runs out, or the demo's monthly allowance is used up, the app says so and the conversation ends for now. Notes and looks stay on screen until the session ends. If the AI allowance is used up as well, the welcome screen says the demo is resting until the 1st of next month and links to About this project. (default; video for the whole conversation set by you, and the resting message added from tech spec TQ4, on 18 Oct 2026; text only removed on 19 Oct 2026)
+- **R13 Time limits.** Each guest gets up to 20 minutes of conversation per day, all with the video stylist (10 until your decision of 28 Oct 2026). A single video call lasts at most 15 minutes, the Tavus plan's limit, so a longer conversation carries on in a second call by itself, with nothing lost. Time left is shown during the last 2 minutes. Voice only is used only when something goes wrong (R9). When conversation time runs out, or the demo's monthly allowance is used up, the app says so and the conversation ends for now. Notes and looks stay on screen until the session ends. If the AI allowance is used up as well, the welcome screen says the demo is resting until the 1st of next month and links to About this project. (default; video for the whole conversation set by you, and the resting message added from tech spec TQ4, on 18 Oct 2026; text only removed on 19 Oct 2026)
 - **R14 Connection problems.** If the connection weakens, the stylist drops to voice only first. If voice drops too, the stylist area shows Reconnecting and tries again up to 3 times. The conversation pauses, and notes and looks stay on screen. If it cannot reconnect, the app offers **Try again**. (FR-02, nonfunctional; 3 tries is a default)
 
 ### My Styling Notes
@@ -312,6 +312,7 @@ Each check can be done by a person using the app.
 | 19 Oct 2026 | My Styling Notes is a free-form notebook with no fixed fields: the stylist jots down any relevant details (R15). Notes are confirmed or removed by touch and changed by voice (R16, R20). | Your decision |
 | 19 Oct 2026 | No typing to the stylist in v1 (R11), and a working microphone is required (R6). People who are deaf, hard of hearing or can't speak can't use the conversation in v1 (R67). | Your decision |
 | 27 Oct 2026 | Notes and photo details in My Styling Notes stay one 28 px ruled line tall, full width: the one exception to R69's 44 px touch targets. | Your decision |
+| 28 Oct 2026 | 20 minutes of conversation a day per visitor, up from 10 (R13). | Your decision |
 
 ## 12. Open questions
 
@@ -321,7 +322,7 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 |---|---|---|
 | Q3 | Which region and currency? | US English and US dollars. |
 | Q4 | How long is guest data kept? | 7 days without use. |
-| Q5 | How much conversation time per visitor? | 10 minutes per day, all with video. Voice only covers problems with video, and the conversation ends when time runs out. |
+| Q5 | How much conversation time per visitor? | 20 minutes per day since 28 Oct 2026 (10 before), all with video. Voice only covers problems with video, and the conversation ends when time runs out. |
 | Q6 | How big is the sample catalog? | About 150 products across womenswear and menswear, covering the example conversations. |
 | Q7 | Is the demo bag shown publicly? (open in the PRD) | Yes, labeled Demo with checkout disabled. |
 | Q8 | Include the Behind the scenes panel? | Yes, off by default. |
@@ -329,6 +330,7 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 
 ## 13. Change log
 
+- **1.6 (28 Oct 2026):** R13: 20 minutes of conversation a day (your decision in 7c), in calls of up to 15 minutes.
 - **1.5 (27 Oct 2026):** R69: notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to 44 px touch targets (your decision in 7a).
 - **1.4 (19 Oct 2026):** Your scope changes: no captions or transcript (R10), no typing to the stylist in v1 (R11), a working microphone required (R6), and a free-form notebook where the stylist jots down any relevant details (R15), confirmed or removed by touch and changed by voice (R16, R20). Text only mode is removed (R8, R13, R14). Also updated the overview, key terms, users, stories, R9, R17, R18, R19, R22 to R25, R28, R32, R46, R47, R57, R63, R67, R70, the layout, scope, future features, success checks S3, S4, S6, S7, S17 and S18, Q5 and the decisions. Requirement numbers are unchanged.
 - **1.3 (18 Oct 2026):** Added the "demo is resting" welcome message to R13, from tech spec TQ4, which you accepted.

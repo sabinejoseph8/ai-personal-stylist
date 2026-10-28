@@ -92,7 +92,7 @@ Open [the live site](https://ai-personal-stylist-inky.vercel.app) on a phone, ta
 - **The conversation needs a voice.** There are no captions and no typing to the stylist in v1, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard.
 - **A sample catalog.** About 140 products with generated photos, no real retailer, no real stock or prices, and no checkout by design.
 - **One video call at a time.** The Tavus plan allows one; a second visitor gets the same stylist by voice, which sounds different.
-- **Costs depend on behaviour.** A session with several styling changes costs about $1.15 of AI; one with none about $0.45. The 10-minute, $3-a-day limits per visitor are what keep a public link safe.
+- **Costs depend on behaviour.** A session with several styling changes costs about $1.15 of AI; one with none about $0.45. The 20-minute, $3-a-day limits per visitor are what keep a public link safe.
 - **Not measured:** whether shoppers like the looks (the check tests rules and stated preferences, not taste), Android phones, and busy periods.
 
 ## Skills demonstrated
