@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { createContext, type ReactNode, useContext, useState } from "react";
-import { buttonClasses } from "@/components/ui/button";
+import { reportBagCount } from "@/components/app-bar/live";
 import { NOT_NOW } from "@/components/ui/not-now";
 import { itemsKey } from "@/core/looks/saved";
 import type { ShownLook } from "@/core/looks/shown";
@@ -58,25 +57,12 @@ export function KeepingProvider({ savedKeys, bagCount, children }: { savedKeys: 
     async add(sessionId, look, picks) {
       const { ok, answer } = await send("/api/bag", { sessionId, lookId: look.id, items: picks });
       if (!ok) return typeof answer?.error === "string" ? answer.error : NOT_NOW;
-      if (Array.isArray(answer?.items)) setCount(answer.items.length);
+      if (Array.isArray(answer?.items)) {
+        setCount(answer.items.length);
+        reportBagCount(answer.items.length);
+      }
       return true;
     },
   };
   return <Context value={value}>{children}</Context>;
-}
-
-/** Saved looks and Demo bag, beside Wardrobe until the app menu arrives in Phase 7. */
-export function KeepingLinks() {
-  const keeping = useKeeping();
-  const count = keeping?.bagCount ?? 0;
-  return (
-    <>
-      <Link href="/saved-looks" className={buttonClasses("secondary")}>
-        Saved looks
-      </Link>
-      <Link href="/bag" className={buttonClasses("secondary")}>
-        {count ? `Demo bag (${count})` : "Demo bag"}
-      </Link>
-    </>
-  );
 }

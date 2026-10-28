@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { reportBagCount } from "@/components/app-bar/live";
 import { Banner } from "@/components/ui/banner";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
@@ -75,7 +76,12 @@ export function DemoBag({ initialItems }: { initialItems: BagItem[] }) {
                     ))}
                   </select>
                 </label>
-                <Button variant="quiet" disabled={busy === item.id} aria-label={`Remove ${item.name}`} onClick={() => void change(item, { method: "DELETE" }, () => setItems((list) => list.filter((i) => i.id !== item.id)))}>
+                <Button variant="quiet" disabled={busy === item.id} aria-label={`Remove ${item.name}`} onClick={() => void change(item, { method: "DELETE" }, () =>
+                      setItems((list) => {
+                        const left = list.filter((i) => i.id !== item.id);
+                        reportBagCount(left.length);
+                        return left;
+                      }))}>
                   Remove
                 </Button>
               </div>

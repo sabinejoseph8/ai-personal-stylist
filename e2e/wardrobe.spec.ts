@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { canRunDatabaseTests, clearPhotos, serverDb, type TestGuest } from "../tests/support/test-guests";
 import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
+import { openFromMenu } from "./support/menu";
 import { commandsSent, fakeMicrophone, scriptDone } from "./support/microphone";
 
 // 3d: the wardrobe in the browser, with the fake photo reader (a portrait photo is a navy wool blazer).
@@ -194,7 +195,7 @@ test.describe("the wardrobe", () => {
     await wardrobe(page).getByRole("button", { name: /Sage green athletic shorts/ }).click();
     await page.getByRole("button", { name: "Clear wardrobe items" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Your session won't use wardrobe items now." })).toBeVisible();
-    await page.getByRole("link", { name: "Back to your session" }).click();
+    await openFromMenu(page, "Session");
     await expect(page).toHaveURL(/\/session$/);
     await expect(page.getByRole("region", { name: "My Styling Notes" })).toBeVisible();
     await expect(page.getByRole("region", { name: "From your wardrobe" })).toHaveCount(0);

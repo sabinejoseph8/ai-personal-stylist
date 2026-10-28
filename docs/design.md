@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.25 (26 Oct 2026)
+**Status:** Agreed, version 1.26 (27 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -362,6 +362,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 **App bar and menu**
 - Phones: the app name and a **Menu** button. Desktops: the same items across the top.
 - Items: Session, Wardrobe, Saved looks, Demo bag (with an item count), Profile and privacy, About this project, Behind the scenes.
+- **As built (7a):** a bar on every page with **AI Personal Stylist** (back to the start) and the menu. Below desktop width, **Menu** opens a sheet with the items; on desktops they sit across the top in Label type, the current page in Emerald and underlined. Demo bag shows its count, "Demo bag (2)", kept up to date as pieces are added or removed. A new visitor sees only **Try the demo** and **About this project** (your answer to Q1). On the session page Behind the scenes opens its panel there; from another page it opens the session page with the panel open. The interim buttons on the session page (Wardrobe, Profile and privacy, Saved looks, Demo bag, Behind the scenes, Back to the start), the "Back to your session" links and the welcome-back screen's Profile and privacy button are gone; the welcome screen's own "AI Personal Stylist" label moved into the bar.
 
 ## 5. Screens and layouts
 
@@ -587,6 +588,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.26 (27 Oct 2026):** The app bar and menu as built (7a, your answer to Q1).
 - **1.25 (26 Oct 2026):** 6c as built (second part): the why-lines under the stage when voice stands in for video (another visitor; unavailable or dropped; resting for the month), Turn video on in every voice-only case, and the resting welcome screen.
 - **1.24 (26 Oct 2026):** 6c as built (first part): Voice only beside Camera, More on phones, the still portrait with a ring that pulses while she speaks (a pulse, not the voice's volume), "Switching to voice only…" and "Turning video on…" while a switch runs, and "Voice only" with **Turn video on** under the stage.
 - **1.23 (26 Oct 2026):** 6b as built: the Profile and privacy page, its links, and saved preferences in the notebook opening it.

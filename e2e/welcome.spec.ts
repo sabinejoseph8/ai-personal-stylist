@@ -105,6 +105,8 @@ test.describe("a guest", () => {
 
   test("can go through setup with Back, Skip and Continue, and answers are saved (R4)", async ({ page }) => {
     await page.goto("/setup");
+    await expect(page.getByText("Step 1 of 3")).toBeVisible();
+    await noSeriousA11yProblems(page);
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByText("Step 2 of 3")).toBeVisible();
     await page.getByRole("button", { name: "Back" }).click();
@@ -118,6 +120,7 @@ test.describe("a guest", () => {
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(page.getByText("Step 3 of 3")).toBeVisible();
+    await noSeriousA11yProblems(page);
     await page.getByRole("radio", { name: "Between" }).click();
     await page.getByLabel("From ($)").fill("200");
     await page.getByLabel("To ($)").fill("300");

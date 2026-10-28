@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { redirect } from "next/navigation";
 import { DemoBag } from "@/components/bag/demo-bag";
-import { buttonClasses } from "@/components/ui/button";
 import { createSampleCatalog } from "@/connectors/catalog/sample";
 import { listBag } from "@/lib/bag-service";
 import { currentGuest } from "@/lib/guest";
@@ -21,14 +20,12 @@ export default async function BagPage() {
   const items = await listBag({ db, catalog: createSampleCatalog(db) }, guest.id);
 
   return (
+    <>
+    <AppBar current="bag" />
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:px-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="type-title m-0">Demo bag</h1>
-        <Link href="/session" className={buttonClasses("quiet")}>
-          Back to your session
-        </Link>
-      </div>
+      <h1 className="type-title m-0">Demo bag</h1>
       <DemoBag key={items.map((i) => `${i.id}:${i.size}`).join(",")} initialItems={items} />
     </main>
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 
 // Placeholder until the About this project page in Phase 7 (R71).
 export const metadata: Metadata = { title: "How it was built · AI Personal Stylist" };
@@ -8,6 +8,8 @@ const DOCS = "https://github.com/sabinejoseph8/ai-personal-stylist/blob/main/doc
 
 export default function AboutPage() {
   return (
+    <>
+    <AppBar current="about" />
     <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-10 tablet:px-6">
       <h1 className="type-title m-0">How it was built</h1>
       <p className="type-body m-0">
@@ -20,9 +22,7 @@ export default function AboutPage() {
         <li><a className="text-emerald underline" href={`${DOCS}/tech-spec.md`}>Tech spec</a></li>
         <li><a className="text-emerald underline" href={`${DOCS}/progress.md`}>Build plan and progress</a></li>
       </ul>
-      <Link href="/" className="type-label self-start text-emerald underline underline-offset-2">
-        Back to the start
-      </Link>
     </main>
+    </>
   );
 }

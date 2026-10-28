@@ -16,8 +16,8 @@ export function Sheet({
   wide = false,
   children,
 }: {
-  /** The button that opens the sheet. Focus goes back to it when the sheet closes. */
-  trigger: ReactNode;
+  /** The button that opens the sheet. Focus goes back to it when the sheet closes. None for a sheet opened from elsewhere (the menu, 7a). */
+  trigger?: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
@@ -29,7 +29,7 @@ export function Sheet({
 }) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
-      <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>
+      {trigger && <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>}
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="overlay-fade fixed inset-0 z-40 bg-ink/40" />
         <RadixDialog.Content

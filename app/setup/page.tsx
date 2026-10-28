@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { currentGuest } from "@/lib/guest";
 import { loadProfile } from "@/lib/profile-store";
 import { SetupFlow } from "./SetupFlow";
@@ -13,5 +14,10 @@ export default async function SetupPage() {
   // Next.js keeps a page's state when the shopper navigates away and back (Activity). Keying on the
   // saved profile makes setup start again from what's saved whenever that changes, for example after
   // Use a sample profile, instead of showing old answers and saving them over the new ones.
-  return <SetupFlow key={JSON.stringify(profile)} initial={profile} />;
+  return (
+    <>
+      <AppBar />
+      <SetupFlow key={JSON.stringify(profile)} initial={profile} />
+    </>
+  );
 }
