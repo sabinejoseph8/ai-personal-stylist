@@ -53,6 +53,10 @@ Update this file whenever there is a significant new feature, a major bug resolv
 - When a task is done and its checks pass, change its `- [ ]` to `- [x]` in docs/progress.md, tick it on the Memory site too, and update the Summary at the top of docs/progress.md.
 - Commit small, working changes with clear messages, and push to GitHub at the end of each task group.
 
+## Portfolio package
+
+This project gets a recruiter-facing portfolio package (the `portfolio-package` skill): the About page, the README, docs/evaluation.md, the architecture diagram, the one-page case study, the checks in checks/, and the private kit outside the repository. Success criteria are set before any result and never moved quietly: a changed target is recorded with its date and reason. A session that has seen an evaluation's expected answers never edits the thing being evaluated; the blind notes set in tests/evals/held-out/ is written and run by a session that never touches the notes reader, and the sessions that build the reader never read that folder. The interview notes also cover how quality was defined and measured, and what the results changed.
+
 ## Safety rules
 
 - The GitHub repository is public. Never commit secrets, .env files or database backups.

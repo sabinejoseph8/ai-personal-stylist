@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.51 (27 Oct 2026)
+**Status:** Agreed, version 1.52 (28 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -342,6 +342,8 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**The portfolio package (7b).** Built with the portfolio-package skill: **README.md** for AI product manager recruiters; **docs/evaluation.md** (what good looks like with the date each target was set, how it is measured, results with caveats first, what the results changed); **docs/architecture.svg** with its PNG and PDF; **docs/case-study.html** and its one-page PDF; **docs/how-to-run.md**; the checks in **checks/** (run_all.py and prepublish_scan.py, Python standard library, configured by checks/portfolio.json, which names the headline numbers that must read the same in the README, the case study and the evaluation); **scripts/eval-summary.mjs**, which prints the headline numbers from the saved results in tests/evals/results/ for free; and the About page (app/about) built to the design. The blind notes set (your answer to Q1) lives in **tests/evals/held-out/**: 15 sentences with expected notes written and run once by a session that never touched the notes reader (`npm run eval:notes:held-out`, the case file chosen with NOTES_CASES), and the sessions that build the reader never read that folder (CLAUDE.md). The About page links the product spec rather than the private PRD (Q2); the demo video is "coming" until Sabine records it (Q3); public pages show the sample profile and totals only (Q4). The private kit lives outside the repository in portfolio-private/, ignored along with interview-notes.md. The pre-publish scan reads the whole Git history before each push.
+
 **The cost per session and the webhook (7a, pull request 3 of 3).** Undo feedback and Compare reuse the earlier look's passing check when it passed on exactly the current requirements (its check_results row's requirements key): no judgment, so no Claude cost (about 2 cents each) and no wait, and they work even when the day's AI is used up. When the requirements have changed since, the earlier look is judged again as before. Builds and changes keep judging their candidates together (your answer to Q2). The Tavus webhook is described in section 3's table.
 
 **The app bar and menu (7a, pull request 1 of 3).** **components/app-bar/**: each page renders the bar itself (a server component reading the guest and the bag's count), so it's as fresh as the page. The bag's count after Add to bag or Remove, and Behind the scenes opened from the menu, reach the bar and the panel through two small browser stores (**components/app-bar/live.ts**), not through each page's state. Behind the scenes from another page links to **/session?behind=1**, which opens the panel. Every page's browser tests run the axe check, About and setup's three steps included; a test helper (**e2e/support/menu.ts**) opens menu items on phones and desktops alike.
@@ -606,6 +608,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.52 (28 Oct 2026):** 7b: the portfolio package (your answers to Q1 to Q4), the blind notes set, the checks and the About page.
 - **1.51 (27 Oct 2026):** 7a, pull request 3: Undo and Compare reuse a passing check (Q2), and the Tavus webhook (Q4).
 - **1.50 (27 Oct 2026):** 7a, pull request 1: the app bar and menu (your answers to Q1 to Q4 of the 7a plan are in mvp.md).
 - **1.49 (27 Oct 2026):** 6d: the Phase 6 review's 15 fixes (your answers to Q1 and Q2).

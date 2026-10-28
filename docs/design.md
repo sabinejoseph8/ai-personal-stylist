@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.27 (27 Oct 2026)
+**Status:** Agreed, version 1.28 (28 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -564,6 +564,7 @@ Shows the pencil and ink states and the pasted photo.
 - **Profile and privacy:** four sections in this order: Your profile, Saved preferences, Permissions (microphone, camera, wardrobe photos, saving preferences), Your data (Clear this session's notes, Download my data, Delete all my data).
 - As built (6b): each section a white panel. Your profile lists shopping, style, sizes and budget with **Edit your profile**. Each saved preference has a quiet **Delete** ("Delete "Never: high heels"?", **Delete preference**); none: "No saved preferences". Microphone and Camera say what they're for and how to change them in Safari's settings; Wardrobe photos and Saving preferences show Allowed or Not allowed, with **Turn off** ("Turn off wardrobe photos?", naming what's deleted, **Turn off and delete**) or **Allow …**. Your data: the privacy promise in a line, **Clear this session's notes** (waits with "No session is open now." when there's none; then "This session's notes are cleared."), **Download my data** ("A ZIP file with your data and your photos."), and **Delete all my data** in Red pen ("Delete all your data?", **Delete all data**). A problem shows in a Red wash line at the top. One column, up to 42 rem wide.
 - **About this project:** a readable article page (Newsreader headings, Figtree body, lines of about 70 characters) covering the problem, the approach, key decisions and how it was built, with links to the PRD, the planning files in docs/ and the source code.
+- **As built (7b):** one column up to 70 characters wide under the app bar, with sections The problem, What it does, Key decisions, How it was built, Read more and Your data in this demo (the Phase 0 data-handling draft). Read more links the README, the evaluation write-up, the one-page case study PDF, the five plan files (the product spec stands in for the private PRD, your answer to Q2), the Memory site and the code, and says the demo video is coming. Links are Emerald and underlined; the small print closes the page.
 
 ## 6. Accessibility built into the design
 
@@ -589,6 +590,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.28 (28 Oct 2026):** The About page as built (7b).
 - **1.27 (27 Oct 2026):** 7a's accessibility pass: what changed at 200% text, and the 44 px links.
 - **1.26 (27 Oct 2026):** The app bar and menu as built (7a, your answer to Q1).
 - **1.25 (26 Oct 2026):** 6c as built (second part): the why-lines under the stage when voice stands in for video (another visitor; unavailable or dropped; resting for the month), Turn video on in every voice-only case, and the resting welcome screen.

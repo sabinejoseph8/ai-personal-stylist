@@ -415,11 +415,12 @@ The full code review of 24 Oct 2026 covers this for everything built so far: 58 
 - [ ] Record a 2 minute demo video for your portfolio, for anyone who can't try it live (default).
 - [ ] Bring interview-notes.md up to date for the launch story. It stays private: on your Mac, never in the repository.
 - [ ] Evaluation write-up (docs/evaluation.md). Write down what good looks like before measuring: the S1 to S20 checks, notes accuracy and speed (the Phase 2 eval of 30 utterances, plus the 0d results), the preference check against planted looks that break a rule, and cost per demo. Then measure with a small, repeatable script, report the results with their caveats first, and say what the results changed. The expected answers are written before any run, and a session that has seen them doesn't change the code being measured.
+- [ ] A blind notes set (your answer to Q1 in 7b): 15 new shopper sentences with expected notes, written and run once by a session that never touched the notes reader, kept in tests/evals/held-out/ where the building sessions never look, and reported next to the in-sample numbers, met or not.
 - [ ] Architecture diagram as SVG, PNG and PDF, used by the README, the About page and the case study.
 - [ ] Simple automated checks for the portfolio pieces: Python standard library only, one run_all script (docs present, README links work, no em dashes, no secrets or private files in the repository, the case study is one page), and a short run guide (docs/how-to-run.md).
 - [ ] A one-page "AI product management case study" PDF, made with headless Chrome and checked to be one page.
 - [ ] A private portfolio kit PDF, kept outside the repository: a 2-minute and a 10-minute story, answers to likely interview questions, a reader test and a demo video script.
-- [ ] Before publishing: scan the repository for secrets, personal email addresses and private files, and check every README link on GitHub. **You:** approve before anything is pushed.
+- [ ] Before publishing: scan the repository for secrets, personal email addresses and private files, and check every README link on GitHub. **You:** read the README and case study drafts, and approve before anything is pushed.
 
 ### 7c. Launch
 - [ ] **You:** check the Tavus Starter plan ($22 a month, already chosen in 0a) and set the final spending limits (TQ2).
@@ -434,7 +435,7 @@ The full code review of 24 Oct 2026 covers this for everything built so far: 58 
 - The accessibility check passes on every screen.
 - The full end-to-end suite passes on phone and desktop sizes.
 - The welcome screen scores 90 or more for phone performance (default).
-- The portfolio checks pass (`python3 checks/run_all.py`), and the evaluation script reproduces the numbers in docs/evaluation.md.
+- The portfolio checks pass (`python3 checks/run_all.py`): the docs exist, the README's sections and links work, no em dashes, the headline numbers agree across the README, case study and evaluation, the case study is one page, private files are untracked, and no secrets or personal email addresses. `python3 checks/prepublish_scan.py --history` reports nothing new. The evaluation summary script reproduces the numbers in docs/evaluation.md.
 
 **Manual verification**
 
