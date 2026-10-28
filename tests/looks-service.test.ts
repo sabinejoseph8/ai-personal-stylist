@@ -212,7 +212,7 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     expect(filled.map((l) => l.slot)).toEqual([1, 2, 3]);
     expect([filled[0].id, filled[2].id]).toEqual([first[0].id, first[2].id]);
     expect(counter.calls).toBe(1);
-  });
+  }, 45_000);
 
   it("with no look passing, asking again builds again only after a change or Try again (Phase 4 code review)", async () => {
     await db

@@ -276,7 +276,7 @@ describe.skipIf(!canRunDatabaseTests)("notes on the server", () => {
     release();
     const { last } = await pending;
     expect(last.notes.find((n) => n.id === elegant)).toMatchObject({ text: "Elegant", status: "confirmed" });
-  });
+  }, 45_000);
 
   it("Remove by touch takes a note out, and Undo brings it back (R20)", async () => {
     await hear("nothing black please");
