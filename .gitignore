@@ -18,6 +18,11 @@ backups/
 # Interview notes are private (Sabine, 19 Oct 2026)
 interview-notes.md
 
+# Private portfolio material, kept on Sabine's Mac (7b, the portfolio-package skill)
+portfolio-private/
+*Portfolio-Kit*
+private/
+
 # Memory site build output
 tools/memory-site/dist/
 

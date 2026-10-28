@@ -5,26 +5,26 @@ import { canRunDatabaseTests, createTestGuest, serverDb, setting, type TestGuest
 
 // Phase 1 automated test: the daily job deletes guests unused for 7 days (R3) and closes idle sessions.
 // It runs the real job against the shared database, as Vercel's scheduler would.
-const SECRET = "test-cron-secret-0123456789";
+const TEST_SECRET = "test-cron-secret-0123456789";
 const run = (authorization?: string) =>
   GET(new Request("http://localhost/api/cron/daily", { headers: authorization ? { authorization } : {} }));
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
 describe("daily job: who may run it", () => {
   beforeAll(() => {
-    process.env.CRON_SECRET = SECRET;
+    process.env.CRON_SECRET = TEST_SECRET;
   });
 
   it("refuses anyone without Vercel's secret", async () => {
     expect((await run()).status).toBe(401);
     expect((await run("Bearer wrong-secret")).status).toBe(401);
-    expect((await run(SECRET)).status).toBe(401);
+    expect((await run(TEST_SECRET)).status).toBe(401);
   });
 
   it("refuses everyone when no secret is set", async () => {
     delete process.env.CRON_SECRET;
-    expect((await run(`Bearer ${SECRET}`)).status).toBe(401);
-    process.env.CRON_SECRET = SECRET;
+    expect((await run(`Bearer ${TEST_SECRET}`)).status).toBe(401);
+    process.env.CRON_SECRET = TEST_SECRET;
   });
 });
 
@@ -38,7 +38,7 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
   let summary: Record<string, number>;
 
   beforeAll(async () => {
-    process.env.CRON_SECRET = SECRET;
+    process.env.CRON_SECRET = TEST_SECRET;
     process.env.SUPABASE_SECRET_KEY = setting("SUPABASE_SECRET_KEY");
     // Fresh guests, not from the pool: the job deletes some of them.
     [old, active, old2] = await Promise.all([createTestGuest({ fresh: true }), createTestGuest({ fresh: true }), createTestGuest({ fresh: true })]);
@@ -57,7 +57,7 @@ describe.skipIf(!canRunDatabaseTests)("daily job", () => {
       .order("last_activity_at")
       .throwOnError();
     [idleSession, liveSession] = sessions.data!.map((s) => s.id);
-    const res = await run(`Bearer ${SECRET}`);
+    const res = await run(`Bearer ${TEST_SECRET}`);
     expect(res.status).toBe(200);
     summary = await res.json();
   }, 60_000);
