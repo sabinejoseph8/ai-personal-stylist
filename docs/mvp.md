@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.48
+**Status:** Living document, version 1.49
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -431,6 +431,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.49 (27 Oct 2026):** 7a done: the iPhone and laptop check passed A to E, including the Tavus webhook counting a closed call's exact minutes.
 - **1.48 (27 Oct 2026):** 6d done, and Phase 6 complete: the Phase 6 review's 15 fixes (Q1 and Q2; tech spec 1.49).
 - **1.47 (27 Oct 2026):** 6a, 6b and 6c done: the combined iPhone check passed A to F, after the first live voice calls found a missing key in Vercel and a trimmed offer (both fixed; tech spec 1.48). 6d, the Phase 6 code review, next.
 - **1.46 (26 Oct 2026):** 6c built in full (two pull requests); its iPhone check is part of the combined 6a to 6c check.
