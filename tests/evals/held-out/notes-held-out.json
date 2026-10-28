@@ -1,0 +1,86 @@
+[
+  { "id": "Held-out: baby shower", "turns": [{ "shopper": "I'm hosting a baby shower for my sister at the end of March, something soft and pastel, maybe lilac, and I don't want to spend more than 180" }],
+    "expect": [
+      { "after": "shower", "has": ["baby shower"] },
+      { "after": "march", "has": ["march"] },
+      { "after": "pastel", "has": ["pastel"] },
+      { "after": "lilac", "has": ["lilac"] },
+      { "after": "180", "has": ["180"] }] },
+  { "id": "Held-out: stretching the budget", "turns": [
+      { "shopper": "Let's keep it under 250 for the christening" },
+      { "stylist": "Under 250, noted. Any colours you'd like?", "shopper": "Hmm, actually I could stretch to 400 if it's worth it" }],
+    "expect": [{ "after": "christening", "has": ["christening"] }, { "after": "400", "has": ["400"], "lacks": ["250"] }],
+    "forbid": ["250"] },
+  { "id": "Held-out: anniversary colours", "turns": [{ "shopper": "For our anniversary dinner I'd love something in burgundy or deep plum, but please no orange, it washes me out" }],
+    "expect": [
+      { "after": "dinner", "has": ["anniversary"] },
+      { "after": "burgundy", "has": ["burgundy"] },
+      { "after": "plum", "has": ["plum"] },
+      { "after": "orange", "has": ["orange"] }] },
+  { "id": "Held-out: unclear, then confirmed", "turns": [
+      { "shopper": "It's, um, sort of a, I guess you'd call it a, like a retirement do? For my dad, in, uh, early October I think" },
+      { "stylist": "A retirement party for your dad in early October, have I got that right?", "shopper": "Yep, that's it" }],
+    "expect": [{ "after": "retirement", "has": ["retirement"], "status": "confirmed" }, { "after": "october", "has": ["october"] }] },
+  { "id": "Held-out: nothing to note", "turns": [{ "shopper": "Sorry, can you hear me okay? My wifi has been playing up all morning" }],
+    "expect": [], "maxNotes": 0 },
+  { "id": "Held-out: vow renewal, long turn", "turns": [{ "shopper": "Right, so, my husband and I are renewing our vows in Santorini at the end of May, it's on a clifftop at sunset, there'll be about 40 people, it's pretty breezy, I want to look effortless, lots of white or ivory, loose and flowy, I'll be barefoot or in sandals, I'm not wearing a veil, I own a gold cuff I'd like to wear, and I'd like to stay under 700" }],
+    "expect": [
+      { "after": "vows", "has": ["vow"] },
+      { "after": "santorini", "has": ["santorini"] },
+      { "after": "may", "has": ["may"] },
+      { "after": "ivory", "has": ["ivory"] },
+      { "after": "cuff", "has": ["cuff"] },
+      { "after": "700", "has": ["700"], "lacks": ["40"] }],
+    "maxNotes": 12 },
+  { "id": "Held-out: owned items for the races", "turns": [{ "shopper": "I already own a tan trench coat and a pair of tortoiseshell sunglasses that I'd love to wear to the races in April" }],
+    "expect": [
+      { "after": "coat", "has": ["trench"] },
+      { "after": "sunglasses", "has": ["sunglasses"] },
+      { "after": "races", "has": ["races"] },
+      { "after": "april", "has": ["april"] }] },
+  { "id": "Held-out: fit", "turns": [{ "shopper": "I'm tall and broad shouldered, so no puffy sleeves please, and I'd like a high waist to balance things out" }],
+    "expect": [
+      { "after": "shouldered", "has": ["tall"] },
+      { "after": "sleeves", "has": ["puff"] },
+      { "after": "waist", "has": ["waist"] }] },
+  { "id": "Held-out: best man", "turns": [{ "shopper": "I'm the best man at a barn wedding in late August, the dress code says smart but no ties, and I'd like a linen suit in a light colour" }],
+    "expect": [
+      { "after": "man", "has": ["best man"] },
+      { "after": "wedding", "has": ["barn"] },
+      { "after": "august", "has": ["august"] },
+      { "after": "ties", "has": ["tie"] },
+      { "after": "linen", "has": ["linen"] }] },
+  { "id": "Held-out: date correction", "turns": [{ "shopper": "Our housewarming is on the 12th, no wait, the 19th of September, and it's pretty casual" }],
+    "expect": [
+      { "after": "housewarming", "has": ["housewarming"] },
+      { "after": "september", "has": ["19"], "lacks": ["12"] },
+      { "after": "casual", "has": ["casual"] }],
+    "forbid": ["12"] },
+  { "id": "Held-out: dressy or relaxed", "turns": [
+      { "shopper": "I need something for a gallery opening next month" },
+      { "stylist": "Fun. Are you thinking more dressy or more relaxed?", "shopper": "Dressy, definitely" }],
+    "expect": [{ "after": "opening", "has": ["gallery"] }, { "after": "dressy", "has": ["dressy"] }],
+    "forbid": ["relaxed"] },
+  { "id": "Held-out: not quite, moved indoors", "turns": [
+      { "shopper": "It's a brunch for my mum's 70th in the garden" },
+      { "stylist": "So a garden brunch for your mum's 70th, is that right?", "shopper": "Not quite, it's moved indoors now, to a restaurant" }],
+    "expect": [
+      { "after": "brunch", "has": ["brunch"] },
+      { "after": "70th", "has": ["70"] },
+      { "after": "restaurant", "has": ["restaurant"], "lacks": ["garden"] }],
+    "forbid": ["garden"] },
+  { "id": "Held-out: a range for a conference", "turns": [{ "shopper": "Somewhere in the 350 to 500 range would be comfortable, it's for a work conference in Chicago in March" }],
+    "expect": [
+      { "after": "range", "has": ["350", "500"] },
+      { "after": "conference", "has": ["conference"] },
+      { "after": "march", "has": ["march"] }] },
+  { "id": "Held-out: minimalist, runs warm", "turns": [{ "shopper": "My style is pretty minimalist, think clean lines and no logos, and I run warm so nothing heavy, it's for the theatre on Saturday" }],
+    "expect": [
+      { "after": "minimalist", "has": ["minimalist"] },
+      { "after": "logos", "has": ["logo"] },
+      { "after": "heavy", "has": ["heavy"] },
+      { "after": "theatre", "has": ["theat"] },
+      { "after": "saturday", "has": ["saturday"] }] },
+  { "id": "Held-out: a trend question", "turns": [{ "shopper": "Are wide leg trousers still in this year, or has everyone gone back to skinny jeans?" }],
+    "expect": [], "forbid": ["wide leg", "skinny"] }
+]

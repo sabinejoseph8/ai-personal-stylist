@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 import { expect, it } from "vitest";
 import { claudeAsk, type Effort, LIVE_MODEL } from "@/connectors/ai/claude";
 import { mergeNotes } from "@/core/notes/merge";
@@ -17,6 +18,8 @@ import { countedAsk } from "../support/eval-spend";
 // Pass marks: at least 90% of checks right, and 95% of notes within 2 seconds of their phrase (R17).
 // Run: npm run eval:notes. It costs about 10 cents. To compare setups (2c), set NOTES_EVAL_EFFORT (off or
 // low), NOTES_EVAL_OVERLAP=0 (one reading at a time), NOTES_EVAL_SEND_MS and NOTES_EVAL_OUT (results file).
+// NOTES_CASES picks another case file, measured the same way: the blind held-out set in tests/evals/held-out
+// (7b) runs with npm run eval:notes:held-out and writes results/notes-held-out-latest.json.
 // Cases with a photo (3b, Sabine's answer to Q3) give the reader the item to style around, and check
 // what the shopper's words changed about it, while the notes are timed as usual. Cases with looks on
 // screen (4c, 5a) check the request to swap a piece and the feedback heard at the end of the turn (only
@@ -80,12 +83,14 @@ const LOOKS: LookForReader[] = [
   },
 ];
 
-const cases: Case[] = JSON.parse(readFileSync("tests/evals/notes-cases.json", "utf8"));
+const CASES_FILE = process.env.NOTES_CASES ?? "tests/evals/notes-cases.json";
+const cases: Case[] = JSON.parse(readFileSync(CASES_FILE, "utf8"));
 // Settings to compare setups (all default to what the app does).
 const EFFORT = (process.env.NOTES_EVAL_EFFORT ?? "off") as Effort;
 const OVERLAP = process.env.NOTES_EVAL_OVERLAP !== "0";
 const SEND_EVERY_MS = Number(process.env.NOTES_EVAL_SEND_MS ?? 500);
-const OUT = process.env.NOTES_EVAL_OUT ?? "tests/evals/results/notes-latest.json";
+// The results file is named after the case file: notes-cases.json writes notes-latest.json.
+const OUT = process.env.NOTES_EVAL_OUT ?? `tests/evals/results/${basename(CASES_FILE, ".json").replace(/-cases$/, "")}-latest.json`;
 const reader = createNotesReader(countedAsk(claudeAsk(LIVE_MODEL, EFFORT, setting("ANTHROPIC_API_KEY"))));
 const WORDS_PER_SECOND = 2.5;
 const AT_ONCE = 3;
@@ -290,6 +295,7 @@ it("notes evaluation: at least 90% right, 95% within 2 seconds", async () => {
   const sorted = timed.map((c) => c.seconds ?? 99).sort((a, b) => a - b);
   const summary = {
     model: LIVE_MODEL,
+    casesFile: CASES_FILE,
     setup: { effort: EFFORT, overlap: OVERLAP, sendEveryMs: SEND_EVERY_MS },
     date: new Date().toISOString(),
     cases: results.length,

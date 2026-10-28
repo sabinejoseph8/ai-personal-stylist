@@ -15,6 +15,7 @@
     "e2e": "playwright test",
     "lighthouse": "node scripts/lighthouse.mjs",
     "eval:notes": "vitest run --config vitest.evals.config.mts tests/evals/notes.eval.ts",
+    "eval:notes:held-out": "NOTES_CASES=tests/evals/held-out/notes-held-out.json vitest run --config vitest.evals.config.mts tests/evals/notes.eval.ts",
     "eval:photos": "vitest run --config vitest.evals.config.mts tests/evals/photos.eval.ts",
     "eval:camera": "vitest run --config vitest.evals.config.mts tests/evals/camera.eval.ts",
     "eval:rules": "vitest run --config vitest.evals.config.mts tests/evals/rules.eval.ts",
