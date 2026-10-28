@@ -840,6 +840,21 @@ export async function currentLooks(deps: Pick<LooksDeps, "db" | "catalog">, gues
 const HISTORY = 10;
 
 /** The earlier versions of a look in its place, newest first: the looks swaps, revisions and restores replaced (5c). */
+/** A look's passing check on these exact requirements, or null: the reasons it passed with. */
+async function passedOn(db: SupabaseClient, guestId: string, lookId: string, key: string): Promise<CheckReason[] | null> {
+  const { data } = await db
+    .from("check_results")
+    .select("reasons")
+    .eq("look_id", lookId)
+    .eq("user_id", guestId)
+    .eq("verdict", "pass")
+    .eq("versions_checked->>requirements", key)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .throwOnError();
+  return data?.[0] ? ((data[0].reasons as CheckReason[]) ?? []) : null;
+}
+
 async function earlierVersions(db: SupabaseClient, guestId: string, sessionId: string, row: LookRow): Promise<LookRow[]> {
   const out: LookRow[] = [];
   let next = row.revision_of;
@@ -930,7 +945,10 @@ async function restoreNow(deps: LooksDeps, guestId: string, sessionId: string, l
   // Undo takes back the lines the last revision answered for the first time.
   const before = new Set(earlier.input_versions.revision?.seen ?? []);
   const takeBack = undo ? [...new Set((row.input_versions.revision?.seen ?? []).filter((s) => !before.has(s)).map((s) => s.split(":")[0]))] : [];
-  const result = await check(deps, guestId, g, items);
+  // The earlier look already passed on exactly these requirements: its verdict stands, with no new judgment
+  // (7a, Sabine's answer to Q2: about 2 cents saved, and instant). Otherwise it's checked again.
+  const passedBefore = await passedOn(db, guestId, earlier.id, g.key);
+  const result: Checked = passedBefore ? { verdict: "pass", reasons: passedBefore, failedProducts: [] } : await check(deps, guestId, g, items);
   if (!(await sessionOpen(db, guestId, sessionId))) throw new SessionEndedError();
   // No verdict (the day's AI allowance, or the judgment step failing): the look stays and says so; nothing is saved (25 Oct 2026).
   if (result.unchecked === "allowance") return { none: todaysLimit("this one stays") };

@@ -3,7 +3,7 @@ import { createFakeEngine, createFakeProvider } from "@/connectors/conversation/
 import { createGptLiveProvider } from "@/connectors/conversation/gpt-live/server";
 import { isPendingVoiceCall, liveSessionId } from "@/connectors/conversation/gpt-live/shared";
 import { fakeEngineAllowed } from "@/connectors/conversation/server";
-import { createTavusProvider } from "@/connectors/conversation/tavus/server";
+import { createTavusProvider, tavusWebhookUrl } from "@/connectors/conversation/tavus/server";
 import { callProviderContract, conversationEngineContract } from "./support/conversation-contract";
 
 // 2a: the conversation connector. The fake engine and the Tavus engine's server side pass the shared
@@ -66,6 +66,18 @@ describe("Tavus provider", () => {
       body: { pal_id: "p1", properties: { max_call_duration: 423, enable_recording: false, participant_left_timeout: 30 } },
     });
     expect(tavus.requests[0].headers["x-api-key"]).toBe(KEY);
+    expect(tavus.requests[0].body).not.toHaveProperty("callback_url");
+  });
+
+  it("asks Tavus to report the call's end to the live site's webhook, with its secret (7a, Q4)", async () => {
+    const tavus = tavusOk();
+    await createTavusProvider({ apiKey: KEY, palId: "p1", fetch: tavus.fetch, callbackUrl: "https://example.test/api/webhooks/tavus?token=s3" }).start({ sessionId: "s1", maxSeconds: 60 });
+    expect(tavus.requests[0].body).toMatchObject({ callback_url: "https://example.test/api/webhooks/tavus?token=s3" });
+    const live = { VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "stylist.example.app", TAVUS_WEBHOOK_SECRET: " s3 cret\n" };
+    expect(tavusWebhookUrl(live)).toBe("https://stylist.example.app/api/webhooks/tavus?token=s3%20cret");
+    // Only on the live site, and only once the secret is set.
+    expect(tavusWebhookUrl({ ...live, VERCEL_ENV: "preview" })).toBeUndefined();
+    expect(tavusWebhookUrl({ ...live, TAVUS_WEBHOOK_SECRET: "" })).toBeUndefined();
   });
 
   it("says busy when Tavus refuses a second call at the same time", async () => {

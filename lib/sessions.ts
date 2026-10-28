@@ -317,6 +317,22 @@ async function placeCall(deps: SessionDeps, guestId: string, session: Session, r
 }
 
 /**
+ * Tavus reported that a video call ended (7a, POST /api/webhooks/tavus, Sabine's answer to Q4): its
+ * session settles the call's exact time, up to the moment Tavus closed it, rather than the estimate
+ * (last activity plus 30 seconds). A call already settled by the page or the daily job is left alone, so
+ * the message can arrive before or after them. Returns whether a call was settled.
+ */
+export async function videoCallEnded(deps: SessionDeps, callId: string, endedAt: number) {
+  const { data } = await deps.db.from("sessions").select(COLUMNS).eq("call_id", callId).maybeSingle<Session>().throwOnError();
+  if (!data || isVoiceCall(callId)) return false;
+  const started = data.call_started_at ? Date.parse(data.call_started_at) : 0;
+  const until = Number.isFinite(endedAt) ? Math.min(Date.now(), Math.max(started, endedAt)) : Date.now();
+  // A session the idle timer already ended keeps its ending; an open one pauses, so it can be resumed.
+  await finishCall(deps, data, data.status === "ended" ? "ended" : "paused", until);
+  return true;
+}
+
+/**
  * End (R12), or a call that stopped by itself (keep: true, so the session can be resumed). A stopped
  * call names itself (callId): one that stopped before a reconnect can arrive late, after the new call
  * is recorded, and must not end that one (review batch 1, A3). End by the button ends whatever runs.
