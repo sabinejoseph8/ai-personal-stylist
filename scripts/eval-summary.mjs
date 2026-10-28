@@ -10,6 +10,8 @@ const read = (name) => {
 };
 const day = (iso) => (iso ? iso.slice(0, 10) : "");
 const pct = (n) => `${Math.round(n)}%`;
+// The runner records a note that never appeared as 99 seconds, so the 95th percentile says so in words.
+const p95 = (r) => (r.p95Seconds >= 99 ? "some notes never appeared" : `95th percentile ${r.p95Seconds} s`);
 
 const notes = read("notes");
 const heldOut = read("notes-held-out");
@@ -21,11 +23,11 @@ const camera = read("camera");
 const rows = [];
 if (notes) {
   rows.push({ measure: "Notes right (in-sample)", target: "90%", result: pct(notes.rightPercent), detail: `${notes.right} of ${notes.checks} checks, ${notes.cases} cases, ${notes.model}`, date: day(notes.date) });
-  rows.push({ measure: "Notes within 2 seconds (in-sample)", target: "95%", result: pct(notes.within2sPercent), detail: `${notes.timedNotes} timed notes, 95th percentile ${notes.p95Seconds} s`, date: day(notes.date) });
+  rows.push({ measure: "Notes within 2 seconds (in-sample)", target: "95%", result: pct(notes.within2sPercent), detail: `${notes.timedNotes} timed notes, ${p95(notes)}`, date: day(notes.date) });
 }
 if (heldOut) {
   rows.push({ measure: "Notes right (blind set)", target: "90%", result: pct(heldOut.rightPercent), detail: `${heldOut.right} of ${heldOut.checks} checks, ${heldOut.cases} cases, written blind`, date: day(heldOut.date) });
-  rows.push({ measure: "Notes within 2 seconds (blind set)", target: "95%", result: pct(heldOut.within2sPercent), detail: `${heldOut.timedNotes} timed notes, 95th percentile ${heldOut.p95Seconds} s`, date: day(heldOut.date) });
+  rows.push({ measure: "Notes within 2 seconds (blind set)", target: "95%", result: pct(heldOut.within2sPercent), detail: `${heldOut.timedNotes} timed notes, ${p95(heldOut)}`, date: day(heldOut.date) });
 }
 if (checker) {
   rows.push({ measure: "Rule breaks caught by code", target: "all", result: checker.ruleBreaksCaught, detail: `${checker.looks} looks, ${checker.model}`, date: day(checker.date) });
