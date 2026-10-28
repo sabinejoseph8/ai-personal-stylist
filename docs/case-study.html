@@ -53,7 +53,7 @@
     <div class="eyebrow">AI product management case study &middot; Live demo, launch check pending &middot; October 2026</div>
     <h1>AI Personal Stylist</h1>
     <div class="sub">A lifelike video stylist that jots down what you want while you talk, then builds looks you refine by voice or touch</div>
-    <p class="lede">For anyone dressing for an occasion on their phone. A working web app, built in three weeks by an AI product manager directing Claude Code, with quality defined before it was measured. Sample products only.</p>
+    <p class="lede">For anyone dressing for an occasion on their phone. A working web app, built in three weeks by an AI product manager directing Claude Code, with quality defined before it was measured.</p>
   </header>
 
   <div class="kpis">
@@ -67,7 +67,7 @@
     <div>
       <section>
         <h2>The problem</h2>
-        <p>Online shopping gives you a search box and a thousand results that don't go together. A good stylist listens, remembers what you said, looks at what you own, and builds a whole outfit within your budget and rules. AI chat gets the listening half, then forgets your budget and shows you the heels you ruled out.</p>
+        <p>Online shopping gives you a search box and a thousand results that don't go together. A good stylist listens, remembers, looks at what you own, and builds a whole outfit within your budget and rules. AI chat listens, then forgets your budget and shows you the heels you ruled out.</p>
       </section>
       <section>
         <h2>What I built</h2>
@@ -76,7 +76,7 @@
           <li><strong>Looks around what you own:</strong> a photo or the live camera names your item; three complete looks are built around it, your own pieces never in the totals.</li>
           <li><strong>One gate:</strong> every look passes a preference check (rules in code, then a model's judgment) before it reaches the screen.</li>
           <li><strong>Refinement and keeping:</strong> keep, change, swap, undo, compare; save a look; a demo bag that cannot check out.</li>
-          <li><strong>Degrade, never break; privacy and budget built in:</strong> voice carries on when video can't; no recordings, photos deleted with the session, download or delete all; a daily allowance and monthly stops checked before every paid call.</li>
+          <li><strong>Degrade, never break; privacy and budget built in:</strong> voice carries on when video can't; no recordings, photos deleted with the session, download or delete all; a daily allowance and monthly stops before every paid call.</li>
         </ul>
       </section>
       <section>
@@ -99,7 +99,8 @@
         <p>Targets set on 17 to 21 October 2026, before any result, and never moved.</p>
         <table>
           <tr><th>Measure</th><th>Target</th><th>Result</th></tr>
-          <tr><td>Notes within 2 s / right (63 sentences)</td><td>95% / 90%</td><td>97% / 96%</td></tr>
+          <tr><td>Notes within 2 s / right (63 sentences, in-sample)</td><td>95% / 90%</td><td>97% / 96%</td></tr>
+          <tr><td>Notes within 2 s / right (15 blind sentences)</td><td>95% / 90%</td><td>85% / 83%, not met</td></tr>
           <tr><td>Rule breaks caught by code (37 looks)</td><td>All</td><td>16 of 16</td></tr>
           <tr><td>Judged looks right</td><td>90%</td><td>21 of 21</td></tr>
           <tr><td>Photo details right (24 catalog photos)</td><td>85%</td><td>93%</td></tr>
@@ -110,12 +111,12 @@
       <section>
         <h2>What I learned</h2>
         <ul>
-          <li>Measuring before building changed the model choice, not just a setting.</li>
+          <li>Measuring before building changed the model choice; a blind set then showed how much my own cases flattered the reader.</li>
           <li>Cost became a product problem: one session's judgments hit the daily allowance in my own check, so the limit, honest limit lines and a free Undo followed.</li>
           <li>The automatic accessibility scan missed what measuring found: 200% text and 44 px targets caught five layout problems and one conflict in my own spec.</li>
         </ul>
       </section>
-      <div class="note"><strong>Limits:</strong> most answers were written by me, the builder, so the scores are in-sample; one blind set of 15 sentences is the exception (docs/evaluation.md). One tester, one iPhone; no stranger has used it yet. Catalog photos, not phone photos. Taste isn't measured, only rules and stated preferences.</div>
+      <div class="note"><strong>Limits:</strong> most answers were mine, so the scores are in-sample; the blind set of 15 sentences scored 83% right and 85% in time, below both targets: the honest estimate for new sentences. One tester, one iPhone; no stranger yet. Catalog photos, not phone photos. Taste isn't measured, only rules.</div>
     </div>
   </div>
 

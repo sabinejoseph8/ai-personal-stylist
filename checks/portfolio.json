@@ -15,22 +15,86 @@
     "docs/progress.md",
     "docs/mvp.md"
   ],
-  "readme_sections": ["problem", "how it works|how a run works|architecture", "design|decision|tradeoff", "quality|evaluation|measured|results|tested|scorecard", "limitation", "skills"],
+  "readme_sections": [
+    "problem",
+    "how it works|how a run works|architecture",
+    "design|decision|tradeoff",
+    "quality|evaluation|measured|results|tested|scorecard",
+    "limitation",
+    "skills"
+  ],
   "_readme_sections": "Each entry is one section; \"|\" separates words that count for it.",
   "evaluation": "docs/evaluation.md",
-  "evaluation_sections": ["what good looks like", "how it is measured", "results", "caveats", "what the results changed"],
-  "style_files": ["README.md", "docs/*.md", "docs/*.html", "app/about/page.tsx"],
+  "evaluation_sections": [
+    "what good looks like",
+    "how it is measured",
+    "results",
+    "caveats",
+    "what the results changed"
+  ],
+  "style_files": [
+    "README.md",
+    "docs/*.md",
+    "docs/*.html",
+    "app/about/page.tsx"
+  ],
   "case_study_pdf": "docs/case-study.pdf",
   "headline_numbers": {
     "_about": "The evaluation's headline numbers (node scripts/eval-summary.mjs) must read the same in every public page that quotes them.",
-    "96%": ["README.md", "docs/case-study.html", "docs/evaluation.md"],
-    "97%": ["README.md", "docs/case-study.html", "docs/evaluation.md"],
-    "16 of 16": ["README.md", "docs/case-study.html", "docs/evaluation.md"],
-    "93%": ["README.md", "docs/case-study.html", "docs/evaluation.md"],
-    "$1.15": ["README.md", "docs/case-study.html", "docs/evaluation.md"]
+    "96%": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ],
+    "97%": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ],
+    "16 of 16": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ],
+    "93%": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ],
+    "$1.15": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ],
+    "83%": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ],
+    "85%": [
+      "README.md",
+      "docs/case-study.html",
+      "docs/evaluation.md"
+    ]
   },
-  "private_paths": ["interview-notes.md", "private/", "portfolio-private/", "*Portfolio-Kit*", ".env.local", "*.docx", "*.xlsx"],
+  "private_paths": [
+    "interview-notes.md",
+    "private/",
+    "portfolio-private/",
+    "*Portfolio-Kit*",
+    ".env.local",
+    "*.docx",
+    "*.xlsx"
+  ],
   "allowed_emails": [],
   "_allowed_emails": "Added to the built-in list (GitHub no-reply addresses, noreply@anthropic.com, example.com). Add only addresses that are public on purpose.",
-  "skip_paths": ["node_modules/", "package-lock.json", ".git/", "tools/memory-site/dist/", "public/catalog/", "catalog/", ".next/"]
+  "skip_paths": [
+    "node_modules/",
+    "package-lock.json",
+    ".git/",
+    "tools/memory-site/dist/",
+    "public/catalog/",
+    "catalog/",
+    ".next/"
+  ]
 }

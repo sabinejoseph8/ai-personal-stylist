@@ -12,7 +12,7 @@
 - **What it does:** a face-to-face conversation with a video stylist who takes notes you can see and correct, builds three complete looks around what you own and what you said, and never shows a look that breaks a preference you confirmed.
 - **How it works:** live video and voice from outside services that only speak and listen; a small server with Claude models reading notes, reading photos and building looks; a preference check that every look must pass before it reaches the screen.
 - **How quality was defined:** targets written before any result, at planning time and in each task group's plan: 95% of notes within 2 seconds, 90% of notes right, every planted rule break caught, 85% of photo details right, about $1.10 of AI per demo, a phone speed score of 90.
-- **Results:** 97% of notes within 2 seconds and 96% right, on sentences the builders had seen (in-sample); 16 of 16 planted rule breaks caught; 93% of photo details right on catalog photos; about $1.15 per demo with styling changes, 5 cents over target; a live speed score of 98. A small blind set of new sentences is reported in the evaluation.
+- **Results:** 97% of notes within 2 seconds and 96% right, on sentences the builders had seen (in-sample); 16 of 16 planted rule breaks caught; 93% of photo details right on catalog photos; about $1.15 per demo with styling changes, 5 cents over target; a live speed score of 98. On a blind set of 15 new sentences the notes scored 83% right and 85% within 2 seconds, below both targets: the honest estimate for sentences nobody tuned for.
 - **Status:** built and live, with the final launch check (a stranger's first session) still to run.
 
 ## The problem
@@ -62,16 +62,16 @@ Underneath: the browser holds the call and sends your words, photos and frames t
 |---|---|---|---|
 | Notes within 2 seconds | 95% | 97% | In-sample; a few points of variation between runs |
 | Notes right | 90% | 96% | In-sample: the answers were seen by the sessions that built the reader |
-| Notes on the blind set | 90% right, 95% within 2 s | See [docs/evaluation.md](docs/evaluation.md) | 15 sentences, one run |
+| Notes on the blind set | 90% right, 95% within 2 s | 83% right, 85% within 2 s | Not met. 15 sentences, one run; 5 notes never appeared, in a long turn a later reading removed |
 | Rule breaks caught by code | All | 16 of 16 | Planted by the builder |
 | Judged looks right | 90% | 21 of 21 | A small set, reviewed by the builder |
 | Photo details right | 85% | 93% | Catalog photos, cleaner than phone photos |
 | AI cost per demo | About $1.10 | About $1.15 | Not met, by 5 cents; one session, with styling changes |
 | Phone speed | 90 | 98 | Lighthouse from a Mac, not a real phone's network |
 
-**What the results changed.** The notes model (Opus was right but too slow, so Haiku with code for money and dates). The notes setup (thinking off and words twice a second took on-time notes from about half to 97%). The daily AI allowance (a session with styling changes cost about $1 of judgments, which stopped the builder's own check; the allowance went to $3 and the screens say when it's used up). Undo and Compare now reuse a look's passing verdict instead of paying for it again. The planned speed work became a measurement, because the live site already scored 98.
+**What the results changed.** The notes model (Opus was right but too slow, so Haiku with code for money and dates). The notes setup (thinking off and words twice a second took on-time notes from about half to 97%). The daily AI allowance (a session with styling changes cost about $1 of judgments, which stopped the builder's own check; the allowance went to $3 and the screens say when it's used up). Undo and Compare now reuse a look's passing verdict instead of paying for it again. The planned speed work became a measurement, because the live site already scored 98. The blind set's misses (notes lost in a long turn, a stretched budget, a venue correction) are the first items for after launch, in a session that never reads the blind cases.
 
-**How blind was it?** Not very, apart from one set. Every in-sample answer was written by the same builder who built the reader, often in the same task group. The photo answers come from the catalog's own details. The blind set is small. The full write-up says what each number can and can't show: [docs/evaluation.md](docs/evaluation.md).
+**How blind was it?** Not very, apart from one set. Every in-sample answer was written by the same builder who built the reader, often in the same task group. The photo answers come from the catalog's own details. The blind set is small, and it scored well below the in-sample numbers, which is the point of having one. The full write-up says what each number can and can't show: [docs/evaluation.md](docs/evaluation.md).
 
 ## Planned and tested like a product
 
@@ -87,7 +87,7 @@ Open [the live site](https://ai-personal-stylist-inky.vercel.app) on a phone, ta
 
 ## Limitations
 
-- **The evaluation is mostly in-sample.** The expected answers were written by the builder, and the notes reader was tuned on the sentences it was then scored on. One blind set of 15 sentences is the exception.
+- **The evaluation is mostly in-sample.** The expected answers were written by the builder, and the notes reader was tuned on the sentences it was then scored on. One blind set of 15 sentences is the exception, and it missed both targets (83% right, 85% within 2 seconds).
 - **One tester.** Every real-device check was by the builder on one iPhone and one laptop. No stranger has used it yet: that first session is the last launch check.
 - **The conversation needs a voice.** There are no captions and no typing to the stylist in v1, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard.
 - **A sample catalog.** About 140 products with generated photos, no real retailer, no real stock or prices, and no checkout by design.
