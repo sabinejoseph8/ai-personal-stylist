@@ -6,7 +6,8 @@ import { isPendingVoiceCall } from "@/connectors/conversation/gpt-live/shared";
 import type { CallProvider } from "@/connectors/conversation/types";
 import { createBudgetGuard, readBudgetLimits } from "@/lib/budget-guard";
 import { addPhoto, finishPhoto } from "@/lib/photos-service";
-import { endConversation, endLeftBehindCalls, openSession, retryStaleCalls, type SessionDeps, startConversation } from "@/lib/sessions";
+import { endConversation, endLeftBehindCalls, openSession, retryStaleCalls, type SessionDeps, startConversation, videoCallEnded } from "@/lib/sessions";
+import { POST as tavusWebhook } from "@/app/api/webhooks/tavus/route";
 import { canRunDatabaseTests, createTestGuest, serverDb, type TestGuest } from "./support/test-guests";
 
 // 2a and 2e: sessions (R12) with the fake engine, against the real database: start, resume, End, the
@@ -348,6 +349,46 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     const { data: usage } = await db.from("usage").select("voice_seconds, openai_microdollars").eq("user_id", guest.id).single().throwOnError();
     expect(usage!.voice_seconds).toBeGreaterThanOrEqual(60);
     expect(Number(usage!.openai_microdollars)).toBe(0);
+  });
+
+  it("Tavus's end-of-call message settles the call's exact time, once, whether the session is open or ended (7a, Q4)", async () => {
+    const started = await startConversation(deps(), guest.id);
+    if (!started.ok) throw new Error(started.reason);
+    await db.from("sessions").update({ call_started_at: new Date(Date.now() - 300_000).toISOString() }).eq("id", started.sessionId).throwOnError();
+    // Tavus closed the call 3 minutes in (the shopper had closed the browser).
+    expect(await videoCallEnded(deps(), started.call.callId, Date.now() - 120_000)).toBe(true);
+    expect(await row(started.sessionId)).toMatchObject({ status: "paused", call_id: null });
+    const used = await usedToday();
+    expect(used).toBeGreaterThanOrEqual(179);
+    expect(used).toBeLessThan(185);
+    expect(ended).toEqual([started.call.callId]);
+    // Settled already (by the page, or a second message): nothing more.
+    expect(await videoCallEnded(deps(), started.call.callId, Date.now())).toBe(false);
+    expect(await usedToday()).toBe(used);
+
+    // A session the idle timer ended with its call still recorded stays ended.
+    const again = await startConversation(deps(), guest.id);
+    if (!again.ok) throw new Error(again.reason);
+    await db.from("sessions").update({ status: "ended", call_started_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", again.sessionId).throwOnError();
+    expect(await videoCallEnded(deps(), again.call.callId, Date.now() - 30_000)).toBe(true);
+    expect(await row(again.sessionId)).toMatchObject({ status: "ended", call_id: null });
+  });
+
+  it("the Tavus webhook needs its secret, and ignores other messages and calls that aren't ours (7a, Q4)", async () => {
+    const was = process.env.TAVUS_WEBHOOK_SECRET;
+    process.env.TAVUS_WEBHOOK_SECRET = "test-webhook-secret";
+    try {
+      const send = (token: string, body: unknown) =>
+        tavusWebhook(new Request(`http://localhost/api/webhooks/tavus?token=${token}`, { method: "POST", body: JSON.stringify(body) }));
+      const shutdown = { conversation_id: "c-not-ours", event_type: "system.shutdown", message_type: "system", timestamp: new Date().toISOString(), properties: { shutdown_reason: "participant_left_timeout reached" } };
+      expect((await send("wrong", shutdown)).status).toBe(401);
+      expect(await (await send("test-webhook-secret", { ...shutdown, event_type: "system.replica_joined" })).json()).toEqual({ ok: true });
+      // A call that isn't ours settles nothing (the route passes the message to videoCallEnded).
+      expect(await videoCallEnded(deps(), shutdown.conversation_id, Date.now())).toBe(false);
+    } finally {
+      if (was === undefined) delete process.env.TAVUS_WEBHOOK_SECRET;
+      else process.env.TAVUS_WEBHOOK_SECRET = was;
+    }
   });
 
   it("a failed settle still ends the call at the provider, then reports the failure (6d review)", async () => {

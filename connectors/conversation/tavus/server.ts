@@ -8,10 +8,22 @@ const TAVUS_API = "https://tavusapi.com/v2";
 
 type Fetch = typeof fetch;
 
-export function createTavusProvider(options: { apiKey?: string; palId?: string; fetch?: Fetch } = {}): CallProvider {
+/**
+ * Where Tavus reports a call's end (7a, Sabine's answer to Q4): the live site's webhook, with the secret
+ * in its address, since Tavus doesn't sign its messages. None off the live site, or until the secret is set.
+ */
+export function tavusWebhookUrl(env: Record<string, string | undefined> = process.env): string | undefined {
+  const host = env.VERCEL_PROJECT_PRODUCTION_URL;
+  const secret = env.TAVUS_WEBHOOK_SECRET?.trim();
+  if (env.VERCEL_ENV !== "production" || !host || !secret) return undefined;
+  return `https://${host}/api/webhooks/tavus?token=${encodeURIComponent(secret)}`;
+}
+
+export function createTavusProvider(options: { apiKey?: string; palId?: string; fetch?: Fetch; callbackUrl?: string } = {}): CallProvider {
   const key = options.apiKey ?? process.env.TAVUS_API_KEY;
   const palId = options.palId ?? pal.pal_id;
   const send = options.fetch ?? fetch;
+  const callbackUrl = "callbackUrl" in options ? options.callbackUrl : tavusWebhookUrl();
 
   async function tavus(method: string, path: string, body?: unknown) {
     if (!key) throw new Error("TAVUS_API_KEY is not set");
@@ -30,6 +42,7 @@ export function createTavusProvider(options: { apiKey?: string; palId?: string; 
       const res = await tavus("POST", "/conversations", {
         pal_id: palId,
         conversation_name: `Session ${sessionId}`,
+        ...(callbackUrl ? { callback_url: callbackUrl } : {}),
         properties: {
           max_call_duration: Math.max(1, Math.floor(maxSeconds)),
           participant_left_timeout: 30,

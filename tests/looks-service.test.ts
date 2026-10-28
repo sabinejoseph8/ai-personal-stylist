@@ -803,8 +803,12 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     const history = await lookHistory(deps(), guest.id, session, revised.id);
     expect(history?.earlier.map((e) => [e.items.map((i) => i.id), e.differences])).toEqual([[look.items.map((i) => i.id), ["Different shoes"]]]);
 
-    const undone = await restoreLook(deps(), guest.id, session, revised.id, { undo: true });
+    // The earlier look passed on these same requirements, so its verdict stands: no judgment (7a, Q2).
+    let judged = 0;
+    const counting: Judge = { judge: (input) => (judged++, createFakeJudge().judge(input)) };
+    const undone = await restoreLook({ ...deps(), judge: counting }, guest.id, session, revised.id, { undo: true });
     if (!undone || !("look" in undone)) throw new Error(JSON.stringify(undone));
+    expect(judged).toBe(0);
     expect(undone.look.items.map((i) => i.id)).toEqual(look.items.map((i) => i.id));
     expect(undone.look.id).not.toBe(look.id);
     expect(undone.takeBack).toHaveLength(1);
@@ -824,6 +828,10 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     const old = look.items[at].id;
     await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [old])).throwOnError();
     const revised = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    // The requirements change, so the earlier look's old verdict doesn't stand (7a, Q2): the revision is
+    // checked again on them and stays, and the earlier look must be judged again.
+    await db.from("session_notes").insert(note("style", "Classic", "confirmed")).throwOnError();
+    await buildLooks(deps(), guest.id, session);
     // The judgment step now turns the old shoes down.
     const judge = createFakeJudge();
     const picky: Judge = { judge: (input) => (input.items.some((i) => "product" in i && i.product.id === old) ? Promise.resolve({ verdict: "conflict", reasons: [{ about: "Elegant", ok: false, why: "The shoes aren't elegant" }], costUsd: 0 }) : judge.judge(input)) };
@@ -916,6 +924,9 @@ describe.skipIf(!canRunDatabaseTests)("building looks", () => {
     const at = look.items.findIndex((i) => i.group === "shoes");
     await db.from("session_notes").insert(feedback("Not these shoes", look.slot, "dislike", [look.items[at].id])).throwOnError();
     const revised = looksOf(await buildLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)!;
+    // New requirements since the earlier look passed, so it needs a judgment (7a, Q2).
+    await db.from("session_notes").insert(note("style", "Classic", "confirmed")).throwOnError();
+    await buildLooks(deps(), guest.id, session);
     expect(await restoreLook(noAi(), guest.id, session, revised.id, { undo: true })).toEqual({ none: "You've reached today's limit for the demo, so this one stays." });
     expect(await restoreLook({ ...deps(), judge: failing }, guest.id, session, revised.id, { undo: true })).toEqual({ none: "That earlier look couldn't be checked just now, so this one stays. Try again in a moment." });
     expect((await currentLooks(deps(), guest.id, session)).find((l) => l.slot === look.slot)?.id).toBe(revised.id);

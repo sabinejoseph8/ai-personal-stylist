@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.50 (27 Oct 2026)
+**Status:** Agreed, version 1.51 (27 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -166,7 +166,7 @@ Every endpoint checks the guest's sign-in, checks the input shape, and checks th
 | **/api/bag** | GET lists the demo bag; POST { sessionId, lookId, items: [{ productId, size }] } is Add to bag: only sample products of a look on the guest's screen whose check passed on the current requirements, each in a size it comes in, never the shopper's own pieces (R61, your answer to Q3); **PATCH .../:itemId** { size } and **DELETE .../:itemId**; 120 bag changes an hour. **POST /api/bag/checkout** always answers 403 "Demo only: these sample products can't be bought." (R62). |
 | **GET /api/me/export**, **DELETE /api/me** | Download my data, a ZIP with data.json and the photos (6b, your answer to Q1), 10 an hour; and delete all my data, which ends the call, deletes the guest (every row and photo) and signs the browser out (R65, S19). |
 | **DELETE /api/me/session-notes**, **PATCH /api/me/permissions**, **DELETE /api/preferences/:id** | Clear this session's notes (its notes, feedback and exceptions; saved preferences stay); turn wardrobe photos or saving preferences on or off, off deleting the wardrobe or the saved preferences (your answers to Q2 and Q3); delete one saved preference (R64, R65). 60 privacy changes an hour. |
-| **POST /api/webhooks/tavus** | Not built. Tavus would report a call's end, so usage is exact. Deferred to Phase 7 (your answer to Q4 of the full code review, 24 Oct 2026): until then a call that ended without the page (a closed browser, a dropped connection) is counted up to the shopper's last activity plus 30 seconds, on the next start or by the daily job. |
+| **POST /api/webhooks/tavus** | Built in 7a (your answer to Q4): Tavus reports a video call's end ("system.shutdown", with its time), and the call's session settles its exact time, up to the moment Tavus closed it, pausing an open session or keeping an ended one ended; a call already settled is left alone. Tavus doesn't sign its messages, so new calls are given the address with a secret (**TAVUS_WEBHOOK_SECRET**, a Vercel setting, live site only, built from **VERCEL_PROJECT_PRODUCTION_URL**), and the conversation must be one of ours. Other messages are answered 200 and ignored. Without the message (the secret unset, or Tavus not reporting), a call that ended without the page is still counted up to the shopper's last activity plus 30 seconds, on the next start or by the daily job. |
 | **GET /api/cron/daily** | The daily clean-up, at 08:00 UTC (vercel.json). Since batch 5 of the review it also sweeps raw uploads older than an hour and ends a guest's left-behind calls before deleting them. Only Vercel's scheduler can call it, because it sends **CRON_SECRET**. It also ends at Tavus any call a session left behind, and deletes the photos of sessions that ended from being idle. |
 
 ### 4.2 Conversation connector
@@ -341,6 +341,8 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Entries:** "Captured: …", "Removed by you: …", "Read from your photo: …", "Check passed: Look 1, … It meets …", "Check blocked a candidate: …" (one line of reasons, never the look itself, R72), "Swap in Look 1: … replaced …", and "Checked again after your change: …". A spare that passed but wasn't needed isn't listed.
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
+
+**The cost per session and the webhook (7a, pull request 3 of 3).** Undo feedback and Compare reuse the earlier look's passing check when it passed on exactly the current requirements (its check_results row's requirements key): no judgment, so no Claude cost (about 2 cents each) and no wait, and they work even when the day's AI is used up. When the requirements have changed since, the earlier look is judged again as before. Builds and changes keep judging their candidates together (your answer to Q2). The Tavus webhook is described in section 3's table.
 
 **The app bar and menu (7a, pull request 1 of 3).** **components/app-bar/**: each page renders the bar itself (a server component reading the guest and the bag's count), so it's as fresh as the page. The bag's count after Add to bag or Remove, and Behind the scenes opened from the menu, reach the bar and the panel through two small browser stores (**components/app-bar/live.ts**), not through each page's state. Behind the scenes from another page links to **/session?behind=1**, which opens the panel. Every page's browser tests run the axe check, About and setup's three steps included; a test helper (**e2e/support/menu.ts**) opens menu items on phones and desktops alike.
 
@@ -604,6 +606,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.51 (27 Oct 2026):** 7a, pull request 3: Undo and Compare reuse a passing check (Q2), and the Tavus webhook (Q4).
 - **1.50 (27 Oct 2026):** 7a, pull request 1: the app bar and menu (your answers to Q1 to Q4 of the 7a plan are in mvp.md).
 - **1.49 (27 Oct 2026):** 6d: the Phase 6 review's 15 fixes (your answers to Q1 and Q2).
 - **1.48 (27 Oct 2026):** The switch's time fix (from Sabine's iPhone check, C.1).
