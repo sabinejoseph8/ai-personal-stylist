@@ -14,7 +14,7 @@ export type BudgetLimits = {
   monthlyOpenaiUsd: number;
   /** The day of the month the video minutes start again, as Tavus's plan renews (7c, Q1). */
   videoCycleDay: number;
-  /** One call's longest length: Tavus's Builder plan ends a call at 15 minutes, so a longer day takes two calls (7c). */
+  /** One call's longest length: Tavus's Builder plan ends a call at 15 minutes; a day set longer than that takes two calls (7c). */
   maxCallSeconds: number;
 };
 
@@ -23,7 +23,7 @@ export type BudgetLimits = {
  * on 28 Oct 2026, 7c Q1). Each can be changed with a setting in Vercel; a missing setting means these.
  */
 const DEFAULTS = {
-  BUDGET_DAILY_CONVERSATION_MINUTES: 20, // R13; 10 until Sabine raised it to 20 on 28 Oct 2026 (7c)
+  BUDGET_DAILY_CONVERSATION_MINUTES: 15, // R13; 10 until 28 Oct 2026, when Sabine set it to 15, one Tavus call's longest length (7c)
   BUDGET_DAILY_AI_USD: 3, // a 10-minute session with styling changes uses about $1 of Opus judgments (measured 25 Oct 2026; $1 until then, when a demo used about $0.35)
   BUDGET_MONTHLY_VIDEO_MINUTES: 165, // Sabine's Tavus plan has 175 a month since 21 Oct 2026; 10 are kept for testing
   BUDGET_MONTHLY_CLAUDE_USD: 40, // raised from $12 on 22 Oct 2026; the Anthropic console limit is set above it

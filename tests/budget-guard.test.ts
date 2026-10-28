@@ -5,9 +5,9 @@ import { canRunDatabaseTests, createTestGuest, recordEvalSpend, serverDb, type T
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
 
 describe("budget limits", () => {
-  it("uses Sabine's launch defaults (7c): 20 minutes a day in calls of up to 15, $3 of AI a day, 165 video minutes from the 21st, $40 Claude and $4 OpenAI a month", () => {
+  it("uses Sabine's launch defaults (7c): 15 minutes a day (one call), $3 of AI a day, 165 video minutes from the 21st, $40 Claude and $4 OpenAI a month", () => {
     expect(readBudgetLimits({})).toEqual({
-      dailyConversationSeconds: 1200,
+      dailyConversationSeconds: 900,
       dailyAiUsd: 3,
       monthlyVideoSeconds: 9900,
       monthlyClaudeUsd: 40,
@@ -15,7 +15,7 @@ describe("budget limits", () => {
       videoCycleDay: 21,
       maxCallSeconds: 900,
     });
-    expect(dailyTimeUsedLine()).toBe("You've used today's 20 minutes with your stylist. Come back tomorrow to talk again.");
+    expect(dailyTimeUsedLine()).toBe("You've used today's 15 minutes with your stylist. Come back tomorrow to talk again.");
   });
 
   it("says when the month's video minutes start again, on the 21st (7c, Q1)", () => {
@@ -31,7 +31,8 @@ describe("budget limits", () => {
     expect(endsBecause(240, 600, 240)).toBe("day"); // 4 minutes left today
     expect(endsBecause(120, 600, 600)).toBe("month"); // the month has 2 minutes left
     expect(endsBecause(60, 60, 600)).toBe("call"); // asked for a minute, with more left today: a next call carries on (7c)
-    expect(endsBecause(900, 900, 1200)).toBe("call"); // a 15-minute call on a 20-minute day
+    expect(endsBecause(900, 900, 900)).toBe("day"); // the 15-minute day is one call
+    expect(endsBecause(900, 900, 1200)).toBe("call"); // a day set longer than a call: a second call carries on
     expect(endsBecause(300, 900, 300)).toBe("day"); // the second call, with 5 minutes left
   });
 
