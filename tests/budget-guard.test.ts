@@ -1,25 +1,39 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { type BudgetLimits, createBudgetGuard, demoRestingRemembered, endsBecause, isResting, nextMonthFirst, readBudgetLimits } from "@/lib/budget-guard";
+import { type BudgetLimits, createBudgetGuard, dailyTimeUsedLine, demoRestingRemembered, endsBecause, isResting, nextMonthFirst, nextVideoCycle, readBudgetLimits } from "@/lib/budget-guard";
 import { canRunDatabaseTests, createTestGuest, recordEvalSpend, serverDb, type TestGuest } from "./support/test-guests";
 
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
 
 describe("budget limits", () => {
-  it("uses Sabine's defaults: 10 minutes a day, $3 of AI a day (since 25 Oct 2026), 165 video minutes, $12 Claude and $4 OpenAI a month", () => {
+  it("uses Sabine's launch defaults (7c): 15 minutes a day (one call), $3 of AI a day, 165 video minutes from the 21st, $40 Claude and $4 OpenAI a month", () => {
     expect(readBudgetLimits({})).toEqual({
-      dailyConversationSeconds: 600,
+      dailyConversationSeconds: 900,
       dailyAiUsd: 3,
       monthlyVideoSeconds: 9900,
-      monthlyClaudeUsd: 12,
+      monthlyClaudeUsd: 40,
       monthlyOpenaiUsd: 4,
+      videoCycleDay: 21,
+      maxCallSeconds: 900,
     });
+    expect(dailyTimeUsedLine()).toBe("You've used today's 15 minutes with your stylist. Come back tomorrow to talk again.");
+  });
+
+  it("says when the month's video minutes start again, on the 21st (7c, Q1)", () => {
+    expect(nextVideoCycle(new Date("2026-10-28T12:00:00Z"), 21)).toBe("21 November");
+    expect(nextVideoCycle(new Date("2026-11-05T12:00:00Z"), 21)).toBe("21 November");
+    expect(nextVideoCycle(new Date("2026-11-21T00:30:00Z"), 21)).toBe("21 December");
+    expect(nextVideoCycle(new Date("2026-12-25T12:00:00Z"), 21)).toBe("21 January");
+    expect(nextVideoCycle(new Date("2026-10-28T12:00:00Z"), 1)).toBe("1 November");
   });
 
   it("says which limit ends a call: today's time, or the month's video minutes when they run out first (R13)", () => {
     expect(endsBecause(600, 600, 600)).toBe("day");
     expect(endsBecause(240, 600, 240)).toBe("day"); // 4 minutes left today
     expect(endsBecause(120, 600, 600)).toBe("month"); // the month has 2 minutes left
-    expect(endsBecause(60, 60, 600)).toBe("day"); // only asked for a minute
+    expect(endsBecause(60, 60, 600)).toBe("call"); // asked for a minute, with more left today: a next call carries on (7c)
+    expect(endsBecause(900, 900, 900)).toBe("day"); // the 15-minute day is one call
+    expect(endsBecause(900, 900, 1200)).toBe("call"); // a day set longer than a call: a second call carries on
+    expect(endsBecause(300, 900, 300)).toBe("day"); // the second call, with 5 minutes left
   });
 
   it("rests the demo when the month's Claude is used up, or both video and OpenAI are (R13, TQ4, Q2 in 6c)", () => {
@@ -37,7 +51,7 @@ describe("budget limits", () => {
   it("can be changed with settings, ignoring values that aren't numbers", () => {
     const limits = readBudgetLimits({ BUDGET_DAILY_CONVERSATION_MINUTES: "5", BUDGET_MONTHLY_CLAUDE_USD: "lots", BUDGET_DAILY_AI_USD: "-1" });
     expect(limits.dailyConversationSeconds).toBe(300);
-    expect(limits.monthlyClaudeUsd).toBe(12);
+    expect(limits.monthlyClaudeUsd).toBe(40);
     expect(limits.dailyAiUsd).toBe(3);
   });
 });
@@ -58,6 +72,27 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
     const { data } = await db.from("usage").select("*").eq("user_id", guest.id).maybeSingle().throwOnError();
     return data;
   };
+
+  it("starts the video month on the cycle day (7c, Q1)", async () => {
+    const start = async (today: string, day: number) => (await db.rpc("video_cycle_start", { today, cycle_day: day }).throwOnError()).data;
+    expect(await start("2026-10-28", 21)).toBe("2026-10-21");
+    expect(await start("2026-11-05", 21)).toBe("2026-10-21");
+    expect(await start("2026-11-21", 21)).toBe("2026-11-21");
+    expect(await start("2027-01-03", 21)).toBe("2026-12-21");
+    expect(await start("2026-10-28", 1)).toBe("2026-10-01");
+  });
+
+  it("leaves the test guests' fake calls out of the month's video minutes, but not out of their day (7c)", async () => {
+    const status = async () => (await db.rpc("budget_status", { guest: guest.id, video_cycle_day: 21 }).throwOnError()).data as Record<string, number>;
+    const before = await status();
+    const guard = createBudgetGuard(db, limits({ dailyConversationSeconds: 600 }));
+    const r = await guard.reserveTime(guest.id, "video", 120);
+    expect(r.ok).toBe(true);
+    const after = await status();
+    expect(after.today_seconds - before.today_seconds).toBe(120);
+    // Other visitors may talk meanwhile, but this guest's 2 minutes never count.
+    expect(after.month_video_seconds - before.month_video_seconds).toBeLessThan(120);
+  });
 
   it("remembers whether the demo is resting for a minute (6d review, Q2)", async () => {
     const first = demoRestingRemembered(db, 1_000_000, limits({}));

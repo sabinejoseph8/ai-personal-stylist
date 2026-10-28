@@ -10,7 +10,7 @@ Steps 1 to 3 need no coding: the live demo is a web page. Running your own copy 
 | 2 | Tap **Start conversation**, allow the microphone, and say what you're dressing for, your budget, and what you like | The stylist answers on video and jots notes in My Styling Notes as you speak |
 | 3 | Confirm the notes with a tap | Three complete looks appear, each checked against your preferences. Keep, change, swap, undo or compare them; save one; put pieces in the demo bag |
 
-The demo has limits so a public link can't run up a bill: 10 minutes of conversation and $3 of AI a day per visitor, and monthly stops for every paid service. When they're reached, the screens say so.
+The demo has limits so a public link can't run up a bill: 15 minutes of conversation and $3 of AI a day per visitor, and monthly stops for every paid service. When they're reached, the screens say so.
 
 ## Run your own copy
 

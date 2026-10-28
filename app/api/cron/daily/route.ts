@@ -75,5 +75,10 @@ export async function GET(request: Request) {
 
   const summary = { ...tidy.data, calls_ended: callsEnded, calls_retried: callsRetried, photos_deleted: photosDeleted, incoming_swept: incomingSwept, guests_deleted: deleted, guests_failed: failures.length };
   console.log(`daily job: ${JSON.stringify(summary)}${failures.length ? `; first failure: ${failures[0]}` : ""}`);
+  // The health page reads this, so the uptime check notices a daily job that stopped or failed (7c).
+  await db
+    .from("job_runs")
+    .upsert({ name: "daily", ran_at: new Date().toISOString(), ok: failures.length === 0, summary })
+    .then(({ error }) => error && console.error(`daily job: recording the run failed: ${error.message}`));
   return Response.json(summary, { status: failures.length ? 500 : 200 });
 }

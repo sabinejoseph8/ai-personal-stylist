@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isPendingVoiceCall, isVoiceCall, VOICE_USD_PER_SECOND } from "@/connectors/conversation/gpt-live/shared";
 import type { CallProvider, Engine } from "@/connectors/conversation/types";
-import type { BudgetGuard, Refusal } from "@/lib/budget-guard";
+import type { BudgetGuard, EndsBecause, Refusal } from "@/lib/budget-guard";
 import { deleteEndedSessionPhotos, deleteSessionPhotos } from "@/lib/photos-service";
 
 // Styling sessions (R12): Start conversation opens one (or picks up the guest's open one), End
@@ -52,7 +52,7 @@ export type StartResult =
       call: { callId: string; joinUrl: string };
       /** The call's longest length, and which limit ends it (R13). */
       seconds: number;
-      endsBecause: "day" | "month";
+      endsBecause: EndsBecause;
     }
   | { ok: false; reason: StartRefusal };
 

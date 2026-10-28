@@ -12,15 +12,24 @@ export type BudgetLimits = {
   monthlyVideoSeconds: number;
   monthlyClaudeUsd: number;
   monthlyOpenaiUsd: number;
+  /** The day of the month the video minutes start again, as Tavus's plan renews (7c, Q1). */
+  videoCycleDay: number;
+  /** One call's longest length: Tavus's Builder plan ends a call at 15 minutes; a day set longer than that takes two calls (7c). */
+  maxCallSeconds: number;
 };
 
-/** Sabine's limits (1f, 20 Oct 2026; the daily AI allowance raised on 25 Oct 2026). Each can be changed with a setting in Vercel. */
+/**
+ * Sabine's limits (1f, 20 Oct 2026; the daily AI allowance raised on 25 Oct 2026; the final launch limits
+ * on 28 Oct 2026, 7c Q1). Each can be changed with a setting in Vercel; a missing setting means these.
+ */
 const DEFAULTS = {
-  BUDGET_DAILY_CONVERSATION_MINUTES: 10, // R13
+  BUDGET_DAILY_CONVERSATION_MINUTES: 15, // R13; 10 until 28 Oct 2026, when Sabine set it to 15, one Tavus call's longest length (7c)
   BUDGET_DAILY_AI_USD: 3, // a 10-minute session with styling changes uses about $1 of Opus judgments (measured 25 Oct 2026; $1 until then, when a demo used about $0.35)
   BUDGET_MONTHLY_VIDEO_MINUTES: 165, // Sabine's Tavus plan has 175 a month since 21 Oct 2026; 10 are kept for testing
-  BUDGET_MONTHLY_CLAUDE_USD: 12, // the Anthropic console limit is $15
+  BUDGET_MONTHLY_CLAUDE_USD: 40, // raised from $12 on 22 Oct 2026; the Anthropic console limit is set above it
   BUDGET_MONTHLY_OPENAI_USD: 4, // the OpenAI console limit is $5
+  BUDGET_VIDEO_CYCLE_DAY: 21, // Tavus's plan renews on the 21st (the upgrade of 21 Oct 2026); 1 means calendar months
+  BUDGET_MAX_CALL_MINUTES: 15, // Tavus Builder's longest call
 };
 
 export function readBudgetLimits(env: Record<string, string | undefined> = process.env): BudgetLimits {
@@ -34,6 +43,8 @@ export function readBudgetLimits(env: Record<string, string | undefined> = proce
     monthlyVideoSeconds: Math.round(value("BUDGET_MONTHLY_VIDEO_MINUTES") * 60),
     monthlyClaudeUsd: value("BUDGET_MONTHLY_CLAUDE_USD"),
     monthlyOpenaiUsd: value("BUDGET_MONTHLY_OPENAI_USD"),
+    videoCycleDay: Math.min(28, Math.max(1, Math.round(value("BUDGET_VIDEO_CYCLE_DAY")))),
+    maxCallSeconds: Math.max(60, Math.round(value("BUDGET_MAX_CALL_MINUTES") * 60)),
   };
 }
 
@@ -54,7 +65,7 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
 
   /** Before an AI call: is there money left for this guest today, and for this provider this month? */
   async function checkAi(guestId: string, provider: Provider): Promise<Answer> {
-    const s = await call<Record<string, number>>("budget_status", { guest: guestId });
+    const s = await call<Record<string, number>>("budget_status", { guest: guestId, video_cycle_day: limits.videoCycleDay });
     if (s.today_microdollars >= limits.dailyAiUsd * MICRO) return { ok: false, reason: "daily_ai_used" };
     if (provider === "claude" && s.month_claude_microdollars >= limits.monthlyClaudeUsd * MICRO) {
       return { ok: false, reason: "monthly_claude_used" };
@@ -76,15 +87,15 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
     },
 
     /**
-     * Before a call: reserves up to `wantedSeconds` of conversation, in one step. A video call is
-     * then created with the seconds granted as its longest length, so Tavus ends it on time.
-     * Voice only also needs OpenAI money left this month.
+     * Before a call: reserves up to `wantedSeconds` of conversation, in one step: the rest of the day,
+     * up to one call's longest length. A video call is then created with the seconds granted as its
+     * longest length, so Tavus ends it on time. Voice only also needs OpenAI money left this month.
      */
     async reserveTime(
       guestId: string,
       engine: Engine,
-      wantedSeconds = limits.dailyConversationSeconds,
-    ): Promise<Answer<{ reservation: Reservation; endsBecause: "day" | "month" }>> {
+      wantedSeconds = Math.min(limits.dailyConversationSeconds, limits.maxCallSeconds),
+    ): Promise<Answer<{ reservation: Reservation; endsBecause: EndsBecause }>> {
       if (!Number.isInteger(wantedSeconds) || wantedSeconds < 1) throw new Error("budget guard: ask for at least 1 second");
       if (engine === "voice") {
         const money = await checkAi(guestId, "openai");
@@ -96,6 +107,7 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
         wanted: wantedSeconds,
         daily_limit: limits.dailyConversationSeconds,
         monthly_video_limit: limits.monthlyVideoSeconds,
+        video_cycle_day: limits.videoCycleDay,
       });
       if (r.granted > 0) return { ok: true, reservation: { engine, seconds: r.granted, day: r.day }, endsBecause: endsBecause(r.granted, wantedSeconds, r.left_today) };
       return { ok: false, reason: r.left_today <= 0 ? "daily_time_used" : "monthly_video_used" };
@@ -134,7 +146,7 @@ export function isResting(m: MonthTotals, limits: BudgetLimits) {
 
 /** Whether the demo is resting this month, from the usage table (no guest needed). */
 export async function demoResting(db: SupabaseClient, limits: BudgetLimits = readBudgetLimits()) {
-  const { data, error } = await db.rpc("budget_status", { guest: "00000000-0000-0000-0000-000000000000" });
+  const { data, error } = await db.rpc("budget_status", { guest: "00000000-0000-0000-0000-000000000000", video_cycle_day: limits.videoCycleDay });
   if (error) throw new Error(`budget guard: budget_status failed: ${error.message}`);
   return isResting(data as MonthTotals, limits);
 }
@@ -158,13 +170,31 @@ export function demoRestingRemembered(db: SupabaseClient, now = Date.now(), limi
   return remembered.value;
 }
 
+/** "21 November": when the month's video minutes start again, on the cycle day (7c), in UTC. */
+export function nextVideoCycle(now = new Date(), cycleDay = readBudgetLimits().videoCycleDay) {
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const next = now.getUTCDate() >= cycleDay ? new Date(Date.UTC(y, m + 1, cycleDay)) : new Date(Date.UTC(y, m, cycleDay));
+  return next.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+
 /** "1 November": the 1st of next month, in UTC as the budget counts months. */
 export function nextMonthFirst(now = new Date()) {
   const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
   return first.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
 }
 
-/** Which limit ends a call (R13): today's time, or the month's video minutes when they run out first. */
-export function endsBecause(granted: number, wanted: number, leftToday: number): "day" | "month" {
-  return granted < Math.min(wanted, leftToday) ? "month" : "day";
+/**
+ * Which limit ends a call (R13): today's time; the month's video minutes when they run out first; or the
+ * call's own length, with time left today, so a new call carries on the conversation (7c).
+ */
+export type EndsBecause = "day" | "month" | "call";
+export function endsBecause(granted: number, wanted: number, leftToday: number): EndsBecause {
+  if (granted < Math.min(wanted, leftToday)) return "month";
+  return wanted < leftToday ? "call" : "day";
+}
+
+/** "You've used today's 15 minutes…": the day's limit in words, from the setting. */
+export function dailyTimeUsedLine(limits: BudgetLimits = readBudgetLimits()) {
+  return `You've used today's ${Math.round(limits.dailyConversationSeconds / 60)} minutes with your stylist. Come back tomorrow to talk again.`;
 }

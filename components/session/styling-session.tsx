@@ -822,7 +822,7 @@ export function StylingSession({
         {inCall && (call.engine === "voice" || call.switching) && (
           <div role="status" className="flex flex-wrap items-center justify-center gap-2 desktop:justify-start">
             <p className="type-label m-0 text-ink">
-              {call.switchingTo === "voice" ? "Switching to voice only…" : call.switchingTo === "video" ? "Turning video on…" : voiceLine(call.voiceWhy ?? "chosen")}
+              {call.switchingTo === "voice" ? "Switching to voice only…" : call.switchingTo === "video" ? "Turning video on…" : voiceLine(call.voiceWhy ?? "chosen", call.videoBackOn)}
             </p>
             {call.engine === "voice" && !call.switching && flow === "live" && (
               <Button variant="quiet" onClick={() => void call.switchToVideo()}>

@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.50
+**Status:** Living document, version 1.51
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,10 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 28 Oct 2026 | The Vercel video stop stays at 260 until 21 Nov 2026, then is deleted so the default 165 (from the 21st) applies. Sabine's Tavus page showed 92.5 of 175 used and the app counted 158.8 since the 21st (66 ahead: her minutes on 21 Oct before the upgrade, and early test calls), so 260 may let Tavus go about 19 minutes over at $0.35 each (about $6.65); 230 was the alternative that kept Tavus inside its plan. Accepted ("it's ok if it goes over") | Sabine | tech spec 1.53 |
+| 28 Oct 2026 | The providers' data handling re-checked before launch (7c, Q4): unchanged since Phase 0 (Tavus's privacy policy of 12 Nov 2025 and terms of 24 Apr 2025, its pricing page's "not training on your data" and zero data retention on Enterprise only; OpenAI's API not used for training, 30 days of abuse monitoring, GPT-Live sessions not stored by default; Anthropic's API data deleted within 30 days, the article of 1 Jul 2026), so the About page's note stands. Found with it: the Builder plan's calls last at most 15 minutes, and minutes past the 175 are billed at $0.35 each, "never paused", so the app's video stop is the only guard against Tavus overage | Claude, for Sabine | mvp.md risk 3 |
+| 28 Oct 2026 | 15 minutes of conversation a day per visitor, up from 10 (R13), asked for by Sabine while 7c was being built: first 20, then 15 to match Tavus Builder's longest call, so a day is one call. With 165 video minutes a month that's about 11 full-length demos instead of about 16, though most visitors use far less. The handover to a second call stays in the code for a longer day | Sabine | product spec 1.6, tech spec 1.53 |
+| 28 Oct 2026 | 7c plan approved as recommended. Q1: the final limits: video counted from the 21st, as Tavus's plan renews, with the stop back to 165 minutes; $40 Claude, $4 OpenAI, $3 of AI a day; the defaults in the code match. Q2: monitoring through GitHub (an uptime check every 30 minutes on the welcome page and a health page, emailed on failure; a weekly cost report as a GitHub issue). Q3: the full S1 to S19 run over two evenings, then a friend's first try (S20). Q4: the providers' data handling re-checked before launch. Building it found that the test guests' fake calls counted against the real video minutes; they're now left out of the month's total | Sabine | tech spec 1.53 |
 | 28 Oct 2026 | The early interview notes stay in the repository's Git history (A): three commits of 18 Oct 2026, before the notes were made private, with nothing sensitive in them; rewriting history (B) would force-push every branch and change every commit id since. Found by 7b's pre-publish history scan; the two other findings are made-up test values | Sabine | mvp.md |
 | 27 Oct 2026 | 7b plan approved as recommended (the portfolio-package skill). Q1: a blind notes set of 15 sentences, written and run once by a session that never touched the notes reader, reported next to the in-sample numbers. Q2: the About page and README link the product spec and mvp.md's PRD table; the PRD itself stays private. Q3: the demo video is recorded after 7b's pages are live, hosted as an unlisted YouTube video, with "coming" until then. Q4: public pages show totals, eval numbers and the sample profile only, never Sabine's own clothes or sessions. Also: nothing is pushed until Sabine has read the README and case study drafts and the pre-publish scan's result | Sabine | tech spec 1.52 |
 | 27 Oct 2026 | Notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to R69's 44 px touch targets (A), rather than two lines (56 px) each: each is the notebook's full width, 28 px meets WCAG's AA minimum (24 px), and the notebook keeps its look with the looks close by on phones. Found by 7a's new touch-target check | Sabine | product spec R69, design 6 |
@@ -434,6 +438,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.51 (28 Oct 2026):** 7c: the launch decisions (Q1 to Q4) and 15 minutes a day.
 - **1.50 (28 Oct 2026):** 7b: the portfolio package decisions (Q1 to Q4), the blind set's result (not met), and the history scan's findings (the old interview notes stay, A).
 - **1.49 (27 Oct 2026):** 7a done: the iPhone and laptop check passed A to E, including the Tavus webhook counting a closed call's exact minutes.
 - **1.48 (27 Oct 2026):** 6d done, and Phase 6 complete: the Phase 6 review's 15 fixes (Q1 and Q2; tech spec 1.49).

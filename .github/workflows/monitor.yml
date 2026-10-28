@@ -1,0 +1,28 @@
+name: Monitor
+
+# 7c monitoring (Sabine's answer to Q2): every 30 minutes, the live site's welcome page and its health
+# page must answer. A failed run is emailed to Sabine by GitHub, which emails the owner of a scheduled
+# workflow when it fails. Nothing secret is needed: both pages are public.
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The welcome page answers
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 https://ai-personal-stylist-inky.vercel.app/)
+          echo "welcome page: $code"
+          test "$code" = "200"
+      - name: The health page says all is well
+        run: |
+          body=$(curl -s --max-time 30 -w '\n%{http_code}' https://ai-personal-stylist-inky.vercel.app/api/health)
+          echo "$body"
+          test "$(echo "$body" | tail -1)" = "200"

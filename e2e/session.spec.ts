@@ -357,16 +357,17 @@ test.describe("the stylist stage", () => {
 
   // 2e: time limits (R13) and connection problems (R14).
   test("shows the time left in the last 2 minutes, then Time is up, keeping the notes (R13)", async ({ page }) => {
+    // The day's 15 minutes are one call (7c).
     await page.clock.install();
     await weddingNotes(page);
     const timeLeft = page.getByRole("region", { name: "Your stylist" }).getByRole("status");
-    await page.clock.fastForward("08:05");
+    await page.clock.fastForward("13:05");
     await expect(timeLeft).toHaveText("2 minutes left");
     await page.clock.fastForward("01:00");
     await expect(timeLeft).toHaveText("1 minute left");
     await page.clock.fastForward("01:00");
     await expect(state(page)).toHaveText("Time is up");
-    await expect(page.getByText("You've used today's 10 minutes with your stylist.", { exact: false })).toBeVisible();
+    await expect(page.getByText("You've used today's 15 minutes with your stylist.", { exact: false })).toBeVisible();
     await expect(note(page, "Elegant")).toBeVisible();
     await expect(page.getByRole("button", { name: /conversation$/ })).toHaveCount(0);
     await expect.poll(sessions).toEqual([expect.objectContaining({ status: "paused" })]);
