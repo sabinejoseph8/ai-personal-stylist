@@ -5,6 +5,7 @@ import { canRunDatabaseTests, serverDb, type TestGuest } from "../tests/support/
 import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
 import { commandsSent, fakeMicrophone, playInCall, scriptDone } from "./support/microphone";
+import { openFromMenu } from "./support/menu";
 
 // 4c: the look panels with the fake engine, notes reader, looks builder and judge (playwright.config.ts):
 // what's needed before looks appear (R39), three checked looks with totals and reasons (R40 to R42,
@@ -123,7 +124,7 @@ test.describe("the looks", () => {
   test("Behind the scenes shows what was captured and each check, a blocked candidate only as its reason (R72)", async ({ page }) => {
     await fakeMicrophone(page, "allowed", true);
     await page.goto("/session");
-    await page.getByRole("button", { name: "Behind the scenes" }).click();
+    await openFromMenu(page, "Behind the scenes");
     const panel = page.getByRole("dialog", { name: "Behind the scenes" });
     await expect(panel).toContainText("Start a conversation, and what the stylist captures and checks appears here.");
     await page.keyboard.press("Escape");
@@ -141,7 +142,7 @@ test.describe("the looks", () => {
     // The looks on screen, read before the panel covers the page.
     const shown = await panels(page).getByRole("heading", { level: 3 }).allTextContents();
 
-    await page.getByRole("button", { name: "Behind the scenes" }).click();
+    await openFromMenu(page, "Behind the scenes");
     await expect(panel).toContainText(/Right now \d+ of \d+ womenswear sample products fit everything you've asked for\./);
     await expect(panel).toContainText("Captured: Outdoor wedding, November. From what you said. Confirmed by you with a tap.");
     await expect(panel).toContainText("Captured: Elegant. From what you said. Not confirmed yet.");
@@ -491,7 +492,7 @@ test.describe("the looks", () => {
     // Open checks it against the saved profile (Q1): a $500 budget, so the $500 looks fit.
     await db.from("profiles").update({ budget_amount_cents: 50000 }).eq("user_id", guest.id).throwOnError();
     try {
-      await page.getByRole("link", { name: "Saved looks" }).click();
+      await openFromMenu(page, "Saved looks");
       const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name }) });
       await expect(card).toContainText(/Saved \d+ \w+/);
       await card.getByRole("button", { name: "Open" }).click();
@@ -522,7 +523,7 @@ test.describe("the looks", () => {
     expect(count).toBeGreaterThan(1);
     await sheet.getByRole("button", { name: "Add to bag" }).click();
     await expect(page.getByText("Added to bag").first()).toBeVisible();
-    await page.getByRole("link", { name: `Demo bag (${count})` }).click();
+    await openFromMenu(page, `Demo bag (${count})`);
 
     const bag = page.getByRole("list", { name: "Pieces in your demo bag" });
     await expect(bag.getByRole("listitem")).toHaveCount(count);

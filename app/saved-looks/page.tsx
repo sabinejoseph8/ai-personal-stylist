@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { redirect } from "next/navigation";
 import { SavedLooks } from "@/components/saved/saved-looks";
-import { buttonClasses } from "@/components/ui/button";
 import { currentGuest } from "@/lib/guest";
 import { listSaved } from "@/lib/saved-looks-service";
 import { serverKeyDb } from "@/lib/supabase/admin";
@@ -23,15 +22,13 @@ export default async function SavedLooksPage() {
   const photos = Object.fromEntries(wardrobe.flatMap((w) => (w.thumbnailUrl ?? w.photoUrl ? [[w.id, (w.thumbnailUrl ?? w.photoUrl)!]] : [])));
 
   return (
+    <>
+    <AppBar current="saved" />
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 tablet:px-6 desktop:px-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="type-title m-0">Saved looks</h1>
-        <Link href="/session" className={buttonClasses("quiet")}>
-          Back to your session
-        </Link>
-      </div>
+      <h1 className="type-title m-0">Saved looks</h1>
       {/* Keyed on what's saved, so the page starts again from the server whenever it changes (tech spec 5, rule 11). */}
       <SavedLooks key={looks.map((l) => l.id).join(",")} initialLooks={looks} photos={photos} />
     </main>
+    </>
   );
 }

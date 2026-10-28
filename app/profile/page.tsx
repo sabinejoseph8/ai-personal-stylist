@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { redirect } from "next/navigation";
 import { ProfileAndPrivacy } from "@/components/profile/profile-and-privacy";
-import { buttonClasses } from "@/components/ui/button";
 import { currentGuest } from "@/lib/guest";
 import { describeBudget, describePreference } from "@/lib/profile";
 import { loadProfile } from "@/lib/profile-store";
@@ -28,13 +27,10 @@ export default async function ProfilePage() {
     .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)} ${v}`);
 
   return (
+    <>
+    <AppBar current="profile" />
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-8 tablet:px-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="type-title m-0">Profile and privacy</h1>
-        <Link href="/session" className={buttonClasses("quiet")}>
-          Back to your session
-        </Link>
-      </div>
+      <h1 className="type-title m-0">Profile and privacy</h1>
       <ProfileAndPrivacy
         key={[profile.preferences.map((p) => p.id).join(","), consents.data?.wardrobe_photos_at ?? "", consents.data?.remember_preferences_at ?? "", wardrobe.count ?? 0, open.data?.id ?? ""].join("|")}
         profile={{
@@ -50,5 +46,6 @@ export default async function ProfilePage() {
         sessionOpen={!!open.data}
       />
     </main>
+    </>
   );
 }

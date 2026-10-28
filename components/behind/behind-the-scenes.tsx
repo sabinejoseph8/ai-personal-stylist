@@ -3,12 +3,13 @@
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icons";
+import { useBehindTheScenesRequests } from "@/components/app-bar/live";
 import { Sheet } from "@/components/ui/sheet";
 import type { Entry, EntryKind } from "@/core/looks/behind";
 
 // Behind the scenes (4d, R72, design 4.4): a portfolio extra that shows, in plain words, what the
 // stylist captured and how each look was checked. Closed until opened (Sabine's answer to Q2 in 4d), from
-// a button beside Wardrobe until the app menu arrives in Phase 7. A sheet on phones, a side panel on
+// the app menu (7a), or at once when the session page is opened from the menu elsewhere. A sheet on phones, a side panel on
 // desktops. While open, it asks again as the notes and looks change. The session page passes it the
 // session and a sign of what changed, through BehindTheScenesSource.
 
@@ -28,9 +29,16 @@ const ICON: Partial<Record<EntryKind, { name: IconName; tone: string }>> = {
 
 const time = (entry: Entry) => (entry.kind === "products" ? "Now" : new Date(entry.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
 
-export function BehindTheScenes() {
+export function BehindTheScenes({ startOpen = false }: { startOpen?: boolean }) {
   const { sessionId, changes } = useContext(Source);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
+  // Each Behind the scenes in the menu opens it.
+  const requests = useBehindTheScenesRequests();
+  const [seenRequests, setSeenRequests] = useState(requests);
+  if (requests !== seenRequests) {
+    setSeenRequests(requests);
+    setOpen(true);
+  }
   const [entries, setEntries] = useState<{ session: string; list: Entry[] } | null>(null);
   const [problem, setProblem] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -62,7 +70,7 @@ export function BehindTheScenes() {
 
   const list = entries && entries.session === sessionId ? entries.list : null;
   return (
-    <Sheet open={open} onOpenChange={setOpen} title="Behind the scenes" side trigger={<Button variant="secondary">Behind the scenes</Button>}>
+    <Sheet open={open} onOpenChange={setOpen} title="Behind the scenes" side>
       <p className="type-small m-0 text-graphite">What the stylist captured and how each look was checked, from this session&apos;s records. No audio, words, video or photos are kept.</p>
       {!sessionId && <p className="type-body m-0 text-ink">Start a conversation, and what the stylist captures and checks appears here.</p>}
       {sessionId && problem && !list && (

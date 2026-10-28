@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { redirect } from "next/navigation";
-import { buttonClasses } from "@/components/ui/button";
 import { Wardrobe } from "@/components/wardrobe/wardrobe";
 import { currentGuest } from "@/lib/guest";
 import { serverKeyDb } from "@/lib/supabase/admin";
@@ -24,13 +23,10 @@ export default async function WardrobePage() {
   ]);
 
   return (
+    <>
+    <AppBar current="wardrobe" />
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 tablet:px-6 desktop:px-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="type-title m-0">Wardrobe</h1>
-        <Link href="/session" className={buttonClasses("quiet")}>
-          Back to your session
-        </Link>
-      </div>
+      <h1 className="type-title m-0">Wardrobe</h1>
       {/* Next.js keeps a page's state when the shopper navigates away and back (Activity). Keying on the
           saved items makes the page start again from what's saved whenever that changes (tech spec 5, rule
           11): after Style with these and Change, it showed the old choice (Sabine's iPhone check in 3e).
@@ -41,5 +37,6 @@ export default async function WardrobePage() {
         photosAllowed={!!consents.data?.wardrobe_photos_at}
       />
     </main>
+    </>
   );
 }

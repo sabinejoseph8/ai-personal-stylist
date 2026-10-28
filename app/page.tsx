@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { NoteLine, NotebookPage } from "@/components/notebook/notebook-page";
 import { buttonClasses } from "@/components/ui/button";
 import { StartDemo } from "@/components/welcome/start-demo";
@@ -41,6 +42,8 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
   ].filter(Boolean) as string[];
 
   return (
+    <>
+    <AppBar />
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10 tablet:px-6">
       <h1 className="type-title m-0">Welcome back</h1>
       <p className="type-body m-0 text-graphite">
@@ -94,12 +97,10 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
         <Link href="/setup" className={buttonClasses("secondary")}>
           Edit your profile
         </Link>
-        <Link href="/profile" className={buttonClasses("secondary")}>
-          Profile and privacy
-        </Link>
       </div>
       <SmallPrint />
     </main>
+    </>
   );
 }
 
@@ -113,9 +114,10 @@ export default async function Home() {
   const resting = await demoRestingRemembered(serverKeyDb()).catch(() => false);
 
   return (
+    <>
+    <AppBar current="welcome" />
     <main className="mx-auto grid max-w-5xl gap-8 px-4 py-10 tablet:px-6 desktop:grid-cols-2 desktop:grid-rows-[auto_1fr] desktop:gap-x-12 desktop:px-8 desktop:py-16">
       <div className="flex flex-col gap-5 desktop:col-start-1 desktop:row-start-1">
-        <p className="type-label m-0 text-graphite">AI Personal Stylist</p>
         <h1 className="type-display m-0">Say what you need. Watch your stylist take notes.</h1>
         <p className="type-body m-0 max-w-[60ch] text-graphite">
           Talk with a lifelike stylist, show what you own, and refine complete looks by voice or touch.
@@ -147,5 +149,6 @@ export default async function Home() {
         <SmallPrint />
       </div>
     </main>
+    </>
   );
 }

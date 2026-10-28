@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AppBar } from "@/components/app-bar/app-bar";
 import { BehindTheScenes } from "@/components/behind/behind-the-scenes";
-import { KeepingLinks, KeepingProvider } from "@/components/looks/keeping";
+import { KeepingProvider } from "@/components/looks/keeping";
 import { redirect } from "next/navigation";
 import { StylingSession } from "@/components/session/styling-session";
 import { buttonClasses } from "@/components/ui/button";
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
   title: "Your session · AI Personal Stylist",
 };
 
-export default async function SessionPage() {
+export default async function SessionPage({ searchParams }: PageProps<"/session">) {
+  // Behind the scenes from the menu on another page opens here (7a).
+  const startBehind = (await searchParams).behind === "1";
   const guest = await currentGuest();
   if (!guest) redirect("/");
   const [profile, open, wardrobe, saved, bag] = await Promise.all([
@@ -52,6 +55,8 @@ export default async function SessionPage() {
     : [[], []];
 
   return (
+    <>
+    <AppBar current="session" />
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 tablet:grid tablet:max-w-5xl tablet:grid-cols-2 tablet:items-start tablet:gap-x-8 tablet:px-6 desktop:max-w-7xl desktop:grid-cols-[320px_minmax(0,400px)_minmax(0,1fr)] desktop:gap-x-10 desktop:px-8">
       <h1 className="type-title m-0 tablet:col-span-2 desktop:col-span-3">Your styling session</h1>
       <ToastProvider>
@@ -69,30 +74,18 @@ export default async function SessionPage() {
             <dt className="text-graphite">Budget</dt>
             <dd className="m-0 price">{budget ?? "Not set"}</dd>
           </dl>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/setup" className={buttonClasses("secondary")}>
-              Edit your profile
-            </Link>
-            {/* Until the app menu arrives (Phase 7), the wardrobe is reached from here (Q3 in 3d). */}
-            <Link href="/wardrobe" className={buttonClasses("secondary")}>
-              Wardrobe
-            </Link>
-            <Link href="/profile" className={buttonClasses("secondary")}>
-              Profile and privacy
-            </Link>
-            {/* Saved looks and the demo bag (6a), here until the app menu arrives in Phase 7. */}
-            <KeepingLinks />
-            {/* A portfolio extra (4d), here until the app menu arrives in Phase 7. */}
-            <BehindTheScenes />
-            <Link href="/" className={buttonClasses("quiet")}>
-              Back to the start
-            </Link>
-          </div>
+          {/* Wardrobe, Saved looks, the bag, Profile and privacy and Behind the scenes are in the app menu (7a). */}
+          <Link href="/setup" className={buttonClasses("secondary", "self-start")}>
+            Edit your profile
+          </Link>
+          {/* A portfolio extra (4d), opened from the menu. */}
+          <BehindTheScenes startOpen={startBehind} />
           <p className="type-small m-0 text-graphite">Sample products only. Nothing here is for sale.</p>
         </section>
       </StylingSession>
       </KeepingProvider>
       </ToastProvider>
     </main>
+    </>
   );
 }

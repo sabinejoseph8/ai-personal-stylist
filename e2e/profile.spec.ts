@@ -3,6 +3,7 @@ import { SAMPLE_PROFILE } from "../lib/profile";
 import { canRunDatabaseTests, serverDb, type TestGuest } from "../tests/support/test-guests";
 import { noSeriousA11yProblems } from "./support/a11y";
 import { type BrowserGuest, createBrowserGuest } from "./support/guest";
+import { openFromMenu } from "./support/menu";
 
 // 6b: Profile and privacy in the browser (R63 to R66, design 5.8): the four sections, deleting a saved
 // preference, turning off saving preferences (Sabine's answer to Q3), the data download (a ZIP, Q1), and
@@ -68,7 +69,7 @@ test.describe("profile and privacy", () => {
       await context.addCookies(fresh.cookies);
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
-      await page.getByRole("link", { name: "Profile and privacy" }).click();
+      await openFromMenu(page, "Profile and privacy");
       await page.getByRole("button", { name: "Delete all my data" }).click();
       await expect(page.getByRole("dialog", { name: "Delete all your data?" })).toContainText("This can't be undone.");
       await page.getByRole("button", { name: "Delete all data" }).click();

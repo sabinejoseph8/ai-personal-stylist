@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.49 (27 Oct 2026)
+**Status:** Agreed, version 1.50 (27 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -342,6 +342,8 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
+**The app bar and menu (7a, pull request 1 of 3).** **components/app-bar/**: each page renders the bar itself (a server component reading the guest and the bag's count), so it's as fresh as the page. The bag's count after Add to bag or Remove, and Behind the scenes opened from the menu, reach the bar and the panel through two small browser stores (**components/app-bar/live.ts**), not through each page's state. Behind the scenes from another page links to **/session?behind=1**, which opens the panel. Every page's browser tests run the axe check, About and setup's three steps included; a test helper (**e2e/support/menu.ts**) opens menu items on phones and desktops alike.
+
 **The Phase 6 review's fixes (6d, 27 Oct 2026).** The review of pull requests #52 to #60 found 15 things, fixed in one pull request:
 - **Back to video (your answer to Q1):** a voice call that can't start (refused, or its offer turned away) sends the next Start or Try again back to video, and after a dropped video call the reconnect tries video next; the server falls back to voice again only if video still can't. A shopper who chose voice keeps it through a plain network blip. Before, the app kept asking for voice, so a wrong OpenAI key or a spent AI allowance left "The voice stylist couldn't start" on every tap while the video stylist, who still worked, was never tried.
 - **A call always ended:** when a call ends, a failed settle (the time given back) no longer skips ending the call at its provider: the provider is still asked, then the failure is reported.
@@ -601,6 +603,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.50 (27 Oct 2026):** 7a, pull request 1: the app bar and menu (your answers to Q1 to Q4 of the 7a plan are in mvp.md).
 - **1.49 (27 Oct 2026):** 6d: the Phase 6 review's 15 fixes (your answers to Q1 and Q2).
 - **1.48 (27 Oct 2026):** The switch's time fix (from Sabine's iPhone check, C.1).
 - **1.47 (26 Oct 2026):** 6c, pull request 2: voice only standing in for video at the start and after a drop, the why-lines, Tavus's out-of-minutes told apart, and the resting welcome screen (your answer to Q2).
