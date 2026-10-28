@@ -14,32 +14,33 @@
   :root { --brand: #1F2A44; --accent: #0F7A4B; --warm: #B5651D; --note: #FFF8E6; --note-edge: #E5B53C; --ink: #1F2A44; --muted: #5B6170; --line: #D9DDE5; --mist: #F3F5F8; }
   * { box-sizing: border-box; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { margin: 0 auto; max-width: 7.5in; background: #FFFFFF; color: var(--ink); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 8.6pt; line-height: 1.34; }
+  body { margin: 0 auto; max-width: 7.5in; background: #FFFFFF; color: var(--ink); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 8.3pt; line-height: 1.32; }
   h1, h2 { color: var(--brand); margin: 0; line-height: 1.15; }
-  .head { border-left: 7px solid var(--brand); padding: 1pt 0 1pt 12pt; margin-bottom: 8pt; }
+  .head { border-left: 7px solid var(--brand); padding: 1pt 0 1pt 12pt; margin-bottom: 6pt; }
   .eyebrow { font-size: 7.4pt; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase; color: var(--warm); margin-bottom: 3pt; }
   h1 { font-size: 21pt; }
   .sub { font-size: 11.5pt; font-weight: 600; color: var(--brand); margin: 2pt 0 5pt; }
   .lede { font-size: 9pt; margin: 0; }
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6pt; margin: 0 0 9pt; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6pt; margin: 0 0 7pt; }
   .kpi { background: var(--mist); border-top: 3px solid var(--accent); border-radius: 3px; padding: 5pt 7pt; }
   .kpi b { display: block; font-size: 15pt; color: var(--brand); line-height: 1.05; }
   .kpi span { display: block; font-size: 7.6pt; color: var(--muted); margin-top: 2pt; line-height: 1.25; }
   .cols { display: grid; grid-template-columns: 1.08fr 1fr; gap: 14pt; }
   h2 { font-size: 10.2pt; padding-bottom: 2pt; border-bottom: 1.5px solid var(--brand); margin: 0 0 4pt; }
-  section { margin-bottom: 7pt; }
+  section { margin-bottom: 6pt; }
   p { margin: 0 0 4pt; }
   ul { margin: 0; padding-left: 13pt; }
   li { margin: 0 0 2pt; }
   strong { color: var(--brand); }
   .figure { border: 1px solid var(--line); border-radius: 3px; padding: 4pt; margin-bottom: 7pt; }
-  .figure img { display: block; width: 100%; height: auto; }
+  .figure img { display: block; width: 76%; height: auto; margin: 0 auto; }
   .figure .cap { font-size: 7.2pt; color: var(--muted); margin-top: 2pt; }
   table { width: 100%; border-collapse: collapse; font-size: 7.8pt; margin-bottom: 5pt; }
   th, td { text-align: left; padding: 2pt 4pt; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { color: var(--muted); font-weight: 700; }
+  td:nth-child(2), td:nth-child(3) { white-space: nowrap; }
   .note { background: var(--note); border-left: 3px solid var(--note-edge); padding: 5pt 8pt; font-size: 7.9pt; margin: 2pt 0 6pt; }
-  .foot { border-top: 1px solid var(--line); padding-top: 5pt; font-size: 7.6pt; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
+  .foot { border-top: 1px solid var(--line); padding-top: 4pt; font-size: 7.6pt; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
   .foot strong { color: var(--ink); }
   @media screen and (max-width: 700px) {
     body { padding: 16px; font-size: 11pt; }
@@ -52,15 +53,15 @@
   <header class="head">
     <div class="eyebrow">AI product management case study &middot; Live demo, launch check pending &middot; October 2026</div>
     <h1>AI Personal Stylist</h1>
-    <div class="sub">A lifelike video stylist that jots down what you want while you talk, then builds looks you refine by voice or touch</div>
+    <div class="sub">A video stylist that jots notes as you talk, then builds looks you refine by voice or touch</div>
     <p class="lede">For anyone dressing for an occasion on their phone. A working web app, built in three weeks by an AI product manager directing Claude Code, with quality defined before it was measured.</p>
   </header>
 
   <div class="kpis">
-    <div class="kpi"><b>97%</b><span>of notes jotted within 2 seconds of their phrase (target 95%, in-sample)</span></div>
-    <div class="kpi"><b>96%</b><span>of note checks right across 63 shopper sentences (target 90%, in-sample)</span></div>
+    <div class="kpi"><b>97%</b><span>of notes within 2 seconds of their phrase (target 95%, in-sample)</span></div>
+    <div class="kpi"><b>96%</b><span>of note checks right, 63 sentences (target 90%, in-sample)</span></div>
     <div class="kpi"><b>16 of 16</b><span>planted rule breaks caught by code before any look is shown</span></div>
-    <div class="kpi"><b>$1.15</b><span>of AI per 10-minute demo with styling changes: 5 cents over the $1.10 target</span></div>
+    <div class="kpi"><b>$1.15</b><span>of AI per 10-minute demo: 5 cents over the $1.10 target</span></div>
   </div>
 
   <div class="cols">
@@ -74,8 +75,7 @@
         <ul>
           <li><strong>My Styling Notes:</strong> the stylist jots free-form notes while you talk; a tap confirms or removes one, a correction by voice rewrites it. Nothing is a rule until confirmed.</li>
           <li><strong>Looks around what you own:</strong> a photo or the live camera names your item; three complete looks are built around it, your own pieces never in the totals.</li>
-          <li><strong>One gate:</strong> every look passes a preference check (rules in code, then a model's judgment) before it reaches the screen.</li>
-          <li><strong>Refinement and keeping:</strong> keep, change, swap, undo, compare; save a look; a demo bag that cannot check out.</li>
+          <li><strong>One gate:</strong> every look passes a preference check (rules in code, then a model's judgment) before it reaches the screen. Then keep, change, swap, undo, compare; save a look; a demo bag that cannot check out.</li>
           <li><strong>Degrade, never break; privacy and budget built in:</strong> voice carries on when video can't; no recordings, photos deleted with the session, download or delete all; a daily allowance and monthly stops before every paid call.</li>
         </ul>
       </section>
@@ -99,12 +99,12 @@
         <p>Targets set on 17 to 21 October 2026, before any result, and never moved.</p>
         <table>
           <tr><th>Measure</th><th>Target</th><th>Result</th></tr>
-          <tr><td>Notes within 2 s / right (63 sentences, in-sample)</td><td>95% / 90%</td><td>97% / 96%</td></tr>
-          <tr><td>Notes within 2 s / right (15 blind sentences)</td><td>95% / 90%</td><td>85% / 83%, not met</td></tr>
-          <tr><td>Rule breaks caught by code (37 looks)</td><td>All</td><td>16 of 16</td></tr>
+          <tr><td>Notes within 2 s / right, 63 in-sample sentences</td><td>95% / 90%</td><td>97% / 96%</td></tr>
+          <tr><td>Notes within 2 s / right, 15 blind sentences</td><td>95% / 90%</td><td>85% / 83%, not met</td></tr>
+          <tr><td>Rule breaks caught by code, 37 looks</td><td>All</td><td>16 of 16</td></tr>
           <tr><td>Judged looks right</td><td>90%</td><td>21 of 21</td></tr>
-          <tr><td>Photo details right (24 catalog photos)</td><td>85%</td><td>93%</td></tr>
-          <tr><td>AI cost per demo</td><td>About $1.10</td><td>$1.15, not met</td></tr>
+          <tr><td>Photo details right, 24 catalog photos</td><td>85%</td><td>93%</td></tr>
+          <tr><td>AI cost per demo</td><td>$1.10</td><td>$1.15, not met</td></tr>
           <tr><td>Phone speed, live welcome screen</td><td>90</td><td>98</td></tr>
         </table>
       </section>
@@ -112,8 +112,8 @@
         <h2>What I learned</h2>
         <ul>
           <li>Measuring before building changed the model choice; a blind set then showed how much my own cases flattered the reader.</li>
-          <li>Cost became a product problem: one session's judgments hit the daily allowance in my own check, so the limit, honest limit lines and a free Undo followed.</li>
-          <li>The automatic accessibility scan missed what measuring found: 200% text and 44 px targets caught five layout problems and one conflict in my own spec.</li>
+          <li>Cost became a product problem: one session's judgments hit the daily allowance in my own check; the limit, honest limit lines and a free Undo followed.</li>
+          <li>The accessibility scanner passed while measuring found five layout problems at 200% text and 44 px, and one conflict in my own spec.</li>
         </ul>
       </section>
       <div class="note"><strong>Limits:</strong> most answers were mine, so the scores are in-sample; the blind set of 15 sentences scored 83% right and 85% in time, below both targets: the honest estimate for new sentences. One tester, one iPhone; no stranger yet. Catalog photos, not phone photos. Taste isn't measured, only rules.</div>
