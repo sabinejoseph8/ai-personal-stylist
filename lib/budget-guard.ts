@@ -194,7 +194,7 @@ export function endsBecause(granted: number, wanted: number, leftToday: number):
   return wanted < leftToday ? "call" : "day";
 }
 
-/** "You've used today's 20 minutes…": the day's limit in words, from the setting. */
+/** "You've used today's 15 minutes…": the day's limit in words, from the setting. */
 export function dailyTimeUsedLine(limits: BudgetLimits = readBudgetLimits()) {
   return `You've used today's ${Math.round(limits.dailyConversationSeconds / 60)} minutes with your stylist. Come back tomorrow to talk again.`;
 }
