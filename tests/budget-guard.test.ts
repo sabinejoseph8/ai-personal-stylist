@@ -111,7 +111,7 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
   it("remembers whether the demo is resting for a minute (6d review, Q2)", async () => {
     const first = demoRestingRemembered(db, 1_000_000, limits({}));
     expect(demoRestingRemembered(db, 1_030_000, limits({}))).toBe(first);
-    expect(await first).toBe(false);
+    expect(await first).toBeNull(); // not resting (the tests keep the month's video total out of reach)
     expect(demoRestingRemembered(db, 1_061_000, limits({}))).not.toBe(first);
   });
 
