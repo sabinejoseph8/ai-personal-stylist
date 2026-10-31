@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.53 (28 Oct 2026)
+**Status:** Agreed, version 1.54 (30 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -422,6 +422,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 9. **Private by default.** Session data is deleted when the session ends: at End, and for idle sessions by a database timer every 10 minutes. One database step, **delete_session_data**, deletes a session's session-only data, and each new session-only table joins it (2e). Photo files can only be deleted by the app, so the app deletes a session's photos first (**lib/photos-service.ts**), and photos of sessions the timer ended go on the guest's next start or in the daily job (3a). Photos sit in private storage behind links that expire in 30 minutes. Decision records hold versions and reasons only.
 10. **Every paid call passes the budget guard** (**lib/budget-guard.ts**). Before a video or voice call, the server reserves the guest's conversation time in one database step, so two tabs can't share the same minutes, and the call is created with the time granted as its longest length. After the call, the time really used replaces the reservation. Before a Claude or OpenAI call, the server checks the guest's AI money for the day and the provider's money for the month, and records the cost afterwards. If the guard can't answer, the paid call doesn't happen. Ending a call claims it first, so two ends arriving together (End and the tab closing) give its time back only once (Phase 2 review). A call a closed browser left behind is counted until the shopper's last activity plus the 30 seconds Tavus waits before ending it (your answer to B in the Phase 2 review). A start that fails after the reservation (Tavus unreachable, a bad reply, or the session couldn't be saved) gives the time back at once and ends any call it created; a session resumed after its call dropped is charged up to its last activity, not up to the resume; and a looks build or revision stops saving once its session has ended, even from a check that was mid-judgment (full code review, batch 1).
 11. **Screens start from saved data.** With Cache Components, Next.js hides a page instead of closing it when the shopper navigates away, and keeps its state for when they come back (React **Activity**). A screen that edits saved data is keyed on that data (for example setup on the saved profile, and the Wardrobe page on the saved items), so it never shows, or saves, old answers over new ones. The Wardrobe page missed this until your final Phase 3 iPhone check: after Style with these and Change, it came back in Select with the old choice. Passing states such as "Starting your demo…" reset when the page is hidden. Found on your iPhone during the Phase 1 check.
+12. **Into the session with a full page load.** Camera and microphone are allowed only on the session page (section 6), and Chrome keeps the rule of the page a visit was loaded on. So every way into the session is a full load: **goToSession()** from code and **SessionLink** for links (**components/session/session-entry.tsx**), never router.push or next/link. On the session page itself, Session stays a plain link, since a reload would end the call. As a safety net the session page reloads once if Chrome still has the microphone off (at most once in 10 seconds, so a real block can't loop). Found 30 Oct 2026 while recording the demo video: after setup, laptop Chrome said "Microphone needed"; iPhone Safari doesn't apply the rule, so the phone checks had passed. The Chrome test **e2e/session-entry.spec.ts** walks from setup, Continue and the menu into the session.
 
 ## 6. Security
 
@@ -480,7 +481,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 
 ### Browser protections
 - A content security policy only allows connections to our own site, Supabase, Tavus and Daily, and Cloudflare (for Turnstile). Voice only (6c) needs no OpenAI entry: the browser's offer goes to our server, and the call's audio isn't governed by connect-src. Scripts need a fresh per-request nonce (proxy.ts). Every page follows it: the Phase 0 test pages were deleted in 2f.
-- Microphone and camera access are only allowed on the session screen.
+- Microphone and camera access are only allowed on the session screen. Chrome applies this per loaded page, so the session is always opened with a full page load (section 5, pattern 12).
 
 ## 7. Hosting, deployment and configuration
 
@@ -609,6 +610,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.54 (30 Oct 2026):** The Chrome microphone fix: every way into the session is a full page load, with a one-time reload as a safety net (section 5, pattern 12).
 - **1.53 (28 Oct 2026):** 7c: the launch limits (15 minutes a day, one call, video counted from the 21st, test guests left out of the month), the health page, the uptime check and the weekly cost report.
 - **1.52 (28 Oct 2026):** 7b: the portfolio package (your answers to Q1 to Q4), the blind notes set, the checks and the About page.
 - **1.51 (27 Oct 2026):** 7a, pull request 3: Undo and Compare reuse a passing check (Q2), and the Tavus webhook (Q4).

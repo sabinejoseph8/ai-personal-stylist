@@ -18,6 +18,7 @@ import {
   type Profile,
   RuleSchema,
 } from "@/lib/profile";
+import { goToSession } from "@/components/session/session-entry";
 import { applySampleProfile, saveBudgetAndPreferencesStep, saveShoppingStep } from "./actions";
 
 type Result = Awaited<ReturnType<typeof saveShoppingStep>>;
@@ -211,7 +212,8 @@ export function SetupFlow({ initial }: { initial: Profile }) {
     setError(null);
     // Leaving setup: next time it opens at step 1 (Next.js keeps this page's state while it's hidden).
     if (next === "session" || next === "welcome") setStep(1);
-    if (next === "session") router.push("/session");
+    // A full load, so the session page's camera and microphone policy applies (Chrome, 30 Oct 2026).
+    if (next === "session") goToSession();
     else if (next === "welcome") router.push("/");
     else setStep(next);
   };

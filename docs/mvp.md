@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.51
+**Status:** Living document, version 1.52
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 30 Oct 2026 | Fix the Chrome microphone bug before recording the demo video. Found while recording: on a laptop in Chrome the session said "Microphone needed" after setup, because Chrome keeps the camera and microphone rule of the page a visit was loaded on, and setup's rule has them off. The fix keeps the agreed rule (camera and microphone only on the session page): every way into the session is a full page load, with a one-time reload as a safety net. iPhone Safari doesn't apply the rule, so earlier phone checks didn't show it | Sabine | tech spec 1.54 (section 5, pattern 12), progress.md |
+| 30 Oct 2026 | The demo video keeps the stylist's real voice: the session is recorded on the Mac in a phone-sized browser window (an iPhone screen recording loses all sound once the call takes the microphone), with Sabine's narration from a Voice Memo and Behind the scenes kept in. The recording runs the app locally with a test guest, because the live bot check turns automated browsers away; its video minutes are real but not in the app's month total (about 4) | Sabine | progress.md (7b) |
 | 28 Oct 2026 | The Vercel video stop stays at 260 until 21 Nov 2026, then is deleted so the default 165 (from the 21st) applies. Sabine's Tavus page showed 92.5 of 175 used and the app counted 158.8 since the 21st (66 ahead: her minutes on 21 Oct before the upgrade, and early test calls), so 260 may let Tavus go about 19 minutes over at $0.35 each (about $6.65); 230 was the alternative that kept Tavus inside its plan. Accepted ("it's ok if it goes over") | Sabine | tech spec 1.53 |
 | 28 Oct 2026 | The providers' data handling re-checked before launch (7c, Q4): unchanged since Phase 0 (Tavus's privacy policy of 12 Nov 2025 and terms of 24 Apr 2025, its pricing page's "not training on your data" and zero data retention on Enterprise only; OpenAI's API not used for training, 30 days of abuse monitoring, GPT-Live sessions not stored by default; Anthropic's API data deleted within 30 days, the article of 1 Jul 2026), so the About page's note stands. Found with it: the Builder plan's calls last at most 15 minutes, and minutes past the 175 are billed at $0.35 each, "never paused", so the app's video stop is the only guard against Tavus overage | Claude, for Sabine | mvp.md risk 3 |
 | 28 Oct 2026 | 15 minutes of conversation a day per visitor, up from 10 (R13), asked for by Sabine while 7c was being built: first 20, then 15 to match Tavus Builder's longest call, so a day is one call. With 165 video minutes a month that's about 11 full-length demos instead of about 16, though most visitors use far less. The handover to a second call stays in the code for a longer day | Sabine | product spec 1.6, tech spec 1.53 |
@@ -438,6 +440,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.52 (30 Oct 2026):** The Chrome microphone fix (fixed before the demo video, Sabine's call) and how the demo video is recorded.
 - **1.51 (28 Oct 2026):** 7c: the launch decisions (Q1 to Q4) and 15 minutes a day.
 - **1.50 (28 Oct 2026):** 7b: the portfolio package decisions (Q1 to Q4), the blind set's result (not met), and the history scan's findings (the old interview notes stay, A).
 - **1.49 (27 Oct 2026):** 7a done: the iPhone and laptop check passed A to E, including the Tavus webhook counting a closed call's exact minutes.

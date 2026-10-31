@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppBar } from "@/components/app-bar/app-bar";
 import { NoteLine, NotebookPage } from "@/components/notebook/notebook-page";
 import { buttonClasses } from "@/components/ui/button";
+import { SessionLink } from "@/components/session/session-entry";
 import { StartDemo } from "@/components/welcome/start-demo";
 import { demoRestingRemembered, nextMonthFirst } from "@/lib/budget-guard";
 import { currentGuest } from "@/lib/guest";
@@ -91,9 +92,13 @@ async function WelcomeBack({ guest }: { guest: NonNullable<Awaited<ReturnType<ty
         </dd>
       </dl>
       <div className="flex flex-wrap gap-2">
-        <Link href={empty ? "/setup" : "/session"} className={buttonClasses("primary")}>
-          Continue
-        </Link>
+        {empty ? (
+          <Link href="/setup" className={buttonClasses("primary")}>
+            Continue
+          </Link>
+        ) : (
+          <SessionLink className={buttonClasses("primary")}>Continue</SessionLink>
+        )}
         <Link href="/setup" className={buttonClasses("secondary")}>
           Edit your profile
         </Link>
