@@ -1,6 +1,6 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.30 (31 Oct 2026)
+**Status:** Agreed, version 1.31 (31 Oct 2026)
 **Last updated:** 31 Oct 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
@@ -375,7 +375,7 @@ No screenshots or mockups were provided, so these wireframes are the starting po
 - Supporting line: "Talk with a lifelike stylist, show what you own, and refine complete looks by voice or touch."
 - **Try the demo** (primary) and **How it was built** (a link to About).
 - Small print: "Sample products only. Nothing here is for sale."
-- Resting state: when the monthly allowance is used up, **Try the demo** is replaced by a line such as "The demo is resting until 1 November. You can still read how it was built." **How it was built** becomes the main button.
+- Resting state: when the monthly allowance is used up, **Try the demo** is replaced by a line such as "The demo is resting until 1 November. You can still read how it was built." The date is when it is back: the 1st, or the day the video minutes start again if that comes first (7d). **How it was built** becomes the main button.
 
 ```
 Phone
@@ -590,6 +590,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.31 (31 Oct 2026):** The resting date is when the demo is back (7d); the time-left pill counts the day's last 2 minutes in whichever call they fall (A1).
 - **1.30 (31 Oct 2026):** The About page links the two-minute demo video in the README (Sabine's choice of host).
 - **1.29 (28 Oct 2026):** 7c: the time-up and resting lines name the day's minutes and the date video is back; the handover to a second call when a day is longer than one call.
 - **1.28 (28 Oct 2026):** The About page as built (7b).
