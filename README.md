@@ -8,7 +8,7 @@
 
 A real session with the video stylist, using the sample profile: the notes as she takes them, complete looks, a change and its undo, a piece from the shopper's own wardrobe shown on camera and styled around, Behind the scenes, and the privacy page. 2 minutes 14 seconds, with sound.
 
-https://github.com/user-attachments/assets/35e1d760-eb20-45b3-8e36-59cbfcb38499
+https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 
 ![Architecture](docs/architecture.png)
 
