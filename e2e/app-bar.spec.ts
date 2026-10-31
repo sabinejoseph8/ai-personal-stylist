@@ -64,7 +64,14 @@ test.describe("a guest's menu", () => {
     await expect(panel).toHaveCount(0);
     await page.goto("/bag");
     await openFromMenu(page, "Behind the scenes");
-    await expect(page).toHaveURL(/\/session\?behind=1$/);
     await expect(panel).toBeVisible();
+    // The ?behind=1 that brought it here is dropped once it has opened, so a reload after closing it
+    // doesn't open it again (Phase 7 review).
+    await expect(page).toHaveURL(/\/session$/);
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Your styling session", level: 1 })).toBeVisible();
+    await expect(panel).toHaveCount(0);
   });
 });

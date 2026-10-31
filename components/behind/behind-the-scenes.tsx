@@ -32,6 +32,11 @@ const time = (entry: Entry) => (entry.kind === "products" ? "Now" : new Date(ent
 export function BehindTheScenes({ startOpen = false }: { startOpen?: boolean }) {
   const { sessionId, changes } = useContext(Source);
   const [open, setOpen] = useState(startOpen);
+  // The ?behind=1 that opened it from another page's menu is dropped once it has opened, so a reload (the
+  // Chrome microphone safety net, say) doesn't open it again after it was closed (Phase 7 review).
+  useEffect(() => {
+    if (startOpen && window.location.search) window.history.replaceState(window.history.state, "", window.location.pathname);
+  }, [startOpen]);
   // Each Behind the scenes in the menu opens it.
   const requests = useBehindTheScenesRequests();
   const [seenRequests, setSeenRequests] = useState(requests);

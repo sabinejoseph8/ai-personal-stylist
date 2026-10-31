@@ -5,7 +5,7 @@ import { NoteLine, NotebookPage } from "@/components/notebook/notebook-page";
 import { buttonClasses } from "@/components/ui/button";
 import { SessionLink } from "@/components/session/session-entry";
 import { StartDemo } from "@/components/welcome/start-demo";
-import { demoRestingRemembered, nextMonthFirst } from "@/lib/budget-guard";
+import { demoRestingRemembered } from "@/lib/budget-guard";
 import { currentGuest } from "@/lib/guest";
 import { serverKeyDb } from "@/lib/supabase/admin";
 import { describeBudget, describePreference, isEmpty } from "@/lib/profile";
@@ -116,7 +116,8 @@ export default async function Home() {
   // The resting state (R13, TQ4, Sabine's answer to Q2 in 6c): when the month's allowance can't run a
   // demo, Try the demo gives way to a line, and How it was built becomes the main button (design 5.1).
   // The answer is remembered for a minute (6d review), so the resting screen can be up to a minute late.
-  const resting = await demoRestingRemembered(serverKeyDb()).catch(() => false);
+  // When it's back (the 1st, or the video cycle day if that comes first), or null.
+  const resting = await demoRestingRemembered(serverKeyDb()).catch(() => null);
 
   return (
     <>
@@ -137,7 +138,7 @@ export default async function Home() {
         {resting ? (
           <>
             <p role="status" className="type-body m-0 text-ink">
-              The demo is resting until {nextMonthFirst()}. You can still read how it was built.
+              The demo is resting until {resting}. You can still read how it was built.
             </p>
             <Link href="/about" className={buttonClasses("primary", "self-start")}>
               How it was built

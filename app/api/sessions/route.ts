@@ -9,7 +9,7 @@ import { type StartRefusal, startConversation } from "@/lib/sessions";
 // Start conversation (R12): picks up the guest's open session or opens one, reserves their time with
 // the budget guard, and starts the video call. The browser gets only the call's join link.
 
-// The day's limit and the dates come from the settings (7c: 20 minutes a day, video counted from the 21st).
+// The day's limit and the dates come from the settings (7c: 15 minutes a day, video counted from the 21st).
 const WHY: Record<StartRefusal | "too_many_starts", { status: number; message: string }> = {
   daily_time_used: { status: 409, message: "" },
   monthly_video_used: { status: 503, message: "" },
@@ -45,7 +45,9 @@ export async function POST(request: Request) {
   const fake = fakeEngineAllowed() ? { video: request.headers.get("x-fake-video"), voice: request.headers.get("x-fake-voice") } : undefined;
   const result = await startConversation(sessionDeps(fake), guest.id, engine);
   if (!result.ok) return refuse(result.reason);
-  // The lines the page shows when this call's time runs out (7c): the day's, and when video is back.
+  // The lines the page shows when this call's time runs out (7c): the day's and the month's, composed here
+  // only (Phase 7 review); when video is back, for the voice-only line; and today's time left, so the page
+  // can count the day down through a call that ends at its own length (Phase 7 review, Sabine's A1).
   return Response.json({
     sessionId: result.sessionId,
     resumed: result.resumed,
@@ -54,7 +56,9 @@ export async function POST(request: Request) {
     call: result.call,
     seconds: result.seconds,
     endsBecause: result.endsBecause,
-    dayUsedLine: dailyTimeUsedLine(),
+    dayLeftSeconds: result.dayLeftSeconds,
+    dayUsedLine: message("daily_time_used"),
+    monthUsedLine: message("monthly_video_used"),
     videoBackOn: nextVideoCycle(),
   });
 }
