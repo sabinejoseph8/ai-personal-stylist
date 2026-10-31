@@ -4,6 +4,12 @@
 
 > **Portfolio case study.** A working web app, live at [ai-personal-stylist-inky.vercel.app](https://ai-personal-stylist-inky.vercel.app), built by an AI product manager with Claude Code as the engineering partner. The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected.
 
+## Demo
+
+A real session with the video stylist, using the sample profile: the notes as she takes them, complete looks, a change and its undo, Behind the scenes, and the privacy page. 1 minute 57 seconds, with sound.
+
+https://github.com/user-attachments/assets/35e1d760-eb20-45b3-8e36-59cbfcb38499
+
 ![Architecture](docs/architecture.png)
 
 ## At a glance
