@@ -95,7 +95,7 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
       guestId: string,
       engine: Engine,
       wantedSeconds = Math.min(limits.dailyConversationSeconds, limits.maxCallSeconds),
-    ): Promise<Answer<{ reservation: Reservation; endsBecause: EndsBecause }>> {
+    ): Promise<Answer<{ reservation: Reservation; endsBecause: EndsBecause; /** Today's time left when the call starts, this call included (Phase 7 review). */ leftToday: number }>> {
       if (!Number.isInteger(wantedSeconds) || wantedSeconds < 1) throw new Error("budget guard: ask for at least 1 second");
       if (engine === "voice") {
         const money = await checkAi(guestId, "openai");
@@ -109,7 +109,7 @@ export function createBudgetGuard(db: SupabaseClient, limits: BudgetLimits = rea
         monthly_video_limit: limits.monthlyVideoSeconds,
         video_cycle_day: limits.videoCycleDay,
       });
-      if (r.granted > 0) return { ok: true, reservation: { engine, seconds: r.granted, day: r.day }, endsBecause: endsBecause(r.granted, wantedSeconds, r.left_today) };
+      if (r.granted > 0) return { ok: true, reservation: { engine, seconds: r.granted, day: r.day }, endsBecause: endsBecause(r.granted, wantedSeconds, r.left_today), leftToday: r.left_today };
       return { ok: false, reason: r.left_today <= 0 ? "daily_time_used" : "monthly_video_used" };
     },
 
@@ -144,11 +144,24 @@ export function isResting(m: MonthTotals, limits: BudgetLimits) {
   return claude || (video && openai);
 }
 
-/** Whether the demo is resting this month, from the usage table (no guest needed). */
-export async function demoResting(db: SupabaseClient, limits: BudgetLimits = readBudgetLimits()) {
+/**
+ * When a resting demo is back, in words ("1 December"): the 1st when the month's Claude is used up; the
+ * earlier of the video cycle day and the 1st when video and OpenAI are, since either brings the stylist
+ * back (Phase 7 review: the welcome screen said the 1st when video was back on the 21st).
+ */
+export function restingBackOn(m: MonthTotals, limits: BudgetLimits, now = new Date()) {
+  if (m.month_claude_microdollars >= limits.monthlyClaudeUsd * MICRO) return inWords(nextMonthFirstDate(now));
+  const video = nextVideoCycleDate(now, limits.videoCycleDay);
+  const first = nextMonthFirstDate(now);
+  return inWords(video < first ? video : first);
+}
+
+/** Whether the demo is resting this month, from the usage table (no guest needed): when it's back, or null. */
+export async function demoResting(db: SupabaseClient, limits: BudgetLimits = readBudgetLimits()): Promise<string | null> {
   const { data, error } = await db.rpc("budget_status", { guest: "00000000-0000-0000-0000-000000000000", video_cycle_day: limits.videoCycleDay });
   if (error) throw new Error(`budget guard: budget_status failed: ${error.message}`);
-  return isResting(data as MonthTotals, limits);
+  const totals = data as MonthTotals;
+  return isResting(totals, limits) ? restingBackOn(totals, limits) : null;
 }
 
 /**
@@ -157,7 +170,7 @@ export async function demoResting(db: SupabaseClient, limits: BudgetLimits = rea
  * answer isn't kept, so the next visit asks again.
  */
 export const RESTING_REMEMBERED_MS = 60_000;
-let remembered: { at: number; value: Promise<boolean> } | null = null;
+let remembered: { at: number; value: Promise<string | null> } | null = null;
 export function demoRestingRemembered(db: SupabaseClient, now = Date.now(), limits?: BudgetLimits) {
   if (!remembered || now - remembered.at >= RESTING_REMEMBERED_MS) {
     const value = demoResting(db, limits);
@@ -170,18 +183,28 @@ export function demoRestingRemembered(db: SupabaseClient, now = Date.now(), limi
   return remembered.value;
 }
 
-/** "21 November": when the month's video minutes start again, on the cycle day (7c), in UTC. */
-export function nextVideoCycle(now = new Date(), cycleDay = readBudgetLimits().videoCycleDay) {
+const inWords = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+
+/** When the month's video minutes start again: the next cycle day (7c), in UTC. */
+export function nextVideoCycleDate(now = new Date(), cycleDay = readBudgetLimits().videoCycleDay) {
   const y = now.getUTCFullYear();
   const m = now.getUTCMonth();
-  const next = now.getUTCDate() >= cycleDay ? new Date(Date.UTC(y, m + 1, cycleDay)) : new Date(Date.UTC(y, m, cycleDay));
-  return next.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+  return now.getUTCDate() >= cycleDay ? new Date(Date.UTC(y, m + 1, cycleDay)) : new Date(Date.UTC(y, m, cycleDay));
 }
 
-/** "1 November": the 1st of next month, in UTC as the budget counts months. */
+/** "21 November": when the month's video minutes start again, in words. */
+export function nextVideoCycle(now = new Date(), cycleDay = readBudgetLimits().videoCycleDay) {
+  return inWords(nextVideoCycleDate(now, cycleDay));
+}
+
+/** The 1st of next month, in UTC as the budget counts Claude and OpenAI months. */
+export function nextMonthFirstDate(now = new Date()) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+}
+
+/** "1 November": the 1st of next month, in words. */
 export function nextMonthFirst(now = new Date()) {
-  const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return first.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+  return inWords(nextMonthFirstDate(now));
 }
 
 /**

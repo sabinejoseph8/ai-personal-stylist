@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { type BudgetLimits, createBudgetGuard, dailyTimeUsedLine, demoRestingRemembered, endsBecause, isResting, nextMonthFirst, nextVideoCycle, readBudgetLimits } from "@/lib/budget-guard";
+import { type BudgetLimits, createBudgetGuard, dailyTimeUsedLine, demoRestingRemembered, endsBecause, isResting, nextMonthFirst, nextVideoCycle, readBudgetLimits, restingBackOn } from "@/lib/budget-guard";
 import { canRunDatabaseTests, createTestGuest, recordEvalSpend, serverDb, type TestGuest } from "./support/test-guests";
 
 // Phase 1 automated test: the budget guard blocks a paid call once the daily or monthly limit is reached (risk 4).
@@ -16,6 +16,20 @@ describe("budget limits", () => {
       maxCallSeconds: 900,
     });
     expect(dailyTimeUsedLine()).toBe("You've used today's 15 minutes with your stylist. Come back tomorrow to talk again.");
+  });
+
+  it("says when a resting demo is back: the 1st for Claude, the earlier of the cycle day and the 1st for video and OpenAI (Phase 7 review)", () => {
+    const limits = { ...readBudgetLimits({}), videoCycleDay: 21 };
+    const month = (claudeUsd: number, videoMinutes: number, openaiUsd: number) => ({
+      month_claude_microdollars: claudeUsd * 1e6,
+      month_video_seconds: videoMinutes * 60,
+      month_openai_microdollars: openaiUsd * 1e6,
+    });
+    const early = new Date("2026-11-02T12:00:00Z");
+    const late = new Date("2026-11-25T12:00:00Z");
+    expect(restingBackOn(month(40, 0, 0), limits, early)).toBe("1 December");
+    expect(restingBackOn(month(15, 165, 4), limits, early)).toBe("21 November"); // video is back before the 1st
+    expect(restingBackOn(month(15, 165, 4), limits, late)).toBe("1 December"); // OpenAI is back before the next 21st
   });
 
   it("says when the month's video minutes start again, on the 21st (7c, Q1)", () => {
@@ -97,7 +111,7 @@ describe.skipIf(!canRunDatabaseTests)("budget guard", () => {
   it("remembers whether the demo is resting for a minute (6d review, Q2)", async () => {
     const first = demoRestingRemembered(db, 1_000_000, limits({}));
     expect(demoRestingRemembered(db, 1_030_000, limits({}))).toBe(first);
-    expect(await first).toBe(false);
+    expect(await first).toBeNull(); // not resting (the tests keep the month's video total out of reach)
     expect(demoRestingRemembered(db, 1_061_000, limits({}))).not.toBe(first);
   });
 

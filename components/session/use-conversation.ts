@@ -119,7 +119,8 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
   const shown = useRef(false);
   // R13: when the call's time runs out, and which limit ends it. R14: each Start, End or Try again
   // starts a new attempt, so a dropped call's retries stop when the shopper does something else.
-  const callEnds = useRef<{ at: number; because: CallLimit } | null>(null);
+  // dayEndsAt: when today's time runs out, so a call limited by its own length still counts the day down (7d, Sabine's A1).
+  const callEnds = useRef<{ at: number; because: CallLimit; dayEndsAt: number } | null>(null);
   // The server's lines for this call's limits (7c), and when video is back after the month's minutes.
   const lines = useRef<{ day: string; month: string } | null>(null);
   const [videoBackOn, setVideoBackOn] = useState<string | null>(null);
@@ -164,8 +165,10 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
       const ends = callEnds.current;
       if (!ends) return;
       const left = (ends.at - Date.now()) / 1000;
-      // A call that ends at its own length with time left today isn't the end of the conversation.
+      // A call that ends at its own length with time left today isn't the end of the conversation: the
+      // label counts the day down, and the next call carries on.
       if (ends.because === "call") {
+        setTimeLeft(timeLeftLabel((ends.dayEndsAt - Date.now()) / 1000));
         if (left <= 0) void nextCall();
         return;
       }
@@ -367,12 +370,18 @@ export function useConversation(openSessionId: string | null, media: CallMedia, 
     const because = data.engine === "voice" && (data.because === "busy" || data.because === "unavailable" || data.because === "resting") ? (data.because as "busy" | "unavailable" | "resting") : null;
     if (because) wanted.current = "voice";
     setVoiceWhy((was) => (kindNow === "video" ? null : because ?? (reconnecting ? was : (was ?? "chosen"))));
-    callEnds.current = { at: Date.now() + data.seconds * 1000, because: data.endsBecause === "month" ? "month" : data.endsBecause === "call" ? "call" : "day" };
+    const dayLeft = typeof data.dayLeftSeconds === "number" ? data.dayLeftSeconds : data.seconds;
+    callEnds.current = {
+      at: Date.now() + data.seconds * 1000,
+      because: data.endsBecause === "month" ? "month" : data.endsBecause === "call" ? "call" : "day",
+      dayEndsAt: Date.now() + dayLeft * 1000,
+    };
     const backOn = typeof data.videoBackOn === "string" ? data.videoBackOn : null;
     setVideoBackOn(backOn);
+    // The server composes both lines (Phase 7 review); these fallbacks are for a call that came without them.
     lines.current = {
       day: typeof data.dayUsedLine === "string" ? data.dayUsedLine : TIME_UP.day,
-      month: backOn ? `The video stylist is resting until ${backOn}.` : TIME_UP.month,
+      month: typeof data.monthUsedLine === "string" ? data.monthUsedLine : TIME_UP.month,
     };
     const e = await engineFor(data.call.joinUrl);
     engine.current = e;
