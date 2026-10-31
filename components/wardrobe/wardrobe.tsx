@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Chip } from "@/components/ui/chip";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icons";
 import { PermissionCard } from "@/components/ui/permission-card";
+import { goToSession } from "@/components/session/session-entry";
 import { Sheet } from "@/components/ui/sheet";
 import { MAX_PHOTO_BYTES, PHOTO_MESSAGES, storeBusy, uploadType, whileStoreBusy } from "@/lib/photos";
 import { CATEGORIES, CATEGORY_LABELS, type Category, DETAIL_LENGTHS, FILTERS, type Filter, type ShownWardrobeItem, WARDROBE_MESSAGES } from "@/lib/wardrobe";
@@ -142,7 +142,6 @@ function ItemForm({
 }
 
 export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownWardrobeItem[]; photosAllowed: boolean }) {
-  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   // Links last 30 minutes: when a picture's has run out, fresh ones are fetched, at most once in a while,
   // as the pasted photo already does (review batch 5, D10).
@@ -233,7 +232,8 @@ export function Wardrobe({ initialItems, photosAllowed }: { initialItems: ShownW
     if (!res?.ok) return setProblem(WARDROBE_MESSAGES.saveFailed);
     // Leaving the page: next time it opens out of Select (Next.js keeps this page's state while it's hidden).
     setSelecting(false);
-    if (selected.size) return router.push("/session");
+    // A full load, so the session page's camera and microphone policy applies (Chrome, 30 Oct 2026).
+    if (selected.size) return goToSession();
     // Clear wardrobe items: nothing from the wardrobe in My Styling Notes, and the stylist isn't told about any.
     setItems((list) => list.map((i) => ({ ...i, styling: false })));
     setNotice(WARDROBE_MESSAGES.cleared);

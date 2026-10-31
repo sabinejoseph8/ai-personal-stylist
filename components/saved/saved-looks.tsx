@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SessionLink } from "@/components/session/session-entry";
 import { useState, useSyncExternalStore } from "react";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
@@ -168,9 +168,7 @@ export function SavedLooks({ initialLooks, photos }: { initialLooks: SavedLook[]
     return (
       <div className="flex flex-col items-start gap-3 rounded-panel border border-dashed border-hairline p-4">
         <p className="type-body m-0 text-graphite">No saved looks yet</p>
-        <Link href="/session" className={buttonClasses("secondary")}>
-          Go to your looks
-        </Link>
+        <SessionLink className={buttonClasses("secondary")}>Go to your looks</SessionLink>
       </div>
     );
   return (

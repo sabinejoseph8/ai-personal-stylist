@@ -9,6 +9,7 @@ import { MyStylingNotes } from "@/components/notebook/my-styling-notes";
 import { PhotoThumbnail, StyleAroundThisItem } from "@/components/notebook/pasted-photo";
 import { CameraAnnouncer, CameraView } from "@/components/session/camera-view";
 import { PinnedBar } from "@/components/session/pinned-bar";
+import { useSessionMediaPolicy } from "@/components/session/session-entry";
 import { CAMERA_MESSAGES, useCamera } from "@/components/session/use-camera";
 import { useConversation } from "@/components/session/use-conversation";
 import { type ShownNote, useNotes } from "@/components/session/use-notes";
@@ -129,6 +130,8 @@ export function StylingSession({
   /** Shown under the notebook: what the profile says (Sabine's answer to Q2 in 2d). */
   children?: ReactNode;
 }) {
+  // If this page was reached without a full load, Chrome may still have the microphone off: reload once.
+  useSessionMediaPolicy();
   // The call, and the notes it feeds: the shopper's words go to the notes reader, a tapped phrase is
   // read as if spoken, and End clears the notes.
   const video = useRef<HTMLVideoElement>(null);

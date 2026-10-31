@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SessionLink } from "@/components/session/session-entry";
 import { Sheet } from "@/components/ui/sheet";
 import { openBehindTheScenes, useBagCount } from "./live";
 
@@ -57,6 +58,14 @@ export function AppMenu({ guest, current, bagCount }: { guest: boolean; current?
         >
           {label}
         </button>
+      );
+    // Into the session from another page: a full load, so its camera and microphone policy applies
+    // (Chrome, 30 Oct 2026). On the session page itself, Session stays a plain link: a reload would end the call.
+    if (item.href.startsWith("/session") && current !== "session")
+      return (
+        <SessionLink href={item.href} className={itemClass} onClick={() => setOpen(false)}>
+          {label}
+        </SessionLink>
       );
     return (
       <Link href={item.href} className={itemClass} aria-current={item.key === current ? "page" : undefined} onClick={() => setOpen(false)}>
