@@ -425,7 +425,7 @@ The full code review of 24 Oct 2026 covers this for everything built so far: 58 
 - [x] Before publishing: scan the repository for secrets, personal email addresses and private files, and check every README link on GitHub. **You:** read the README and case study drafts, and approve before anything is pushed. Done 28 Oct 2026: the scan found only made-up test values and the early interview notes in three old commits, which stay (your answer A); you approved the push.
 
 ### 7c. Launch
-- [ ] **You:** check the Tavus Starter plan ($22 a month, already chosen in 0a) and set the final spending limits (TQ2).
+- [x] **You:** check the Tavus Starter plan ($22 a month, already chosen in 0a) and set the final spending limits (TQ2). Done: Tavus is on the Builder plan since 21 Oct 2026 (175 minutes a month, renewing on the 21st), and the final limits were agreed on 28 Oct 2026 (7c, Q1): video counted from the 21st with a stop at 165 minutes, $40 Claude and $4 OpenAI a month, $3 of AI a day per visitor. Still to do: on or after 21 Nov 2026, delete BUDGET_MONTHLY_VIDEO_MINUTES (260) in Vercel so the 165 default applies.
 - [x] Monitoring: error alerts, an uptime check and a weekly cost check. Done 28 Oct 2026: the health page, the uptime check every 30 minutes (GitHub emails a failure) and the Monday cost report as a GitHub issue; both ran once by hand and passed (#69).
 - [ ] Full run of S1 to S20 on an iPhone and a laptop. Android phones aren't tested in v1.
 - [ ] **You:** ask a friend who has never seen the app to try it from the link (S20).
