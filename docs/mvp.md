@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.52
+**Status:** Living document, version 1.53
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 31 Oct 2026 | The demo video plays inside the GitHub README (a video attached on GitHub), not on unlisted YouTube as agreed on 27 Oct (Q3): a recruiter sees it on the page they already have open. A free GitHub account takes videos up to 10 MB, so the README gets a smaller copy (about 8 MB, no visible difference). The About page links the README's Demo section | Sabine | progress.md (7b), design.md |
+| 31 Oct 2026 | The demo video shows the moving video stylist. This Tavus cycle's 175 minutes were used up, so the local copy that recorded it allowed video past the month's stop (about 3 extra minutes, about $1 at $0.35 a minute); the live site's limits didn't change | Sabine | progress.md (7b) |
 | 30 Oct 2026 | Fix the Chrome microphone bug before recording the demo video. Found while recording: on a laptop in Chrome the session said "Microphone needed" after setup, because Chrome keeps the camera and microphone rule of the page a visit was loaded on, and setup's rule has them off. The fix keeps the agreed rule (camera and microphone only on the session page): every way into the session is a full page load, with a one-time reload as a safety net. iPhone Safari doesn't apply the rule, so earlier phone checks didn't show it | Sabine | tech spec 1.54 (section 5, pattern 12), progress.md |
 | 30 Oct 2026 | The demo video keeps the stylist's real voice: the session is recorded on the Mac in a phone-sized browser window (an iPhone screen recording loses all sound once the call takes the microphone), with Sabine's narration from a Voice Memo and Behind the scenes kept in. The recording runs the app locally with a test guest, because the live bot check turns automated browsers away; its video minutes are real but not in the app's month total (about 4) | Sabine | progress.md (7b) |
 | 28 Oct 2026 | The Vercel video stop stays at 260 until 21 Nov 2026, then is deleted so the default 165 (from the 21st) applies. Sabine's Tavus page showed 92.5 of 175 used and the app counted 158.8 since the 21st (66 ahead: her minutes on 21 Oct before the upgrade, and early test calls), so 260 may let Tavus go about 19 minutes over at $0.35 each (about $6.65); 230 was the alternative that kept Tavus inside its plan. Accepted ("it's ok if it goes over") | Sabine | tech spec 1.53 |
@@ -440,6 +442,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.53 (31 Oct 2026):** The demo video: shown in the GitHub README instead of unlisted YouTube, and recorded with the video stylist past the month's minutes.
 - **1.52 (30 Oct 2026):** The Chrome microphone fix (fixed before the demo video, Sabine's call) and how the demo video is recorded.
 - **1.51 (28 Oct 2026):** 7c: the launch decisions (Q1 to Q4) and 15 minutes a day.
 - **1.50 (28 Oct 2026):** 7b: the portfolio package decisions (Q1 to Q4), the blind set's result (not met), and the history scan's findings (the old interview notes stay, A).
