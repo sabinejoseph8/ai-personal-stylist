@@ -53,6 +53,8 @@ export type StartResult =
       /** The call's longest length, and which limit ends it (R13). */
       seconds: number;
       endsBecause: EndsBecause;
+      /** Today's time left as the call starts, this call included (7c handover; Phase 7 review). */
+      dayLeftSeconds: number;
     }
   | { ok: false; reason: StartRefusal };
 
@@ -312,7 +314,7 @@ async function placeCall(deps: SessionDeps, guestId: string, session: Session, r
     engine: provider.engine,
     call: { callId: call.callId, joinUrl: call.joinUrl },
     seconds: reserved.reservation.seconds,
-    endsBecause: reserved.endsBecause,
+    endsBecause: reserved.endsBecause, dayLeftSeconds: reserved.leftToday,
   };
 }
 

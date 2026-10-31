@@ -351,6 +351,31 @@ describe.skipIf(!canRunDatabaseTests)("sessions", () => {
     expect(Number(usage!.openai_microdollars)).toBe(0);
   });
 
+  it("a day longer than one call is served as calls that carry on: each ends at its own length, the last at the day's (7c handover; Phase 7 review)", async () => {
+    // A 10-minute day of 4-minute calls (from 21 Nov 2026 the live site has 5-minute calls in a 15-minute day).
+    const d = deps({ guard: createBudgetGuard(db, { ...readBudgetLimits({}), dailyConversationSeconds: 600, maxCallSeconds: 240, monthlyVideoSeconds: 1e9 }) });
+    const ranItsLength = async (sessionId: string, callId: string, seconds: number) => {
+      await db.from("sessions").update({ call_started_at: new Date(Date.now() - seconds * 1000).toISOString() }).eq("id", sessionId).throwOnError();
+      // The page leaves the call and starts again in the same session (nextCall in use-conversation).
+      await endConversation(d, guest.id, sessionId, true, callId);
+    };
+    const first = await startConversation(d, guest.id);
+    if (!first.ok) throw new Error(first.reason);
+    expect(first).toMatchObject({ seconds: 240, endsBecause: "call", dayLeftSeconds: 600 });
+    await ranItsLength(first.sessionId, first.call.callId, 240);
+    const second = await startConversation(d, guest.id);
+    if (!second.ok) throw new Error(second.reason);
+    expect(second).toMatchObject({ sessionId: first.sessionId, resumed: true, seconds: 240, endsBecause: "call", dayLeftSeconds: 360 });
+    await ranItsLength(second.sessionId, second.call.callId, 240);
+    const third = await startConversation(d, guest.id);
+    if (!third.ok) throw new Error(third.reason);
+    // The last 2 minutes of the day: this call ends the conversation for today.
+    expect(third).toMatchObject({ sessionId: first.sessionId, seconds: 120, endsBecause: "day", dayLeftSeconds: 120 });
+    await ranItsLength(third.sessionId, third.call.callId, 120);
+    expect(await startConversation(d, guest.id)).toEqual({ ok: false, reason: "daily_time_used" });
+    expect(await usedToday()).toBe(600);
+  });
+
   it("Tavus's end-of-call message settles the call's exact time, once, whether the session is open or ended (7a, Q4)", async () => {
     const started = await startConversation(deps(), guest.id);
     if (!started.ok) throw new Error(started.reason);

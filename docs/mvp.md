@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.53
+**Status:** Living document, version 1.54
 **Last updated:** 25 Oct 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -161,6 +161,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 31 Oct 2026 | The Phase 7 code review (7d) runs now, at Sabine's request, before 7c's last two tasks (a friend's S20 and the Free plan switch); the 21 Nov change gets its own small review. Its two decisions: A1, during a call limited by its own length (from 21 Nov, 5-minute calls in a 15-minute day) the stage counts the day's time down, so the countdown is there in every call; B1, the per-row test-guest check in the budget functions stays, recorded as a known small inefficiency, to be fixed only if the app gets busier (it would need a live database migration) | Sabine | progress.md (7d, known issues) |
 | 31 Oct 2026 | Tavus moves back down to the Free plan on 21 Nov 2026, when the Builder cycle ends. The Free plan has 20 video minutes a month, one call at a time, calls of at most 5 minutes (Sabine confirmed this on her Tavus billing page, 31 Oct) and no overage, from the "Pricing Built to Scale" table on Tavus's pricing page (Tavus answers 402 when the minutes run out, which the app already turns into "resting" and carries on by voice). So most visitors after 21 Nov get the voice stylist. Planned for that day: the code's defaults change to a video stop of 18 minutes and 5-minute calls, the Vercel setting of 260 is deleted, and the README and About page say how video works now. The launch checks and a friend's first try happen before then, while video has room | Sabine | progress.md (7c), risk 3 |
 | 31 Oct 2026 | The demo video plays inside the GitHub README (a video attached on GitHub), not on unlisted YouTube as agreed on 27 Oct (Q3): a recruiter sees it on the page they already have open. A free GitHub account takes videos up to 10 MB, so the README gets a smaller copy (about 8 MB, no visible difference). The About page links the README's Demo section | Sabine | progress.md (7b), design.md |
 | 31 Oct 2026 | The demo video shows the moving video stylist. This Tavus cycle's 175 minutes were used up, so the local copy that recorded it allowed video past the month's stop (about 3 extra minutes, about $1 at $0.35 a minute); the live site's limits didn't change | Sabine | progress.md (7b) |
@@ -443,6 +444,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.54 (31 Oct 2026):** The Phase 7 code review run early, with its two decisions (A1, B1).
 - **1.53 (31 Oct 2026):** The demo video: shown in the GitHub README instead of unlisted YouTube, and recorded with the video stylist past the month's minutes. Tavus moves to the Free plan on 21 Nov 2026 (risk 3 updated).
 - **1.52 (30 Oct 2026):** The Chrome microphone fix (fixed before the demo video, Sabine's call) and how the demo video is recorded.
 - **1.51 (28 Oct 2026):** 7c: the launch decisions (Q1 to Q4) and 15 minutes a day.

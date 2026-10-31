@@ -1,6 +1,6 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.54 (30 Oct 2026)
+**Status:** Agreed, version 1.55 (31 Oct 2026)
 **Last updated:** 25 Oct 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
@@ -610,6 +610,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.55 (31 Oct 2026):** The Phase 7 code review: currentGuest() is remembered per request (React's cache), since a page and its app bar both ask; the sessions route sends both time-up lines and today's time left with each call; the welcome screen's resting date comes from restingBackOn (the 1st, or the video cycle day if earlier); the weekly cost report reads budget_status, as the app's stops do.
 - **1.54 (30 Oct 2026):** The Chrome microphone fix: every way into the session is a full page load, with a one-time reload as a safety net (section 5, pattern 12).
 - **1.53 (28 Oct 2026):** 7c: the launch limits (15 minutes a day, one call, video counted from the 21st, test guests left out of the month), the health page, the uptime check and the weekly cost report.
 - **1.52 (28 Oct 2026):** 7b: the portfolio package (your answers to Q1 to Q4), the blind notes set, the checks and the About page.

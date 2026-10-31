@@ -1,7 +1,7 @@
 "use client";
 
 import { SessionLink } from "@/components/session/session-entry";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { reportBagCount } from "@/components/app-bar/live";
 import { Banner } from "@/components/ui/banner";
 import { Button, buttonClasses } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import { type BagItem, DEMO_ONLY } from "@/core/looks/saved";
 
 export function DemoBag({ initialItems }: { initialItems: BagItem[] }) {
   const [items, setItems] = useState(initialItems);
+  // The app bar's Demo bag count follows this page's list (7a).
+  useEffect(() => reportBagCount(items.length), [items.length]);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -74,12 +76,7 @@ export function DemoBag({ initialItems }: { initialItems: BagItem[] }) {
                     ))}
                   </select>
                 </label>
-                <Button variant="quiet" disabled={busy === item.id} aria-label={`Remove ${item.name}`} onClick={() => void change(item, { method: "DELETE" }, () =>
-                      setItems((list) => {
-                        const left = list.filter((i) => i.id !== item.id);
-                        reportBagCount(left.length);
-                        return left;
-                      }))}>
+                <Button variant="quiet" disabled={busy === item.id} aria-label={`Remove ${item.name}`} onClick={() => void change(item, { method: "DELETE" }, () => setItems((list) => list.filter((i) => i.id !== item.id)))}>
                   Remove
                 </Button>
               </div>
