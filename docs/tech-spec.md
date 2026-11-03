@@ -1,7 +1,7 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.55 (31 Oct 2026)
-**Last updated:** 31 Oct 2026
+**Status:** Agreed, version 1.56 (3 Nov 2026)
+**Last updated:** 3 Nov 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
 
@@ -49,7 +49,7 @@
 | **Conversation connector** | One interface with two engines: Tavus for video, and OpenAI GPT-Live for voice only. Every engine reports the same events: words heard (partial and final), stylist started or stopped speaking, requests from the stylist, and errors. |
 | **Stylist core** | Our own server code, with no outside service inside it. It turns words into notes and feedback, reads photos, builds looks, checks them, and keeps session state with version numbers. It is the single source of truth. |
 | **AI connector** | The only place that calls Claude. Each job has its own prompt, model setting and output shape. |
-| **Catalog connector** | The only place that reads products. v1 has the sample catalog. ASOS or FARFETCH would be new connectors with the same shape (PRD D02). |
+| **Catalog connector** | The only place that reads products. v1 has the sample catalog. FWRD or FARFETCH would be new connectors with the same shape (PRD D02). |
 | **Database and storage** | Supabase: guest sign-in, data tables with per-guest access rules, and private photo storage. |
 | **Scheduled jobs** | Run daily: delete guests unused for 7 days and leftover test guests, close idle sessions, and tidy old usage and rate-limit records. Daily limits reset on their own, because usage is counted per UTC day. |
 
@@ -190,6 +190,7 @@ The same contract the PRD asks for (D02), so a real retailer can be added later.
 - Every product has normalized IDs (our own id plus the provider's), variants (one per size), price with currency, the details the preference check reads, region, image rights, availability time, retailer attribution and purchase link.
 - **connectors/catalog/required-details.ts** lists the details each category must have (for example heel height and toe for shoes, sleeve, neckline and coverage for dresses and tops). A missing detail is a fail.
 - The sample connector reports every capability as off, "can be bought" is always false, and availability is never "in stock" (R62).
+- After v1 the business model is affiliate commission (product spec 1.8): a high-end retailer's connector, such as FWRD's, fills each product's purchase link with its affiliate link and sets "can be bought". Nothing else in the contract changes, and v1's sample catalog leaves the link empty.
 - One shared contract test suite (**tests/support/catalog-contract.ts**) runs against every connector (PRD D19).
 - The sample products live in **catalog/products.json**, and each photo's source and review in **catalog/image-sources.json**. **npm run catalog:load** loads them into the database with the server key, matched by slug, and refuses any photo you haven't approved. **npm run catalog:check** reports the count and anything missing.
 
@@ -610,6 +611,7 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.56 (3 Nov 2026):** Section 4.3: after v1, a retailer's connector carries its affiliate links in the purchase link (the business model, product spec 1.8). Section 1: FWRD replaces ASOS as a future connector, following the shortlist.
 - **1.55 (31 Oct 2026):** The Phase 7 code review: currentGuest() is remembered per request (React's cache), since a page and its app bar both ask; the sessions route sends both time-up lines and today's time left with each call; the welcome screen's resting date comes from restingBackOn (the 1st, or the video cycle day if earlier); the weekly cost report reads budget_status, as the app's stops do.
 - **1.54 (30 Oct 2026):** The Chrome microphone fix: every way into the session is a full page load, with a one-time reload as a safety net (section 5, pattern 12).
 - **1.53 (28 Oct 2026):** 7c: the launch limits (15 minutes a day, one call, video counted from the 21st, test guests left out of the month), the health page, the uptime check and the weekly cost report.
