@@ -23,8 +23,6 @@
 
 **Business model (after v1).** Affiliate commission: each product links to its retailer's site through the retailer's affiliate program, and the app earns a share of what shoppers keep, assumed at 5%. The target is high-end retailers such as FWRD, because a video stylist's more advanced styling suits higher-ticket items. v1 has no affiliate links and makes no money. (decided 3 Nov 2026)
 
-**Why it is being built now (default).** It is a portfolio project. A hiring manager should be able to try it in a few minutes with no sign-up and see the product thinking behind it. It must run on a small, fixed budget.
-
 ## 2. Key terms
 
 - **Session:** one styling conversation, from Start conversation to End.
@@ -336,7 +334,7 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 
 ## 13. Change log
 
-- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11.
+- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11. Section 1 no longer has "Why it is being built now" (your request).
 - **1.7 (31 Oct 2026):** R13: from 21 Nov 2026 the day runs as three 5-minute calls (the Tavus Free plan), the countdown covers the day's last 2 minutes in any call, and the resting date is when the demo is back (7d).
 - **1.6 (28 Oct 2026):** R13: 15 minutes of conversation a day (your decision in 7c), one Tavus call's longest length.
 - **1.5 (27 Oct 2026):** R69: notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to 44 px touch targets (your decision in 7a).
