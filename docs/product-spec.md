@@ -48,7 +48,7 @@
 | User | What they need | Sign-in |
 |---|---|---|
 | **Shopper** | Outfit help for an occasion, built around what they own and within budget | No sign-up. Try the demo creates a private guest account in that browser |
-| **Portfolio visitor** (recruiter, hiring manager, interviewer) | Understand the product fast, often at a desk without a headset | Same guest flow, with a working microphone. Can tap sample phrases to get started, and the stylist answers on video (default) |
+| **Portfolio visitor** | Understand the product fast, often at a desk without a headset | Same guest flow, with a working microphone. Can tap sample phrases to get started, and the stylist answers on video (default) |
 | **You, the project owner** | Demo it in interviews and keep running costs predictable | Same guest flow. Time limits protect the budget (default) |
 
 Guest accounts (decided in Q2):
@@ -334,7 +334,7 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 
 ## 13. Change log
 
-- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11. Section 1 no longer has "Why it is being built now" (your request).
+- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11. Section 1 no longer has "Why it is being built now" (your request). Section 4's Portfolio visitor no longer lists recruiter, hiring manager and interviewer (your request).
 - **1.7 (31 Oct 2026):** R13: from 21 Nov 2026 the day runs as three 5-minute calls (the Tavus Free plan), the countdown covers the day's last 2 minutes in any call, and the resting date is when the demo is back (7d).
 - **1.6 (28 Oct 2026):** R13: 15 minutes of conversation a day (your decision in 7c), one Tavus call's longest length.
 - **1.5 (27 Oct 2026):** R69: notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to 44 px touch targets (your decision in 7a).
