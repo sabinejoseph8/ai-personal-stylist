@@ -19,6 +19,7 @@ https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 - **How it works:** live video and voice from outside services that only speak and listen; a small server with Claude models reading notes, reading photos and building looks; a preference check that every look must pass before it reaches the screen.
 - **How quality was defined:** targets written before any result, at planning time and in each task group's plan: 95% of notes within 2 seconds, 90% of notes right, every planted rule break caught, 85% of photo details right, about $1.10 of AI per demo, a phone speed score of 90.
 - **Results:** 97% of notes within 2 seconds and 96% right, on sentences the builders had seen (in-sample); 16 of 16 planted rule breaks caught; 93% of photo details right on catalog photos; about $1.15 per demo with styling changes, 5 cents over target; a live speed score of 98. On a blind set of 15 new sentences the notes scored 83% right and 85% within 2 seconds, below both targets: the honest estimate for sentences nobody tuned for.
+- **Business model:** affiliate commission after v1 from high-end retailers such as FWRD, an assumed 5% of what shoppers keep; v1 has nothing for sale. A video stylist's styling suits higher-ticket items: at FWRD's average order of about $640, a 10-minute video session pays for itself if about one in 7 or 8 sessions ends in a kept order.
 - **Status:** built and live, with the final launch check (a stranger's first session) still to run.
 
 ## The problem
@@ -45,6 +46,19 @@ Underneath: the browser holds the call and sends your words, photos and frames t
 - **Accuracy first, then speed, then cost.** Four models were measured on the same sentences before any screen was built. Opus was right every time but too slow for live notes; Haiku with better instructions and code for money and dates was fast and right.
 - **Degrade, never break.** If video is busy or out of minutes, the same stylist carries on by voice, saying why. If a check can't run, the look is held with a plain reason rather than shown unchecked.
 - **Privacy as a feature.** Calls are never recorded, the camera is never sent to the video service, session photos are deleted when the session ends, and a shopper can download or delete everything. What it cost: a saved look keeps your own item by name, not its photo.
+
+## Business model
+
+**Affiliate commission from high-end retailers, after v1.** Each piece in a look would link to the retailer's own site through its affiliate program, and the app would earn a commission on what the shopper keeps, assumed at 5%. The target is high-end retailers such as FWRD, because a video stylist's more advanced, personal styling suits higher-ticket items. The shopper pays the retailer's price, and the retailer handles checkout, delivery and returns. v1 has no links: it is a demo with sample products, and nothing is for sale.
+
+**Does a session pay for itself?** A 10-minute session costs about $0.95 to $1.65 with the voice stylist and about $3.95 to $4.65 with the video stylist: $0.45 to $1.15 of Claude (measured), plus OpenAI voice at $0.05 a minute or Tavus video at $0.35 a minute. Hosting isn't counted. FWRD's average order was about $640 in 2025, before returns (Revolve Group's 2025 annual report), so one order earns about $32 at 5%.
+
+| A 10-minute session | Cost to run | Kept orders to break even at 5% | In average FWRD orders ($32 each) |
+|---|---|---|---|
+| Voice stylist | $0.95 to $1.65 | $19 to $33 | One in every 19 to 34 sessions |
+| Video stylist | $3.95 to $4.65 | $79 to $93 | One in every 7 or 8 sessions |
+
+**What it means.** The video stylist pays for itself if about one in seven or eight video sessions ends in a kept order. A $300 basket would need one in three or four, which is why the target is high end. The $640 is before returns, and returned orders usually earn no commission, so the real bar is higher, and how many sessions end in a kept order is the first thing to measure with real shoppers. The app is ready for links: every product already has a purchase link and a "can be bought" flag, empty and off in v1, and the catalog sits behind one connector, so a retailer's affiliate feed is a new connector, not a redesign. Affiliate income would also make the app commercial, which needs a paid hosting plan, and in the US the links need a clear note that the app earns a commission.
 
 ## How quality was defined and measured
 
@@ -99,7 +113,7 @@ Open [the live site](https://ai-personal-stylist-inky.vercel.app) on a phone, ta
 - **A sample catalog.** About 140 products with generated photos, no real retailer, no real stock or prices, and no checkout by design.
 - **One video call at a time.** The Tavus plan allows one; a second visitor gets the same stylist by voice, which sounds different.
 - **Costs depend on behaviour.** A session with several styling changes costs about $1.15 of AI; one with none about $0.45. The 15-minute, $3-a-day limits per visitor are what keep a public link safe.
-- **Not measured:** whether shoppers like the looks (the check tests rules and stated preferences, not taste), Android phones, and busy periods.
+- **Not measured:** whether shoppers like the looks (the check tests rules and stated preferences, not taste), whether sessions lead to purchases (v1 has no links, so the business model is untested), Android phones, and busy periods.
 
 ## Skills demonstrated
 

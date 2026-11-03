@@ -1,7 +1,7 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.54
-**Last updated:** 31 Oct 2026
+**Status:** Living document, version 1.55
+**Last updated:** 3 Nov 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
@@ -50,7 +50,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 | Live camera recognition | A vision session | Frames read by our server and thrown away, never sent to Tavus. The camera turns off after 2 minutes | Privacy, and it works in every mode | 18 Oct 2026, tech spec |
 | AI for notes, photos, looks and checks | Not set | Claude, with Opus 5.5 for every job until Phase 0 measures speed and cost (TQ3) | Reliable structured output, image understanding and careful rule following | 18 Oct 2026, Sabine |
 | Running cost | Not set | About $40 a month, with daily limits per guest and a "demo is resting" state (TQ2, TQ4) | A fixed, small budget | 18 Oct 2026, Sabine |
-| PRD open decisions | Launch region, audience, money, public demo bag | US English and US dollars; adults shopping womenswear, menswear or both; no money-making; demo bag shown with checkout disabled | Sensible defaults for a portfolio demo | 17 Oct 2026, product spec |
+| PRD open decisions | Launch region, audience, money, public demo bag | US English and US dollars; adults shopping womenswear, menswear or both; no money-making in v1 (the business model after v1 is affiliate commission, decided 3 Nov 2026); demo bag shown with checkout disabled | Sensible defaults for a portfolio demo | 17 Oct 2026, product spec |
 | Contract tests and end-to-end tests (D19, D20) | Release R2 | Built in Phases 1 and 7 | Testing from the start keeps a solo build safe | 18 Oct 2026, progress.md |
 
 ## 4. Success criteria
@@ -101,6 +101,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 15 | The scope is large for one builder | Task groups, and the cut list in progress.md | Open |
 | 16 | Looks feel generic or badly matched (the PRD's "fashion relevance" risk) | Phase 4 looks evals, and you reviewing sample looks | Reduced in 4b: Sabine's review of real builds added rules for colors in the main piece, shoes and bag that suit the outfit, no missing coat, and a different dress or top and bottom in each look, and the checker eval holds her examples (21 of 21 right). Open until real visitors use it |
 | 17 | People who can't use voice can't use the conversation in v1, because there are no captions or typing and a working microphone is required. This includes people who are deaf, hard of hearing or can't speak, and anyone whose microphone is blocked or broken | The app explains how to turn the microphone on (R6). Captions and typing are future features | Accepted on 19 Oct 2026 |
+| 18 | A session's running cost has to be earned back in commission. At an assumed 5%, a 10-minute session needs $19 to $33 of kept orders by voice and $79 to $93 by video. FWRD's average order (about $640 in 2025, before returns) earns about $32, so about one in 7 or 8 video sessions, or one in 19 to 34 voice sessions, must end in a kept order; returned orders usually earn nothing | After v1: high-end retailers such as FWRD, where a video stylist suits higher-ticket items, and measuring how many sessions end in a kept order once links exist | Open (after v1). The cost check is in the README and the case study (3 Nov 2026) |
 
 ## 6. Assumptions
 
@@ -117,6 +118,9 @@ The tech spec's risk table has the full detail. This list tracks status.
 | About 150 sample products are enough for three different looks for common occasions | Estimate | Phase 1 (1e) and Phase 4: mostly true. The job interview and birthday dinner get 3 looks; the emerald wedding with earth tones gets 2, shown with the explanation (4b, 4c) |
 | About 6 full demos a month is enough for job applications | The $40 budget | Phase 7 monitoring |
 | Visitors trying the demo can talk out loud and have a working microphone | Recruiters try it on a phone or laptop | Phase 7 monitoring |
+| Affiliate programs pay about 5% of what shoppers keep, and nothing on returned orders | Sabine's planning figure (3 Nov 2026). Each program sets its rate when it accepts the app | After v1 |
+| FWRD's average order is about $640 | Revolve Group's 2025 annual report (the 2025 average, before returns), from Sabine on 3 Nov 2026 | After v1 |
+| Once the app earns commission it is commercial, so it moves from Vercel's Hobby plan (non-commercial use only) to a paid plan | Vercel's Hobby plan docs (checked 18 Oct 2026) | After v1 |
 
 ### Phase 3 code review (3e, 20 Oct 2026)
 
@@ -161,6 +165,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 3 Nov 2026 | The business model after v1 is affiliate commission from high-end retailers such as FWRD, an assumed 5% of what shoppers keep, because a video stylist's more advanced styling suits higher-ticket items (Sabine first named ASOS and Revolve, then chose high end). v1 is unchanged: sample products, nothing for sale, no affiliate links. The README and the case study describe it with a cost check (risk 18); the About page stays as it is. The retailer shortlist (ASOS and FARFETCH, 7 Oct 2026) is unchanged until Sabine decides | Sabine | README, case study, product spec 1.8, tech spec 1.56 |
 | 31 Oct 2026 | The Phase 7 code review (7d) runs now, at Sabine's request, before 7c's last two tasks (a friend's S20 and the Free plan switch); the 21 Nov change gets its own small review. Its two decisions: A1, during a call limited by its own length (from 21 Nov, 5-minute calls in a 15-minute day) the stage counts the day's time down, so the countdown is there in every call; B1, the per-row test-guest check in the budget functions stays, recorded as a known small inefficiency, to be fixed only if the app gets busier (it would need a live database migration) | Sabine | progress.md (7d, known issues) |
 | 31 Oct 2026 | Tavus moves back down to the Free plan on 21 Nov 2026, when the Builder cycle ends. The Free plan has 20 video minutes a month, one call at a time, calls of at most 5 minutes (Sabine confirmed this on her Tavus billing page, 31 Oct) and no overage, from the "Pricing Built to Scale" table on Tavus's pricing page (Tavus answers 402 when the minutes run out, which the app already turns into "resting" and carries on by voice). So most visitors after 21 Nov get the voice stylist. Planned for that day: the code's defaults change to a video stop of 18 minutes and 5-minute calls, the Vercel setting of 260 is deleted, and the README and About page say how video works now. The launch checks and a friend's first try happen before then, while video has room | Sabine | progress.md (7c), risk 3 |
 | 31 Oct 2026 | The demo video plays inside the GitHub README (a video attached on GitHub), not on unlisted YouTube as agreed on 27 Oct (Q3): a recruiter sees it on the page they already have open. A free GitHub account takes videos up to 10 MB, so the README gets a smaller copy (about 8 MB, no visible difference). The About page links the README's Demo section | Sabine | progress.md (7b), design.md |
@@ -444,6 +449,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.55 (3 Nov 2026):** The business model after v1 (affiliate commission from high-end retailers such as FWRD, an assumed 5%), its cost check as risk 18, and three assumptions: the 5% rate, FWRD's $640 average order, and paid hosting once the app earns money.
 - **1.54 (31 Oct 2026):** The Phase 7 code review run early, with its two decisions (A1, B1).
 - **1.53 (31 Oct 2026):** The demo video: shown in the GitHub README instead of unlisted YouTube, and recorded with the video stylist past the month's minutes. Tavus moves to the Free plan on 21 Nov 2026 (risk 3 updated).
 - **1.52 (30 Oct 2026):** The Chrome microphone fix (fixed before the demo video, Sabine's call) and how the demo video is recorded.
