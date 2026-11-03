@@ -26,7 +26,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 - Portfolio extras: sample phrases, the About this project page, and the Behind the scenes panel.
 
 **Out of v1**
-- Real retailers (ASOS and FARFETCH), checkout, affiliate links, real prices and stock.
+- Real retailers (FWRD and FARFETCH), checkout, affiliate links, real prices and stock.
 - Email or social sign-in, and syncing across devices.
 - Native iOS and Android apps.
 - Other languages, and currencies other than US dollars.
@@ -165,7 +165,8 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
-| 3 Nov 2026 | The business model after v1 is affiliate commission from high-end retailers such as FWRD, an assumed 5% of what shoppers keep, because a video stylist's more advanced styling suits higher-ticket items (Sabine first named ASOS and Revolve, then chose high end). v1 is unchanged: sample products, nothing for sale, no affiliate links. The README and the case study describe it with a cost check (risk 18); the About page stays as it is. The retailer shortlist (ASOS and FARFETCH, 7 Oct 2026) is unchanged until Sabine decides | Sabine | README, case study, product spec 1.8, tech spec 1.56 |
+| 3 Nov 2026 | FWRD replaces ASOS on the retailer shortlist, which is now FWRD and FARFETCH, to match the high-end business model. X01 now compares FWRD and FARFETCH, and the Rakuten inquiry about ASOS feeds (X02) is no longer needed | Sabine | product spec 1.8, tech spec 1.56, backlog X01 and X02 |
+| 3 Nov 2026 | The business model after v1 is affiliate commission from high-end retailers such as FWRD, an assumed 5% of what shoppers keep, because a video stylist's more advanced styling suits higher-ticket items (Sabine first named ASOS and Revolve, then chose high end). v1 is unchanged: sample products, nothing for sale, no affiliate links. The README and the case study describe it with a cost check (risk 18); the About page stays as it is. The same day FWRD replaced ASOS on the retailer shortlist (the row above) | Sabine | README, case study, product spec 1.8, tech spec 1.56 |
 | 31 Oct 2026 | The Phase 7 code review (7d) runs now, at Sabine's request, before 7c's last two tasks (a friend's S20 and the Free plan switch); the 21 Nov change gets its own small review. Its two decisions: A1, during a call limited by its own length (from 21 Nov, 5-minute calls in a 15-minute day) the stage counts the day's time down, so the countdown is there in every call; B1, the per-row test-guest check in the budget functions stays, recorded as a known small inefficiency, to be fixed only if the app gets busier (it would need a live database migration) | Sabine | progress.md (7d, known issues) |
 | 31 Oct 2026 | Tavus moves back down to the Free plan on 21 Nov 2026, when the Builder cycle ends. The Free plan has 20 video minutes a month, one call at a time, calls of at most 5 minutes (Sabine confirmed this on her Tavus billing page, 31 Oct) and no overage, from the "Pricing Built to Scale" table on Tavus's pricing page (Tavus answers 402 when the minutes run out, which the app already turns into "resting" and carries on by voice). So most visitors after 21 Nov get the voice stylist. Planned for that day: the code's defaults change to a video stop of 18 minutes and 5-minute calls, the Vercel setting of 260 is deleted, and the README and About page say how video works now. The launch checks and a friend's first try happen before then, while video has room | Sabine | progress.md (7c), risk 3 |
 | 31 Oct 2026 | The demo video plays inside the GitHub README (a video attached on GitHub), not on unlisted YouTube as agreed on 27 Oct (Q3): a recruiter sees it on the page they already have open. A free GitHub account takes videos up to 10 MB, so the README gets a smaller copy (about 8 MB, no visible difference). The About page links the README's Demo section | Sabine | progress.md (7b), design.md |
@@ -440,8 +441,8 @@ Where every backlog item from PRD v1.8 lives in the plan.
 | D41 | The single publishing gate | Phase 4 (4b, 4c) | Planned |
 | D42 | Preference questions and recovery | Phase 4 (4b), Phase 5 (5c) | Planned |
 | D43 | Preference check acceptance | Phase 4 tests and checks | Planned |
-| X01 | Compare ASOS and FARFETCH | After v1 | Deferred |
-| X02 | Send the Rakuten ASOS inquiry | After v1, only when Sabine says so | Deferred |
+| X01 | Compare FWRD and FARFETCH (ASOS until 3 Nov 2026) | After v1 | Deferred |
+| X02 | Send the Rakuten ASOS inquiry | Not needed: ASOS left the shortlist on 3 Nov 2026 | Dropped |
 | X03 | Negotiate retailer permissions | After v1 | Deferred |
 | X04 | An approved retailer connector | After v1 | Deferred |
 | X05 | Checkout on retailer sites | After v1 | Deferred |
@@ -449,7 +450,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
-- **1.55 (3 Nov 2026):** The business model after v1 (affiliate commission from high-end retailers such as FWRD, an assumed 5%), its cost check as risk 18, and three assumptions: the 5% rate, FWRD's $640 average order, and paid hosting once the app earns money.
+- **1.55 (3 Nov 2026):** The business model after v1 (affiliate commission from high-end retailers such as FWRD, an assumed 5%), its cost check as risk 18, and three assumptions: the 5% rate, FWRD's $640 average order, and paid hosting once the app earns money. FWRD replaces ASOS on the retailer shortlist (X01 updated, X02 no longer needed).
 - **1.54 (31 Oct 2026):** The Phase 7 code review run early, with its two decisions (A1, B1).
 - **1.53 (31 Oct 2026):** The demo video: shown in the GitHub README instead of unlisted YouTube, and recorded with the video stylist past the month's minutes. Tavus moves to the Free plan on 21 Nov 2026 (risk 3 updated).
 - **1.52 (30 Oct 2026):** The Chrome microphone fix (fixed before the demo video, Sabine's call) and how the demo video is recorded.

@@ -19,7 +19,7 @@
 
 **Who it is for.** Adults who shop womenswear, menswear or both, and want help putting together a look for an occasion, using what they own and staying within budget.
 
-**Retailer-independent.** Every product is a clearly labeled sample. Nothing can be bought in v1. Real retailers (ASOS and FARFETCH are shortlisted) come later.
+**Retailer-independent.** Every product is a clearly labeled sample. Nothing can be bought in v1. Real retailers (FWRD and FARFETCH are shortlisted) come later.
 
 **Business model (after v1).** Affiliate commission: each product links to its retailer's site through the retailer's affiliate program, and the app earns a share of what shoppers keep, assumed at 5%. The target is high-end retailers such as FWRD, because a video stylist's more advanced styling suits higher-ticket items. v1 has no affiliate links and makes no money. (decided 3 Nov 2026)
 
@@ -244,7 +244,7 @@ Each requirement can be checked by using the app. Empty, loading and error state
 ## 8. Out of scope for v1
 
 - Buying anything: checkout, payments, affiliate links, real prices or real stock. (PRD)
-- Real retailer catalogs, including ASOS and FARFETCH, and any scraping of retailer sites. (PRD)
+- Real retailer catalogs, including FWRD and FARFETCH, and any scraping of retailer sites. (PRD; FWRD replaced ASOS on 3 Nov 2026)
 - A choice of stylists, avatars or voices. v1 has one stylist. (PRD)
 - Email or social sign-in, and syncing across devices. (default)
 - Native iOS and Android apps. (default)
@@ -258,7 +258,7 @@ Each requirement can be checked by using the app. Empty, loading and error state
 
 | Future feature | What v1 does now to leave room |
 |---|---|
-| Real retailers (ASOS, FARFETCH) | Every product records its source, price currency, availability date and whether it can be bought (always "no" in v1). |
+| Real retailers (FWRD, FARFETCH) | Every product records its source, price currency, availability date and whether it can be bought (always "no" in v1). |
 | Checkout on retailer sites, or in the app if a retailer allows it | The bag already groups items by source and has a checkout step that is disabled with a reason. It can be switched on per retailer later. |
 | Affiliate links with high-end retailers such as FWRD, the business model (decided 3 Nov 2026) | Every product has a purchase link and a "can be bought" flag, empty and off in v1, for a retailer's connector to fill. When links go live, a clear note near them says the app earns a commission (US rules). |
 | Accounts that sync across devices | Guest data belongs to one account, so it can later be linked to an email without loss. |
@@ -318,6 +318,7 @@ Each check can be done by a person using the app.
 | 28 Oct 2026 | 15 minutes of conversation a day per visitor, up from 10 (R13): one Tavus call (you first asked for 20, then chose 15 to match the call's limit). | Your decision |
 | 31 Oct 2026 | Tavus moves to its Free plan on 21 Nov 2026: 20 video minutes a month and calls of at most 5 minutes, so most visitors get the voice stylist and a day is three calls (R13). In every call the day's last 2 minutes are counted down (7d, A1). | Your decision |
 | 3 Nov 2026 | The business model after v1 is affiliate commission from high-end retailers such as FWRD (assumed 5%). v1 is unchanged: no affiliate links, nothing for sale. | Sabine |
+| 3 Nov 2026 | FWRD replaces ASOS on the retailer shortlist, which is now FWRD and FARFETCH, to match the high-end business model. | Sabine |
 
 ## 12. Open questions
 
@@ -335,7 +336,7 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 
 ## 13. Change log
 
-- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5% (your decision). v1 is unchanged. Sections 1, 9 and 11.
+- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11.
 - **1.7 (31 Oct 2026):** R13: from 21 Nov 2026 the day runs as three 5-minute calls (the Tavus Free plan), the countdown covers the day's last 2 minutes in any call, and the resting date is when the demo is back (7d).
 - **1.6 (28 Oct 2026):** R13: 15 minutes of conversation a day (your decision in 7c), one Tavus call's longest length.
 - **1.5 (27 Oct 2026):** R69: notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to 44 px touch targets (your decision in 7a).
