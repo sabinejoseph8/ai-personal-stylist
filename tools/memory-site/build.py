@@ -1822,7 +1822,7 @@ def build(test=False):
     panels.append("</div>")
 
     foot = ('<footer class="site-foot"><div class="wrap"><span>Built from docs/product-spec.md, docs/design.md, docs/tech-spec.md and docs/progress.md.</span>'
-            '<span>Rebuild with <code>python3 tools/memory-site/build.py</code> after the docs change. docs/mvp.md and interview-notes.md stay in the repository.</span></div></footer>')
+            '<span>Rebuild with <code>python3 tools/memory-site/build.py</code> after the docs change. docs/mvp.md stays in the repository, and the interview notes stay private.</span></div></footer>')
 
     css = (HERE / "site.css").read_text(encoding="utf-8")
     js = (HERE / "site.js").read_text(encoding="utf-8")

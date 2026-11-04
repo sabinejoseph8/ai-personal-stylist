@@ -1,7 +1,7 @@
 # AI Personal Stylist: Product Spec
 
-**Status:** Agreed, version 1.8 (3 Nov 2026)
-**Last updated:** 3 Nov 2026
+**Status:** Agreed, version 1.9 (4 Nov 2026)
+**Last updated:** 4 Nov 2026
 **Based on:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026), both in the project root
 **Next step:** the tech spec builds on this agreed version. Any later change gets a new version number and a change log entry.
 
@@ -18,6 +18,8 @@
 **What it is.** A mobile-first web app where you talk face to face with a lifelike AI stylist on video. You can show clothes you own on your camera or in a photo. While you talk, the stylist jots down short notes of what you want in **My Styling Notes**, a notebook on screen. There is no transcript: the notes are the only written record, and you can confirm or correct any of them. It then builds complete outfits that mix clothes you own with sample products, and keeps refining them as you say what you like and dislike.
 
 **Who it is for.** Adults who shop womenswear, menswear or both, and want help putting together a look for an occasion, using what they own and staying within budget.
+
+It is also a portfolio piece demonstrating AI product management: specs before code, quality targets set before any result, and an evaluation with a blind test set.
 
 **Retailer-independent.** Every product is a clearly labeled sample. Nothing can be bought in v1. Real retailers (FWRD and FARFETCH are shortlisted) come later.
 
@@ -48,7 +50,7 @@
 | User | What they need | Sign-in |
 |---|---|---|
 | **Shopper** | Outfit help for an occasion, built around what they own and within budget | No sign-up. Try the demo creates a private guest account in that browser |
-| **Portfolio visitor** | Understand the product fast, often at a desk without a headset | Same guest flow, with a working microphone. Can tap sample phrases to get started, and the stylist answers on video (default) |
+| **First-time visitor** | Understand the product fast, often at a desk without a headset | Same guest flow, with a working microphone. Can tap sample phrases to get started, and the stylist answers on video (default) |
 | **You, the project owner** | Demo and keep running costs predictable | Same guest flow. Time limits protect the budget (default) |
 
 Guest accounts (decided in Q2):
@@ -108,7 +110,7 @@ Guest accounts (decided in Q2):
 - As a shopper, I can do everything apart from the conversation itself by touch or keyboard. The conversation needs my voice in v1.
 - As a screen reader user, I hear what changed in my notes without losing my place.
 
-**L. Portfolio visitor (default)**
+**L. First-time visitor (default)**
 - As a visitor, I can tap a suggested example phrase to get started quickly.
 - As a visitor, I can read how and why the product was built.
 - As a visitor, I can open Behind the scenes to see what the stylist captured and why each look passed its preference check.
@@ -225,7 +227,7 @@ Each requirement can be checked by using the app. Empty, loading and error state
 - **R68 Screen readers.** Changes to notes, statuses and looks, and items recognized on camera, are announced politely, without moving focus or talking over the stylist. Every control has a label and every photo has a description. (AC-06, AC-FB-07, FR-27)
 - **R69 Visual access.** Text contrast is at least 4.5 to 1. Touch targets are at least 44 by 44 pixels, apart from the notes and photo details in My Styling Notes, which are one 28 px ruled line tall and the full width of the notebook (your decision, 27 Oct 2026; 28 px meets WCAG's AA minimum of 24 px). Focus is always visible. With reduced motion turned on, non-essential animation stops. (Privacy and accessibility)
 
-### Portfolio extras (default)
+### Demo extras (default)
 
 - **R70 Tap to try.** Once the conversation is running, the session screen offers sample phrases, including the wedding example, that a visitor can tap to send as if spoken. The stylist answers out loud and on video as usual. (default)
 - **R71 About this project.** A page explains the problem, the key decisions and how the product was built, and links the PRD, these planning files and the source code. (default)
@@ -334,7 +336,8 @@ Q1 and Q2 are answered (see Decisions). The rest use the recommended default unl
 
 ## 13. Change log
 
-- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11. Section 1 no longer has "Why it is being built now" (your request). Section 4's Portfolio visitor no longer lists recruiter, hiring manager and interviewer (your request). The project owner's need now reads "Demo and keep running costs predictable" (your request).
+- **1.9 (4 Nov 2026):** Section 1 gains one sentence on what the project demonstrates. Section 4's visitor is the first-time visitor, and section 6's extras are the demo extras; nothing they do changes (your decisions).
+- **1.8 (3 Nov 2026):** The business model after v1: affiliate commission from high-end retailers such as FWRD, assumed at 5%, and FWRD replaces ASOS on the retailer shortlist (both your decisions). v1 is unchanged. Sections 1, 8, 9 and 11. Section 1 no longer has "Why it is being built now" (your request). Section 4's visitor row is shorter (your request). The project owner's need now reads "Demo and keep running costs predictable" (your request).
 - **1.7 (31 Oct 2026):** R13: from 21 Nov 2026 the day runs as three 5-minute calls (the Tavus Free plan), the countdown covers the day's last 2 minutes in any call, and the resting date is when the demo is back (7d).
 - **1.6 (28 Oct 2026):** R13: 15 minutes of conversation a day (your decision in 7c), one Tavus call's longest length.
 - **1.5 (27 Oct 2026):** R69: notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to 44 px touch targets (your decision in 7a).

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AppBar } from "@/components/app-bar/app-bar";
 
-// About this project (7b, R71, design 5.8): a readable article for product manager roles. The problem,
+// About this project (7b, R71, design 5.8): a readable article for a first-time visitor. The problem,
 // the approach, the key decisions, how it was built, what was measured, and the links: the planning
 // files (the product spec stands in for the private PRD, Sabine's answer to Q2 in 7b), the Memory site
 // and the code. Lines of about 70 characters, Newsreader headings and Figtree body.
@@ -42,7 +42,7 @@ export default function AboutPage() {
         <header className="flex flex-col gap-3">
           <h1 className="type-title m-0">About this project</h1>
           <P>
-            A portfolio project by Sabine Joseph for AI product manager roles: a lifelike video stylist that jots down what you want while you talk,
+            A project by Sabine Joseph, an AI product manager: a lifelike video stylist that jots down what you want while you talk,
             then builds complete looks you refine by voice or touch. Sample products only. Nothing here is for sale.
           </P>
         </header>
@@ -124,7 +124,7 @@ export default function AboutPage() {
         <Section title="Read more">
           <ul className="type-body m-0 flex list-disc flex-col gap-2 pl-5">
             <li>
-              <A href={`${REPO}#readme`}>The README on GitHub</A>, written for recruiters: the problem, the architecture, how quality was measured, the
+              <A href={`${REPO}#readme`}>The README on GitHub</A>: the problem, the architecture, how quality was measured, the
               results and their limits.
             </li>
             <li>

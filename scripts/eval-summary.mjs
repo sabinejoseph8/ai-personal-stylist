@@ -1,6 +1,6 @@
 // The evaluation's headline numbers, read from the saved results (tests/evals/results/*-latest.json), so
 // docs/evaluation.md, the README and the case study can be checked against them without spending a cent
-// (7b, the portfolio package). Re-running an eval (npm run eval:notes and so on) rewrites its file.
+// (7b, the project package). Re-running an eval (npm run eval:notes and so on) rewrites its file.
 // Usage: node scripts/eval-summary.mjs [--json]
 import { existsSync, readFileSync } from "node:fs";
 

@@ -9,7 +9,7 @@ A blind test set for the notes reader, written on 27 October 2026 for Phase 7b (
 **The rules.**
 
 - The expected notes were written before anything was run.
-- The main 7b session, which builds the rest of the portfolio package, never reads this folder.
+- The main 7b session, which builds the rest of the project package, never reads this folder.
 - The set is run once, with `npm run eval:notes:held-out` (about 5 cents of Claude). It is not re-run to improve the score, and the cases are not changed after the results are seen. A run that fails for a technical reason (a missing key, a timeout) is fixed and run again, and the write-up says so.
 - The runner is the same one as the in-sample set, `tests/evals/notes.eval.ts`, pointed at this file with `NOTES_CASES`. It measures the same things in the same way: each sentence is replayed at 2.5 words a second, sent twice a second, with the app's merging, and each note is timed from its phrase.
 

@@ -77,7 +77,7 @@ export default async function SessionPage({ searchParams }: PageProps<"/session"
           <Link href="/setup" className={buttonClasses("secondary", "self-start")}>
             Edit your profile
           </Link>
-          {/* A portfolio extra (4d), opened from the menu. */}
+          {/* A demo extra (4d), opened from the menu. */}
           <BehindTheScenes startOpen={startBehind} />
           <p className="type-small m-0 text-graphite">Sample products only. Nothing here is for sale.</p>
         </section>

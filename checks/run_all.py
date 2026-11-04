@@ -342,7 +342,7 @@ def check_no_personal_emails(root: Path, cfg: dict) -> Result:
 
 CHECKS: List[Tuple[str, Callable[[Path, dict], Result]]] = [
     ("Required files exist", check_required),
-    ("README has the recruiter sections", check_readme_sections),
+    ("README has the expected sections", check_readme_sections),
     ("README links resolve in the repository", check_readme_links),
     ("Evaluation has its sections in order of evidence", check_evaluation_sections),
     ("No em dashes in public writing", check_em_dashes),
