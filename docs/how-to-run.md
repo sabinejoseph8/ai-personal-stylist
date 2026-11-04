@@ -33,7 +33,7 @@ Open http://localhost:3000. The fake stylist for tests isn't used here: this is 
 
 ## Run the checks
 
-The portfolio checks (Python 3 standard library, nothing to install):
+The package checks (Python 3 standard library, nothing to install):
 
 ```bash
 python3 checks/run_all.py

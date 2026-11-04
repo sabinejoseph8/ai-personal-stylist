@@ -7,7 +7,7 @@ import { useBehindTheScenesRequests } from "@/components/app-bar/live";
 import { Sheet } from "@/components/ui/sheet";
 import type { Entry, EntryKind } from "@/core/looks/behind";
 
-// Behind the scenes (4d, R72, design 4.4): a portfolio extra that shows, in plain words, what the
+// Behind the scenes (4d, R72, design 4.4): a demo extra that shows, in plain words, what the
 // stylist captured and how each look was checked. Closed until opened (Sabine's answer to Q2 in 4d), from
 // the app menu (7a), or at once when the session page is opened from the menu elsewhere. A sheet on phones, a side panel on
 // desktops. While open, it asks again as the notes and looks change. The session page passes it the

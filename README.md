@@ -4,7 +4,7 @@
 
 By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#demo) · [One-page case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
 
-> **A portfolio project.** The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
+> The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
 
 ## Demo
 
@@ -104,7 +104,7 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 
 - **Project Memory:** [product spec](docs/product-spec.md), [design](docs/design.md), [tech spec](docs/tech-spec.md), [phased plan with progress](docs/progress.md) and [MVP scope, decisions and risks](docs/mvp.md), each agreed before building and kept current. Also published as a [website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX) with live plan ticks.
 - **Risk first:** the first phase tested the video stylist, live notes on four models, the camera, costs and the providers' data handling before any screen was built, with pass marks written down first.
-- **Automated checks:** 458 unit and database tests, about 200 browser tests on phone and desktop sizes with fake engines, an accessibility scan on every page, and the portfolio checks (`python3 checks/run_all.py`).
+- **Automated checks:** 458 unit and database tests, about 200 browser tests on phone and desktop sizes with fake engines, an accessibility scan on every page, and the package checks (`python3 checks/run_all.py`).
 
 ## Run it yourself
 
@@ -122,7 +122,7 @@ supabase/       Database tables and functions, as migrations
 tests/          Unit and database tests, and the evaluations with their saved results
 e2e/            Browser tests on phone and desktop sizes
 docs/           The plan files, the evaluation, the diagram, the case study, the run guide
-checks/         Portfolio checks and the pre-publish scan (Python standard library)
+checks/         Package checks and the pre-publish scan (Python standard library)
 scripts/        Lighthouse, the evaluation summary, Tavus setup
 tools/          The Memory site builder
 ```

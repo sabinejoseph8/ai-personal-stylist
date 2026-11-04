@@ -1,7 +1,7 @@
 # AI Personal Stylist: Design
 
-**Status:** Agreed, version 1.31 (31 Oct 2026)
-**Last updated:** 31 Oct 2026
+**Status:** Agreed, version 1.32 (4 Nov 2026)
+**Last updated:** 4 Nov 2026
 **Goes with:** product-spec.md, version 1.4 (agreed)
 **Screenshots or mockups provided:** none. The layouts below follow the PRD's mobile session layout and the product spec.
 
@@ -192,7 +192,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 
 **Quick replies and sample phrases**
 - Quick replies: when the stylist asks a question with clear options, they appear as chips under the stylist, for example Dress, Pantsuit, Not sure yet. Tapping one answers as if spoken. They disappear once answered.
-- Sample phrases (portfolio extra): once the conversation is running and before the shopper first speaks, three phrases appear, including the wedding example. Tapping one sends it as if spoken.
+- Sample phrases (demo extra): once the conversation is running and before the shopper first speaks, three phrases appear, including the wedding example. Tapping one sends it as if spoken.
 - States: shown, pressed, hidden after use, disabled while connecting.
 
 **Pinned bar (phones)**
@@ -349,7 +349,7 @@ Grouped by where they appear. Each lists its states and how it behaves.
 - Banners stay until the problem is solved: information on Page, success on Emerald wash, errors on Red wash.
 - Toasts confirm small actions ("Look saved") for 4 seconds, with **Undo** where possible.
 
-**Behind the scenes panel (portfolio extra)**
+**Behind the scenes panel (demo extra)**
 - Off by default. Opens from the menu: a side panel on desktops, a bottom sheet on phones.
 - A time-stamped list of plain-language entries, newest first. For example:
   - "Captured Budget: up to $500, from your voice, high certainty."
@@ -590,6 +590,7 @@ Shows the pencil and ink states and the pasted photo.
 
 ## 8. Change log
 
+- **1.32 (4 Nov 2026):** The sample phrases and Behind the scenes are demo extras, as in the product spec (1.9).
 - **1.31 (31 Oct 2026):** The resting date is when the demo is back (7d); the time-left pill counts the day's last 2 minutes in whichever call they fall (A1).
 - **1.30 (31 Oct 2026):** The About page links the two-minute demo video in the README (Sabine's choice of host).
 - **1.29 (28 Oct 2026):** 7c: the time-up and resting lines name the day's minutes and the date video is back; the handover to a second call when a day is longer than one call.

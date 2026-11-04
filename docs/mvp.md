@@ -1,7 +1,7 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.55
-**Last updated:** 3 Nov 2026
+**Status:** Living document, version 1.56
+**Last updated:** 4 Nov 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
 
@@ -9,7 +9,7 @@
 
 ## 1. The MVP in one paragraph
 
-A mobile-first web app where you talk face to face with a lifelike AI stylist on video, show what you own on camera or in a photo, and watch the stylist jot down what matters in My Styling Notes. The stylist then builds complete looks that mix your clothes with sample products and refines them as you react. Nothing can be bought. It is a portfolio project: a hiring manager can try it with no sign-up, and it runs on about $40 a month.
+A mobile-first web app where you talk face to face with a lifelike AI stylist on video, show what you own on camera or in a photo, and watch the stylist jot down what matters in My Styling Notes. The stylist then builds complete looks that mix your clothes with sample products and refines them as you react. Nothing can be bought. Anyone can try it with no sign-up, and it runs on about $40 a month.
 
 ## 2. In and out of v1
 
@@ -23,7 +23,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 - Saved looks and a demo bag that cannot check out.
 - Privacy controls: clear, download and delete.
 - Accessibility: everything outside the conversation works by touch or keyboard. The conversation itself needs your voice (accepted trade-off, risk 17).
-- Portfolio extras: sample phrases, the About this project page, and the Behind the scenes panel.
+- Demo extras: sample phrases, the About this project page, and the Behind the scenes panel.
 
 **Out of v1**
 - Real retailers (FWRD and FARFETCH), checkout, affiliate links, real prices and stock.
@@ -38,9 +38,9 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 
 | Topic | PRD v1.8 | Agreed plan | Why | Decided |
 |---|---|---|---|---|
-| Platform | Mobile-first, platform not set | A web app that opens from a link | Recruiters can try it without installing anything | 17 Oct 2026, product spec |
+| Platform | Mobile-first, platform not set | A web app that opens from a link | A first-time visitor can try it without installing anything | 17 Oct 2026, product spec |
 | Video stylist and live camera | P0 | Both in v1 (Q1, option B) | The lifelike stylist is the experience | 17 Oct 2026, Sabine |
-| Accounts | Accounts and style profiles | One-tap guest accounts kept for 7 days, plus a sample profile (Q2, option A) | Recruiters won't sign up to try a portfolio project | 17 Oct 2026, Sabine |
+| Accounts | Accounts and style profiles | One-tap guest accounts kept for 7 days, plus a sample profile (Q2, option A) | First-time visitors won't sign up to try a demo | 17 Oct 2026, Sabine |
 | Conversation layer | OpenAI Realtime for speech, with a Tavus face | Tavus runs the whole video conversation, and OpenAI GPT-Live is only a voice-only fallback (TQ1). The text only mode was removed on 19 Oct 2026 | The PRD pairing needs an always-on media server and adds delay. This setup costs less and is simpler | 18 Oct 2026, Sabine |
 | Captions | Transcript captions (FR-01, AC-06) | No transcript or captions. The stylist's voice and My Styling Notes are the only output (R10) | The screen should feel like a stylist taking notes, not a chat log | 19 Oct 2026, Sabine |
 | My Styling Notes | Labelled fields for occasion, season and date, colors, style, budget, outfit type and owned wardrobe, each with a status (FR-11, FR-12) | A free-form notebook with no fixed fields. The stylist jots down any relevant details, in pencil (To confirm) or ink (Confirmed). The details looks need are still read in the background (R15, R16) | Feels like a real stylist taking notes, and nothing relevant is lost for not fitting a field | 19 Oct 2026, Sabine |
@@ -50,7 +50,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 | Live camera recognition | A vision session | Frames read by our server and thrown away, never sent to Tavus. The camera turns off after 2 minutes | Privacy, and it works in every mode | 18 Oct 2026, tech spec |
 | AI for notes, photos, looks and checks | Not set | Claude, with Opus 5.5 for every job until Phase 0 measures speed and cost (TQ3) | Reliable structured output, image understanding and careful rule following | 18 Oct 2026, Sabine |
 | Running cost | Not set | About $40 a month, with daily limits per guest and a "demo is resting" state (TQ2, TQ4) | A fixed, small budget | 18 Oct 2026, Sabine |
-| PRD open decisions | Launch region, audience, money, public demo bag | US English and US dollars; adults shopping womenswear, menswear or both; no money-making in v1 (the business model after v1 is affiliate commission, decided 3 Nov 2026); demo bag shown with checkout disabled | Sensible defaults for a portfolio demo | 17 Oct 2026, product spec |
+| PRD open decisions | Launch region, audience, money, public demo bag | US English and US dollars; adults shopping womenswear, menswear or both; no money-making in v1 (the business model after v1 is affiliate commission, decided 3 Nov 2026); demo bag shown with checkout disabled | Sensible defaults for a public demo | 17 Oct 2026, product spec |
 | Contract tests and end-to-end tests (D19, D20) | Release R2 | Built in Phases 1 and 7 | Testing from the start keeps a solo build safe | 18 Oct 2026, progress.md |
 
 ## 4. Success criteria
@@ -73,10 +73,10 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 
 **How they are checked:** success checks S1 to S20 in the product spec, spread across the phases and run in full in task group 7c.
 
-**Portfolio success (default)**
+**Demo success (default)**
 - About 12 full video demos a month within about $50 (Tavus Starter had 120 minutes on Sabine's account, and the database is $10). Since 21 Oct 2026 the Tavus plan has 175 minutes a month, about 16 demos.
-- The link works whenever a recruiter clicks it.
-- The About page, the README and the one-page case study tell the story behind the product, with the evaluation's results and limits (7b). The interview notes stay private, for interview practice.
+- The link works whenever someone clicks it.
+- The About page, the README and the one-page case study tell the story behind the product, with the evaluation's results and limits (7b). The interview notes stay private.
 
 ## 5. Risks
 
@@ -94,7 +94,7 @@ The tech spec's risk table has the full detail. This list tracks status.
 | 8 | The voice changes when the stylist drops to voice only | Softened with a matched voice and a spoken line | Accepted |
 | 9 | Recognition reads garments wrong | Phase 3 (3b, 3c) | The camera reader check (3c) named the catalog items' type 18 of 20 and color 20 of 20 at camera size, and an item is only named after two frames agree. Handled in 3b: the photo eval had 94% of details right (pass mark 85%) and found every item in two-item photos; uncertain details show To confirm, and any detail can be confirmed by touch or corrected by voice. Catalog photos are cleaner than phone photos, so real photos are checked on Sabine's iPhone |
 | 10 | Provider data handling for audio and words | Phase 0 (0f), Phase 2 (2e) | Reviewed in 0f. Tavus publishes no retention period, so each Tavus conversation is hard-deleted when its call ends. Checked with a real call in 2e: Tavus no longer has it afterwards. Notes are deleted at End and within about 40 minutes of going idle |
-| 11 | The database is down when a recruiter clicks the link | Phase 1 (1f) and the uptime check | Lower: the database is on Supabase Pro, which doesn't pause |
+| 11 | The database is down when a visitor clicks the link | Phase 1 (1f) and the uptime check | Lower: the database is on Supabase Pro, which doesn't pause |
 | 12 | Phone browser quirks | Phase 0 (0f) | Open. Android isn't tested in v1 (accepted risk) |
 | 13 | Sample catalog quality and image rights | Phase 1 (1e) | Handled in 1e: one photo style for all 140 products, no real brands, each photo's source recorded, and every photo approved by Sabine |
 | 14 | Outside services change quickly | Every phase | Open |
@@ -107,17 +107,17 @@ The tech spec's risk table has the full detail. This list tracks status.
 
 | Assumption | Based on | Checked in |
 |---|---|---|
-| Tavus Starter costs $22 a month, one call at a time, calls up to 10 minutes, with no overage. Sabine's plan shows 120 minutes a month, not the 60 the pricing page showed on 17 Oct 2026, which allows about 12 full video demos a month instead of 6 | Sabine's Tavus account, 18 Oct 2026 | Phase 0 (0c, 0f). Tech spec section 9 and the portfolio goal were updated in 0g |
+| Tavus Starter costs $22 a month, one call at a time, calls up to 10 minutes, with no overage. Sabine's plan shows 120 minutes a month, not the 60 the pricing page showed on 17 Oct 2026, which allows about 12 full video demos a month instead of 6 | Sabine's Tavus account, 18 Oct 2026 | Phase 0 (0c, 0f). Tech spec section 9 and the demo goal were updated in 0g |
 | Tavus audio-only minutes cost the same as video minutes | Tavus doesn't say. Its billing docs count any open call | Phase 0 |
 | GPT-Live costs $0.05 a minute and needs a paid OpenAI account | OpenAI's model page, 17 Oct 2026 | Phase 0 |
 | GPT-Live sends live words that the notes reader can use | Confirmed in 0e (session.input_transcript.delta) | Closed |
 | Claude Opus 5.5 costs $4 per million input tokens and $20 per million output tokens; Haiku 5.5 costs $0.10 and $0.50 | Anthropic's model table, Oct 2026 | Phase 0 costs |
 | A full demo uses about $1.10 of AI with Opus 5.5 for every job | Tech spec section 9 estimate | Measured in 0f: about $0.05 for notes and camera on Haiku 5.5. With looks and checks on Opus, about $0.35. Notes sent twice a second (2c) bring it to about $0.45. Measured on 25 Oct 2026 from Sabine's iPhone check: a 10-minute session with styling changes costs about $1 of Opus judgments (about 45 at about 2 cents each), so a demo is about $1.15; the daily AI allowance per guest is $3 since then, and cutting the cost per session is a question for the 6a plan |
 | Supabase pauses free projects after 7 days without activity, and a daily job prevents it | Third-party pricing guides | No longer applies: the project is on Sabine's Pro organization (20 Oct 2026) |
-| Vercel's free Hobby plan allows this personal, non-commercial portfolio project | Vercel's Hobby plan docs (checked 18 Oct 2026): personal, non-commercial use only, which fits a portfolio project with no money-making. Hobby also limits functions to 5 minutes and keeps runtime logs for 1 hour | Checked in 0b |
+| Vercel's free Hobby plan allows this personal, non-commercial project | Vercel's Hobby plan docs (checked 18 Oct 2026): personal, non-commercial use only, which fits a project with no money-making. Hobby also limits functions to 5 minutes and keeps runtime logs for 1 hour | Checked in 0b |
 | About 150 sample products are enough for three different looks for common occasions | Estimate | Phase 1 (1e) and Phase 4: mostly true. The job interview and birthday dinner get 3 looks; the emerald wedding with earth tones gets 2, shown with the explanation (4b, 4c) |
-| About 6 full demos a month is enough for job applications | The $40 budget | Phase 7 monitoring |
-| Visitors trying the demo can talk out loud and have a working microphone | Recruiters try it on a phone or laptop | Phase 7 monitoring |
+| About 6 full demos a month is enough for first-time visitors | The $40 budget | Phase 7 monitoring |
+| Visitors trying the demo can talk out loud and have a working microphone | Visitors try it on a phone or laptop | Phase 7 monitoring |
 | Affiliate programs pay about 5% of what shoppers keep, and nothing on returned orders | Sabine's planning figure (3 Nov 2026). Each program sets its rate when it accepts the app | After v1 |
 | FWRD's average order is about $640 | Revolve Group's 2025 annual report (the 2025 average, before returns), from Sabine on 3 Nov 2026 | After v1 |
 | Once the app earns commission it is commercial, so it moves from Vercel's Hobby plan (non-commercial use only) to a paid plan | Vercel's Hobby plan docs (checked 18 Oct 2026) | After v1 |
@@ -165,11 +165,12 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 4 Nov 2026 | The public files describe the work, not who reads it (the packaging skill's new rule). One sentence in the product spec's overview says what the project demonstrates; the visitor in the specs is the first-time visitor, and the sample phrases, About page and Behind the scenes are demo extras, unchanged; the About page and GitHub's About box are reworded, and the packaging skill's exact name lives in Claude's private memory rather than CLAUDE.md (her five defaults) | Sabine | product spec 1.9, design 1.32, tech spec 1.57, CLAUDE.md |
 | 3 Nov 2026 | FWRD replaces ASOS on the retailer shortlist, which is now FWRD and FARFETCH, to match the high-end business model. X01 now compares FWRD and FARFETCH, and the Rakuten inquiry about ASOS feeds (X02) is no longer needed | Sabine | product spec 1.8, tech spec 1.56, backlog X01 and X02 |
 | 3 Nov 2026 | The business model after v1 is affiliate commission from high-end retailers such as FWRD, an assumed 5% of what shoppers keep, because a video stylist's more advanced styling suits higher-ticket items (Sabine first named ASOS and Revolve, then chose high end). v1 is unchanged: sample products, nothing for sale, no affiliate links. The README and the case study describe it with a cost check (risk 18); the About page stays as it is. The same day FWRD replaced ASOS on the retailer shortlist (the row above) | Sabine | README, case study, product spec 1.8, tech spec 1.56 |
 | 31 Oct 2026 | The Phase 7 code review (7d) runs now, at Sabine's request, before 7c's last two tasks (a friend's S20 and the Free plan switch); the 21 Nov change gets its own small review. Its two decisions: A1, during a call limited by its own length (from 21 Nov, 5-minute calls in a 15-minute day) the stage counts the day's time down, so the countdown is there in every call; B1, the per-row test-guest check in the budget functions stays, recorded as a known small inefficiency, to be fixed only if the app gets busier (it would need a live database migration) | Sabine | progress.md (7d, known issues) |
 | 31 Oct 2026 | Tavus moves back down to the Free plan on 21 Nov 2026, when the Builder cycle ends. The Free plan has 20 video minutes a month, one call at a time, calls of at most 5 minutes (Sabine confirmed this on her Tavus billing page, 31 Oct) and no overage, from the "Pricing Built to Scale" table on Tavus's pricing page (Tavus answers 402 when the minutes run out, which the app already turns into "resting" and carries on by voice). So most visitors after 21 Nov get the voice stylist. Planned for that day: the code's defaults change to a video stop of 18 minutes and 5-minute calls, the Vercel setting of 260 is deleted, and the README and About page say how video works now. The launch checks and a friend's first try happen before then, while video has room | Sabine | progress.md (7c), risk 3 |
-| 31 Oct 2026 | The demo video plays inside the GitHub README (a video attached on GitHub), not on unlisted YouTube as agreed on 27 Oct (Q3): a recruiter sees it on the page they already have open. A free GitHub account takes videos up to 10 MB, so the README gets a smaller copy (about 8 MB, no visible difference). The About page links the README's Demo section | Sabine | progress.md (7b), design.md |
+| 31 Oct 2026 | The demo video plays inside the GitHub README (a video attached on GitHub), not on unlisted YouTube as agreed on 27 Oct (Q3): a reader sees it on the page they already have open. A free GitHub account takes videos up to 10 MB, so the README gets a smaller copy (about 8 MB, no visible difference). The About page links the README's Demo section | Sabine | progress.md (7b), design.md |
 | 31 Oct 2026 | The demo video shows the moving video stylist. This Tavus cycle's 175 minutes were used up, so the local copy that recorded it allowed video past the month's stop (about 3 extra minutes, about $1 at $0.35 a minute); the live site's limits didn't change | Sabine | progress.md (7b) |
 | 30 Oct 2026 | Fix the Chrome microphone bug before recording the demo video. Found while recording: on a laptop in Chrome the session said "Microphone needed" after setup, because Chrome keeps the camera and microphone rule of the page a visit was loaded on, and setup's rule has them off. The fix keeps the agreed rule (camera and microphone only on the session page): every way into the session is a full page load, with a one-time reload as a safety net. iPhone Safari doesn't apply the rule, so earlier phone checks didn't show it | Sabine | tech spec 1.54 (section 5, pattern 12), progress.md |
 | 30 Oct 2026 | The demo video keeps the stylist's real voice: the session is recorded on the Mac in a phone-sized browser window (an iPhone screen recording loses all sound once the call takes the microphone), with Sabine's narration from a Voice Memo and Behind the scenes kept in. The recording runs the app locally with a test guest, because the live bot check turns automated browsers away; its video minutes are real but not in the app's month total (about 4) | Sabine | progress.md (7b) |
@@ -178,7 +179,7 @@ Newest first. The agreed files hold the detail.
 | 28 Oct 2026 | 15 minutes of conversation a day per visitor, up from 10 (R13), asked for by Sabine while 7c was being built: first 20, then 15 to match Tavus Builder's longest call, so a day is one call. With 165 video minutes a month that's about 11 full-length demos instead of about 16, though most visitors use far less. The handover to a second call stays in the code for a longer day | Sabine | product spec 1.6, tech spec 1.53 |
 | 28 Oct 2026 | 7c plan approved as recommended. Q1: the final limits: video counted from the 21st, as Tavus's plan renews, with the stop back to 165 minutes; $40 Claude, $4 OpenAI, $3 of AI a day; the defaults in the code match. Q2: monitoring through GitHub (an uptime check every 30 minutes on the welcome page and a health page, emailed on failure; a weekly cost report as a GitHub issue). Q3: the full S1 to S19 run over two evenings, then a friend's first try (S20). Q4: the providers' data handling re-checked before launch. Building it found that the test guests' fake calls counted against the real video minutes; they're now left out of the month's total | Sabine | tech spec 1.53 |
 | 28 Oct 2026 | The early interview notes stay in the repository's Git history (A): three commits of 18 Oct 2026, before the notes were made private, with nothing sensitive in them; rewriting history (B) would force-push every branch and change every commit id since. Found by 7b's pre-publish history scan; the two other findings are made-up test values | Sabine | mvp.md |
-| 27 Oct 2026 | 7b plan approved as recommended (the portfolio-package skill). Q1: a blind notes set of 15 sentences, written and run once by a session that never touched the notes reader, reported next to the in-sample numbers. Q2: the About page and README link the product spec and mvp.md's PRD table; the PRD itself stays private. Q3: the demo video is recorded after 7b's pages are live, hosted as an unlisted YouTube video, with "coming" until then. Q4: public pages show totals, eval numbers and the sample profile only, never Sabine's own clothes or sessions. Also: nothing is pushed until Sabine has read the README and case study drafts and the pre-publish scan's result | Sabine | tech spec 1.52 |
+| 27 Oct 2026 | 7b plan approved as recommended (Sabine's packaging skill). Q1: a blind notes set of 15 sentences, written and run once by a session that never touched the notes reader, reported next to the in-sample numbers. Q2: the About page and README link the product spec and mvp.md's PRD table; the PRD itself stays private. Q3: the demo video is recorded after 7b's pages are live, hosted as an unlisted YouTube video, with "coming" until then. Q4: public pages show totals, eval numbers and the sample profile only, never Sabine's own clothes or sessions. Also: nothing is pushed until Sabine has read the README and case study drafts and the pre-publish scan's result | Sabine | tech spec 1.52 |
 | 27 Oct 2026 | Notes and photo details in My Styling Notes stay one 28 px ruled line tall, the one exception to R69's 44 px touch targets (A), rather than two lines (56 px) each: each is the notebook's full width, 28 px meets WCAG's AA minimum (24 px), and the notebook keeps its look with the looks close by on phones. Found by 7a's new touch-target check | Sabine | product spec R69, design 6 |
 | 27 Oct 2026 | 7a plan approved as recommended, in three pull requests (the app bar and menu; the accessibility pass and phone performance; the cost per session and the Tavus webhook), with one iPhone and laptop check at the end. Q1: the app bar shows on every page, and a new visitor's menu lists only Try the demo and About this project. Q2: Undo and Compare reuse the earlier look's passing verdict when the requirements haven't changed; builds and changes keep judging their candidates together (judging one at a time would halve their cost but make a change 2 to 3 times slower). Q3: phone speed is measured with a Lighthouse script run on the Mac against a production build and the live site, recorded in the docs, not a GitHub check. Q4: the Tavus webhook is built for the live site, checked by a secret in its address and a known conversation, with today's estimate kept as the fallback; Tavus's message names are confirmed before building | Sabine | tech spec 1.50 |
 | 27 Oct 2026 | 6d plan approved as recommended. Q1: a voice stylist that can't start sends the next Start or Try again back to video (after a dropped video call, the reconnect tries video next), and the server falls back to voice again only if video still can't; a shopper who chose voice keeps it through a plain network blip. Q2: the welcome screen's resting answer is remembered for a minute per server, so the resting screen can be up to a minute late | Sabine | tech spec 1.49 |
@@ -247,7 +248,7 @@ Newest first. The agreed files hold the detail.
 | 19 Oct 2026 | Scope change: no word-for-word transcript or captions on screen, so the stylist's voice and My Styling Notes are the only output. My Styling Notes becomes a free-form notebook with no fixed fields, where the stylist jots down any relevant details. Typing to the stylist is out of scope for v1, to be reviewed in a future version. A working microphone is required: without one, the shopper can't use the app | Sabine | product spec 1.4 (R6, R10, R11, R15), design 0.7, tech spec 1.2, progress.md |
 | 19 Oct 2026 | Defaults accepted with the scope change: notes are confirmed or removed by touch, with Undo, and changed by voice. Uncertain notes are jotted in pencil as To confirm. The details looks need are read in the background. Feedback is jotted under its look. Text only mode is removed, so the conversation pauses or ends with notes and looks kept. Tap-to-try phrases work only once the conversation is running | Sabine | product spec 1.4 (R13, R14, R16, R20, R47, R70) |
 | 19 Oct 2026 | Accepted trade-off: with no captions and no typing, people who are deaf, hard of hearing or can't speak can't use the conversation in v1. Captions and typing are listed as future features | Sabine | product spec 1.4 (R67, section 9), risk 17 |
-| 19 Oct 2026 | The portfolio package (a recruiter README, an architecture diagram, an evaluation defined before measuring, simple standard-library checks, a one-page case study PDF and a private portfolio kit) is built in Phase 7 (7b), once the app exists, not now on Phase 0 test pages. interview-notes.md becomes private: kept on Sabine's Mac and no longer tracked in the public repository (its earlier versions stay in the history) | Sabine | progress.md (7b), CLAUDE.md, .gitignore |
+| 19 Oct 2026 | The project package (a README, an architecture diagram, an evaluation defined before measuring, simple standard-library checks, a one-page case study PDF and a private kit) is built in Phase 7 (7b), once the app exists, not now on Phase 0 test pages. interview-notes.md becomes private: kept on Sabine's Mac and no longer tracked in the public repository (its earlier versions stay in the history) | Sabine | progress.md (7b), CLAUDE.md, .gitignore |
 | 20 Oct 2026 | design.md agreed as version 1.0, so the design system (1c) is built from it | Sabine | design.md 1.0 |
 | 20 Oct 2026 | 1b: automated tests use the Supabase server key to create test guests, because bot protection blocks normal sign-in. The Phase 0 test pages stay, behind the passcode, until Phase 2's session screen replaces them | Sabine | tech spec 1.5 |
 | 20 Oct 2026 | One Supabase project, ai-personal-stylist, in Sabine's Pro organization ($10 a month), shared by development and the live site until launch. Sabine's organization was already on Pro, so new projects cost about $10 each. She first chose a new free organization, then two Pro projects, then one; the spare project was deleted. The running budget is now about $50 a month | Sabine | tech spec 1.4 |
@@ -450,12 +451,13 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.56 (4 Nov 2026):** Sabine's packaging skill's new rule, applied with her five defaults (4 Nov 2026): the public files describe the work, not who reads it. The overview, the demo extras, the demo success criteria, decisions on platform, accounts and defaults, risk 11, two assumptions and three log entries are reworded; nothing they decided changes.
 - **1.55 (3 Nov 2026):** The business model after v1 (affiliate commission from high-end retailers such as FWRD, an assumed 5%), its cost check as risk 18, and three assumptions: the 5% rate, FWRD's $640 average order, and paid hosting once the app earns money. FWRD replaces ASOS on the retailer shortlist (X01 updated, X02 no longer needed).
 - **1.54 (31 Oct 2026):** The Phase 7 code review run early, with its two decisions (A1, B1).
 - **1.53 (31 Oct 2026):** The demo video: shown in the GitHub README instead of unlisted YouTube, and recorded with the video stylist past the month's minutes. Tavus moves to the Free plan on 21 Nov 2026 (risk 3 updated).
 - **1.52 (30 Oct 2026):** The Chrome microphone fix (fixed before the demo video, Sabine's call) and how the demo video is recorded.
 - **1.51 (28 Oct 2026):** 7c: the launch decisions (Q1 to Q4) and 15 minutes a day.
-- **1.50 (28 Oct 2026):** 7b: the portfolio package decisions (Q1 to Q4), the blind set's result (not met), and the history scan's findings (the old interview notes stay, A).
+- **1.50 (28 Oct 2026):** 7b: the packaging decisions (Q1 to Q4), the blind set's result (not met), and the history scan's findings (the old interview notes stay, A).
 - **1.49 (27 Oct 2026):** 7a done: the iPhone and laptop check passed A to E, including the Tavus webhook counting a closed call's exact minutes.
 - **1.48 (27 Oct 2026):** 6d done, and Phase 6 complete: the Phase 6 review's 15 fixes (Q1 and Q2; tech spec 1.49).
 - **1.47 (27 Oct 2026):** 6a, 6b and 6c done: the combined iPhone check passed A to F, after the first live voice calls found a missing key in Vercel and a trimmed offer (both fixed; tech spec 1.48). 6d, the Phase 6 code review, next.

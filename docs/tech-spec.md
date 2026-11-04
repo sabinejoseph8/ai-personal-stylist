@@ -1,7 +1,7 @@
 # AI Personal Stylist: Tech Spec
 
-**Status:** Agreed, version 1.56 (3 Nov 2026)
-**Last updated:** 3 Nov 2026
+**Status:** Agreed, version 1.57 (4 Nov 2026)
+**Last updated:** 4 Nov 2026
 **Builds on:** product-spec.md version 1.4 (agreed) and design.md version 1.0 (agreed)
 **Next step:** progress.md turns this agreed spec into a phased build plan. Any later change gets a new version number and a change log entry.
 
@@ -76,7 +76,7 @@
 
 ```
 CLAUDE.md            how Claude works on this project
-interview-notes.md   the project story, told for interviews (private: on Sabine's Mac, not in the repository)
+interview-notes.md   the project story, in Sabine's own words (private: on Sabine's Mac, not in the repository)
 docs/                the plan and project memory: product spec, design, tech spec, progress, MVP scope
 app/                 screens and server endpoints
 core/                stylist core: notes, feedback, looks, checker, versions, limits
@@ -343,7 +343,7 @@ Shared settings: stable prompt parts are cached to cut cost, answers come back a
 - **Products now (your answer to Q3):** the first line says how many of the catalog's products for the shopper's department fit everything now, and why the rest were left out, counted by reason ("5 for Never: high heels").
 - Never audio, words, video or photos, and only the guest's own open session.
 
-**The portfolio package (7b).** Built with the portfolio-package skill: **README.md** for AI product manager recruiters; **docs/evaluation.md** (what good looks like with the date each target was set, how it is measured, results with caveats first, what the results changed); **docs/architecture.svg** with its PNG and PDF; **docs/case-study.html** and its one-page PDF; **docs/how-to-run.md**; the checks in **checks/** (run_all.py and prepublish_scan.py, Python standard library, configured by checks/portfolio.json, which names the headline numbers that must read the same in the README, the case study and the evaluation); **scripts/eval-summary.mjs**, which prints the headline numbers from the saved results in tests/evals/results/ for free; and the About page (app/about) built to the design. The blind notes set (your answer to Q1) lives in **tests/evals/held-out/**: 15 sentences with expected notes written and run once by a session that never touched the notes reader (`npm run eval:notes:held-out`, the case file chosen with NOTES_CASES), and the sessions that build the reader never read that folder (CLAUDE.md). The About page links the product spec rather than the private PRD (Q2); the demo video is "coming" until Sabine records it (Q3); public pages show the sample profile and totals only (Q4). The private kit lives outside the repository in portfolio-private/, ignored along with interview-notes.md. The pre-publish scan reads the whole Git history before each push.
+**The project package (7b).** Built with Sabine's packaging skill: **README.md** for a first-time reader; **docs/evaluation.md** (what good looks like with the date each target was set, how it is measured, results with caveats first, what the results changed); **docs/architecture.svg** with its PNG and PDF; **docs/case-study.html** and its one-page PDF; **docs/how-to-run.md**; the checks in **checks/** (run_all.py and prepublish_scan.py, Python standard library, configured by checks/portfolio.json, which names the headline numbers that must read the same in the README, the case study and the evaluation); **scripts/eval-summary.mjs**, which prints the headline numbers from the saved results in tests/evals/results/ for free; and the About page (app/about) built to the design. The blind notes set (your answer to Q1) lives in **tests/evals/held-out/**: 15 sentences with expected notes written and run once by a session that never touched the notes reader (`npm run eval:notes:held-out`, the case file chosen with NOTES_CASES), and the sessions that build the reader never read that folder (CLAUDE.md). The About page links the product spec rather than the private PRD (Q2); the demo video is "coming" until Sabine records it (Q3); public pages show the sample profile and totals only (Q4). The private kit lives outside the repository in portfolio-private/, ignored along with interview-notes.md. The pre-publish scan reads the whole Git history before each push.
 
 **The cost per session and the webhook (7a, pull request 3 of 3).** Undo feedback and Compare reuse the earlier look's passing check when it passed on exactly the current requirements (its check_results row's requirements key): no judgment, so no Claude cost (about 2 cents each) and no wait, and they work even when the day's AI is used up. When the requirements have changed since, the earlier look is judged again as before. Builds and changes keep judging their candidates together (your answer to Q2). The Tavus webhook is described in section 3's table.
 
@@ -486,7 +486,7 @@ These rules keep the app secure and easy to extend. Each one is enforced in one 
 
 ## 7. Hosting, deployment and configuration
 
-- **Code:** a GitHub repository, public so it can be linked from your portfolio (default). Secrets are never committed.
+- **Code:** a GitHub repository, public so anyone can read it (default). Secrets are never committed.
 - **Deploys:** Vercel builds every pull request into its own preview link. Merging to main deploys production.
 - **Database:** one Supabase project, **ai-personal-stylist** in your Pro organization, shared by development, previews and the live site until launch (your decision, 20 Oct 2026). Tests clean up the rows they create. A separate production database can be added before launch. Table changes ship as migration files in the repository (supabase/migrations).
 - **Scheduled jobs:** a database timer (Supabase Cron, **close-idle-sessions**) runs every 10 minutes: it ends sessions idle for 30 minutes and deletes their notes (your answer to Q1 in 2e). It can't delete photo files, so those sessions' photos are deleted on the guest's next Start conversation or by the daily job, whichever comes first: at most a day, still private (your answer to Q4 in 3a). A Vercel cron job runs daily at 08:00 UTC (4 am in New York). It does the same, ends at Tavus any call those sessions left behind and gives back its unused minutes, deletes their photos, deletes guests unused for 7 days with their photos (R3), deletes test guests older than a day that a test run left behind, and deletes usage records older than 90 days and old rate-limit counts. Only anonymous guests and test guests are ever deleted. A guest's last-active time is updated on every page visit, at most once an hour (your decision, 20 Oct 2026). Keeping the database awake isn't needed on Pro.
@@ -556,7 +556,7 @@ The riskiest items go first, so Phase 0 proves them before anything else is buil
 | 8 | The voice changes when the stylist drops to voice only (accepted in TQ1) | The stylist can feel like a different person. With video for the whole conversation, this only happens when video fails, is busy, or runs out of monthly minutes | Pick the GPT-Live voice that sounds closest to the Tavus face (Phase 0), and have the stylist say "I'm switching to voice only, so I'll sound a little different." (section 4.2) | 0 |
 | 9 | Recognition reads garments wrong | Bad looks built on wrong details | To confirm statuses, easy correction, and a photo eval set | 3 |
 | 10 | Provider data handling for audio and words (Tavus, OpenAI) | Shopper trust and R35 | Recording off, no camera sent to Tavus, a provider terms review in Phase 0, and a plain summary on the About page | 0 |
-| 11 | The database is down or paused when a recruiter clicks the link | A recruiter clicks your link and the app is down | The database is on Supabase Pro, which doesn't pause. An uptime check catches outages (originally about the free plan pausing) | 1 |
+| 11 | The database is down or paused when a visitor clicks the link | A visitor clicks your link and the app is down | The database is on Supabase Pro, which doesn't pause. An uptime check catches outages (originally about the free plan pausing) | 1 |
 | 12 | Phone browser quirks: iPhone audio autoplay, camera switching, permissions | Phones are the main screen | Test on real phones from Phase 0, and start audio only after a tap | 0 |
 | 13 | Sample catalog quality and image rights | Weak images make weak looks | One consistent photo style, every image reviewed, and the source recorded per image. No real brands | 1 |
 | 14 | Fast-changing outside services (Tavus recently renamed "personas" to "PALs", and GPT-Live is new) | Updates can break the app | Connectors, pinned versions, contract tests, and a monthly check of change logs | All |
@@ -611,11 +611,12 @@ TQ1 and TQ2 are answered (see Decisions). TQ3 to TQ6 below were accepted with th
 
 ## 12. Change log
 
+- **1.57 (4 Nov 2026):** Public wording: the code layout, section 6's 7b package, section 8's repository and risk 11 describe the work and a first-time visitor or reader. No decision changes.
 - **1.56 (3 Nov 2026):** Section 4.3: after v1, a retailer's connector carries its affiliate links in the purchase link (the business model, product spec 1.8). Section 1: FWRD replaces ASOS as a future connector, following the shortlist.
 - **1.55 (31 Oct 2026):** The Phase 7 code review: currentGuest() is remembered per request (React's cache), since a page and its app bar both ask; the sessions route sends both time-up lines and today's time left with each call; the welcome screen's resting date comes from restingBackOn (the 1st, or the video cycle day if earlier); the weekly cost report reads budget_status, as the app's stops do.
 - **1.54 (30 Oct 2026):** The Chrome microphone fix: every way into the session is a full page load, with a one-time reload as a safety net (section 5, pattern 12).
 - **1.53 (28 Oct 2026):** 7c: the launch limits (15 minutes a day, one call, video counted from the 21st, test guests left out of the month), the health page, the uptime check and the weekly cost report.
-- **1.52 (28 Oct 2026):** 7b: the portfolio package (your answers to Q1 to Q4), the blind notes set, the checks and the About page.
+- **1.52 (28 Oct 2026):** 7b: the project package (your answers to Q1 to Q4), the blind notes set, the checks and the About page.
 - **1.51 (27 Oct 2026):** 7a, pull request 3: Undo and Compare reuse a passing check (Q2), and the Tavus webhook (Q4).
 - **1.50 (27 Oct 2026):** 7a, pull request 1: the app bar and menu (your answers to Q1 to Q4 of the 7a plan are in mvp.md).
 - **1.49 (27 Oct 2026):** 6d: the Phase 6 review's 15 fixes (your answers to Q1 and Q2).
