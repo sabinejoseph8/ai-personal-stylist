@@ -2,7 +2,7 @@
 
 Steps 1 to 3 need no coding: the live demo is a web page. Running your own copy (step 4 on) needs a terminal and a few accounts.
 
-## See it working (3 minutes)
+## See it working (a few minutes)
 
 | Step | You do | What happens |
 |---|---|---|

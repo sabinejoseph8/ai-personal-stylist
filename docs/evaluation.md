@@ -2,6 +2,8 @@
 
 How quality was defined before it was measured, how it was measured, the results with their limits, and what the results changed. The numbers come from the saved evaluation results in `tests/evals/results/` and from the checks recorded in the plan; `node scripts/eval-summary.mjs` prints the headline numbers from those files without spending anything.
 
+**How to read it.** Codes such as R17 point to numbered requirements in the product spec, S1 to S20 to its success checks, and 2c or 7a to task groups in the plan (docs/progress.md). A "session" is one Claude Code conversation. **In-sample** means the reader was scored on cases its builders had used while tuning it, like knowing the exam questions. The **blind** set was written and run by a separate session that never touched the notes reader.
+
 ## 1. What good looks like
 
 Set before any result, at planning time or when each part's task group was planned, and recorded in the plan files. The dates are when each target was written down.
