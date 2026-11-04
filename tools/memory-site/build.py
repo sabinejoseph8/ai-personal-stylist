@@ -1682,12 +1682,20 @@ def plan_summary(ctx, sec, phases):
     ring = ('<div class="ring"><svg viewBox="0 0 128 128" aria-hidden="true"><circle class="track" cx="64" cy="64" r="54"></circle>'
             '<circle class="val" id="hero-ring" cx="64" cy="64" r="54" stroke-dasharray="%.2f" stroke-dashoffset="%.2f"></circle></svg>'
             '<div class="pct" id="hero-pct">0%%<small>done</small></div></div>') % (circ, circ)
-    fact_rows = "".join("<dt>%s</dt><dd>%s</dd>" % (esc(k), inline(v)) for k, v in facts)
+    # The long history ("Current status" and every "Earlier" entry) folds away, so a visitor sees
+    # the current focus, recent changes, what's left and the next action first.
+    folded = [(k, v) for k, v in facts if k == "Current status" or k.startswith("Earlier")]
+    shown = [(k, v) for k, v in facts if (k, v) not in folded]
+    fact_rows = "".join("<dt>%s</dt><dd>%s</dd>" % (esc(k), inline(v)) for k, v in shown)
+    history = ""
+    if folded:
+        history = ('<details class="history"><summary>Show the history (%d entries)</summary><dl class="deflist">%s</dl></details>'
+                   % (len(folded), "".join("<dt>%s</dt><dd>%s</dd>" % (esc(k), inline(v)) for k, v in folded)))
     hero = ('<div class="card hero">%s<div class="facts"><div class="kicker">Now</div><a class="now" id="hero-phase" href="#plan-phase-0">Phase 0</a>'
             '<div class="bar" aria-hidden="true"><i id="hero-bar"></i></div><div class="muted small" id="hero-count">0 tasks done</div>'
             '<div class="stack tight"><div class="kicker">Next open task</div><a id="hero-next" href="#plan-phase-0">Loading</a></div>'
             '<div class="tick-status" id="tick-status" data-live="0" aria-live="polite"><span class="dot"></span><span class="txt">Showing the plan as written.</span></div>'
-            '<dl class="deflist">%s</dl></div></div>') % (ring, fact_rows)
+            '<dl class="deflist">%s</dl>%s</div></div>') % (ring, fact_rows, history)
     how_html = '<div class="callout info"><div class="title">%s</div>%s</div>' % (esc(how[0]), render_list(how[1])) if how else ""
     cards = []
     if table:
