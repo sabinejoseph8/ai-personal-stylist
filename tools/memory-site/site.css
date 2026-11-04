@@ -234,8 +234,6 @@ a.chip:hover { border-color: var(--edge); }
 @media (max-width: 560px) {
   .meta { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .meta dd { margin-bottom: 8px; }
-  .deflist { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .deflist dd { margin-bottom: 8px; }
 }
 
 /* Sections */
@@ -297,6 +295,11 @@ a.chip:hover { border-color: var(--edge); }
 .deflist { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; }
 .deflist dt { font-weight: 600; color: var(--muted); font-size: 14px; }
 .deflist dd { margin: 0; min-width: 0; }
+@media (max-width: 560px) {
+  /* After the rules above, so it wins on phones: labels stack above their text. */
+  .deflist { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .deflist dd { margin-bottom: 8px; }
+}
 .timeline { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .timeline > li { margin: 0; padding-left: 18px; border-left: 2px solid var(--line); }
 
