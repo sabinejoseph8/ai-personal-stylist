@@ -2,8 +2,6 @@
 
 **A video AI stylist that remembers what you said and won't show you what you ruled out.** A working web app for anyone dressing for an occasion on their phone.
 
-By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#ai-stylist-video-demo) · [Case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
-
 > The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
 
 ## The problem
