@@ -2,7 +2,7 @@
 
 **A video AI stylist that remembers what you said and won't show you what you ruled out.** A working web app for anyone dressing for an occasion on their phone.
 
-By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#demo) · [Case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
+By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#ai-stylist-video-demo) · [Case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
 
 > The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
 
@@ -20,7 +20,7 @@ Version 1 builds the conversation, the notes, looks around what you own and the 
 
 Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
-## Demo
+## AI stylist video demo
 
 A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page. 2 minutes 13 seconds, with sound.
 
