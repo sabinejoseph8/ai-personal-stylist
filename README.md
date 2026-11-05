@@ -12,12 +12,6 @@ A real session with the video stylist, using the sample profile: the notes as sh
 
 https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 
-## My role and skills
-
-I'm a product manager, not a developer. I wrote the product, design and technical specs from a product requirements document, set the quality targets before any result existed, made every product decision, and approved each plan before any code changed. Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
-
-What this shows: specs and a risk-first plan; success metrics set before results and reported with their limits; model choice from measured accuracy, speed and cost; cost control, privacy and accessibility as requirements; and directing an AI coding tool in plain English, as a non-developer, to a working product.
-
 ## The problem
 
 Shopping for an outfit online means a search box, filters, and a thousand results that don't go together. A good stylist in a shop does the opposite: listens, remembers what you said, looks at what you already own, and puts a whole outfit together within your budget and your rules.
