@@ -18,9 +18,9 @@ Version 1 builds the conversation, the notes, looks around what you own and the 
 
 Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
-## AI stylist video demo
+## AI stylist video demo, 2 minutes 13 seconds with sound
 
-A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page. 2 minutes 13 seconds, with sound.
+A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page.
 
 https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 

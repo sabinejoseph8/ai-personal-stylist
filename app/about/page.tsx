@@ -148,7 +148,7 @@ export default function AboutPage() {
               <A href={REPO}>The code</A>, with its tests, evaluations and checks.
             </li>
             <li>
-              <A href={`${REPO}#ai-stylist-video-demo`}>The two-minute demo video</A>: a real session with the video stylist, for anyone who can&rsquo;t try it live.
+              <A href={`${REPO}#ai-stylist-video-demo-2-minutes-13-seconds-with-sound`}>The two-minute demo video</A>: a real session with the video stylist, for anyone who can&rsquo;t try it live.
             </li>
           </ul>
         </Section>
