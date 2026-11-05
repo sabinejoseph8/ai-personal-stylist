@@ -14,17 +14,15 @@ Shopping for an outfit online means a search box, filters, and a thousand result
 - **What the user should be able to do:** say what they're dressing for, show a piece they own, and get three complete looks within budget that keep to every rule they've given; then change a piece by voice or touch, round after round, without losing what they asked for.
 - **The outcome:** a whole outfit they're happy with in minutes, from a stylist that listened: nothing they ruled out, nothing over budget, and their own pieces put to use.
 
-Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1, with the business model on page 2 of the [case study](https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html).
+Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1.
 
 Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
-## AI stylist video demo
+## AI stylist video demo, 2 minutes 13 seconds with sound
 
-A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page. 2 minutes 13 seconds, with sound.
+A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page.
 
 https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
-
-![Architecture](docs/architecture.png)
 
 ## At a glance
 
@@ -35,6 +33,10 @@ https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 - **Results:** 96% of notes right and 97% within 2 seconds (in-sample), 16 of 16 planted rule breaks caught, 93% of photo details right. Three targets were missed: the blind set of new sentences (83% right and 85% within 2 seconds, against 90% and 95%), interruption (0.7 seconds against 0.5) and AI cost per 10-minute demo (about $1.15 against $1.10).
 - **Status:** Built and live, with no sign-up. The products are a sample catalog and nothing is for sale. The last launch check, a stranger's first session, timed, is still to run.
 - **How it was built:** I wrote the specs, set the quality targets and made every product decision, and Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
+
+**Direct links:** [the live site](https://ai-personal-stylist-inky.vercel.app) · [the case study](https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html) · [the Project Memory website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX)
+
+![Architecture](docs/architecture.png)
 
 ## How it works
 

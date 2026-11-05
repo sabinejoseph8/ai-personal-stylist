@@ -41,6 +41,7 @@
   .note { background: var(--note); border-left: 3px solid var(--note-edge); padding: 5pt 8pt; font-size: 7.9pt; margin: 2pt 0 6pt; }
   .foot { border-top: 1px solid var(--line); padding-top: 4pt; font-size: 7.6pt; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
   .foot strong { color: var(--ink); }
+  .foot.one { grid-template-columns: 1fr; }
   .page2 { break-before: page; }
   .page2 .lede { max-width: 6.2in; }
   table.money { font-size: 8.4pt; }
@@ -103,7 +104,7 @@
     <div>
       <section>
         <h2>My role</h2>
-        <p>I'm a product manager, not a developer. I wrote the specs from a PRD, set every target before any result, made every product decision and approved each plan before code changed. Claude Code wrote the code: 73 pull requests from 18 to 31 October, each tested before it merged.</p>
+        <p>I wrote the specs from a PRD, set every target before any result, made every product decision and approved each plan before code changed. Claude Code wrote the code: 73 pull requests from 18 to 31 October, each tested before it merged.</p>
       </section>
       <section>
         <h2>How I measured quality</h2>
@@ -140,9 +141,8 @@
     </div>
   </div>
 
-  <footer class="foot">
+  <footer class="foot one">
     <div><strong>In the repository:</strong> README, docs/evaluation.md, Project Memory (specs and plan), the architecture diagram, checks. Live at ai-personal-stylist-inky.vercel.app. Page 2: the business model.</div>
-    <div><strong>Sabine Joseph,</strong> AI product manager, directing Claude Code as a non-developer. Code and documents: github.com/sabinejoseph8/ai-personal-stylist.</div>
   </footer>
 
   <div class="page2">
