@@ -80,6 +80,7 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 ## Limitations
 
 - **The evaluation is mostly in-sample**, and the one blind set missed both targets. Treat 83% right and 85% within 2 seconds as the estimate for new sentences.
+- **Voice only in the conversation.** No captions and no typing to the stylist yet, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard. Captions or typing are the first accessibility item after launch.
 - **One tester.** Every real-device check was mine, on one iPhone and one laptop. No stranger has used it yet.
 - **Not measured:** whether shoppers like the looks (the check tests rules and stated preferences, not taste), whether sessions lead to purchases (no links yet, so the business model is untested), and busy periods. Costs depend on behaviour: $0.45 to $1.15 of AI a session, so the 15-minute, $3-a-day limits per visitor are what keep a public link safe.
 
