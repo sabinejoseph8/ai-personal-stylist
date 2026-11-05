@@ -24,9 +24,17 @@ https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 
 ## The problem
 
-Shopping for an outfit online means a search box, filters, and a thousand results that don't go together. A good stylist in a shop does the opposite: listens, remembers what you said, looks at what you already own, and puts a whole outfit together within your budget and your rules.
+Shopping for an outfit online means a search box, filters, and a thousand results that don't go together. A good stylist in a shop does the opposite: listens, remembers what you said, looks at what you already own, and puts a whole outfit together within your budget and your rules. AI assistants manage the listening half. Where they fail is memory and consistency: they forget the budget you gave two messages ago, contradict a preference you stated, and show you the high heels you said you never wear. This project builds a stylist you talk to face to face, who writes down what you want, keeps to it, and puts whole looks together around what you own.
 
-AI assistants manage the listening half. Where they fail is memory and consistency: they forget the budget you gave two messages ago, contradict a preference you stated, and show you the high heels you said you never wear.
+- **Who it is for:** adults who shop womenswear, menswear or both, dressing for an occasion such as a wedding, who want a complete look that uses what they already own and stays within budget, on their phone.
+- **What problem it solves:** search returns single items, not outfits, and leaves the shopper to work out what goes together. Chat assistants listen but don't hold on to what was said: the budget, the "never" rules and the event's details drift out of the conversation, and nothing checks a suggestion against them before it is shown.
+- **Why it matters:** every forgotten budget or ignored "never" costs trust. The shopper ends up repeating themselves, rechecking every suggestion, or going back to scrolling, and looks that ignore what they own mean buying more than they need.
+- **What the user should be able to do:** say what they're dressing for, show a piece they own, and get three complete looks within budget that keep to every rule they've given; then change a piece by voice or touch, round after round, without losing what they asked for.
+- **The outcome:** a whole outfit they're happy with in minutes, from a stylist that listened: nothing they ruled out, nothing over budget, and their own pieces put to use.
+
+Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1 (see [What I left out of v1](#what-i-left-out-of-v1-and-why)).
+
+Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
 ## How it works
 
