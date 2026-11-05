@@ -35,7 +35,8 @@ https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 - **Results:** 96% of notes right and 97% within 2 seconds (in-sample), 16 of 16 planted rule breaks caught, 93% of photo details right. Three targets were missed: the blind set of new sentences (83% right and 85% within 2 seconds, against 90% and 95%), interruption (0.7 seconds against 0.5) and AI cost per 10-minute demo (about $1.15 against $1.10).
 - **Status:** Built and live, with no sign-up. The products are a sample catalog and nothing is for sale. The last launch check, a stranger's first session, timed, is still to run.
 - **How it was built:** I wrote the specs, set the quality targets and made every product decision, and Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
-- **Direct links:** [the live site](https://ai-personal-stylist-inky.vercel.app) · [the case study](https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html) · [the Project Memory website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX)
+
+**Direct links:** [the live site](https://ai-personal-stylist-inky.vercel.app) · [the case study](https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html) · [the Project Memory website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX)
 
 ## How it works
 
