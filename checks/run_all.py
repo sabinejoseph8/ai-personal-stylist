@@ -268,6 +268,8 @@ def check_headline_numbers(root: Path, cfg: dict) -> Result:
 
 
 def check_case_study_pages(root: Path, cfg: dict) -> Result:
+    if not cfg["case_study_pdf"]:
+        return "skip", ["no case study PDF (case_study_pdf is empty)"]
     path = root / cfg["case_study_pdf"]
     if not path.exists():
         return "skip", [f"no {cfg['case_study_pdf']}"]

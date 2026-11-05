@@ -8,7 +8,6 @@
     "docs/architecture.png",
     "docs/architecture.pdf",
     "docs/case-study.html",
-    "docs/case-study.pdf",
     "docs/product-spec.md",
     "docs/design.md",
     "docs/tech-spec.md",
@@ -38,8 +37,8 @@
     "docs/*.html",
     "app/about/page.tsx"
   ],
-  "case_study_pdf": "docs/case-study.pdf",
-  "case_study_pages": 2,
+  "case_study_pdf": "",
+  "_case_study_pdf": "Empty: since 4 Nov 2026 the case study is a web page (GitHub Pages from docs/), with no PDF.",
   "headline_numbers": {
     "_about": "The evaluation's headline numbers (node scripts/eval-summary.mjs) must read the same in every public page that quotes them.",
     "96%": [

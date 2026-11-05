@@ -132,7 +132,8 @@ export default function AboutPage() {
               and what the results changed.
             </li>
             <li>
-              <A href={`${DOCS}/case-study.pdf`}>The case study</A> (PDF).
+              <A href="https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html">The case study</A>: the project on one page, with the business
+              model after v1 on a second.
             </li>
             <li>
               The plan: the <A href={`${DOCS}/product-spec.md`}>product spec</A> (every requirement traces back to the original PRD),{" "}
@@ -141,13 +142,13 @@ export default function AboutPage() {
               <A href={`${DOCS}/mvp.md`}>the MVP scope, decisions and risks</A>, including how the plan changed from the PRD.
             </li>
             <li>
-              <A href={MEMORY_SITE}>The Memory site</A>: the same four plan files as a website, with live ticks for every task.
+              <A href={MEMORY_SITE}>The Memory site</A>: the same five plan files as a website, with live ticks for every task.
             </li>
             <li>
               <A href={REPO}>The code</A>, with its tests, evaluations and checks.
             </li>
             <li>
-              <A href={`${REPO}#demo`}>The two-minute demo video</A>: a real session with the video stylist, for anyone who can&rsquo;t try it live.
+              <A href={`${REPO}#ai-stylist-video-demo`}>The two-minute demo video</A>: a real session with the video stylist, for anyone who can&rsquo;t try it live.
             </li>
           </ul>
         </Section>

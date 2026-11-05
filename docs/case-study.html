@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Personal Stylist Case Study</title>
+<meta name="description" content="AI Personal Stylist: an AI product management case study, with the business model on page 2.">
 <!--
-  Two-page "AI product management case study": the case, then the business model. Letter size, print-ready.
-  Render:  python3 <skill>/scripts/render.py pdf docs/case-study.html docs/case-study.pdf
-  Check:   python3 checks/run_all.py   (fails unless the PDF has exactly two pages)
+  "AI product management case study": the case, then the business model. A web page,
+  published with GitHub Pages from docs/ at
+  https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html
+  It still prints on two Letter pages from the browser.
 -->
 <style>
   @page { size: Letter; margin: 0.38in 0.5in; }
@@ -42,8 +44,16 @@
   .page2 { break-before: page; }
   .page2 .lede { max-width: 6.2in; }
   table.money { font-size: 8.4pt; }
+  @media screen {
+    html { background: var(--mist); }
+    body { max-width: 8.5in; margin: 24px auto; padding: 0.4in 0.5in; border-radius: 4px; box-shadow: 0 1px 3px rgba(31, 42, 68, 0.12), 0 8px 24px rgba(31, 42, 68, 0.08); }
+    .page2 { margin-top: 0.4in; padding-top: 0.35in; border-top: 2px dashed var(--line); }
+  }
+  @media screen and (min-width: 1000px) {
+    body { zoom: 1.2; }
+  }
   @media screen and (max-width: 700px) {
-    body { padding: 16px; font-size: 11pt; }
+    body { margin: 0; border-radius: 0; box-shadow: none; padding: 16px; font-size: 11pt; }
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .cols, .foot { grid-template-columns: 1fr; }
     .page2 { margin-top: 28px; padding-top: 20px; border-top: 2px dashed var(--line); }
