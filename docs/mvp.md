@@ -1,6 +1,6 @@
 # AI Personal Stylist: MVP Scope
 
-**Status:** Living document, version 1.57
+**Status:** Living document, version 1.58
 **Last updated:** 4 Nov 2026
 **Built from:** MVP PRD v1.8 and Prioritized Backlog v1.8 (7 Oct 2026, in the project root), product spec 1.4, design 1.11, tech spec 1.23 and progress.md
 **Rule:** this file explains why the plan is the way it is. If it disagrees with product-spec.md, design.md, tech-spec.md or progress.md, those agreed files win, and this file is updated to match.
@@ -76,7 +76,7 @@ A mobile-first web app where you talk face to face with a lifelike AI stylist on
 **Demo success (default)**
 - About 12 full video demos a month within about $50 (Tavus Starter had 120 minutes on Sabine's account, and the database is $10). Since 21 Oct 2026 the Tavus plan has 175 minutes a month, about 16 demos.
 - The link works whenever someone clicks it.
-- The About page, the README and the case study (the case, then the business model on a second page) tell the story behind the product, with the evaluation's results and limits (7b). The interview notes stay private.
+- The About page, the README and the case study (a web page: the case, then the business model) tell the story behind the product, with the evaluation's results and limits (7b). The interview notes stay private.
 
 ## 5. Risks
 
@@ -165,6 +165,7 @@ Newest first. The agreed files hold the detail.
 
 | Date | Decision | Made by | Recorded in |
 |---|---|---|---|
+| 4 Nov 2026 | The case study is a web page, published with GitHub Pages from docs/ (her choice over a page on the live app), and every link goes to it. The PDF is deleted (her choice over keeping it unlinked), so its page check is skipped | Sabine | README, About page, docs/.nojekyll, checks/portfolio.json, design 1.34, tech spec 1.59 |
 | 4 Nov 2026 | The README follows Clarivi's layout: At a glance after the demo, a fuller problem section, and Skills demonstrated at the end, without the My role and skills, What's next or What I left out of v1 sections (the voice-only conversation becomes a limitation). The business model moves to a second page of the case study, so the case study is two pages and its check expects two | Sabine | README, docs/case-study.pdf, checks/portfolio.json, design 1.33, tech spec 1.58 |
 | 4 Nov 2026 | The public files describe the work, not who reads it (the packaging skill's new rule). One sentence in the product spec's overview says what the project demonstrates; the visitor in the specs is the first-time visitor, and the sample phrases, About page and Behind the scenes are demo extras, unchanged; the About page and GitHub's About box are reworded, and the packaging skill's exact name lives in Claude's private memory rather than CLAUDE.md (her five defaults) | Sabine | product spec 1.9, design 1.32, tech spec 1.57, CLAUDE.md |
 | 3 Nov 2026 | FWRD replaces ASOS on the retailer shortlist, which is now FWRD and FARFETCH, to match the high-end business model. X01 now compares FWRD and FARFETCH, and the Rakuten inquiry about ASOS feeds (X02) is no longer needed | Sabine | product spec 1.8, tech spec 1.56, backlog X01 and X02 |
@@ -452,6 +453,7 @@ Where every backlog item from PRD v1.8 lives in the plan.
 
 ## 10. Change log
 
+- **1.58 (4 Nov 2026):** The case study becomes a web page on GitHub Pages and the PDF is deleted (Sabine's decision): the 7b success criterion and a new decision row.
 - **1.57 (4 Nov 2026):** The README's new layout and the case study's second page, for the business model (Sabine's decision): the 7b success criterion and a new decision row.
 - **1.56 (4 Nov 2026):** Sabine's packaging skill's new rule, applied with her five defaults (4 Nov 2026): the public files describe the work, not who reads it. The overview, the demo extras, the demo success criteria, decisions on platform, accounts and defaults, risk 11, two assumptions and three log entries are reworded; nothing they decided changes.
 - **1.55 (3 Nov 2026):** The business model after v1 (affiliate commission from high-end retailers such as FWRD, an assumed 5%), its cost check as risk 18, and three assumptions: the 5% rate, FWRD's $640 average order, and paid hosting once the app earns money. FWRD replaces ASOS on the retailer shortlist (X01 updated, X02 no longer needed).
