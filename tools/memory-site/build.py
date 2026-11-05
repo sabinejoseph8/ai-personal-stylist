@@ -25,11 +25,15 @@ TABS = [
     ("design", "design.md", "Design Spec", "Design"),
     ("tech", "tech-spec.md", "Tech Spec", "Tech"),
     ("plan", "progress.md", "Plan", "Plan"),
+    ("mvp", "mvp.md", "MVP", "MVP"),
 ]
 FILE_TAB = {f: k for k, f, _, _ in TABS}
 OWNER = "Sabine"
 DIAGRAM_FONT = "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
 LIMITS = {"R": 72, "S": 20}
+TAB_ICON = ('<svg class="ic" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>')
 
 # ---------------------------------------------------------------- parsing
 
@@ -195,7 +199,7 @@ def parse_doc(text):
 # ---------------------------------------------------------------- inline markdown
 
 REF_RE = re.compile(r"\b([RS])(\d{1,2})\b")
-FILE_RE = re.compile(r"\b(?:docs/)?(product-spec|design|tech-spec|progress)\.md\b")
+FILE_RE = re.compile(r"\b(?:docs/)?(product-spec|design|tech-spec|progress|mvp)\.md\b")
 
 
 def esc(s):
@@ -362,7 +366,7 @@ def subsection(ctx, title, inner, toc=False):
 def status_of(meta):
     for k, v in meta:
         if k.lower() == "status":
-            m = re.match(r"^(\w+),\s*version\s*([\d.]+)(?:\s*\(([^)]*)\))?", v)
+            m = re.match(r"^([\w ]+?),\s*version\s*([\d.]+)(?:\s*\(([^)]*)\))?", v)
             if m:
                 return m.group(1), m.group(2), m.group(3) or ""
             return v, "", ""
@@ -1561,6 +1565,21 @@ def render_tech(doc, ctx):
     return "".join(parts)
 
 
+# ---------------------------------------------------------------- mvp
+
+def render_mvp(doc, ctx):
+    parts = [dochead("mvp.md", doc, preamble(doc["pre"]))]
+    for sec in doc["sections"]:
+        name = split_num(sec["title"])[1].lower()
+        if name == "change log":
+            inner = changelog(sec["blocks"])
+        else:
+            inner = generic(sec["blocks"]) + "".join(
+                subsection(ctx, sub["title"], generic(sub["blocks"])) for sub in sec["subs"])
+        parts.append(section(ctx, sec["title"], inner))
+    return "".join(parts)
+
+
 # ---------------------------------------------------------------- plan
 
 def split_group_blocks(blocks):
@@ -1779,6 +1798,7 @@ def build(test=False):
         "design": render_design(docs["design"], ctxs["design"]),
         "tech": render_tech(docs["tech"], ctxs["tech"]),
         "plan": render_plan(docs["plan"], ctxs["plan"]),
+        "mvp": render_mvp(docs["mvp"], ctxs["mvp"]),
     }
 
     # header: project name, core value line, status pills
@@ -1798,17 +1818,19 @@ def build(test=False):
             "ok" if state.lower() == "agreed" else "draft", key, esc(label), esc(state.lower()), esc(version)))
     summary_line = "All three specs agreed" if agreed == 3 else "%d of 3 specs agreed" % agreed
     updated = dates[0] if dates else ""
-    header = ('<header class="site-head"><div class="wrap"><div class="eyebrow">Project Memory</div>'
+    header = ('<header class="site-head"><div class="wrap"><div class="eyebrow">Project Memory &middot; %d files</div>'
               '<h1 class="site-title">AI Personal Stylist</h1><p class="site-value">%s</p>'
               '<div class="head-meta"><span class="chip pill %s"><span class="dot"></span>%s</span>%s'
               '<span class="by">Owner %s. Updated %s.</span></div></div></header>') % (
-        inline(value), "ok" if agreed == 3 else "draft", esc(summary_line), "".join(pills), esc(OWNER), esc(updated))
+        len(TABS), inline(value), "ok" if agreed == 3 else "draft", esc(summary_line), "".join(pills), esc(OWNER), esc(updated))
 
-    tabbar = ['<nav class="tabbar" aria-label="Documents"><div class="wrap"><div class="seg" role="tablist">']
+    words = {4: "Four", 5: "Five", 6: "Six"}
+    tabbar = ['<nav class="tabbar" aria-label="Documents"><div class="wrap">'
+              '<p class="tab-hint"><strong>%s files.</strong> Choose one to read it:</p><div class="seg" role="tablist">' % words.get(len(TABS), str(len(TABS)))]
     for k, (key, fname, long_label, short) in enumerate(TABS):
         tabbar.append('<a class="tab" role="tab" id="tab-%s" href="#%s" data-tab="%s" aria-controls="panel-%s" aria-selected="%s" tabindex="%d">'
-                      '<span class="long">%s</span><span class="short">%s</span></a>' % (
-                          key, key, key, key, "true" if k == 0 else "false", 0 if k == 0 else -1, esc(long_label), esc(short)))
+                      '%s<span class="long">%s</span><span class="short">%s</span></a>' % (
+                          key, key, key, key, "true" if k == 0 else "false", 0 if k == 0 else -1, TAB_ICON, esc(long_label), esc(short)))
     tabbar.append("</div></div></nav>")
 
     panels = ['<div class="panels">']
@@ -1821,8 +1843,8 @@ def build(test=False):
                           rail, chips, bodies[key]))
     panels.append("</div>")
 
-    foot = ('<footer class="site-foot"><div class="wrap"><span>Built from docs/product-spec.md, docs/design.md, docs/tech-spec.md and docs/progress.md.</span>'
-            '<span>Rebuild with <code>python3 tools/memory-site/build.py</code> after the docs change. docs/mvp.md stays in the repository, and the interview notes stay private.</span></div></footer>')
+    foot = ('<footer class="site-foot"><div class="wrap"><span>Built from docs/product-spec.md, docs/design.md, docs/tech-spec.md, docs/progress.md and docs/mvp.md.</span>'
+            '<span>Rebuild with <code>python3 tools/memory-site/build.py</code> after the docs change. The interview notes stay private.</span></div></footer>')
 
     css = (HERE / "site.css").read_text(encoding="utf-8")
     js = (HERE / "site.js").read_text(encoding="utf-8")

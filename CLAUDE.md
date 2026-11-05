@@ -10,7 +10,7 @@ The agreed plan is in docs/. Read the files a task needs before starting it.
 
 If the docs and the code disagree, or a task needs a decision the docs don't make, stop and ask Sabine. Don't change an agreed decision on your own.
 
-The Memory site (https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX) shows the four plan files as a website. Its plan ticks live in the site's `tasks` collection, one document per task id (for example `p0a-01`), so tick tasks there with the ArtifactData tool. After the docs change, rebuild it with `python3 tools/memory-site/build.py` and republish to the same URL.
+The Memory site (https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX) shows the four plan files and docs/mvp.md as a website, one tab each. Its plan ticks live in the site's `tasks` collection, one document per task id (for example `p0a-01`), so tick tasks there with the ArtifactData tool. After the docs change, rebuild it with `python3 tools/memory-site/build.py` and republish to the same URL.
 
 ## Project memory
 

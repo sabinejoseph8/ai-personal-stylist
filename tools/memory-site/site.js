@@ -2,7 +2,7 @@
   "use strict";
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var TAB_IDS = ["product", "design", "tech", "plan"];
+  var TAB_IDS = ["product", "design", "tech", "plan", "mvp"];
 
   /* ---------- Tabs and deep links ---------- */
   var panels = $$(".panel");
