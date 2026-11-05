@@ -6,22 +6,6 @@ By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-ink
 
 > The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
 
-## Demo
-
-A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page. 2 minutes 13 seconds, with sound.
-
-https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
-
-## At a glance
-
-- **The user and the problem:** Anyone dressing for an occasion who shops on their phone. Online shopping gives a search box and a thousand results that don't go together, and AI assistants forget the budget you gave and show you what you ruled out.
-- **What it does:** You talk face to face with a video stylist. She takes notes as you speak, which you confirm with a tap, and builds three complete looks within your budget and your rules, around a piece you already own if you show it.
-- **How it works:** A fast small model (Claude Haiku 5.5) and plain code read the notes while you talk. A larger one (Claude Opus 5.5) reads photos and builds the looks. Every look passes one gate, rules in code and then a judgment call, before you see it. Video and voice come from Tavus and OpenAI; every decision is made on my server.
-- **How quality was defined:** Targets with numbers for the notes, the looks, the photos, speed and cost, set on 17 October 2026 before any result existed, and never moved.
-- **Results:** 96% of notes right and 97% within 2 seconds (in-sample), 16 of 16 planted rule breaks caught, 93% of photo details right. Three targets were missed: the blind set of new sentences (83% right and 85% within 2 seconds, against 90% and 95%), interruption (0.7 seconds against 0.5) and AI cost per 10-minute demo (about $1.15 against $1.10).
-- **Status:** Built and live, with no sign-up. The products are a sample catalog and nothing is for sale. The last launch check, a stranger's first session, timed, is still to run.
-- **How it was built:** I wrote the specs, set the quality targets and made every product decision, and Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
-
 ## The problem
 
 Shopping for an outfit online means a search box, filters, and a thousand results that don't go together. A good stylist in a shop does the opposite: listens, remembers what you said, looks at what you already own, and puts a whole outfit together within your budget and your rules. AI assistants manage the listening half. Where they fail is memory and consistency: they forget the budget you gave two messages ago, contradict a preference you stated, and show you the high heels you said you never wear. This project builds a stylist you talk to face to face, who writes down what you want, keeps to it, and puts whole looks together around what you own.
@@ -36,6 +20,24 @@ Version 1 builds the conversation, the notes, looks around what you own and the 
 
 Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
+## Demo
+
+A real session with the video stylist, using the sample profile: the notes as she takes them, three complete looks, a change and its undo, a piece from my own wardrobe shown on camera and styled around, Behind the scenes (what was captured and how each look was checked), and the privacy page. 2 minutes 13 seconds, with sound.
+
+https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
+
+![Architecture](docs/architecture.png)
+
+## At a glance
+
+- **The user and the problem:** Anyone dressing for an occasion who shops on their phone. Online shopping gives a search box and a thousand results that don't go together, and AI assistants forget the budget you gave and show you what you ruled out.
+- **What it does:** You talk face to face with a video stylist. She takes notes as you speak, which you confirm with a tap, and builds three complete looks within your budget and your rules, around a piece you already own if you show it.
+- **How it works:** A fast small model (Claude Haiku 5.5) and plain code read the notes while you talk. A larger one (Claude Opus 5.5) reads photos and builds the looks. Every look passes one gate, rules in code and then a judgment call, before you see it. Video and voice come from Tavus and OpenAI; every decision is made on my server.
+- **How quality was defined:** Targets with numbers for the notes, the looks, the photos, speed and cost, set on 17 October 2026 before any result existed, and never moved.
+- **Results:** 96% of notes right and 97% within 2 seconds (in-sample), 16 of 16 planted rule breaks caught, 93% of photo details right. Three targets were missed: the blind set of new sentences (83% right and 85% within 2 seconds, against 90% and 95%), interruption (0.7 seconds against 0.5) and AI cost per 10-minute demo (about $1.15 against $1.10).
+- **Status:** Built and live, with no sign-up. The products are a sample catalog and nothing is for sale. The last launch check, a stranger's first session, timed, is still to run.
+- **How it was built:** I wrote the specs, set the quality targets and made every product decision, and Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
+
 ## How it works
 
 1. **Try the demo.** A guest sign-in with a bot check, no account. A short setup, or a sample profile with a budget and three saved preferences, such as "Never: high heels".
@@ -44,9 +46,13 @@ Nothing the stylist hears becomes a rule until you confirm it, and no look reach
 4. **Three looks appear**, each checked against your saved preferences and confirmed notes before you see it. Keep or change a piece, swap it, undo, compare earlier versions. Your own items are never in the totals.
 5. **Keep what you like.** Save a look, put sample pieces in a demo bag that cannot check out, download everything the app holds, or delete it all.
 
-![Architecture](docs/architecture.png)
-
 Underneath: the browser holds the call and sends your words, photos and camera frames to my server. The server reads notes with a fast small model (Claude Haiku 5.5) and plain code for money and dates, reads photos and builds looks with a larger one (Claude Opus 5.5), and runs every look through one gate: rules in code, then a judgment call for the rest. A budget guard checks every paid call against a daily allowance per visitor and monthly stops per service.
+
+## Planned and tested like a product
+
+- **Project Memory:** [product spec](docs/product-spec.md), [design](docs/design.md), [tech spec](docs/tech-spec.md), [phased plan with progress](docs/progress.md) and [MVP scope, decisions and risks](docs/mvp.md), each agreed before building and kept current. Also published as a [website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX) with live plan ticks.
+- **Risk first:** the first phase tested the video stylist, live notes on four models, the camera, costs and the providers' data handling before any screen was built, with pass marks written down first.
+- **Automated checks:** 458 unit and database tests, about 200 browser tests on phone and desktop sizes with fake engines, an accessibility scan on every page, and the package checks (`python3 checks/run_all.py`).
 
 ## Key decisions and what they cost
 
@@ -83,12 +89,6 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 - **Voice only in the conversation.** No captions and no typing to the stylist yet, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard. Captions or typing are the first accessibility item after launch.
 - **One tester.** Every real-device check was mine, on one iPhone and one laptop. No stranger has used it yet.
 - **Not measured:** whether shoppers like the looks (the check tests rules and stated preferences, not taste), whether sessions lead to purchases (no links yet, so the business model is untested), and busy periods. Costs depend on behaviour: $0.45 to $1.15 of AI a session, so the 15-minute, $3-a-day limits per visitor are what keep a public link safe.
-
-## Planned and tested like a product
-
-- **Project Memory:** [product spec](docs/product-spec.md), [design](docs/design.md), [tech spec](docs/tech-spec.md), [phased plan with progress](docs/progress.md) and [MVP scope, decisions and risks](docs/mvp.md), each agreed before building and kept current. Also published as a [website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX) with live plan ticks.
-- **Risk first:** the first phase tested the video stylist, live notes on four models, the camera, costs and the providers' data handling before any screen was built, with pass marks written down first.
-- **Automated checks:** 458 unit and database tests, about 200 browser tests on phone and desktop sizes with fake engines, an accessibility scan on every page, and the package checks (`python3 checks/run_all.py`).
 
 ## Run it yourself
 
