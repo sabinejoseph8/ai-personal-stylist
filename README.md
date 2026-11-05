@@ -110,3 +110,12 @@ checks/         Package checks and the pre-publish scan (Python standard library
 scripts/        Lighthouse, the evaluation summary, Tavus setup
 tools/          The Memory site builder
 ```
+
+## Skills demonstrated
+
+- **AI product management:** problem framing, specs and a risk-first phased plan agreed before building, success targets set before any result, directing an AI coding tool from the specs and the plan as a non-developer, and decisions driven by measured results, including the ones that missed.
+- **Evaluation:** test sets with the expected answers written first, four models compared on accuracy, speed and cost, in-sample results labelled as such, and a blind set written and run once by a separate conversation that never touched the notes reader.
+- **Responsible AI:** nothing the AI hears becomes a rule until the shopper confirms it, every look passes a check (rules in code, then a model's judgment) before it is shown, and a look whose check can't run is held with a plain reason.
+- **Privacy, cost and accessibility as requirements:** no recordings, the camera never sent to the video service, photos deleted when the session ends, and download or delete everything; a daily AI allowance per visitor and monthly stops per service before every paid call; an accessibility scan on every page, and checks by hand at 200% text size that found five layout problems the scanner missed.
+- **Business model:** affiliate commission at an assumed 5%, a cost check per session, and the riskiest assumption named: the share of sessions that must end in a kept order.
+- **Communication:** this README, the [case study](docs/case-study.pdf), the [evaluation](docs/evaluation.md) and the plan files, written in plain English and kept current.

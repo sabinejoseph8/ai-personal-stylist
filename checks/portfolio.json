@@ -20,7 +20,8 @@
     "how it works|how a run works|architecture",
     "design|decision|tradeoff",
     "quality|evaluation|measured|results|tested|scorecard",
-    "limitation"
+    "limitation",
+    "skills"
   ],
   "_readme_sections": "Each entry is one section; \"|\" separates words that count for it.",
   "evaluation": "docs/evaluation.md",
