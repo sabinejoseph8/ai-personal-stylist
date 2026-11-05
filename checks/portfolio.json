@@ -38,6 +38,7 @@
     "app/about/page.tsx"
   ],
   "case_study_pdf": "docs/case-study.pdf",
+  "case_study_pages": 2,
   "headline_numbers": {
     "_about": "The evaluation's headline numbers (node scripts/eval-summary.mjs) must read the same in every public page that quotes them.",
     "96%": [

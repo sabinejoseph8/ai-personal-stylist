@@ -9,8 +9,8 @@ checks/portfolio.json (template in the portfolio-package skill). Then:
   python3 checks/run_all.py --root PATH --config FILE   check another folder (read only)
 
 It checks: required files, README sections and links, evaluation sections,
-no em dashes, headline numbers agree across files, the case study PDF is one
-page, private files are not tracked, and no secrets or personal emails in
+no em dashes, headline numbers agree across files, the case study PDF has its
+expected pages (one unless case_study_pages says otherwise), private files are not tracked, and no secrets or personal emails in
 tracked files. It never changes anything.
 """
 from __future__ import annotations
@@ -40,6 +40,7 @@ DEFAULTS = {
                             "what the results changed"],
     "style_files": ["README.md", "docs/*.md", "docs/*.html"],
     "case_study_pdf": "docs/case-study.pdf",
+    "case_study_pages": 1,
     "headline_numbers": {},
     "private_paths": ["interview-notes.md", "private/", "portfolio-private/"],
     "allowed_emails": ["users.noreply.github.com", "noreply@anthropic.com", "noreply@github.com",
@@ -273,7 +274,8 @@ def check_case_study_pages(root: Path, cfg: dict) -> Result:
     n = pdf_page_count(path)
     if n is None:
         return "fail", ["could not count the pages"]
-    return ("pass", []) if n == 1 else ("fail", [f"{cfg['case_study_pdf']} has {n} pages, not 1"])
+    want = int(cfg["case_study_pages"])
+    return ("pass", []) if n == want else ("fail", [f"{cfg['case_study_pdf']} has {n} pages, not {want}"])
 
 
 def check_private_untracked(root: Path, cfg: dict) -> Result:
@@ -347,7 +349,7 @@ CHECKS: List[Tuple[str, Callable[[Path, dict], Result]]] = [
     ("Evaluation has its sections in order of evidence", check_evaluation_sections),
     ("No em dashes in public writing", check_em_dashes),
     ("Headline numbers agree across files", check_headline_numbers),
-    ("Case study PDF is exactly one page", check_case_study_pages),
+    ("Case study PDF has the expected pages", check_case_study_pages),
     ("Private files are ignored and untracked", check_private_untracked),
     ("No secrets in tracked files", check_no_secrets),
     ("No personal email addresses in tracked files", check_no_personal_emails),

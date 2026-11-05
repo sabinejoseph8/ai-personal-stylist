@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Personal Stylist Case Study</title>
 <!--
-  One-page "AI product management case study". Letter size, print-ready.
+  Two-page "AI product management case study": the case, then the business model. Letter size, print-ready.
   Render:  python3 <skill>/scripts/render.py pdf docs/case-study.html docs/case-study.pdf
-  Check:   python3 checks/run_all.py   (fails unless the PDF is exactly one page)
+  Check:   python3 checks/run_all.py   (fails unless the PDF has exactly two pages)
 -->
 <style>
   @page { size: Letter; margin: 0.38in 0.5in; }
@@ -39,10 +39,14 @@
   .note { background: var(--note); border-left: 3px solid var(--note-edge); padding: 5pt 8pt; font-size: 7.9pt; margin: 2pt 0 6pt; }
   .foot { border-top: 1px solid var(--line); padding-top: 4pt; font-size: 7.6pt; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
   .foot strong { color: var(--ink); }
+  .page2 { break-before: page; }
+  .page2 .lede { max-width: 6.2in; }
+  table.money { font-size: 8.4pt; }
   @media screen and (max-width: 700px) {
     body { padding: 16px; font-size: 11pt; }
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .cols, .foot { grid-template-columns: 1fr; }
+    .page2 { margin-top: 28px; padding-top: 20px; border-top: 2px dashed var(--line); }
   }
 </style>
 </head>
@@ -84,11 +88,6 @@
           <li><strong>Accuracy first, then speed, then cost:</strong> four models measured on the same sentences before any screen was built; the most accurate one, Opus, was too slow for live notes.</li>
           <li><strong>Specs before code:</strong> product, design and tech specs and a phased plan, kept current; a phone check and a code review closed every phase.</li>
         </ul>
-      </section>
-      <section>
-        <h2>Business model</h2>
-        <p><strong>Affiliate commission from high-end retailers, after v1:</strong> each piece links to a retailer such as FWRD, earning an assumed 5% of what shoppers keep. My hypothesis is that a video stylist's personal styling suits higher-ticket items. v1 has no links: sample products only.</p>
-        <p><strong>Does a session pay?</strong> Ten minutes cost $0.95 to $1.65 by voice and $3.95 to $4.65 by video. FWRD's average order was about $640 in 2025, before returns (Revolve Group annual report): $32 at 5%. So about one in 7 or 8 video sessions, or one in 19 to 34 voice sessions, must end in a kept order. Returns earn nothing, so that rate is the riskiest assumption and the first thing to measure.</p>
       </section>
     </div>
     <div>
@@ -132,8 +131,61 @@
   </div>
 
   <footer class="foot">
-    <div><strong>In the repository:</strong> README, docs/evaluation.md, Project Memory (specs and plan), the architecture diagram, checks. Live at ai-personal-stylist-inky.vercel.app.</div>
+    <div><strong>In the repository:</strong> README, docs/evaluation.md, Project Memory (specs and plan), the architecture diagram, checks. Live at ai-personal-stylist-inky.vercel.app. Page 2: the business model.</div>
     <div><strong>Sabine Joseph,</strong> AI product manager, directing Claude Code as a non-developer. Code and documents: github.com/sabinejoseph8/ai-personal-stylist.</div>
   </footer>
+
+  <div class="page2">
+    <header class="head">
+      <div class="eyebrow">AI Personal Stylist &middot; Page 2 &middot; After v1</div>
+      <h1>Business model</h1>
+      <div class="sub">Affiliate commission from high-end retailers, assumed at 5% of what shoppers keep</div>
+      <p class="lede">v1 has no links: the products are a sample catalog and nothing is for sale. This page is the plan for after v1, and the test of whether a session pays for itself.</p>
+    </header>
+
+    <div class="kpis">
+      <div class="kpi"><b>5%</b><span>assumed commission on what the shopper keeps, through the retailer's affiliate program</span></div>
+      <div class="kpi"><b>$32</b><span>earned on FWRD's average order, about $640 in 2025 before returns</span></div>
+      <div class="kpi"><b>1 in 7 or 8</b><span>video sessions must end in a kept order to pay for themselves</span></div>
+      <div class="kpi"><b>1 in 19 to 34</b><span>voice sessions must end in a kept order to pay for themselves</span></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <section>
+          <h2>How it would earn</h2>
+          <p>Each piece in a look would link to the retailer's own site through its affiliate program, and the app would earn a commission on what the shopper keeps, assumed at 5%. My hypothesis is that a video stylist's more personal styling suits higher-ticket items, so the target is a high-end retailer such as FWRD. The shopper pays the retailer's price; the retailer handles checkout, delivery and returns.</p>
+        </section>
+        <section>
+          <h2>Does a session pay for itself?</h2>
+          <p>A 10-minute session costs about $0.95 to $1.65 with the voice stylist and $3.95 to $4.65 with the video stylist: $0.45 to $1.15 of Claude, plus OpenAI voice at $0.05 a minute or Tavus video at $0.35 a minute. Hosting isn't counted. FWRD's average order was about $640 in 2025, before returns (Revolve Group's 2025 annual report): about $32 at 5%.</p>
+        </section>
+      </div>
+      <div>
+        <section>
+          <h2>The riskiest assumption</h2>
+          <p>That one in 7 or 8 video sessions ends in a kept order: far above usual online shopping conversion, and returned orders earn nothing. A $300 basket would need one in 3 or 4, which is why the target is high end. That rate is the first thing to measure with real shoppers.</p>
+        </section>
+        <section>
+          <h2>Ready for links</h2>
+          <p>Every product already has an empty purchase link and a "can be bought" flag, so a retailer's feed is a new connector, not a redesign.</p>
+        </section>
+      </div>
+    </div>
+
+    <section>
+      <h2>Break-even per 10-minute session, at 5%</h2>
+      <table class="money">
+        <tr><th>A 10-minute session</th><th>Cost to run</th><th>Kept spend to break even</th><th>In average FWRD orders ($32 each)</th></tr>
+        <tr><td>Voice stylist</td><td>$0.95 to $1.65</td><td>$19 to $33</td><td>One in every 19 to 34 sessions</td></tr>
+        <tr><td>Video stylist</td><td>$3.95 to $4.65</td><td>$79 to $93</td><td>One in every 7 or 8 sessions</td></tr>
+      </table>
+    </section>
+
+    <footer class="foot">
+      <div><strong>Sources:</strong> the Claude cost per session was measured in the app's own sessions (docs/evaluation.md); FWRD's average order is from Revolve Group's 2025 annual report.</div>
+      <div><strong>Not yet tested:</strong> v1 has no links, so no commission has been earned and no kept-order rate measured.</div>
+    </footer>
+  </div>
 </body>
 </html>

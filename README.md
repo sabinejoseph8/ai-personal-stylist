@@ -2,7 +2,7 @@
 
 **A video AI stylist that remembers what you said and won't show you what you ruled out.** A working web app for anyone dressing for an occasion on their phone.
 
-By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#demo) · [One-page case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
+By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#demo) · [Case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
 
 > The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
 
@@ -28,8 +28,6 @@ Shopping for an outfit online means a search box, filters, and a thousand result
 
 AI assistants manage the listening half. Where they fail is memory and consistency: they forget the budget you gave two messages ago, contradict a preference you stated, and show you the high heels you said you never wear.
 
-The problem is my own. I shop for occasion outfits on my phone, and that is how every search box and chat assistant has failed me. I haven't done user research beyond that yet: a friend's first try, timed, is the first outside evidence and the last launch check.
-
 ## How it works
 
 1. **Try the demo.** A guest sign-in with a bot check, no account. A short setup, or a sample profile with a budget and three saved preferences, such as "Never: high heels".
@@ -53,23 +51,10 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 
 ## What I left out of v1, and why
 
-- **No retailer, no checkout.** A sample catalog of about 140 items with generated photos keeps the demo free of real stock, prices and retailer terms while the product idea is tested. Links come with the business model below.
+- **No retailer, no checkout.** A sample catalog of about 140 items with generated photos keeps the demo free of real stock, prices and retailer terms while the product idea is tested. Links come with the business model, on page 2 of the [case study](docs/case-study.pdf).
 - **Voice only in the conversation.** No captions and no typing to the stylist yet, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard. The first accessibility item after launch.
 - **One video call at a time.** The video plan allows one; a second visitor gets the same stylist by voice, which sounds different.
 - **Android not tested.** One iPhone and one laptop, mine.
-
-## Business model, after v1
-
-**Affiliate commission from high-end retailers.** Each piece in a look would link to the retailer's own site through its affiliate program, and the app would earn a commission on what the shopper keeps, assumed at 5%. My hypothesis is that a video stylist's more personal styling suits higher-ticket items, so the target is a retailer such as FWRD. The shopper pays the retailer's price; the retailer handles checkout, delivery and returns. v1 has no links.
-
-**Does a session pay for itself?** A 10-minute session costs about $0.95 to $1.65 with the voice stylist and $3.95 to $4.65 with the video stylist: $0.45 to $1.15 of Claude, plus OpenAI voice at $0.05 a minute or Tavus video at $0.35 a minute. Hosting isn't counted. FWRD's average order was about $640 in 2025, before returns (Revolve Group's 2025 annual report): about $32 at 5%.
-
-| A 10-minute session | Cost to run | Kept spend to break even at 5% | In average FWRD orders ($32 each) |
-|---|---|---|---|
-| Voice stylist | $0.95 to $1.65 | $19 to $33 | One in every 19 to 34 sessions |
-| Video stylist | $3.95 to $4.65 | $79 to $93 | One in every 7 or 8 sessions |
-
-**The riskiest assumption** is that one in 7 or 8 video sessions ends in a kept order: far above usual online shopping conversion, and returned orders earn nothing. A $300 basket would need one in 3 or 4, which is why the target is high end. It is the first thing to measure with real shoppers. The app is ready: every product already has an empty purchase link and a "can be bought" flag, so a retailer's feed is a new connector, not a redesign.
 
 ## How I defined and measured quality
 
