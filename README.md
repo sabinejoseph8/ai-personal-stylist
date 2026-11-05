@@ -24,8 +24,6 @@ A real session with the video stylist, using the sample profile: the notes as sh
 
 https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 
-![Architecture](docs/architecture.png)
-
 ## At a glance
 
 - **The user and the problem:** Anyone dressing for an occasion who shops on their phone. Online shopping gives a search box and a thousand results that don't go together, and AI assistants forget the budget you gave and show you what you ruled out.
@@ -37,6 +35,8 @@ https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 - **How it was built:** I wrote the specs, set the quality targets and made every product decision, and Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
 
 **Direct links:** [the live site](https://ai-personal-stylist-inky.vercel.app) · [the case study](https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html) · [the Project Memory website](https://claude.ai/artifact/Ngtm5cTyekAP1cPikjmhuX)
+
+![Architecture](docs/architecture.png)
 
 ## How it works
 
