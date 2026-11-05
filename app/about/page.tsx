@@ -132,7 +132,7 @@ export default function AboutPage() {
               and what the results changed.
             </li>
             <li>
-              <A href={`${DOCS}/case-study.pdf`}>The one-page case study</A> (PDF).
+              <A href={`${DOCS}/case-study.pdf`}>The case study</A> (PDF).
             </li>
             <li>
               The plan: the <A href={`${DOCS}/product-spec.md`}>product spec</A> (every requirement traces back to the original PRD),{" "}

@@ -2,7 +2,7 @@
 
 **A video AI stylist that remembers what you said and won't show you what you ruled out.** A working web app for anyone dressing for an occasion on their phone.
 
-By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#demo) · [One-page case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
+By Sabine Joseph, AI product manager. [Live app](https://ai-personal-stylist-inky.vercel.app) · [Demo video](#demo) · [Case study (PDF)](docs/case-study.pdf) · [Evaluation](docs/evaluation.md) · [How to run it](docs/how-to-run.md)
 
 > The stylist, the notes, the looks and the preference check are real. The products are a sample catalog of about 140 items with generated photos: nothing is for sale, and no retailer is connected. Built and live; the last launch check, a stranger's first session, is still to run.
 
@@ -12,19 +12,29 @@ A real session with the video stylist, using the sample profile: the notes as sh
 
 https://github.com/user-attachments/assets/d4ee8b8a-1dc7-43db-9bde-858ca3c55bda
 
-## My role and skills
+## At a glance
 
-I'm a product manager, not a developer. I wrote the product, design and technical specs from a product requirements document, set the quality targets before any result existed, made every product decision, and approved each plan before any code changed. Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
-
-What this shows: specs and a risk-first plan; success metrics set before results and reported with their limits; model choice from measured accuracy, speed and cost; cost control, privacy and accessibility as requirements; and directing an AI coding tool in plain English, as a non-developer, to a working product.
+- **The user and the problem:** Anyone dressing for an occasion who shops on their phone. Online shopping gives a search box and a thousand results that don't go together, and AI assistants forget the budget you gave and show you what you ruled out.
+- **What it does:** You talk face to face with a video stylist. She takes notes as you speak, which you confirm with a tap, and builds three complete looks within your budget and your rules, around a piece you already own if you show it.
+- **How it works:** A fast small model (Claude Haiku 5.5) and plain code read the notes while you talk. A larger one (Claude Opus 5.5) reads photos and builds the looks. Every look passes one gate, rules in code and then a judgment call, before you see it. Video and voice come from Tavus and OpenAI; every decision is made on my server.
+- **How quality was defined:** Targets with numbers for the notes, the looks, the photos, speed and cost, set on 17 October 2026 before any result existed, and never moved.
+- **Results:** 96% of notes right and 97% within 2 seconds (in-sample), 16 of 16 planted rule breaks caught, 93% of photo details right. Three targets were missed: the blind set of new sentences (83% right and 85% within 2 seconds, against 90% and 95%), interruption (0.7 seconds against 0.5) and AI cost per 10-minute demo (about $1.15 against $1.10).
+- **Status:** Built and live, with no sign-up. The products are a sample catalog and nothing is for sale. The last launch check, a stranger's first session, timed, is still to run.
+- **How it was built:** I wrote the specs, set the quality targets and made every product decision, and Claude Code wrote the code. Planning started on 7 October 2026 and building ran from 18 to 31 October: 73 pull requests, each tested automatically before it merged, with a check on my own phone and a code review at the end of every phase.
 
 ## The problem
 
-Shopping for an outfit online means a search box, filters, and a thousand results that don't go together. A good stylist in a shop does the opposite: listens, remembers what you said, looks at what you already own, and puts a whole outfit together within your budget and your rules.
+Shopping for an outfit online means a search box, filters, and a thousand results that don't go together. A good stylist in a shop does the opposite: listens, remembers what you said, looks at what you already own, and puts a whole outfit together within your budget and your rules. AI assistants manage the listening half. Where they fail is memory and consistency: they forget the budget you gave two messages ago, contradict a preference you stated, and show you the high heels you said you never wear. This project builds a stylist you talk to face to face, who writes down what you want, keeps to it, and puts whole looks together around what you own.
 
-AI assistants manage the listening half. Where they fail is memory and consistency: they forget the budget you gave two messages ago, contradict a preference you stated, and show you the high heels you said you never wear.
+- **Who it is for:** adults who shop womenswear, menswear or both, dressing for an occasion such as a wedding, who want a complete look that uses what they already own and stays within budget, on their phone.
+- **What problem it solves:** search returns single items, not outfits, and leaves the shopper to work out what goes together. Chat assistants listen but don't hold on to what was said: the budget, the "never" rules and the event's details drift out of the conversation, and nothing checks a suggestion against them before it is shown.
+- **Why it matters:** every forgotten budget or ignored "never" costs trust. The shopper ends up repeating themselves, rechecking every suggestion, or going back to scrolling, and looks that ignore what they own mean buying more than they need.
+- **What the user should be able to do:** say what they're dressing for, show a piece they own, and get three complete looks within budget that keep to every rule they've given; then change a piece by voice or touch, round after round, without losing what they asked for.
+- **The outcome:** a whole outfit they're happy with in minutes, from a stylist that listened: nothing they ruled out, nothing over budget, and their own pieces put to use.
 
-The problem is my own. I shop for occasion outfits on my phone, and that is how every search box and chat assistant has failed me. I haven't done user research beyond that yet: a friend's first try, timed, is the first outside evidence and the last launch check.
+Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1, with the business model on page 2 of the [case study](docs/case-study.pdf).
+
+Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
 ## How it works
 
@@ -46,26 +56,6 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 - **Accuracy first, then speed, then cost.** Four models were measured on the same sentences before any screen was built. Opus was right every time but too slow for live notes; Haiku with better instructions and code for money and dates was fast and right.
 - **Degrade, never break.** If video is busy or out of minutes, the same stylist carries on by voice and says why. If a check can't run, the look is held with a plain reason rather than shown unchecked.
 - **Privacy as a feature.** Calls are never recorded, the camera is never sent to the video service, session photos are deleted when the session ends, and a shopper can download or delete everything. The cost: a saved look keeps your own item by name, not its photo.
-
-## What I left out of v1, and why
-
-- **No retailer, no checkout.** A sample catalog of about 140 items with generated photos keeps the demo free of real stock, prices and retailer terms while the product idea is tested. Links come with the business model below.
-- **Voice only in the conversation.** No captions and no typing to the stylist yet, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard. The first accessibility item after launch.
-- **One video call at a time.** The video plan allows one; a second visitor gets the same stylist by voice, which sounds different.
-- **Android not tested.** One iPhone and one laptop, mine.
-
-## Business model, after v1
-
-**Affiliate commission from high-end retailers.** Each piece in a look would link to the retailer's own site through its affiliate program, and the app would earn a commission on what the shopper keeps, assumed at 5%. My hypothesis is that a video stylist's more personal styling suits higher-ticket items, so the target is a retailer such as FWRD. The shopper pays the retailer's price; the retailer handles checkout, delivery and returns. v1 has no links.
-
-**Does a session pay for itself?** A 10-minute session costs about $0.95 to $1.65 with the voice stylist and $3.95 to $4.65 with the video stylist: $0.45 to $1.15 of Claude, plus OpenAI voice at $0.05 a minute or Tavus video at $0.35 a minute. Hosting isn't counted. FWRD's average order was about $640 in 2025, before returns (Revolve Group's 2025 annual report): about $32 at 5%.
-
-| A 10-minute session | Cost to run | Kept spend to break even at 5% | In average FWRD orders ($32 each) |
-|---|---|---|---|
-| Voice stylist | $0.95 to $1.65 | $19 to $33 | One in every 19 to 34 sessions |
-| Video stylist | $3.95 to $4.65 | $79 to $93 | One in every 7 or 8 sessions |
-
-**The riskiest assumption** is that one in 7 or 8 video sessions ends in a kept order: far above usual online shopping conversion, and returned orders earn nothing. A $300 basket would need one in 3 or 4, which is why the target is high end. It is the first thing to measure with real shoppers. The app is ready: every product already has an empty purchase link and a "can be bought" flag, so a retailer's feed is a new connector, not a redesign.
 
 ## How I defined and measured quality
 
@@ -90,15 +80,9 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 ## Limitations
 
 - **The evaluation is mostly in-sample**, and the one blind set missed both targets. Treat 83% right and 85% within 2 seconds as the estimate for new sentences.
+- **Voice only in the conversation.** No captions and no typing to the stylist yet, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard. Captions or typing are the first accessibility item after launch.
 - **One tester.** Every real-device check was mine, on one iPhone and one laptop. No stranger has used it yet.
 - **Not measured:** whether shoppers like the looks (the check tests rules and stated preferences, not taste), whether sessions lead to purchases (no links yet, so the business model is untested), and busy periods. Costs depend on behaviour: $0.45 to $1.15 of AI a session, so the 15-minute, $3-a-day limits per visitor are what keep a public link safe.
-
-## What's next
-
-- A stranger's first session, timed: the aim is a first look within 3 minutes.
-- Fix what the blind set found, then run it once more and report both runs.
-- Captions or typing for the conversation.
-- A retailer-link pilot that measures what matters after launch: time to first look, looks saved, sessions ending in a kept order, and returns.
 
 ## Planned and tested like a product
 
@@ -126,3 +110,12 @@ checks/         Package checks and the pre-publish scan (Python standard library
 scripts/        Lighthouse, the evaluation summary, Tavus setup
 tools/          The Memory site builder
 ```
+
+## Skills demonstrated
+
+- **AI product management:** problem framing, specs and a risk-first phased plan agreed before building, success targets set before any result, directing an AI coding tool from the specs and the plan as a non-developer, and decisions driven by measured results, including the ones that missed.
+- **Evaluation:** test sets with the expected answers written first, four models compared on accuracy, speed and cost, in-sample results labelled as such, and a blind set written and run once by a separate conversation that never touched the notes reader.
+- **Responsible AI:** nothing the AI hears becomes a rule until the shopper confirms it, every look passes a check (rules in code, then a model's judgment) before it is shown, and a look whose check can't run is held with a plain reason.
+- **Privacy, cost and accessibility as requirements:** no recordings, the camera never sent to the video service, photos deleted when the session ends, and download or delete everything; a daily AI allowance per visitor and monthly stops per service before every paid call; an accessibility scan on every page, and checks by hand at 200% text size that found five layout problems the scanner missed.
+- **Business model:** affiliate commission at an assumed 5%, a cost check per session, and the riskiest assumption named: the share of sessions that must end in a kept order.
+- **Communication:** this README, the [case study](docs/case-study.pdf), the [evaluation](docs/evaluation.md) and the plan files, written in plain English and kept current.
