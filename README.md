@@ -32,7 +32,7 @@ Shopping for an outfit online means a search box, filters, and a thousand result
 - **What the user should be able to do:** say what they're dressing for, show a piece they own, and get three complete looks within budget that keep to every rule they've given; then change a piece by voice or touch, round after round, without losing what they asked for.
 - **The outcome:** a whole outfit they're happy with in minutes, from a stylist that listened: nothing they ruled out, nothing over budget, and their own pieces put to use.
 
-Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1 (see [What I left out of v1](#what-i-left-out-of-v1-and-why)).
+Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1, with the business model on page 2 of the [case study](docs/case-study.pdf).
 
 Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
@@ -56,13 +56,6 @@ Underneath: the browser holds the call and sends your words, photos and camera f
 - **Accuracy first, then speed, then cost.** Four models were measured on the same sentences before any screen was built. Opus was right every time but too slow for live notes; Haiku with better instructions and code for money and dates was fast and right.
 - **Degrade, never break.** If video is busy or out of minutes, the same stylist carries on by voice and says why. If a check can't run, the look is held with a plain reason rather than shown unchecked.
 - **Privacy as a feature.** Calls are never recorded, the camera is never sent to the video service, session photos are deleted when the session ends, and a shopper can download or delete everything. The cost: a saved look keeps your own item by name, not its photo.
-
-## What I left out of v1, and why
-
-- **No retailer, no checkout.** A sample catalog of about 140 items with generated photos keeps the demo free of real stock, prices and retailer terms while the product idea is tested. Links come with the business model, on page 2 of the [case study](docs/case-study.pdf).
-- **Voice only in the conversation.** No captions and no typing to the stylist yet, so people who are deaf, hard of hearing or can't speak can't use the conversation. Everything outside it works by touch or keyboard. The first accessibility item after launch.
-- **One video call at a time.** The video plan allows one; a second visitor gets the same stylist by voice, which sounds different.
-- **Android not tested.** One iPhone and one laptop, mine.
 
 ## How I defined and measured quality
 
