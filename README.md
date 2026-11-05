@@ -14,7 +14,7 @@ Shopping for an outfit online means a search box, filters, and a thousand result
 - **What the user should be able to do:** say what they're dressing for, show a piece they own, and get three complete looks within budget that keep to every rule they've given; then change a piece by voice or touch, round after round, without losing what they asked for.
 - **The outcome:** a whole outfit they're happy with in minutes, from a stylist that listened: nothing they ruled out, nothing over budget, and their own pieces put to use.
 
-Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1, with the business model on page 2 of the [case study](https://sabinejoseph8.github.io/ai-personal-stylist/case-study.html).
+Version 1 builds the conversation, the notes, looks around what you own and the check every look passes, on a sample catalog: nothing is for sale. Real retailers come after v1.
 
 Nothing the stylist hears becomes a rule until you confirm it, and no look reaches the screen without passing a check against your rules.
 
